@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>VMのブート順序とブートソースの構成 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="vm-snapshots.html">
+    <link rel="next" href="../manifests/index.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">VMライフサイクル管理</a></li>
+    <li><a href="boot-order-boot-sources.html">VMのブート順序とブートソース</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">VMのブート順序とブートソースの構成</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、OpenShift VirtualizationでVMのブート順序、ブートソース、およびブートオプションを構成する方法を説明します。ブート構成を理解することは、カスタムOSのインストール、レスキューおよびリカバリのシナリオ、マルチブート環境、セキュリティコンプライアンス要件において不可欠です。</p>
+</div>
+<div class="paragraph">
+<p>ブート構成により、VMがどのデバイスから起動を試みるか、その順序、および使用するファームウェアモード（BIOSまたはUEFI）を制御できます。OpenShift Virtualizationは、永続ボリューム、コンテナイメージ、ネットワークベースのソースなど、さまざまなブートソースをサポートしています。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以降</p>
+</li>
+<li>
+<p>CLIツール: <code>oc</code>, <code>virtctl</code>, <code>kubectl</code></p>
+</li>
+<li>
+<p>VMのブートプロセスに関する基本的な理解</p>
+</li>
+<li>
+<p>永続ボリューム用に構成されたストレージクラス</p>
+</li>
+<li>
+<p>コンテナレジストリの例を使用する場合: コンテナレジストリ（Quay.io、Docker Hub、または内部レジストリ）へのアクセス権</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_openshift_virtualizationのブートソースタイプ"><a class="anchor" href="#_openshift_virtualizationのブートソースタイプ"></a>OpenShift Virtualizationのブートソースタイプ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenShift Virtualizationは、複数のブートソースタイプをサポートしています。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ブートソースタイプ</th>
+<th class="tableblock halign-left valign-top">説明</th>
+<th class="tableblock halign-left valign-top">ユースケース</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>PersistentVolumeClaim (PVC)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ストレージに裏打ちされた永続ディスクから起動</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">本番環境のVM、ステートフルなワークロード、カスタムOSのインストール</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ContainerDisk</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンテナにパッケージ化されたディスクイメージから起動</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">エフェメラル（一時的）なVM、テスト、CI/CD、イミュータブルなワークロード</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>DataVolume</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Containerized Data Importer (CDI) を介してプロビジョニングされたディスクから起動</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP、S3、またはレジストリソースからのイメージのインポート</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>CloudInitNoCloud</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">初期化ディスク（起動不可だが、ブートディスクと併用されるのが一般的）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VMの構成と初期化</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ブートファームウェアモード"><a class="anchor" href="#_ブートファームウェアモード"></a>ブートファームウェアモード</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenShift Virtualizationは、2つのファームウェアモードをサポートしています。</p>
+</div>
+<div class="sect2">
+<h3 id="_bios_レガシーモード"><a class="anchor" href="#_bios_レガシーモード"></a>BIOS (レガシーモード)</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>従来のPC BIOSファームウェア</p>
+</li>
+<li>
+<p>古いオペレーティングシステムとの互換性あり</p>
+</li>
+<li>
+<p>ブートデバイスのサイズ制限（MBRで2TBまで）</p>
+</li>
+<li>
+<p>起動時間が短い</p>
+</li>
+<li>
+<p>ほとんどのLinuxディストリビューションのデフォルト</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_uefi_unified_extensible_firmware_interface"><a class="anchor" href="#_uefi_unified_extensible_firmware_interface"></a>UEFI (Unified Extensible Firmware Interface)</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>モダンなファームウェアインターフェイス</p>
+</li>
+<li>
+<p>セキュアブートに必須</p>
+</li>
+<li>
+<p>GPTパーティションテーブルと大容量ディスク（2TB超）をサポート</p>
+</li>
+<li>
+<p>Windows 11および最新のWindows Serverバージョンで必須</p>
+</li>
+<li>
+<p>より優れたセキュリティ機能</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ブートデバイス順序の理解"><a class="anchor" href="#_ブートデバイス順序の理解"></a>ブートデバイス順序の理解</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ブートデバイスの順序は、VMファームウェアがブート可能なコンテンツをチェックするデバイスと、そのシーケンスを決定します。KubeVirtでは、ディスクとインターフェイスの <code>bootOrder</code> フィールドを使用してブート順序を制御します。</p>
+</div>
+<div class="paragraph">
+<p><strong>重要な概念:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>bootOrder</code> の数値が小さいほど優先度が高くなります（1は2より先に起動）</p>
+</li>
+<li>
+<p>ディスクとインターフェイスのみにブート順序を指定可能</p>
+</li>
+<li>
+<p><code>bootOrder</code> が指定されていない場合、ファームウェアが決定します</p>
+</li>
+<li>
+<p>通常、プライマリブートディスクには <code>bootOrder: 1</code> を割り当てます</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ1_persistentvolumeclaim_pvc_からの起動最も一般的"><a class="anchor" href="#_シナリオ1_persistentvolumeclaim_pvc_からの起動最も一般的"></a>シナリオ1: PersistentVolumeClaim (PVC) からの起動（最も一般的）</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>これは、永続ストレージを使用する本番VMの標準構成です。</p>
+</div>
+<div class="paragraph">
+<p>テスト用の名前空間を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace boot-demo</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+この例のcloud-initパスワードはデモ目的専用です。本番環境では、常に強力でユニークなパスワードまたはSSHキー認証を使用してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/boot-order-boot-sources/vm-boot-from-pvc.yaml" class="xref attachment">vm-boot-from-pvc.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-pvc
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-pvc-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-pvc
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-pvc-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>重要ポイント:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>rootdisk の <code>bootOrder: 1</code> により、最初に起動することが保証されます</p>
+</li>
+<li>
+<p>DataVolumeが自動的にPVCをプロビジョニングしてデータを格納します</p>
+</li>
+<li>
+<p>Cloud-initディスクは構成を提供しますが、ブート可能ではありません</p>
+</li>
+<li>
+<p>ディスクへの変更は、VMの再起動後も保持されます</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>デプロイと検証:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f vm-boot-from-pvc.yaml
+oc get vm vm-boot-pvc -n boot-demo
+oc get vmi vm-boot-pvc -n boot-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>使用する場合:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>永続ストレージを必要とする本番ワークロード</p>
+</li>
+<li>
+<p>再起動後もデータを保持する必要があるVM</p>
+</li>
+<li>
+<p>従来のサーバーデプロイメント</p>
+</li>
+<li>
+<p>状態の永続性が必要な開発環境</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ2_containerdiskからの起動エフェメラル"><a class="anchor" href="#_シナリオ2_containerdiskからの起動エフェメラル"></a>シナリオ2: ContainerDiskからの起動（エフェメラル）</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ContainerDiskは、OCIコンテナ形式でディスクイメージをパッケージ化します。イミュータブル（不変）でステートレスなワークロードに最適です。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/boot-order-boot-sources/vm-boot-from-containerdisk.yaml" class="xref attachment">vm-boot-from-containerdisk.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-containerdisk
+  namespace: boot-demo
+spec:
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-containerdisk
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: containerdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>重要な注意点:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ContainerDiskはエフェメラルです。VMの停止時にすべての変更が失われます</p>
+</li>
+<li>
+<p>レジストリからイメージがプルされるため、デプロイが高速です</p>
+</li>
+<li>
+<p>テストやCI/CDパイプラインに最適</p>
+</li>
+<li>
+<p>quay.io/containerdisks のパブリックイメージを使用するか、自作も可能です</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>デプロイ:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f vm-boot-from-containerdisk.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>使用する場合:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>テストおよび開発</p>
+</li>
+<li>
+<p>CI/CDパイプライン</p>
+</li>
+<li>
+<p>イミュータブルなインフラストラクチャパターン</p>
+</li>
+<li>
+<p>永続性が不要なシナリオ</p>
+</li>
+<li>
+<p>ストレージのオーバーヘッドなしで素早くVMをプロビジョニングしたい場合</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ3_httpソースのdatavolumeからの起動"><a class="anchor" href="#_シナリオ3_httpソースのdatavolumeからの起動"></a>シナリオ3: HTTPソースのDataVolumeからの起動</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>DataVolumeを使用してHTTP/HTTPSソースからブートイメージをインポートします。中央管理されたイメージからVMプロビジョニングを自動化するのに役立ちます。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/boot-order-boot-sources/vm-boot-from-http.yaml" class="xref attachment">vm-boot-from-http.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-http
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-http-disk
+        annotations:
+          cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+      spec:
+        source:
+          http:
+            url: "https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2"
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-http
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-http-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>主な機能:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>CDIが自動的にイメージをダウンロードおよび変換します</p>
+</li>
+<li>
+<p>イメージは一度だけインポートされ、その後はPVCに格納されます</p>
+</li>
+<li>
+<p>次回以降の起動はPVC（永続的）を使用します</p>
+</li>
+<li>
+<p>一部のストレージクラスでは、アノテーション <code>cdi.kubevirt.io/storage.bind.immediate.requested: "true"</code> が必要です</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>インポートの進捗状況を監視:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f vm-boot-from-http.yaml
+oc get dv vm-boot-http-disk -n boot-demo --watch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>使用する場合:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>自動化されたデプロイパイプライン</p>
+</li>
+<li>
+<p>中央レポジトリからのゴールデンイメージのインポート</p>
+</li>
+<li>
+<p>標準化されたVMプロビジョニング</p>
+</li>
+<li>
+<p>Webサーバーやオブジェクトストレージでイメージがホストされている場合</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ4_ブート順序を指定した複数のブートデバイス"><a class="anchor" href="#_シナリオ4_ブート順序を指定した複数のブートデバイス"></a>シナリオ4: ブート順序を指定した複数のブートデバイス</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>複数のブート可能デバイスを明示的な順序で構成します。レスキューシナリオやマルチブート構成に役立ちます。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/boot-order-boot-sources/vm-multiple-boot-devices.yaml" class="xref attachment">vm-multiple-boot-devices.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-multi-boot
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-multi-boot-primary
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-multi-boot-secondary
+      spec:
+        source:
+          blank: {}
+        storage:
+          resources:
+            requests:
+              storage: 20Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-multi-boot
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: primarydisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: secondarydisk
+              bootOrder: 2
+            - cdrom:
+                bus: sata
+              name: installcdrom
+              bootOrder: 3
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-multi-boot-primary
+          name: primarydisk
+        - dataVolume:
+            name: vm-multi-boot-secondary
+          name: secondarydisk
+        - name: installcdrom
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ブートシーケンスの説明:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>bootOrder: 1</code> - プライマリディスク（最初に起動を試みる）</p>
+</li>
+<li>
+<p><code>bootOrder: 2</code> - セカンダリディスク（プライマリが失敗した場合のフォールバック）</p>
+</li>
+<li>
+<p><code>bootOrder: 3</code> - CD-ROM（インストールメディア、最後の手段）</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>デプロイ:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f vm-multiple-boot-devices.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>使用する場合:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>災害復旧（DR）シナリオ</p>
+</li>
+<li>
+<p>カスタムOSのインストール</p>
+</li>
+<li>
+<p>さまざまなOS構成のテスト</p>
+</li>
+<li>
+<p>フォールバックブートオプションを必要とする環境</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ5_uefiブートモード"><a class="anchor" href="#_シナリオ5_uefiブートモード"></a>シナリオ5: UEFIブートモード</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>従来のBIOSではなくUEFIファームウェアを使用するようにVMを構成します。セキュアブートや最新のWindowsバージョンに必要です。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/boot-order-boot-sources/vm-boot-uefi.yaml" class="xref attachment">vm-boot-uefi.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-uefi
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-uefi-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-uefi
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-uefi-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>主な構成:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>firmware.bootloader.efi</code> がUEFIモードを有効にします</p>
+</li>
+<li>
+<p><code>secureBoot: false</code> - セキュアブートは無効です（サポートされているOSでは有効化可能）</p>
+</li>
+<li>
+<p>マシンタイプ <code>pc-q35-rhel9.4.0</code> はUEFIと互換性があります</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>デプロイ:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f vm-boot-uefi.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>使用する場合:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Windows 11または最新のWindows Server VM</p>
+</li>
+<li>
+<p>セキュアブートを必要とするシステム</p>
+</li>
+<li>
+<p>大容量ディスク（2TB超）のサポート</p>
+</li>
+<li>
+<p>強化されたセキュリティ要件</p>
+</li>
+<li>
+<p>UEFIを推奨するモダンなLinuxディストリビューション</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ6_セキュアブート付きuefi上級者向け"><a class="anchor" href="#_シナリオ6_セキュアブート付きuefi上級者向け"></a>シナリオ6: セキュアブート付きUEFI（上級者向け）</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>セキュアブートは、ブートプロセス中に未承認のコードが実行されるのを防ぎます。これにはUEFIファームウェアと互換性のあるオペレーティングシステムが必要です。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/boot-order-boot-sources/vm-boot-uefi-secureboot.yaml" class="xref attachment">vm-boot-uefi-secureboot.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-secureboot
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-secureboot-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-secureboot
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: true
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+        features:
+          smm:
+            enabled: true
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-secureboot-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>重要な要件:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>secureBoot: true</code> がセキュアブートを有効にします</p>
+</li>
+<li>
+<p><code>features.smm.enabled: true</code> がセキュアブート（System Management Mode）に必要です</p>
+</li>
+<li>
+<p>オペレーティングシステムがセキュアブートをサポートしている必要があります（ほとんどのモダンなLinuxおよびWindows）</p>
+</li>
+<li>
+<p>ブートローダーとカーネルが信頼されたキーで署名されている必要があります</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>デプロイ:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f vm-boot-uefi-secureboot.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>使用する場合:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>セキュリティコンプライアンス要件</p>
+</li>
+<li>
+<p>Windows 11（セキュアブートが必要）</p>
+</li>
+<li>
+<p>厳格なブート整合性要件がある環境</p>
+</li>
+<li>
+<p>ルートキットやブートレベルのマルウェアに対する防御</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+すべてのオペレーティングシステムがセキュアブートをサポートしているわけではありません。VMが起動しない場合は、セキュアブートを無効にして、標準のUEFIを使用してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ7_ネットワークブート_pxe"><a class="anchor" href="#_シナリオ7_ネットワークブート_pxe"></a>シナリオ7: ネットワークブート (PXE)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>PXE (Preboot Execution Environment) を使用してネットワークから起動するようにVMを構成します。OSの自動インストールやディスクレスワークステーションに役立ちます。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/boot-order-boot-sources/vm-boot-pxe.yaml" class="xref attachment">vm-boot-pxe.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-pxe
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-pxe-disk
+      spec:
+        source:
+          blank: {}
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-pxe
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 2
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+            - bridge: {}
+              name: pxe-net
+              bootOrder: 1
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+        - name: pxe-net
+          multus:
+            networkName: pxe-network
+      volumes:
+        - dataVolume:
+            name: vm-boot-pxe-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>主な構成:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>セカンダリネットワークインターフェイス (<code>pxe-net</code>) に <code>bootOrder: 1</code> を設定（ディスクより先に起動）</p>
+</li>
+<li>
+<p>ディスクに <code>bootOrder: 2</code> を設定（ネットワークブート試行後のフォールバック）</p>
+</li>
+<li>
+<p>Multusを介して構成されたセカンダリネットワーク（例: <code>pxe-network</code>）が必要</p>
+</li>
+<li>
+<p>直接的なネットワークアクセスにブリッジインターフェイスバインディングを使用</p>
+</li>
+<li>
+<p>プライマリポッドネットワーク (<code>default</code>) は一般的な接続用として維持</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>PXEブートの前提条件:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>セカンダリネットワークが構成されておりアクセス可能であること（ネットワークチュートリアルを参照）</p>
+</li>
+<li>
+<p>セカンダリネットワーク上でPXEサーバーが構成されていること</p>
+</li>
+<li>
+<p>DHCPサーバーがブート情報を提供していること</p>
+</li>
+<li>
+<p>TFTPサーバーがブートファイルを提供していること</p>
+</li>
+<li>
+<p>VMとPXEインフラストラクチャ間のネットワーク接続</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>使用する場合:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>自動化されたOSインストール</p>
+</li>
+<li>
+<p>ディスクレスワークステーション環境</p>
+</li>
+<li>
+<p>ネットワークベースのリカバリシステム</p>
+</li>
+<li>
+<p>大規模な自動化デプロイ</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ブートメニューの構成"><a class="anchor" href="#_ブートメニューの構成"></a>ブートメニューの構成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM起動時にブートデバイスを選択できる対話型ブートメニューを有効にできます。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/boot-order-boot-sources/vm-boot-menu.yaml" class="xref attachment">vm-boot-menu.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-menu
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-menu-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-menu
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - cdrom:
+                bus: sata
+              name: installcdrom
+              bootOrder: 2
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        firmware:
+          bootloader:
+            bios:
+              useSerial: true
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-menu-disk
+          name: rootdisk
+        - name: installcdrom
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ブートメニューへのアクセス:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f vm-boot-menu.yaml
+
+# VNC経由でアクセスしてブートメニューを表示
+virtctl vnc vm-boot-menu -n boot-demo
+
+# またはコンソール経由
+virtctl console vm-boot-menu -n boot-demo</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>起動中に ESC または F12 を押してブートメニューにアクセス</p>
+</li>
+<li>
+<p>利用可能なオプションからブートデバイスを選択</p>
+</li>
+<li>
+<p><code>useSerial: true</code> により、シリアルコンソール経由でブートメニューにアクセス可能になります</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_検証コマンド"><a class="anchor" href="#_検証コマンド"></a>検証コマンド</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ブート構成をデプロイした後、次のコマンドを使用して検証します。</p>
+</div>
+<div class="sect2">
+<h3 id="_vmステータスの確認"><a class="anchor" href="#_vmステータスの確認"></a>VMステータスの確認</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VMの一覧表示
+oc get vm -n boot-demo
+
+# VMが実行中か確認
+oc get vmi -n boot-demo</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 詳細なVM情報（vm-boot-pvcを自分のVM名に置き換え）
+oc describe vm vm-boot-pvc -n boot-demo</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ブート構成の表示"><a class="anchor" href="#_ブート構成の表示"></a>ブート構成の表示</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ブート順序を表示するVM仕様を取得（vm-boot-pvcを自分のVM名に置き換え）
+oc get vm vm-boot-pvc -n boot-demo -o yaml | grep -A 5 bootOrder
+
+# ファームウェア構成の確認（vm-boot-uefiを自分のVM名に置き換え）
+oc get vm vm-boot-uefi -n boot-demo -o yaml | grep -A 10 firmware</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vmコンソールへのアクセス"><a class="anchor" href="#_vmコンソールへのアクセス"></a>VMコンソールへのアクセス</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># シリアルコンソールアクセス（vm-boot-pvcを自分のVM名に置き換え）
+virtctl console vm-boot-pvc -n boot-demo
+
+# VNCグラフィカルコンソール（vm-boot-menuを自分のVM名に置き換え）
+virtctl vnc vm-boot-menu -n boot-demo</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ブートログの確認"><a class="anchor" href="#_ブートログの確認"></a>ブートログの確認</h3>
+<div class="paragraph">
+<p>VM内部で実行:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ブートメッセージの表示
+dmesg | head -50
+
+# システム起動時間の確認
+systemd-analyze
+
+# ブートログの一覧
+journalctl -b
+
+# UEFIまたはBIOSモードの確認
+[ -d /sys/firmware/efi ] &amp;&amp; echo "UEFI" || echo "BIOS"</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_一般的な問題と解決策"><a class="anchor" href="#_一般的な問題と解決策"></a>一般的な問題と解決策</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_問題_指定されたデバイスからvmが起動しない"><a class="anchor" href="#_問題_指定されたデバイスからvmが起動しない"></a>問題: 指定されたデバイスからVMが起動しない</h3>
+<div class="paragraph">
+<p><strong>現象</strong>: VMが <code>bootOrder: 1</code> を持つデバイスから起動しない。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>デバイスが実際にブート可能（ブートローダーがある）か確認</p>
+</li>
+<li>
+<p>デバイスがVMに正しく接続されているか確認</p>
+</li>
+<li>
+<p>VMイベントを確認:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe vmi vm-boot-pvc -n boot-demo</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>コンソールにアクセスしてエラーメッセージを確認:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console vm-boot-pvc -n boot-demo</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_問題_セキュアブートによりvmが起動しない"><a class="anchor" href="#_問題_セキュアブートによりvmが起動しない"></a>問題: セキュアブートによりVMが起動しない</h3>
+<div class="paragraph">
+<p><strong>現象</strong>: <code>secureBoot: true</code> を設定したVMが起動しない、またはブートエラーを表示する。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>OSがセキュアブートをサポートしていることを確認</p>
+</li>
+<li>
+<p>フィーチャーで <code>smm.enabled: true</code> が設定されているか確認</p>
+</li>
+<li>
+<p>問題を切り分けるためにセキュアブートを一時的に無効にしてみる</p>
+</li>
+<li>
+<p>ブートローダーとカーネルが適切に署名されているか確認</p>
+</li>
+</ul>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VMを編集してセキュアブートを無効化
+oc edit vm vm-boot-secureboot -n boot-demo
+# secureBoot: true を secureBoot: false に変更</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_問題_pxeブートが機能しない"><a class="anchor" href="#_問題_pxeブートが機能しない"></a>問題: PXEブートが機能しない</h3>
+<div class="paragraph">
+<p><strong>現象</strong>: PXEブート用に構成されたVMがブート情報を受信しない。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>PXEサーバーがネットワークからアクセス可能か確認</p>
+</li>
+<li>
+<p>DHCPがPXEブートオプションを提供するように構成されているか確認</p>
+</li>
+<li>
+<p>VMネットワークインターフェイスがブリッジバインディングを使用していることを確認</p>
+</li>
+<li>
+<p>ファイアウォールルールがPXEトラフィック（DHCP、TFTP）を許可しているか確認</p>
+</li>
+<li>
+<p>ネットワークインターフェイスに <code>bootOrder</code> が設定されていることを確認</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_問題_containerdiskイメージのプルに失敗する"><a class="anchor" href="#_問題_containerdiskイメージのプルに失敗する"></a>問題: ContainerDiskイメージのプルに失敗する</h3>
+<div class="paragraph">
+<p><strong>現象</strong>: ContainerDiskを使用するVMがイメージプルエラーで失敗する。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>コンテナイメージが存在し、アクセス可能であることを確認</p>
+</li>
+<li>
+<p>プライベートレジストリを使用している場合は、イメージプルシークレットを確認</p>
+</li>
+<li>
+<p>イメージが正しい形式（コンテナ内の /disk/ パスにあるディスク）であることを確認</p>
+</li>
+</ul>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ポッドイベントの確認
+oc get events -n boot-demo</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># virt-launcherポッドログの確認（最初に実際のポッド名を確認）
+oc get pods -n boot-demo
+oc logs -n boot-demo virt-launcher-vm-boot-containerdisk-xxxxx</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_問題_http_datavolumeインポートが失敗する"><a class="anchor" href="#_問題_http_datavolumeインポートが失敗する"></a>問題: HTTP DataVolumeインポートが失敗する</h3>
+<div class="paragraph">
+<p><strong>現象</strong>: HTTPソースを持つDataVolumeが ImportInProgress でスタックするか失敗する。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>URLがクラスターからアクセス可能であることを確認</p>
+</li>
+<li>
+<p>十分なストレージクォータがあることを確認</p>
+</li>
+<li>
+<p>ストレージクラスが動的プロビジョニングをサポートしていることを確認</p>
+</li>
+<li>
+<p>必要に応じて即時バインディング用のアノテーションを追加</p>
+</li>
+</ul>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># DataVolumeステータスの確認
+oc get dv -n boot-demo
+oc describe dv vm-boot-http-disk -n boot-demo
+
+# インポーターポッドログの確認（最初に実際のポッド名を確認）
+oc get pods -n boot-demo
+oc logs -n boot-demo importer-vm-boot-http-disk-xxxxx
+
+# 必要に応じてCDIコントローラーログを確認
+oc get pods -n openshift-cnv | grep cdi-deployment
+oc logs -n openshift-cnv cdi-deployment-xxxxx</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ベストプラクティス"><a class="anchor" href="#_ベストプラクティス"></a>ベストプラクティス</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ブート順序の構成"><a class="anchor" href="#_ブート順序の構成"></a>ブート順序の構成</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>プライマリブートデバイスには必ず <code>bootOrder</code> を明示的に設定する</p>
+</li>
+<li>
+<p>1、2、3のように順番に番号を振る（番号を飛ばさない）</p>
+</li>
+<li>
+<p>VMアノテーションまたはラベルにブートシーケンスをドキュメント化する</p>
+</li>
+<li>
+<p>コンソール経由でBIOS/UEFIセットアップにアクセスしてブート順序をテストする</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ファームウェアの選択"><a class="anchor" href="#_ファームウェアの選択"></a>ファームウェアの選択</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>新規デプロイメントにはUEFIを使用する（優れたセキュリティ、モダンな機能）</p>
+</li>
+<li>
+<p>BIOSは古いオペレーティングシステムとの互換性のためにのみ使用する</p>
+</li>
+<li>
+<p>セキュアブートは、必要であり、OSがサポートしている場合のみ有効にする</p>
+</li>
+<li>
+<p>セキュアブートを使用する場合は、常にSMMを有効にする</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ブートソースの選択"><a class="anchor" href="#_ブートソースの選択"></a>ブートソースの選択</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>永続性を必要とする本番ワークロードにはPVCを使用する</p>
+</li>
+<li>
+<p>エフェメラルでイミュータブルなワークロードにはContainerDiskを使用する</p>
+</li>
+<li>
+<p>中央レポジトリからの自動デプロイにはHTTP DataVolumeを使用する</p>
+</li>
+<li>
+<p>カスタムイメージはバージョン管理のためにContainerDiskとしてパッケージ化する</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_セキュリティ"><a class="anchor" href="#_セキュリティ"></a>セキュリティ</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Windows 11やセキュリティに敏感なワークロードにはセキュアブートを有効にする</p>
+</li>
+<li>
+<p>強化されたセキュリティ機能のためにはBIOSではなくUEFIを使用する</p>
+</li>
+<li>
+<p>セキュリティパッチを含めるためにブートイメージを定期的に更新する</p>
+</li>
+<li>
+<p>デプロイ前にコンテナイメージの脆弱性をスキャンする</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_パフォーマンス"><a class="anchor" href="#_パフォーマンス"></a>パフォーマンス</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>ディスクパフォーマンス向上のためにvirtioバスを使用する</p>
+</li>
+<li>
+<p>パフォーマンスチューニングにはディスクキャッシングモードを検討する</p>
+</li>
+<li>
+<p>適切なストレージクラスを使用する（ブートディスクにはSSD）</p>
+</li>
+<li>
+<p>VM起動を高速化するためにPVCを事前プロビジョニングする</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルで作成されたすべてのリソースを削除するには:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべてのVMを削除
+oc delete vm --all -n boot-demo
+
+# 名前空間を削除
+oc delete namespace boot-demo</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+VMを削除すると、関連付けられたDataVolumeとPVCも削除され、データが損失します。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、以下について学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>さまざまなブートソースタイプ（PVC、ContainerDisk、HTTP DataVolume）</p>
+</li>
+<li>
+<p>ブートデバイス順序の構成方法</p>
+</li>
+<li>
+<p>BIOSとUEFIファームウェアモードの違い</p>
+</li>
+<li>
+<p>セキュアブートの有効化と構成方法</p>
+</li>
+<li>
+<p>PXEを使用したネットワークブート構成</p>
+</li>
+<li>
+<p>ブートメニューの構成</p>
+</li>
+<li>
+<p>ブート構成に関するベストプラクティス</p>
+</li>
+<li>
+<p>一般的な問題とトラブルシューティング</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>ブート構成を理解することは、適切なVMライフサイクル管理、セキュリティコンプライアンス、および多様なオペレーティングシステム要件への対応に不可欠です。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照先"><a class="anchor" href="#_参照先"></a>参照先</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://kubevirt.io/user-guide/user_workloads/boot_from_external_source/" target="_blank" rel="noopener">KubeVirt Booting From External Source</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/virtual_machines/disks_and_volumes/" target="_blank" rel="noopener">KubeVirt Disks and Volumes</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/latest/virt/about_virt/about-virt.html" target="_blank" rel="noopener">OpenShift Virtualization Documentation</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/virtual_machines/virtual_hardware/" target="_blank" rel="noopener">KubeVirt Virtual Hardware</a></p>
+</li>
+<li>
+<p><a href="https://uefi.org/specifications" target="_blank" rel="noopener">UEFI Specifications</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="vm-snapshots.html">VMスナップショット</a></span>
+  <span class="next"><a href="../manifests/index.html">マニフェスト</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

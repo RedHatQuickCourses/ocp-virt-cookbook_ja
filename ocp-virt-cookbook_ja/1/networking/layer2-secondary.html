@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Layer 2 セカンダリネットワークの設定 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="cudn-localnet-vlan.html">
+    <link rel="next" href="linux-bridges.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ネットワーク構成</a></li>
+    <li><a href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Layer 2 セカンダリネットワークの設定</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本ガイドでは、クラスター全体の論理スイッチを介して <code>VirtualMachines</code> を接続するための <code>layer2</code> セカンダリネットワークの設定方法を説明します。</p>
+</div>
+<div class="paragraph">
+<p>これを行うことで、<code>VirtualMachines</code> はデフォルトの Pod ネットワークをプライマリネットワークとして継続的に使用できます。これは、以下の条件が当てはまる場合に有効です。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>同じ名前空間内の（ノードが異なる場合でも）VM 間に単純な接続性が必要な場合。</p>
+</li>
+<li>
+<p>名前空間内の VM 間でネットワークの分離が不要な場合。</p>
+</li>
+<li>
+<p>VM 間のネットワーク接続を複数の名前空間にまたがって拡張する必要がない場合。</p>
+</li>
+<li>
+<p>クラスター内のノードの物理ネットワークインターフェイスへのアクセスが不要な場合。</p>
+</li>
+<li>
+<p>インターネットからセカンダリネットワークへのイングレス接続をルーティングする必要がない場合。</p>
+</li>
+<li>
+<p>最後に、セカンダリネットワークから外部ネットワークへのアクセスが不要な場合。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>検証済みバージョン:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>OpenShift 4.20,4.21</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualization オペレーターがインストールされた OpenShift 4.20 以降のクラスター</p>
+</li>
+<li>
+<p><code>NetworkAttachmentDefinition</code> リソースを作成するためのクラスター管理者権限</p>
+</li>
+<li>
+<p>CLI ツールのインストール: <code>oc</code>, <code>virtctl</code></p>
+</li>
+<li>
+<p>Kubernetes ネットワークの概念に関する基本的な理解</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_手順"><a class="anchor" href="#_手順"></a>手順</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>プロセスは以下の3つのステップで構成されます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#creating_a_namespace">名前空間の作成</a></p>
+</li>
+<li>
+<p><a href="#creating_a_nad">NetworkAttachmentDefinition の作成</a></p>
+</li>
+<li>
+<p><a href="#attaching_vms">VirtualMachines のネットワークへの接続</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#creating_first_vm">最初の VirtualMachine の作成</a></p>
+</li>
+<li>
+<p><a href="#creating_second_vm">2つ目の VirtualMachine の作成</a></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="#testing_secondary_network">セカンダリネットワークのテスト</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="creating_a_namespace"><a class="anchor" href="#creating_a_namespace"></a>名前空間の作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>最初のステップとして、まだ作成していない場合は、ネットワークを定義する <code>NetworkAttachmentDefinition</code> と、ネットワークに接続したい <code>VirtualMachines</code> を格納するための名前空間を作成します。この場合、特別なラベルは必要ありません。</p>
+</div>
+<div class="paragraph">
+<p>YAML を定義することなく、<code>oc</code> バイナリを使用して簡単に新しい名前空間を作成できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace example-l2-secondary</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>新しい名前空間が作成されたので、現在の kube コンテキスト（現在作業中のクラスターと名前空間）を新しい名前空間（OpenShift 用語ではプロジェクト）に切り替えるのが最適です。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc project example-l2-secondary</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>名前空間が作成され、現在のコンテキストが設定されたら、<a href="#creating_a_nad">NetworkAttachmentDefinition の作成</a> に進みます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="creating_a_nad"><a class="anchor" href="#creating_a_nad"></a>NetworkAttachmentDefinition の作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>2番目のステップは、名前空間内に <code>layer2</code> ネットワークを定義する <code>NetworkAttachmentDefinition</code> を作成することです。</p>
+</div>
+<div class="paragraph">
+<p><code>l2-network.nad.yaml</code> という名前の新しいファイルを作成し、以下の YAML 定義をファイルの内容としてコピー＆ペーストしてから、エディターを保存して閉じます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: l2-network
+  namespace: example-l2-secondary
+spec:
+  config: |-
+    {
+            "cniVersion": "0.3.1",
+            "name": "l2-network",
+            "type": "ovn-k8s-cni-overlay",
+            "topology":"layer2",
+            "mtu": 1400,
+            "netAttachDefName": "example-l2-secondary/l2-network"
+    }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>oc apply</code> を使用して、OpenShift クラスター上の定義済みの名前空間 <code>example-l2-secondary</code> に <code>NetworkAttachmentDefinition</code> を適用します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f l2-network.nad.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>NetworkAttachmentDefinition</code> が正常に作成されたことを確認します。次に進む前に、<code>l2-network</code> が <code>example-l2-secondary</code> 名前空間に存在している必要があります。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get net-attach-def l2-network -n example-l2-secondary</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>l2-network</code> が作成されたら、<a href="#attaching_vms">VirtualMachines の接続</a> に進みます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="attaching_vms"><a class="anchor" href="#attaching_vms"></a>VirtualMachines の接続</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>次のステップは、<code>VirtualMachines</code> を作成し、作成したばかりの <code>layer2</code> ネットワークに接続することです。
+これは、一般的な OpenShift (Kubernetes) の流儀に従い、<code>VirtualMachine</code> API オブジェクトを作成してクラスターに適用することで行います。</p>
+</div>
+<div class="paragraph">
+<p>このセクションでは、どちらもセカンダリの <code>l2-network</code> に接続される2つの新しい VM を作成します。</p>
+</div>
+<div class="sect2">
+<h3 id="creating_first_vm"><a class="anchor" href="#creating_first_vm"></a>最初の VirtualMachine の作成</h3>
+<div class="paragraph">
+<p>以下は、最初の VirtualMachine の YAML 定義です（主要なフィールドについては後述します）。
+内容を <code>fedora-l2-secondary.vm.yaml</code> という新しいファイルにコピー＆ペーストしてください。</p>
+</div>
+<div class="paragraph">
+<p>警告: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では必ず強力で一意のパスワードまたは SSH 鍵認証を使用してください。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-l2-secondary
+  labels:
+    app: fedora-l2-secondary
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      name: fedora-l2-secondary-root
+    spec:
+      sourceRef:
+        kind: DataSource
+        name: fedora
+        namespace: openshift-virtualization-os-images
+      storage:
+        resources:
+          requests:
+            storage: 30Gi
+  instancetype:
+    name: u1.large
+  preference:
+    name: fedora
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        app: fedora-l2-secondary
+    spec:
+      domain:
+        devices:
+          interfaces:
+          - name: default
+            masquerade: {}
+          - name: secondary
+            bridge: {}
+        resources: {}
+      terminationGracePeriodSeconds: 180
+      networks:
+      - name: default
+        pod: {}
+      - name: secondary
+        multus:
+          networkName: l2-network
+      volumes:
+      - name: fedora-l2-secondary-root
+        dataVolume:
+          name: fedora-l2-secondary-root
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd:
+              expire: False
+          networkData: |
+            version: 2
+            ethernets:
+              enp2s0:
+                addresses:
+                - 192.168.20.10/24</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="title">上記の VM の例について</div>
+<div class="paragraph">
+<p>上記の例におけるフィールド（<code>spec.template.spec</code> に関連）について：</p>
+</div>
+<div class="paragraph">
+<p><strong>domain.devices.interfaces</strong> - インターフェイス定義のリストを受け入れ、それぞれに2つのフィールドが定義されています。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong> - インターフェイス名を指定します。ここでは <code>networks</code> で関連付けられたネットワーク名に合わせて <code>secondary</code> と命名しました。</p>
+</li>
+<li>
+<p><strong>bridge</strong> または <strong>masquerade</strong> - セカンダリインターフェイスは <code>bridge</code> を使用してハイパーバイザー Pod のインターフェイスに接続されます。どちらのフィールドも空のオブジェクト (<code>{}</code>) を受け入れます。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>networks</strong> - インターフェイスの接続に使用するネットワークをリストアップする場所です。<code>interfaces</code> と同様に、各ネットワークには2つのフィールドがあります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong> - <code>default</code> ネットワークと区別するために <code>secondary</code> というネットワーク名を適切に選択しました。</p>
+</li>
+<li>
+<p><strong>pod</strong> または <strong>multus</strong> - デフォルト以外のネットワークを選択するには、フィールド名として <code>multus</code> を指定します。デフォルトの <code>pod</code> ネットワークは空のオブジェクトを受け入れますが、<code>multus</code> は <code>networkName</code> サブフィールドを必要とします。</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>networkName</strong> (<code>multus</code> に必須) - 前述の手順で作成した <code>NetworkAttachmentDefinition</code> の名前である <code>l2-network</code> を指定します。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>volumes</strong> - <code>fedora-l2-secondary-root</code> ディスクと、ユーザー資格情報やネットワークアドレスなどの VM 設定データを渡すために使用される <code>cloudinitdisk</code> の2つのボリュームが定義されています。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>oc create</code> を使用して、OpenShift クラスター上の現在の名前空間 (<code>example-l2-secondary</code>) に新しい VirtualMachine を作成できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create -f fedora-l2-secondary.vm.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>次に進む前に、<code>fedora-l2-secondary</code> VM が <code>example-l2-secondary</code> 名前空間で実行中であることを確認してください。<code>Provisioning</code> 状態の間は、コマンドを数回実行する必要がある場合があります。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm fedora-l2-secondary -n example-l2-secondary</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<div class="title">トラブルシューティング</div>
+<p><code>VirtualMachine</code> が <code>Pending</code> 状態で停止しているように見える場合、VM のスケジューリングを妨げている要因があります。考えられる要因は以下の通りです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>クラスター上の基盤となる <code>DataVolume</code> のプロビジョニングに問題がある（ディスク容量不足など）。</p>
+</li>
+<li>
+<p><code>l2-network</code> の <code>NetworkAttachmentDefinition</code> が存在しない。</p>
+</li>
+<li>
+<p>OpenShift クラスターにリソース制限がある。メモリ不足や vCPU 不足により、VM がスケジューリングできていない可能性があります。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>問題の原因を特定するには、下位レベルのリソース（<code>vmi</code>、<code>datavolume</code>、<code>pvc</code> など）に対して <code>oc describe</code> または <code>oc get -o yaml</code> を使用してください。
+エラーメッセージは、該当するリソースの Events (<code>oc describe</code>) または Status (<code>oc get -o yaml</code>) に記載されているはずです。</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="creating_second_vm"><a class="anchor" href="#creating_second_vm"></a>2つ目の VirtualMachine の作成</h3>
+<div class="paragraph">
+<p>テストを行う前に、セカンダリネットワークを介した接続を確立するために2つ目の VM が必要です。</p>
+</div>
+<div class="paragraph">
+<p>以下は、2つ目の <code>VirtualMachine</code> の YAML ソース定義です。
+提供された内容を <code>fedora-l2-secondary2.vm.yaml</code> という名前のファイルに保存してください。
+最初の VM からの変更点は、名前、IP アドレス、ルートボリューム名のみであることに注意してください。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-l2-secondary2
+  labels:
+    app: fedora-l2-secondary2
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      name: fedora-l2-secondary2-root
+    spec:
+      sourceRef:
+        kind: DataSource
+        name: fedora
+        namespace: openshift-virtualization-os-images
+      storage:
+        resources:
+          requests:
+            storage: 30Gi
+  instancetype:
+    name: u1.large
+  preference:
+    name: fedora
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        app: fedora-l2-secondary2
+    spec:
+      domain:
+        devices:
+          interfaces:
+          - name: default
+            masquerade: {}
+          - name: secondary
+            bridge: {}
+        resources: {}
+      terminationGracePeriodSeconds: 180
+      networks:
+      - name: default
+        pod: {}
+      - name: secondary
+        multus:
+          networkName: l2-network
+      volumes:
+      - name: fedora-l2-secondary2-root
+        dataVolume:
+          name: fedora-l2-secondary2-root
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd:
+              expire: False
+          networkData: |
+            version: 2
+            ethernets:
+              enp2s0:
+                addresses:
+                - 192.168.20.20/24</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>OpenShift クラスター上の現在の名前空間に <code>VirtualMachine</code> を適用します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f fedora-l2-secondary2.vm.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>fedora-l2-secondary2</code> という名前の2つ目の VM が <code>example-l2-secondary</code> 名前空間で実行中であることを確認してください。<a href="#testing_secondary_network">テスト</a> を行う前に、両方の <code>VirtualMachines</code> が実行されている必要があります。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm fedora-l2-secondary2 -n example-l2-secondary</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="testing_secondary_network"><a class="anchor" href="#testing_secondary_network"></a>セカンダリネットワークのテスト</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>セカンダリネットワークは <code>layer2</code> 専用であり、クラスターと名前空間内の仮想ネットワークとしてのみ存在するため、ある VM から別の VM への接続性をテストする必要があります。</p>
+</div>
+<div class="paragraph">
+<p>テストを進めるには、<code>example-l2-secondary</code> 名前空間に以下のリソースが存在している必要があります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>NetworkAttachmentDefinition</code>: <code>l2-network</code></p>
+</li>
+<li>
+<p><code>VirtualMachine</code>: <code>fedora-l2-secondary</code> (セカンダリ NIC IP アドレス: 192.168.20.10)</p>
+</li>
+<li>
+<p><code>VirtualMachine</code>: <code>fedora-l2-secondary2</code> (セカンダリ NIC IP アドレス: 192.168.20.20)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>最も簡単なテスト方法は、一方の VM（または両方の VM）のコンソールに接続し、もう一方の VM に ping を送信することです。</p>
+</div>
+<div class="paragraph">
+<p><code>virtctl</code> コマンドを使用して最初の <code>VirtualMachine</code> のコンソールにアクセスし、<strong>ユーザー名</strong>:`fedora`、<strong>パスワード</strong>:`fedora` でログインします（ログインプロンプトが表示されない場合は <code>ENTER</code> を押してください）。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console fedora-l2-secondary</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>VirtualMachine</code> の IP アドレスを確認します。次のコマンドを実行すると、<code>enp2s0</code> インターフェイスに対して静的アドレス <code>192.168.20.10</code> が返されるはずです。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ip addr show</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>最初の VM のコンソールから <code>fedora-l2-secondary2</code> (IP アドレス: <code>192.168.20.20</code>) VM に ping を送信します。応答があれば、セカンダリネットワークは機能しています（<code>CTRL+C</code> を押すと ping がキャンセルされます）。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ping 192.168.20.20</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM コンソールを終了するには、<code>CTRL+]</code> を押します。</p>
+</div>
+<div class="paragraph">
+<p>この演習で作成したすべてリソースを削除するには、別の名前空間に切り替えて <code>example-l2-secondary</code> 名前空間を削除するだけです。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc project default
+oc delete namespace example-l2-secondary</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の内容を学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>ovn-k8s-cni-overlay</code> CNI プラグインを使用して <code>layer2</code> トポロジーの <code>NetworkAttachmentDefinition</code> を作成する方法</p>
+</li>
+<li>
+<p>プライマリ masquerade インターフェイスとセカンダリ bridge インターフェイスの両方を持つ VirtualMachines を設定する方法</p>
+</li>
+<li>
+<p>cloud-init <code>networkData</code> を使用してセカンダリネットワークに静的 IP アドレスを割り当てる方法</p>
+</li>
+<li>
+<p>同じ OVN 管理の論理スイッチ上の VM 間の Layer 2 接続を確認する方法</p>
+</li>
+<li>
+<p>Linux ブリッジや localnet などの他のネットワークオプションと比較して、いつ Layer 2 セカンダリネットワークを使用するか</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_関連リソース"><a class="anchor" href="#_関連リソース"></a>関連リソース</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-connecting-vm-to-ovn-secondary-network" target="_blank" rel="noopener">OpenShift Virtualization - OVN セカンダリネットワークへの VM の接続</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/multiple_networks/understanding-multiple-networks" target="_blank" rel="noopener">OpenShift - 複数のネットワークの理解</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a></span>
+  <span class="next"><a href="linux-bridges.html">Linuxブリッジ</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

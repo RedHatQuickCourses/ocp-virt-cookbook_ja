@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>仮想マシン向けの専用CPU配置 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="resource-limits-qos.html">
+    <link rel="next" href="numa-hugepages.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">VM パフォーマンスチューニング</a></li>
+    <li><a href="cpu-pinning.html">専用CPU配置</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">仮想マシン向けの専用CPU配置</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、OpenShift Virtualizationにおいて仮想マシン向けの専用CPU配置を設定する方法を解説します。デフォルトでは、仮想マシンのvCPUはホスト上の他のワークロードと物理CPU時間を共有します。専用CPU配置を使用すると、各vCPUが特定の物理CPUに固定（ピン留め）されるため、CPUスティールが排除され、スケジューリングのジッター（揺らぎ）が軽減されます。</p>
+</div>
+<div class="paragraph">
+<p>この設定は、予測可能なレイテンシが求められるNFV/通信アプリケーション、リアルタイム処理、HPC、およびレイテンシに敏感なデータベースなどのワークロードに不可欠です。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以上（4.21で検証済み）</p>
+</li>
+<li>
+<p>クラスター管理者アクセス権（<code>system:admin</code> または同等の権限）</p>
+</li>
+<li>
+<p><code>oc</code> および <code>virtctl</code> CLIがインストール済みであること</p>
+</li>
+<li>
+<p>十分な物理CPUコアを持つワーカーノード（少なくとも4コア推奨）</p>
+</li>
+<li>
+<p>KubernetesのQoSクラスに関する知識（<a href="resource-limits-qos.html" class="xref page">VMリソース制限とQoSの設定</a>を参照）</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_専用cpu配置の理解"><a class="anchor" href="#_専用cpu配置の理解"></a>専用CPU配置の理解</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenShiftはKubernetesのCPUマネージャーを使用して、Podに排他的な物理CPUを割り当てます。CPUマネージャーが <code>static</code> ポリシーで実行されている場合、Podのコンテナーをホストの専用CPUに固定し、他のワークロードがそれらのCPUを使用できないように制限できます。</p>
+</div>
+<div class="paragraph">
+<p>KubeVirtの <code>dedicatedCpuPlacement</code> フィールドは、CPUマネージャーに対して <code>virt-launcher</code> PodのvCPUを物理CPUに固定するように指示します。Podが実行されると、各ゲストvCPUは予約された物理CPUに直接マッピングされます。</p>
+</div>
+<div class="paragraph">
+<p>専用配置が機能するには、以下の2つの要件を満たす必要があります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ノードのCPUマネージャーが <code>static</code> ポリシーで実行されていること。</p>
+</li>
+<li>
+<p>VMのQoSが <strong>Guaranteed</strong> であること：CPUおよびメモリの要求量（request）が上限（limit）と一致しており、かつCPU数が整数である必要があります。</p>
+</li>
+</ul>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">モード</th>
+<th class="tableblock halign-left valign-top">vCPUの動作</th>
+<th class="tableblock halign-left valign-top">ユースケース</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">デフォルト（共有）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vCPUが他のすべてのワークロードとホストCPU時間を競合する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">汎用VM、開発環境、レイテンシが重要ではないワークロード</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">専用 (<code>dedicatedCpuPlacement: true</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vCPUが予約済み物理CPUに固定され、CPUスティールが発生しない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFV/通信、リアルタイム処理、HPC、レイテンシに敏感なデータベース</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_cpuマネージャーのスタティックポリシーを有効にする"><a class="anchor" href="#_ステップ_1_cpuマネージャーのスタティックポリシーを有効にする"></a>ステップ 1: CPUマネージャーのスタティックポリシーを有効にする</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>CPUマネージャーのポリシーは、<code>KubeletConfig</code> リソースを使用してMachineConfigPoolごとに設定します。</p>
+</div>
+<div class="paragraph">
+<p>まず、この設定の対象を識別するために、ワーカーのMachineConfigPoolにラベルを追加します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc label machineconfigpool worker custom-kubelet=cpumanager-enabled</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+シングルノードOpenShift (SNO) クラスターの場合、ノードは <code>worker</code> ではなく <code>master</code> MachineConfigPoolに属します。上記のコマンドおよび後述する <code>KubeletConfig</code> の <code>machineConfigPoolSelector</code> において、<code>worker</code> を <code>master</code> に置き換えてください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/cpu-pinning/kubeletconfig-static-policy.yaml" class="xref attachment">kubeletconfig-static-policy.yaml をダウンロード</a></p>
+</div>
+<div class="paragraph">
+<p><code>KubeletConfig</code> を適用して、スタティックCPUマネージャーポリシーを有効にします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: machineconfiguration.openshift.io/v1
+kind: KubeletConfig
+metadata:
+  name: cpumanager-enabled
+spec:
+  machineConfigPoolSelector:
+    matchLabels:
+      custom-kubelet: cpumanager-enabled
+  kubeletConfig:
+    cpuManagerPolicy: static
+    cpuManagerReconcilePeriod: 5s
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Machine Config Operatorが、ターゲットプール内の全ノードに新しいkubelet設定を適用します。ロールアウトを監視します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get mcp worker -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>UPDATING</code> 列が <code>False</code> に戻り、<code>READYMACHINECOUNT</code> が <code>MACHINECOUNT</code> と一致するまで待ちます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED
+worker   rendered-worker-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   True      False      False</pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cpuマネージャーポリシーの確認"><a class="anchor" href="#_cpuマネージャーポリシーの確認"></a>CPUマネージャーポリシーの確認</h3>
+<div class="paragraph">
+<p>各ワーカーノードのkubeletが <code>static</code> ポリシーで実行されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt; -- chroot /host cat /etc/kubernetes/kubelet.conf</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力に以下が含まれている必要があります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>cpuManagerPolicy: static
+cpuManagerReconcilePeriod: 5s</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_専用cpuワークロード用のノードにラベルを付ける"><a class="anchor" href="#_ステップ_2_専用cpuワークロード用のノードにラベルを付ける"></a>ステップ 2: 専用CPUワークロード用のノードにラベルを付ける</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>専用CPU配置を要求するVMは、CPUマネージャーが実行されているノードのみをターゲットにするためにノードセレクターが必要です。スタティックポリシーが有効な各ワーカーノードに <code>cpumanager=true</code> ラベルを適用します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc label node &lt;node-name&gt; cpumanager=true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ラベルが付与されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nodes -L cpumanager</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME         STATUS   ROLES    AGE   VERSION   CPUMANAGER
+worker-01    Ready    worker   10d   v1.34.5   true
+worker-02    Ready    worker   10d   v1.34.5   true</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+KubeVirt CRで <code>CPUManager</code> フィーチャーゲートが有効になっている場合、KubeVirtが自動的に <code>cpumanager=true</code> ラベルを管理できます。有効な場合、KubeVirtはスタティックCPUマネージャーポリシーが実行されているノードを検出し、ラベルの付与・削除を自動的に行います。フィーチャーゲートがない場合は、ノードの追加や再設定のたびにこのラベルを手動で管理してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_名前空間の作成"><a class="anchor" href="#_ステップ_3_名前空間の作成"></a>ステップ 3: 名前空間の作成</h2>
+<div class="sectionbody">
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace cpu-pinning-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_専用cpu配置でvmをデプロイする"><a class="anchor" href="#_ステップ_4_専用cpu配置でvmをデプロイする"></a>ステップ 4: 専用CPU配置でVMをデプロイする</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>以下のVM仕様は、<code>dedicatedCpuPlacement: true</code> を使用して2つの専用vCPUを要求します。<code>nodeSelector</code> により、VMは <code>cpumanager=true</code> とラベル付けされたノードでのみスケジューリングされます。メモリの要求量と上限は同一であり、Guaranteed QoS要件を満たしています。</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+この例のcloud-initパスワードはデモンストレーション目的のみです。本番環境では、SSHキー認証または強力でユニークなパスワードを使用してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/cpu-pinning/vm-dedicated-cpu.yaml" class="xref attachment">vm-dedicated-cpu.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-dedicated-cpu
+  namespace: cpu-pinning-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-dedicated-cpu
+    spec:
+      nodeSelector:
+        cpumanager: "true"
+      domain:
+        cpu:
+          sockets: 2
+          cores: 1
+          threads: 1
+          dedicatedCpuPlacement: true
+        memory:
+          guest: 1Gi
+        resources:
+          requests:
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+EOF</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+QEMUおよびハイパーバイザーのオーバーヘッドを考慮し、メモリ制限（2Gi）はゲストメモリ（1Gi）よりも高く設定されています。KubeVirtがどのようにVMのメモリ仕様をコンテナーリソース値に変換するかについては、<a href="resource-limits-qos.html" class="xref page">VMリソース制限とQoSの設定</a>を参照してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>VMがRunning状態になるまで待ちます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm vm-dedicated-cpu -n cpu-pinning-demo -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME              AGE   STATUS    READY
+vm-dedicated-cpu  30s   Running   True</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_cpuピン留めの確認"><a class="anchor" href="#_ステップ_5_cpuピン留めの確認"></a>ステップ 5: CPUピン留めの確認</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ホスト側での確認"><a class="anchor" href="#_ホスト側での確認"></a>ホスト側での確認</h3>
+<div class="paragraph">
+<p>VMが実行されているノードを特定します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi vm-dedicated-cpu -n cpu-pinning-demo -o wide</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME              AGE   PHASE     IP            NODENAME    READY
+vm-dedicated-cpu  60s   Running   10.128.0.45   worker-01   True</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>そのノードでデバッグセッションを開きます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>デバッグシェル内で、CPUマネージャーの状態ファイルを確認します。このファイルには、各コンテナーにどの物理CPUが割り当てられているかが記録されています。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">chroot /host cat /var/lib/kubelet/cpu_manager_state</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力はJSONオブジェクトです。<code>entries</code> マップは <code>virt-launcher</code> PodのUIDをキーとしており、各エントリにはそのPod内の <code>compute</code> コンテナーに排他的に割り当てられた物理CPU IDがリストされています。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{"policyName":"static","defaultCpuSet":"0-1,3-41,43-79","entries":{"&lt;pod-uid&gt;":{"compute":"2,42"}},"checksum":...}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>この例では、CPU <code>2</code> と <code>42</code> がVMの2つのvCPU専用に予約されています。これらは <code>defaultCpuSet</code> から削除されるため、VMの実行中には他のワークロードがそれらを使用することはできません。</p>
+</div>
+<div class="paragraph">
+<p>デバッグシェルを終了します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">exit</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ゲスト側での確認"><a class="anchor" href="#_ゲスト側での確認"></a>ゲスト側での確認</h3>
+<div class="paragraph">
+<p>VMコンソールに接続します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console vm-dedicated-cpu -n cpu-pinning-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザー <code>fedora</code>、パスワード <code>redhat</code> でログインします。ゲストOS内で、オペレーティングシステムから認識されているvCPUの数を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lscpu | grep -E "^CPU\(s\)|^Socket|^Core|^Thread"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>CPU(s):                  2
+Thread(s) per core:      1
+Core(s) per socket:      1
+Socket(s):               2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲストは2つのvCPU（2ソケット、1コア、各1スレッド）を認識しており、要求されたトポロジーと一致しています。</p>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> を押してコンソールから切断します。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_エミュレータースレッドの分離"><a class="anchor" href="#_エミュレータースレッドの分離"></a>エミュレーター・スレッドの分離</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>QEMUは、I/O、タイマー、その他のハイパーバイザー・タスクを処理するエミュレーター・スレッドを実行します。デフォルトでは、このスレッドはVMのvCPUと物理CPU時間を共有するため、レイテンシのスパイクを引き起こす可能性があります。<code>isolateEmulatorThread</code> オプションは、このスレッド専用に追加の物理CPUを予約します。</p>
+</div>
+<div class="paragraph">
+<p>エミュレーター・スレッドの分離を有効にするには、VMスペックのCPUセクションに <code>dedicatedCpuPlacement: true</code> と併せて <code>isolateEmulatorThread: true</code> を追加します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">domain:
+  cpu:
+    sockets: 2
+    cores: 1
+    threads: 1
+    dedicatedCpuPlacement: true
+    isolateEmulatorThread: true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>この設定により、KubeVirtは合計3つの物理CPUを要求します（2つはvCPU用、1つはエミュレーター・スレッド専用）。エミュレーターに起因するわずかなジッターにも敏感なワークロードの場合にこのオプションを使用してください。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only</code> CPUマネージャーオプションを使用している場合、偶数のvCPUで <code>isolateEmulatorThread</code> を使用するとスケジューリングエラーが発生することがあります。これを解決するには、KubeVirt CRで <code>AlignCPUs</code> フィーチャーゲートを有効にしてください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_vmがpending状態のままになる"><a class="anchor" href="#_vmがpending状態のままになる"></a>VMがPending状態のままになる</h3>
+<div class="paragraph">
+<p>スケジューリングの失敗がないかVMIイベントを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe vmi vm-dedicated-cpu -n cpu-pinning-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>以下のようなイベントを探します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Warning  FailedScheduling  0/3 nodes are available: 3 node(s) didn't match Pod's node affinity/selector</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>考えられる原因と解決策:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>cpumanager=true</code> ラベル付きノードがない</strong>: <code>oc get nodes -L cpumanager</code> を実行し、スタティックCPUマネージャーポリシーが適用されているノードにラベルを付与します。</p>
+</li>
+<li>
+<p><strong>利用可能な固定可能CPUが不足している</strong>: CPUマネージャーは割り当て可能なプールからCPUを予約します。<code>oc describe node &lt;node-name&gt;</code> でノードのキャパシティを確認し、要求を満たすのに十分なCPUがあるか検証します。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vm起動後にcpuピン留めが有効にならない"><a class="anchor" href="#_vm起動後にcpuピン留めが有効にならない"></a>VM起動後にCPUピン留めが有効にならない</h3>
+<div class="paragraph">
+<p>KubeletConfigが正しく適用されたか確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get kubeletconfig cpumanager-enabled</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>MachineConfigPoolの状態を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get mcp worker</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>UPDATED</code> が <code>False</code> または <code>DEGRADED</code> が <code>True</code> の場合、設定は完全に適用されていません。MCOログを調査してください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -n openshift-machine-config-operator -l k8s-app=machine-config-operator --tail=50</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vmが_insufficient_dedicated_cpu_resources_でアドミッションに失敗する"><a class="anchor" href="#_vmが_insufficient_dedicated_cpu_resources_でアドミッションに失敗する"></a>VMが "insufficient dedicated CPU resources" でアドミッションに失敗する</h3>
+<div class="paragraph">
+<p>このエラーは、<code>dedicatedCpuPlacement: true</code> が設定されているが、QoSクラスがGuaranteedではないことを意味します。CPU要求量と上限が等しいこと、および両方が整数値であることを確認してください。</p>
+</div>
+<div class="paragraph">
+<p>virt-launcher Podに実際に割り当てられているQoSクラスを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pod -n cpu-pinning-demo -l kubevirt.io/domain=vm-dedicated-cpu -o jsonpath='{.items[0].status.qosClass}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>値は <code>Guaranteed</code> である必要があります。<code>Burstable</code> の場合は、VMのリソース仕様を見直し、メモリ要求量とメモリ上限が一致していることを確認してください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cpu_manager_state_にvmのエントリが表示されない"><a class="anchor" href="#_cpu_manager_state_にvmのエントリが表示されない"></a><code>cpu_manager_state</code> にVMのエントリが表示されない</h3>
+<div class="paragraph">
+<p>CPUマネージャー状態ファイルにvirt-launcher PodのCPU割り当てがリストされていない場合、ノードのkubeletがまだ <code>none</code> ポリシーで動作している可能性があります。ポリシーを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt; -- chroot /host cat /etc/kubernetes/kubelet.conf</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>cpuManagerPolicy</code> が存在しないか <code>none</code> に設定されている場合、KubeletConfigがそのノードにまだ適用されていません。MachineConfigPoolのロールアウトが完了するまで待機してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルで作成した全リソースを削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace cpu-pinning-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>必要なくなった場合は、ノードから <code>cpumanager=true</code> ラベルを削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc label node &lt;node-name&gt; cpumanager-</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>CPUマネージャーポリシーを元に戻すには、<code>KubeletConfig</code> を削除し、MachineConfigPoolからラベルを削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete kubeletconfig cpumanager-enabled</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc label machineconfigpool worker custom-kubelet-</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<code>KubeletConfig</code> を削除すると、kubelet設定を元に戻すために別のMCOロールアウトがトリガーされます。CPUマネージャーの動作に依存する追加のワークロードをスケジュールする前に、MachineConfigPoolのロールアウトが完了したことを確認してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の方法を学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>KubeletConfig</code> リソースを使用して、Kubernetes CPUマネージャーで <code>static</code> ポリシーを設定する</p>
+</li>
+<li>
+<p>専用CPU配置が利用可能であることを示すノードラベルを付ける</p>
+</li>
+<li>
+<p><code>dedicatedCpuPlacement: true</code> とGuaranteed QoSを持つ仮想マシンをデプロイする</p>
+</li>
+<li>
+<p>CPUマネージャー状態ファイルを使用して、ホスト側からCPUピン留めを確認する</p>
+</li>
+<li>
+<p>ゲスト内からvCPUトポロジーを確認する</p>
+</li>
+<li>
+<p>必要に応じて <code>isolateEmulatorThread: true</code> を使用してQEMUエミュレーター・スレッドを分離する</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="resource-limits-qos.html" class="xref page">VMリソース制限とQoS</a>&#8201;&#8212;&#8201;Guaranteed QoSの要件とメモリオーバーヘッド</p>
+</li>
+<li>
+<p><a href="../vm-configuration/node-placement-affinity.html" class="xref page">ノード配置とアフィニティ</a>&#8201;&#8212;&#8201;VMスケジューリング用の特定のノードをターゲットにする</p>
+</li>
+<li>
+<p><a href="../vm-configuration/infrastructure-node-placement.html" class="xref page">インフラストラクチャノード配置</a>&#8201;&#8212;&#8201;仮想化ワークロード専用のノードプール</p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/compute/dedicated_cpu_resources/" target="_blank" rel="noopener">KubeVirt 専用CPUリソース (英語)</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.18/scalability_and_performance/using-cpu-manager.html" target="_blank" rel="noopener">CPUマネージャーとトポロジーマネージャーの使用 - OpenShiftドキュメント (英語)</a></p>
+</li>
+<li>
+<p><a href="https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/" target="_blank" rel="noopener">CPU管理ポリシー - Kubernetesドキュメント (英語)</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="resource-limits-qos.html">リソース制限とQoS</a></span>
+  <span class="next"><a href="numa-hugepages.html">NUMAとHugepages</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

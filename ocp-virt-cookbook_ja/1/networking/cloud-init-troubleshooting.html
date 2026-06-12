@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Cloud-init IP 設定トラブルシューティングガイド :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="static-ip-configuration.html">
+    <link rel="next" href="udn-primary-networks.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ネットワーク構成</a></li>
+    <li><a href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Cloud-init IP 設定トラブルシューティングガイド</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>本ガイドでは、OpenShift Virtualization における cloud-init を使用した IP アドレス設定に関する問題のトラブルシューティング手順、検証コマンド、および解決策を提供します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_目次"><a class="anchor" href="#_目次"></a>目次</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#quick-health-checks">クイックヘルスチェック</a></p>
+</li>
+<li>
+<p><a href="#debugging-cloud-init">cloud-init のデバッグ</a></p>
+</li>
+<li>
+<p><a href="#common-issues-by-scenario">シナリオ別の一般的な問題</a></p>
+</li>
+<li>
+<p><a href="#diagnostic-commands">診断コマンド</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クイックヘルスチェック"><a class="anchor" href="#_クイックヘルスチェック"></a>クイックヘルスチェック</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_vm_ステータスの確認"><a class="anchor" href="#_vm_ステータスの確認"></a>VM ステータスの確認</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm &lt;vm-name&gt; -n &lt;namespace&gt;
+oc get vmi &lt;vm-name&gt; -n &lt;namespace&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vm_が_ip_アドレスを持っているか確認"><a class="anchor" href="#_vm_が_ip_アドレスを持っているか確認"></a>VM が IP アドレスを持っているか確認</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi &lt;vm-name&gt; -n &lt;namespace&gt; -o jsonpath='{.status.interfaces[*].ipAddress}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_guest_agent_が実行中か確認"><a class="anchor" href="#_guest_agent_が実行中か確認"></a>Guest Agent が実行中か確認</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi &lt;vm-name&gt; -n &lt;namespace&gt; -o jsonpath='{.status.guestOSInfo}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>空の場合、Guest Agent は実行されていません（<a href="#issue-1-guest-agent-not-running">Guest Agent の問題</a> を参照）。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cloud_init_のデバッグ"><a class="anchor" href="#_cloud_init_のデバッグ"></a>cloud-init のデバッグ</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_vm_コンソールへのアクセス"><a class="anchor" href="#_vm_コンソールへのアクセス"></a>VM コンソールへのアクセス</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console &lt;vm-name&gt; -n &lt;namespace&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cloud_init_ステータスの確認"><a class="anchor" href="#_cloud_init_ステータスの確認"></a>cloud-init ステータスの確認</h3>
+<div class="paragraph">
+<p>VM 内で実行:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># cloud-init の完了ステータスを確認
+cloud-init status
+
+# 成功時の期待される出力:
+# status: done
+
+# 詳細なステータスを確認
+cloud-init status --long</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cloud_init_ログの確認"><a class="anchor" href="#_cloud_init_ログの確認"></a>cloud-init ログの確認</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># メインの cloud-init ログ
+cat /var/log/cloud-init.log
+
+# 出力ログ (コマンドの実行結果を表示)
+cat /var/log/cloud-init-output.log
+
+# エラーを確認
+grep -i error /var/log/cloud-init.log
+grep -i failed /var/log/cloud-init.log</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_適用された_cloud_init_設定の表示"><a class="anchor" href="#_適用された_cloud_init_設定の表示"></a>適用された cloud-init 設定の表示</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># userdata を表示
+sudo cat /var/lib/cloud/instance/user-data.txt
+
+# ネットワーク設定を表示 (networkData を使用している場合)
+sudo cat /var/lib/cloud/instance/network-config.txt
+
+# cloud-init データを表示
+sudo cat /var/lib/cloud/instance/cloud-config.txt</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ネットワーク設定の確認"><a class="anchor" href="#_ネットワーク設定の確認"></a>ネットワーク設定の確認</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ネットワークインターフェースを表示
+ip addr show
+
+# ルーティングテーブルを表示
+ip route show
+
+# DNS 設定を確認
+cat /etc/resolv.conf
+
+# NetworkManager を使用するシステム (Fedora, RHEL) の場合
+nmcli device status
+nmcli connection show</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_接続性のテスト"><a class="anchor" href="#_接続性のテスト"></a>接続性のテスト</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ネットワーク接続のテスト
+ping -c 3 8.8.8.8
+
+# DNS 解決のテスト
+nslookup google.com
+
+# Pod ネットワークからテスト
+curl http://&lt;vm-ip&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ別の一般的な問題"><a class="anchor" href="#_シナリオ別の一般的な問題"></a>シナリオ別の一般的な問題</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_シナリオ_1_dhcp_設定"><a class="anchor" href="#_シナリオ_1_dhcp_設定"></a>シナリオ 1: DHCP 設定</h3>
+<div class="sect3">
+<h4 id="_問題_dhcp_経由で_vm_が_ip_を取得できない"><a class="anchor" href="#_問題_dhcp_経由で_vm_が_ip_を取得できない"></a>問題: DHCP 経由で VM が IP を取得できない</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get vmi fedora-dhcp-vm -n vms -o jsonpath='{.status.interfaces[0].ipAddress}'
+# 空を返す、または IP が表示されない</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM コンソールにアクセス
+virtctl console fedora-dhcp-vm -n vms
+
+# インターフェースステータスを確認
+ip addr show enp1s0
+
+# DHCP クライアントを確認
+journalctl -u NetworkManager | grep -i dhcp</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>DHCP クライアントが実行されていない</p>
+</li>
+<li>
+<p>ネットワークインターフェースがダウンしている</p>
+</li>
+<li>
+<p>cloud-init の DHCP 設定エラー</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>VM 定義の cloud-init DHCP 設定を確認:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">cloudInitNoCloud:
+  networkData: |
+    version: 2
+    ethernets:
+      enp1s0:
+        dhcp4: true</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>ネットワークインターフェースを手動で再起動:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo nmcli connection down "Wired connection 1"
+sudo nmcli connection up "Wired connection 1"</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>NetworkManager ログを確認:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo journalctl -u NetworkManager --since "5 minutes ago"</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_問題_cloud_init_内のインターフェース名が間違っている"><a class="anchor" href="#_問題_cloud_init_内のインターフェース名が間違っている"></a>問題: cloud-init 内のインターフェース名が間違っている</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:
+ネットワーク設定が適用されず、ログに「device eth0 not found」と表示される。</p>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内 - 実際のインターフェース名を確認
+ip link show</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ゲスト OS で使用されているインターフェース名ではなく、汎用名 (<code>eth0</code>, <code>eth1</code>) を使用している</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>ゲスト OS 内の実際のインターフェース名を確認してください。最新の Linux ディストリビューション (RHEL 8+, Fedora, Ubuntu 16.04+) では、予測可能な命名規則が使用されます。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>最初のインターフェース: <code>enp1s0</code></p>
+</li>
+<li>
+<p>2番目のインターフェース: <code>enp2s0</code></p>
+</li>
+<li>
+<p>3番目のインターフェース: <code>enp3s0</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>cloud-init の networkData を更新し、正しい名前を使用します:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 2
+  ethernets:
+    enp1s0:  # eth0 ではなく
+      dhcp4: true</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_シナリオ_2_静的_ip_設定"><a class="anchor" href="#_シナリオ_2_静的_ip_設定"></a>シナリオ 2: 静的 IP 設定</h3>
+<div class="sect3">
+<h4 id="_問題_静的_ip_が適用されない"><a class="anchor" href="#_問題_静的_ip_が適用されない"></a>問題: 静的 IP が適用されない</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:
+設定した静的 IP ではなく、VM が DHCP IP を取得してしまう。</p>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内
+ip addr show enp1s0
+
+# エラーがないか cloud-init ログを確認
+grep -i "network" /var/log/cloud-init.log</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>networkData 内のインターフェース名が間違っている</p>
+</li>
+<li>
+<p>DHCP が有効のままになっている</p>
+</li>
+<li>
+<p>networkData YAML の構文エラー</p>
+</li>
+<li>
+<p>cloud-init が networkData を処理していない</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>networkData の構文 (インデント、YAML 形式) を確認:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: false  # DHCP を無効化
+      addresses:
+        - 192.168.1.100/24
+      routes:
+        - to: default
+          via: 192.168.1.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>cloud-init のエラーを確認:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cloud-init status --long
+cat /var/log/cloud-init.log | grep -A 5 -B 5 "network"</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>ネットワーク設定を手動で適用:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo nmcli connection modify "Wired connection 1" \
+  ipv4.method manual \
+  ipv4.addresses 192.168.1.100/24 \
+  ipv4.gateway 192.168.1.1 \
+  ipv4.dns "8.8.8.8 8.8.4.4"
+
+sudo nmcli connection up "Wired connection 1"</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_問題_静的_ip_は適用されたが接続できない"><a class="anchor" href="#_問題_静的_ip_は適用されたが接続できない"></a>問題: 静的 IP は適用されたが接続できない</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内
+ip addr show enp1s0
+# 正しい IP が表示される
+
+ping 192.168.1.1
+# Network unreachable</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ルーティングテーブルを確認
+ip route show
+
+# ゲートウェイに到達可能か確認
+ping -c 1 192.168.1.1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ゲートウェイの設定漏れ、または誤り</p>
+</li>
+<li>
+<p>サブネットマスクの誤り</p>
+</li>
+<li>
+<p>静的 IP 用に構成されていない物理ネットワーク</p>
+</li>
+<li>
+<p>スイッチポートの VLAN 設定ミス</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>cloud-init 設定でゲートウェイを確認</p>
+</li>
+<li>
+<p>サブネットマスクがネットワーク設定と一致しているか確認</p>
+</li>
+<li>
+<p>物理ネットワークがこのサブネット上で静的 IP を許可しているか確認</p>
+</li>
+<li>
+<p>VLAN を使用している場合は、NetworkAttachmentDefinition (NAD) とブリッジマッピングが正しいか確認</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_シナリオ_3_複数のネットワークインターフェース"><a class="anchor" href="#_シナリオ_3_複数のネットワークインターフェース"></a>シナリオ 3: 複数のネットワークインターフェース</h3>
+<div class="sect3">
+<h4 id="_問題_セカンダリインターフェースが設定されない"><a class="anchor" href="#_問題_セカンダリインターフェースが設定されない"></a>問題: セカンダリインターフェースが設定されない</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:
+プライマリインターフェースのみ IP を取得し、セカンダリインターフェースがダウンしているか未設定の状態。</p>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内
+ip addr show
+
+# NetworkManager 接続を確認
+nmcli connection show</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>networkData にセカンダリインターフェースが定義されていない</p>
+</li>
+<li>
+<p>セカンダリインターフェースの名前が間違っている</p>
+</li>
+<li>
+<p>セカンダリネットワーク接続が機能していない</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>VM が複数のネットワーク接続を持っているか確認:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  template:
+    spec:
+      networks:
+        - name: default
+          pod: {}
+        - name: secondary-net
+          multus:
+            networkName: my-nad</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>networkData 内のインターフェース両方を確認:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: true
+    enp2s0:  # セカンダリインターフェース
+      dhcp4: false
+      addresses:
+        - 192.168.100.10/24</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>NAD が存在し、正しく設定されているか確認:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get network-attachment-definition -n &lt;namespace&gt;
+oc describe network-attachment-definition &lt;nad-name&gt; -n &lt;namespace&gt;</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_問題_デフォルトルートの競合"><a class="anchor" href="#_問題_デフォルトルートの競合"></a>問題: デフォルトルートの競合</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:
+両方のインターフェースにデフォルトルートがあり、ルーティングの問題が発生している。</p>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内
+ip route show
+
+# 複数のデフォルトルートが表示される
+# default via 10.128.0.1 dev enp1s0
+# default via 192.168.100.1 dev enp2s0</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>両方のインターフェースがデフォルトゲートウェイで構成されている</p>
+</li>
+<li>
+<p>DHCP がプライマリインターフェースにデフォルトルートを追加している</p>
+</li>
+<li>
+<p>静的設定がセカンダリインターフェースにデフォルトルートを追加している</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>networkData でセカンダリインターフェースからデフォルトルートを削除:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">enp2s0:
+  dhcp4: false
+  addresses:
+    - 192.168.100.10/24
+  # 'routes' セクションなし - デフォルトゲートウェイなし</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>両方にルートが必要な場合は、メトリックを使用して優先順位を付けます:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">enp1s0:
+  dhcp4: true
+  dhcp4-overrides:
+    route-metric: 100  # 数値が低い方が優先される
+
+enp2s0:
+  dhcp4: false
+  addresses:
+    - 192.168.100.10/24
+  routes:
+    - to: default
+      via: 192.168.100.1
+      metric: 200  # 数値が高い = 優先順位が低い</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_シナリオ_4_vlan_インターフェースの設定"><a class="anchor" href="#_シナリオ_4_vlan_インターフェースの設定"></a>シナリオ 4: VLAN インターフェースの設定</h3>
+<div class="sect3">
+<h4 id="_問題_vlan_インターフェースが作成されない"><a class="anchor" href="#_問題_vlan_インターフェースが作成されない"></a>問題: VLAN インターフェースが作成されない</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:
+VLAN インターフェース (例: <code>enp2s0.100</code>) が存在しない。</p>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内
+ip link show
+
+# cloud-init ログを確認
+grep -i vlan /var/log/cloud-init.log</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>networkData の VLAN 設定構文エラー</p>
+</li>
+<li>
+<p>親インターフェースがアップしていない</p>
+</li>
+<li>
+<p>VLAN モジュールがロードされていない</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>networkData の VLAN 設定を確認:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 2
+  ethernets:
+    enp2s0: {}  # 親インターフェースを定義する必要がある
+  vlans:
+    vlan100:
+      id: 100
+      link: enp2s0
+      addresses:
+        - 192.168.100.10/24</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>VLAN インターフェースを手動で作成:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo nmcli connection add type vlan \
+  con-name vlan100 \
+  ifname enp2s0.100 \
+  dev enp2s0 \
+  id 100 \
+  ip4 192.168.100.10/24</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_問題_vlan_インターフェースに接続性がない"><a class="anchor" href="#_問題_vlan_インターフェースに接続性がない"></a>問題: VLAN インターフェースに接続性がない</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:
+VLAN インターフェースは存在するがネットワークに到達できない。</p>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VLAN インターフェースのステータスを確認
+ip addr show enp2s0.100
+
+# トラフィックがタグ付けされているか確認
+tcpdump -i enp2s0 -n vlan 100</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>物理スイッチポートがトランクモードになっていない</p>
+</li>
+<li>
+<p>スイッチトランクで VLAN が許可されていない</p>
+</li>
+<li>
+<p>設定の VLAN ID が間違っている</p>
+</li>
+<li>
+<p>NAD が VLAN 用に設定されていない</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>スイッチポートがトランクモードで、VLAN 100 を許可しているか確認</p>
+</li>
+<li>
+<p>NAD の VLAN 設定を確認:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get network-attachment-definition &lt;nad-name&gt; -n &lt;namespace&gt; -o yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>"vlan": 100</code> があるか確認してください。</p>
+</div>
+</li>
+<li>
+<p>localnet 用の OVN ブリッジマッピングを確認:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nncp -A</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_シナリオ_5_ipv6_設定"><a class="anchor" href="#_シナリオ_5_ipv6_設定"></a>シナリオ 5: IPv6 設定</h3>
+<div class="sect3">
+<h4 id="_問題_ipv6_アドレスが適用されない"><a class="anchor" href="#_問題_ipv6_アドレスが適用されない"></a>問題: IPv6 アドレスが適用されない</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:
+IPv4 のみ設定され、IPv6 アドレスがない。</p>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内
+ip -6 addr show</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>cloud-init で IPv6 が有効になっていない</p>
+</li>
+<li>
+<p>OS で IPv6 が無効になっている</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>networkData で IPv6 を有効化:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: true
+      dhcp6: true
+      # または静的 IPv6:
+      addresses:
+        - 2001:db8::10/64</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>IPv6 が無効になっていないことを確認:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat /proc/sys/net/ipv6/conf/all/disable_ipv6
+# 0 (有効) である必要があります</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_シナリオ_6_dns_設定"><a class="anchor" href="#_シナリオ_6_dns_設定"></a>シナリオ 6: DNS 設定</h3>
+<div class="sect3">
+<h4 id="_問題_dns_が機能しない"><a class="anchor" href="#_問題_dns_が機能しない"></a>問題: DNS が機能しない</h4>
+<div class="paragraph">
+<p><strong>症状</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内
+ping 8.8.8.8
+# 成功
+
+ping google.com
+# Unknown host</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>診断</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat /etc/resolv.conf
+
+# DNS 解決を確認
+nslookup google.com</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>cloud-init でネームサーバーが設定されていない</p>
+</li>
+<li>
+<p>DHCP が DNS サーバーを提供していない</p>
+</li>
+<li>
+<p><code>/etc/resolv.conf</code> が空、または間違っている</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>networkData にネームサーバーを追加:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: false
+      addresses:
+        - 192.168.1.100/24
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+        search:
+          - example.com</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>DNS を手動で設定:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_診断コマンド"><a class="anchor" href="#_診断コマンド"></a>診断コマンド</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ネットワークステータスの全確認"><a class="anchor" href="#_ネットワークステータスの全確認"></a>ネットワークステータスの全確認</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内 - ネットワークチェック
+echo "=== Interfaces ==="
+ip addr show
+
+echo "=== Routes ==="
+ip route show
+
+echo "=== DNS ==="
+cat /etc/resolv.conf
+
+echo "=== Cloud-init Status ==="
+cloud-init status --long
+
+echo "=== Cloud-init Network Config ==="
+sudo cat /var/lib/cloud/instance/network-config.txt
+
+echo "=== NetworkManager Connections ==="
+nmcli connection show
+
+echo "=== Connectivity Tests ==="
+ping -c 2 8.8.8.8 &amp;&amp; echo "IP connectivity: OK" || echo "IP connectivity: FAILED"
+nslookup google.com &amp;&amp; echo "DNS: OK" || echo "DNS: FAILED"</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_openshift_クラスターからの確認"><a class="anchor" href="#_openshift_クラスターからの確認"></a>OpenShift クラスターからの確認</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM ステータスの確認
+oc get vm,vmi &lt;vm-name&gt; -n &lt;namespace&gt;
+
+# VM IP アドレスの確認
+oc get vmi &lt;vm-name&gt; -n &lt;namespace&gt; -o jsonpath='{.status.interfaces}' | jq
+
+# ネットワーク接続の確認
+oc get vm &lt;vm-name&gt; -n &lt;namespace&gt; -o jsonpath='{.spec.template.spec.networks}' | jq
+
+# NADs の確認
+oc get network-attachment-definition -n &lt;namespace&gt;
+
+# VM イベントの確認
+oc get events -n &lt;namespace&gt; --field-selector involvedObject.name=&lt;vm-name&gt; --sort-by='.lastTimestamp'
+
+# VM 定義の cloud-init セクションを確認
+oc get vm &lt;vm-name&gt; -n &lt;namespace&gt; -o yaml | grep -A 50 cloudInitNoCloud</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cloud_init_の再実行_テスト用"><a class="anchor" href="#_cloud_init_の再実行_テスト用"></a>cloud-init の再実行 (テスト用)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内 - cloud-init のクリーンアップと再実行 (破壊的)
+sudo cloud-init clean --logs
+sudo cloud-init init
+sudo cloud-init modules --mode config
+sudo cloud-init modules --mode final
+
+# ステータスを確認
+cloud-init status --long</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_インターフェース命名リファレンス"><a class="anchor" href="#_インターフェース命名リファレンス"></a>インターフェース命名リファレンス</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM 内の最新 Linux ディストリビューションは、PCI スロット位置に基づいた予測可能なインターフェース名を使用します。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ネットワーク接続順序</th>
+<th class="tableblock halign-left valign-top">インターフェース名</th>
+<th class="tableblock halign-left valign-top">一般的な用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1番目 (デフォルト Pod ネットワーク)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>enp1s0</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プライマリネットワーク (DHCP)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2番目 (Multus/NAD)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>enp2s0</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">セカンダリネットワーク</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3番目 (Multus/NAD)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>enp3s0</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3番目のネットワーク</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4番目 (Multus/NAD)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>enp4s0</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4番目のネットワーク</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><strong>ゲスト OS に表示されるインターフェース名を使用してください。最新の Linux ディストリビューション (RHEL 8+、Fedora、Ubuntu 16.04+) は、上記に示す enpXsY 形式を使用します。古いディストリビューションでは、eth0、eth1 などが使用される場合があります。</strong></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cloud_init_バージョンの違い"><a class="anchor" href="#_cloud_init_バージョンの違い"></a>cloud-init バージョンの違い</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_cloud_init_v1_vs_v2_ネットワーク設定"><a class="anchor" href="#_cloud_init_v1_vs_v2_ネットワーク設定"></a>cloud-init v1 vs v2 ネットワーク設定</h3>
+<div class="paragraph">
+<p><strong>Version 1</strong> (旧式、レガシー):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 1
+  config:
+    - type: physical
+      name: eth0
+      subnets:
+        - type: dhcp</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Version 2</strong> (最新、推奨):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>推奨</strong>: 新しい設定には必ずバージョン 2 を使用してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参考資料"><a class="anchor" href="#_参考資料"></a>参考資料</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://cloudinit.readthedocs.io/en/latest/reference/network-config.html" target="_blank" rel="noopener">Cloud-init ドキュメント - ネットワーク設定</a></p>
+</li>
+<li>
+<p><a href="https://netplan.io/examples/" target="_blank" rel="noopener">Netplan 設定例</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-about-vm-networking.html" target="_blank" rel="noopener">OpenShift Virtualization ネットワーキング</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/virtual_machines/interfaces_and_networks/" target="_blank" rel="noopener">KubeVirt ネットワーク設定</a></p>
+</li>
+<li>
+<p><a href="ovs-bridge-troubleshooting.html" class="xref page">OVS ブリッジの検証</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_例_ocplab01_クラスターのテスト"><a class="anchor" href="#_例_ocplab01_クラスターのテスト"></a>例: ocplab01 クラスターのテスト</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>SNO クラスター (ocplab01) でのテスト結果:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get vmi fedora-dhcp-vm -n cloud-init-test -o jsonpath='{.status.interfaces}' | jq
+[
+  {
+    "infoSource": "domain, guest-agent, multus-status",
+    "interfaceName": "eth0",
+    "ipAddress": "10.128.0.165",
+    "ipAddresses": [
+      "10.128.0.165",
+      "fd02::5e"
+    ],
+    "mac": "02:92:c2:00:00:05",
+    "name": "default",
+    "queueCount": 1
+  }
+]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>注意</strong>: VMI ステータス上は <code>interfaceName</code> が <code>eth0</code> と表示されますが (内部的な KubeVirt の命名)、Fedora VM 内部のインターフェースは <code>enp1s0</code> です。cloud-init 設定には、必ずゲスト OS 内で表示されるインターフェース名を使用してください。</p>
+</div>
+<div class="paragraph">
+<p>VM 内部での確認:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">[fedora@fedora ~]$ ip addr show enp1s0
+2: enp1s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1400 qdisc fq_codel state UP group default qlen 1000
+    link/ether 02:92:c2:00:00:05 brd ff:ff:ff:ff:ff:ff
+    inet 10.128.0.165/23 brd 10.128.1.255 scope global dynamic noprefixroute enp1s0
+       valid_lft 86295sec preferred_lft 86295sec
+    inet6 fd02::5e/64 scope global dynamic noprefixroute
+       valid_lft 86296sec preferred_lft 14296sec</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>cloud-init ステータス:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">[fedora@fedora ~]$ cloud-init status
+status: done</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これは、適切なインターフェース命名を行うことで DHCP シナリオが正しく機能することを確認しています。</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="static-ip-configuration.html">静的IPの設定</a></span>
+  <span class="next"><a href="udn-primary-networks.html">UDN プライマリネットワーク</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

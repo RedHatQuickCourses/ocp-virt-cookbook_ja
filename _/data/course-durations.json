@@ -1,81 +1,271 @@
 {
-  "totalSeconds": 428,
-  "pageCount": 15,
+  "totalSeconds": 6329,
+  "pageCount": 53,
   "pages": [
     {
       "module": "ROOT",
       "page": "index.adoc",
-      "seconds": 15
+      "seconds": 44
     },
     {
-      "module": "LABENV",
+      "module": "getting-started",
       "page": "index.adoc",
-      "seconds": 4
+      "seconds": 24
     },
     {
-      "module": "chapter1",
+      "module": "getting-started",
+      "page": "prerequisites.adoc",
+      "seconds": 30
+    },
+    {
+      "module": "getting-started",
+      "page": "install-openshift-virtualization.adoc",
+      "seconds": 63
+    },
+    {
+      "module": "getting-started",
+      "page": "default-storage-class.adoc",
+      "seconds": 74
+    },
+    {
+      "module": "getting-started",
+      "page": "create-vm-web-console.adoc",
+      "seconds": 35
+    },
+    {
+      "module": "getting-started",
+      "page": "vm-lifecycle-states.adoc",
+      "seconds": 99
+    },
+    {
+      "module": "getting-started",
+      "page": "virtctl-basics.adoc",
+      "seconds": 108
+    },
+    {
+      "module": "getting-started",
+      "page": "cloud-init-fundamentals.adoc",
+      "seconds": 108
+    },
+    {
+      "module": "storage",
       "page": "index.adoc",
-      "seconds": 9
+      "seconds": 28
     },
     {
-      "module": "chapter1",
-      "page": "section1.adoc",
-      "seconds": 9
+      "module": "storage",
+      "page": "lvm-operator.adoc",
+      "seconds": 160
     },
     {
-      "module": "chapter1",
-      "page": "section2.adoc",
-      "seconds": 9
+      "module": "storage",
+      "page": "lvm-troubleshooting.adoc",
+      "seconds": 238
     },
     {
-      "module": "chapter1",
-      "page": "section3.adoc",
-      "seconds": 9
+      "module": "storage",
+      "page": "hostpath-provisioner.adoc",
+      "seconds": 183
     },
     {
-      "module": "chapter1",
-      "page": "tabs-demo.adoc",
-      "seconds": 20
+      "module": "storage",
+      "page": "creating-managing-storage-class.adoc",
+      "seconds": 122
     },
     {
-      "module": "chapter1",
-      "page": "collapsible-demo.adoc",
-      "seconds": 36
+      "module": "storage",
+      "page": "multi-disk-configuration.adoc",
+      "seconds": 81
     },
     {
-      "module": "chapter1",
-      "page": "images.adoc",
-      "seconds": 271
-    },
-    {
-      "module": "chapter2",
+      "module": "networking",
       "page": "index.adoc",
-      "seconds": 9
+      "seconds": 31
     },
     {
-      "module": "chapter2",
-      "page": "section1.adoc",
-      "seconds": 9
+      "module": "networking",
+      "page": "static-ip-configuration.adoc",
+      "seconds": 309
     },
     {
-      "module": "chapter3",
+      "module": "networking",
+      "page": "cloud-init-troubleshooting.adoc",
+      "seconds": 172
+    },
+    {
+      "module": "networking",
+      "page": "udn-primary-networks.adoc",
+      "seconds": 88
+    },
+    {
+      "module": "networking",
+      "page": "localnet-secondary.adoc",
+      "seconds": 37
+    },
+    {
+      "module": "networking",
+      "page": "localnet-vlan.adoc",
+      "seconds": 62
+    },
+    {
+      "module": "networking",
+      "page": "cudn-localnet-vlan.adoc",
+      "seconds": 138
+    },
+    {
+      "module": "networking",
+      "page": "layer2-secondary.adoc",
+      "seconds": 136
+    },
+    {
+      "module": "networking",
+      "page": "linux-bridges.adoc",
+      "seconds": 153
+    },
+    {
+      "module": "networking",
+      "page": "sriov-secondary.adoc",
+      "seconds": 224
+    },
+    {
+      "module": "networking",
+      "page": "vm-ingress-routes.adoc",
+      "seconds": 78
+    },
+    {
+      "module": "networking",
+      "page": "ovs-bridge-troubleshooting.adoc",
+      "seconds": 175
+    },
+    {
+      "module": "vm-configuration",
       "page": "index.adoc",
-      "seconds": 9
+      "seconds": 23
     },
     {
-      "module": "chapter3",
-      "page": "section1.adoc",
-      "seconds": 9
+      "module": "vm-configuration",
+      "page": "internal-dns-for-vms.adoc",
+      "seconds": 102
     },
     {
-      "module": "chapter3",
-      "page": "section2.adoc",
-      "seconds": 9
+      "module": "vm-configuration",
+      "page": "remote-access-linux-vms.adoc",
+      "seconds": 88
+    },
+    {
+      "module": "vm-configuration",
+      "page": "remote-access-linux-troubleshooting.adoc",
+      "seconds": 236
+    },
+    {
+      "module": "vm-configuration",
+      "page": "remote-access-windows-vms.adoc",
+      "seconds": 67
+    },
+    {
+      "module": "vm-configuration",
+      "page": "windows-vm-virtio-drivers.adoc",
+      "seconds": 70
+    },
+    {
+      "module": "vm-configuration",
+      "page": "infrastructure-node-placement.adoc",
+      "seconds": 162
+    },
+    {
+      "module": "vm-configuration",
+      "page": "node-placement-affinity.adoc",
+      "seconds": 207
+    },
+    {
+      "module": "vm-configuration",
+      "page": "hotplug-volumes-interfaces.adoc",
+      "seconds": 63
+    },
+    {
+      "module": "vm-configuration",
+      "page": "vm-templates.adoc",
+      "seconds": 467
+    },
+    {
+      "module": "performance",
+      "page": "index.adoc",
+      "seconds": 34
+    },
+    {
+      "module": "performance",
+      "page": "resource-limits-qos.adoc",
+      "seconds": 113
+    },
+    {
+      "module": "performance",
+      "page": "cpu-pinning.adoc",
+      "seconds": 84
+    },
+    {
+      "module": "performance",
+      "page": "numa-hugepages.adoc",
+      "seconds": 188
+    },
+    {
+      "module": "performance",
+      "page": "realtime-vms.adoc",
+      "seconds": 213
+    },
+    {
+      "module": "vm-lifecycle",
+      "page": "index.adoc",
+      "seconds": 23
+    },
+    {
+      "module": "vm-lifecycle",
+      "page": "import-qcow2-boot-volume.adoc",
+      "seconds": 106
+    },
+    {
+      "module": "vm-lifecycle",
+      "page": "custom-golden-images.adoc",
+      "seconds": 95
+    },
+    {
+      "module": "vm-lifecycle",
+      "page": "golden-images-troubleshooting.adoc",
+      "seconds": 107
+    },
+    {
+      "module": "vm-lifecycle",
+      "page": "cloning-vms.adoc",
+      "seconds": 179
+    },
+    {
+      "module": "vm-lifecycle",
+      "page": "vm-snapshots.adoc",
+      "seconds": 99
+    },
+    {
+      "module": "vm-lifecycle",
+      "page": "boot-order-boot-sources.adoc",
+      "seconds": 163
+    },
+    {
+      "module": "manifests",
+      "page": "index.adoc",
+      "seconds": 53
+    },
+    {
+      "module": "api",
+      "page": "index.adoc",
+      "seconds": 22
+    },
+    {
+      "module": "api",
+      "page": "api-component-overview.adoc",
+      "seconds": 336
     },
     {
       "module": "appendix",
-      "page": "appendix.adoc",
-      "seconds": 1
+      "page": "glossary.adoc",
+      "seconds": 29
     }
   ]
 }

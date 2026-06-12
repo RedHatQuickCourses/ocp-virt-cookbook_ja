@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>仮想マシンの内部DNS解決 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="remote-access-linux-vms.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">仮想マシンの設定</a></li>
+    <li><a href="internal-dns-for-vms.html">VMの内部DNS</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">仮想マシンの内部DNS解決</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、OpenShift Virtualizationにおいて、クラスター内通信のために仮想マシンを安定したDNS名で探索可能にする方法を説明します。Kubernetes Serviceを使用してVMのDNSベースのサービス探索を有効にし、IPアドレスをハードコードすることなくPodからVMへ、またVMからVMへの通信を実現する方法を学びます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_学習目標"><a class="anchor" href="#_学習目標"></a>学習目標</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Kubernetes Serviceを使用してVMを公開する方法</p>
+</li>
+<li>
+<p>VMのDNS解決をテストする方法</p>
+</li>
+<li>
+<p>OpenShift VirtualizationでVMのDNSクエリがどのように解決されるか</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以降</p>
+</li>
+<li>
+<p>インストール済みのCLIツール: <code>oc</code>、<code>virtctl</code></p>
+</li>
+<li>
+<p>Kubernetes ServiceとDNSに関する基本的な知識</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_パート1_デプロイ公開テスト"><a class="anchor" href="#_パート1_デプロイ公開テスト"></a>パート1: デプロイ、公開、テスト</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ステップ_1_名前空間の作成"><a class="anchor" href="#_ステップ_1_名前空間の作成"></a>ステップ 1: 名前空間の作成</h3>
+<div class="paragraph">
+<p>このチュートリアル用の専用名前空間を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc new-project myapp</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_2_fedora_vmのデプロイ"><a class="anchor" href="#_ステップ_2_fedora_vmのデプロイ"></a>ステップ 2: Fedora VMのデプロイ</h3>
+<div class="paragraph">
+<p>Fedora VMをデプロイします。</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+この例のcloud-initパスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードまたはSSHキー認証を使用してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/internal-dns-for-vms/fedora-app-vm.yaml" class="xref attachment">fedora-app-vm.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-app-vm
+  namespace: myapp
+  labels:
+    app: myapp
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+    - metadata:
+        name: fedora-app-vm-volume
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: fedora-app-vm
+        app: myapp
+    spec:
+      domain:
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - name: default
+              masquerade: {}
+        resources:
+          requests:
+            memory: 2Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: fedora-app-vm-volume
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+          name: cloudinitdisk
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMが実行状態になるまで待ちます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">watch 'oc get vm,vmi,dv -n myapp'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMが <code>Running</code> かつ <code>Ready: True</code> になるまで待ち、完了したら <code>Ctrl+C</code> を押します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_3_vm用serviceの作成"><a class="anchor" href="#_ステップ_3_vm用serviceの作成"></a>ステップ 3: VM用Serviceの作成</h3>
+<div class="paragraph">
+<p>VMをターゲットにするヘッドレスServiceを作成します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/internal-dns-for-vms/headless-service.yaml" class="xref attachment">headless-service.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+  namespace: myapp
+spec:
+  clusterIP: None
+  selector:
+    kubevirt.io/domain: fedora-app-vm
+  ports:
+    - name: ssh
+      protocol: TCP
+      port: 22
+      targetPort: 22
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ServiceとEndpointSliceを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get svc myapp-service -n myapp
+oc get endpointslice -n myapp -l kubernetes.io/service-name=myapp-service</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="paragraph">
+<p>Serviceは <code>TYPE: ClusterIP</code> で <code>CLUSTER-IP: None</code> (ヘッドレスサービス) と表示されるはずです。</p>
+</div>
+<div class="paragraph">
+<p>EndpointSliceのENDPOINTS列には、VMのPod IPアドレスが表示されるはずです。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_4_dns解決と接続性のテスト"><a class="anchor" href="#_ステップ_4_dns解決と接続性のテスト"></a>ステップ 4: DNS解決と接続性のテスト</h3>
+<div class="paragraph">
+<p>DNS解決と接続性をテストするためにデバッグ用Podを作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-dns
+  namespace: myapp
+spec:
+  containers:
+  - name: debug
+    image: registry.access.redhat.com/ubi9/ubi
+    command: ["sleep", "3600"]
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 1000
+      capabilities:
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+  restartPolicy: Never
+EOF
+
+# Podの準備ができるまで待機
+oc wait --for=condition=Ready pod/debug-dns -n myapp --timeout=60s
+
+# DNS解決をテスト
+oc exec -n myapp debug-dns -- getent hosts myapp-service.myapp.svc.cluster.local
+
+# クリーンアップ
+oc delete pod debug-dns -n myapp</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される結果:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>DNS解決によってVMのPod IPアドレスが返されます（例: <code>10.128.0.169 myapp-service.myapp.svc.cluster.local</code>）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>これは、ServiceのDNS名がVMのIPアドレスに正しく解決されていることを確認するものです。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_パート2_仕組みの理解"><a class="anchor" href="#_パート2_仕組みの理解"></a>パート2: 仕組みの理解</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_dns解決フロー"><a class="anchor" href="#_dns解決フロー"></a>DNS解決フロー</h3>
+<div class="paragraph">
+<p>PodまたはVMがServiceをDNS名でクエリする場合、以下のフローが発生します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">┌───────────────────────────────────────────────────────────────┐
+│ OpenShift Cluster                                             │
+│                                                               │
+│  [Client VM/Pod]                                              │
+│         │                                                     │
+│         │ 1. DNS Query: myapp-service.myapp.svc...            │
+│         │                                                     │
+│         ↓                                                     │
+│  [/etc/resolv.conf]                                           │
+│   nameserver 172.30.0.10                                      │
+│   search myapp.svc.cluster.local svc.cluster.local            │
+│         │                                                     │
+│         │ 2. Send query to DNS server                         │
+│         ↓                                                     │
+│  ┌──────────────┐                                             │
+│  │   CoreDNS    │                                             │
+│  │ 172.30.0.10  │                                             │
+│  └──────┬───────┘                                             │
+│         │                                                     │
+│         │ 3. Lookup Service record                            │
+│         ↓                                                     │
+│  ┌──────────────────────────────────────────────┐             │
+│  │ Service: myapp-service                       │             │
+│  │ Type: Headless                               │             │
+│  │ Selector: kubevirt.io/domain=fedora-app-vm   │             │
+│  └──────┬───────────────────────────────────────┘             │
+│         │                                                     │
+│         │ 4. Return VM Pod IP                                 │
+│         ↓                                                     │
+│  [Client receives: 10.128.2.45]                               │
+│         │                                                     │
+│         │ 5. Connect to VM                                    │
+│         ↓                                                     │
+│  ┌──────────────────────┐                                     │
+│  │  fedora-app-vm       │                                     │
+│  │  IP: 10.128.2.45     │                                     │
+│  └──────────────────────┘                                     │
+│                                                               │
+└───────────────────────────────────────────────────────────────┘</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップバイステップの解説"><a class="anchor" href="#_ステップバイステップの解説"></a>ステップバイステップの解説</h3>
+<div class="paragraph">
+<p><strong>ステップ 1: DNSクエリの開始</strong></p>
+</div>
+<div class="paragraph">
+<p>クライアント（他のVMやPod）が <code>myapp-service.myapp.svc.cluster.local</code> に接続する必要があります。クライアントがDNSクエリを開始します。</p>
+</div>
+<div class="paragraph">
+<p><strong>ステップ 2: CoreDNSへのクエリ送信</strong></p>
+</div>
+<div class="paragraph">
+<p>クライアントは <code>/etc/resolv.conf</code> ファイルを読み取り、そこに記載されているクラスターDNSサービス（通常は <code>172.30.0.10</code>）にDNSクエリを送信します。</p>
+</div>
+<div class="paragraph">
+<p><strong>ステップ 3: CoreDNSによるServiceレコードの参照</strong></p>
+</div>
+<div class="paragraph">
+<p>CoreDNSはクラスター内のすべてのKubernetes Serviceのデータベースを保持しています。CoreDNSは <code>myapp</code> 名前空間の <code>myapp-service</code> というServiceを検索します。</p>
+</div>
+<div class="paragraph">
+<p><strong>ステップ 4: ServiceがVMのPod IPを返却</strong></p>
+</div>
+<div class="paragraph">
+<p>Serviceがヘッドレス（<code>clusterIP: None</code>）であるため、CoreDNSはEndpointSliceからVMのPodの実際のIPアドレスを返します。通常のClusterIP Serviceの場合は、代わりにServiceの仮想IPが返されます。</p>
+</div>
+<div class="paragraph">
+<p><strong>ステップ 5: 接続の確立</strong></p>
+</div>
+<div class="paragraph">
+<p>クライアントはIPアドレスを受け取り、そのVMへの直接接続を確立します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_主要なポイント"><a class="anchor" href="#_主要なポイント"></a>主要なポイント</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>DNSにはServiceが必要</strong>: 仮想マシンはCoreDNSに自動的には登録されません。Kubernetes ServiceのみがDNSレコードを作成します。</p>
+</li>
+<li>
+<p><strong>VM名はDNS名ではない</strong>: VMの <code>metadata.name</code> はKubernetesのリソース識別子であり、DNS名ではありません。ネットワークアクセスには使用できません。</p>
+</li>
+<li>
+<p><strong>Service名がDNS名になる</strong>: Serviceの <code>metadata.name</code> が、<code>&lt;service-name&gt;.&lt;namespace&gt;.svc.cluster.local</code> としてCoreDNSに登録されます。</p>
+</li>
+<li>
+<p><strong>ヘッドレスサービスはVMのIPを返す</strong>: ヘッドレスService（<code>clusterIP: None</code>）はVMのPod IPを直接返すため、VM間での直接通信が可能になります。</p>
+</li>
+<li>
+<p><strong>通常のサービスは負荷分散を提供する</strong>: 通常のClusterIP Serviceは安定した仮想IPを提供し、複数のVM間でトラフィックを分散できます。</p>
+</li>
+<li>
+<p><strong>検索ドメインにより短い名前が使用可能</strong>: <code>/etc/resolv.conf</code> の <code>search</code> ドメインにより、同じ名前空間内のServiceにアクセスする際、完全修飾ドメイン名（FQDN）の代わりに <code>myapp-service</code> のような短い名前を使用できます。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_パート3_リファレンス"><a class="anchor" href="#_パート3_リファレンス"></a>パート3: リファレンス</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_確認コマンド"><a class="anchor" href="#_確認コマンド"></a>確認コマンド</h3>
+<div class="paragraph">
+<p><strong>ServiceおよびEndpointSliceの確認:</strong></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Serviceの詳細表示
+oc get svc myapp-service -n myapp
+
+# EndpointSliceの確認 (VMのPod IPが表示されるはずです)
+oc get endpointslice -n myapp -l kubernetes.io/service-name=myapp-service
+
+# Serviceの全詳細を表示
+oc describe svc myapp-service -n myapp</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>DNS解決と接続性のテスト:</strong></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># デバッグ用Podの作成（未作成の場合）
+oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-dns
+  namespace: myapp
+spec:
+  containers:
+  - name: debug
+    image: registry.access.redhat.com/ubi9/ubi
+    command: ["sleep", "3600"]
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 1000
+      capabilities:
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+  restartPolicy: Never
+EOF
+
+# Podの準備ができるまで待機
+oc wait --for=condition=Ready pod/debug-dns -n myapp --timeout=60s
+
+# DNS解決をテスト
+oc exec -n myapp debug-dns -- getent hosts myapp-service.myapp.svc.cluster.local
+
+# 終了後にクリーンアップ
+oc delete pod debug-dns -n myapp</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>VMラベルの確認:</strong></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VMのラベルがServiceのセレクターと一致しているか確認
+oc get vm fedora-app-vm -n myapp -o jsonpath='{.metadata.labels}'
+oc get svc myapp-service -n myapp -o jsonpath='{.spec.selector}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_一般的な問題"><a class="anchor" href="#_一般的な問題"></a>一般的な問題</h3>
+<div class="paragraph">
+<p><strong>問題: DNS解決で結果が返されない</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>診断:</strong></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get svc myapp-service -n myapp
+oc get endpointslice -n myapp -l kubernetes.io/service-name=myapp-service</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ServiceのセレクターがVMのラベルと一致していない</p>
+</li>
+<li>
+<p>VMが実行されていない（EndpointSliceにエントリがない）</p>
+</li>
+<li>
+<p>名前空間が間違っている</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>ServiceのセレクターがVMの <code>kubevirt.io/domain</code> ラベルと完全に一致しているか確認する</p>
+</li>
+<li>
+<p>VMが実行中であることを確認する: <code>oc get vmi -n myapp</code></p>
+</li>
+<li>
+<p>ServiceとVMの両方が同じ名前空間にあることを確認する</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>問題: 名前空間をまたいだDNS解決が失敗する</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>診断:</strong></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 別の名前空間にデバッグ用Podを作成
+oc new-project test-namespace 2&gt;/dev/null || true
+
+oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-cross-ns
+  namespace: test-namespace
+spec:
+  containers:
+  - name: debug
+    image: registry.access.redhat.com/ubi9/ubi
+    command: ["sleep", "300"]
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 1000
+      capabilities:
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+  restartPolicy: Never
+EOF
+
+# 待機してテスト
+oc wait --for=condition=Ready pod/debug-cross-ns -n test-namespace --timeout=60s
+oc exec -n test-namespace debug-cross-ns -- \
+  getent hosts myapp-service.myapp.svc.cluster.local
+
+# クリーンアップ
+oc delete pod debug-cross-ns -n test-namespace</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>一般的な原因:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>FQDNではなく短い名前を使用している</p>
+</li>
+<li>
+<p>ネットワークポリシーによって名前空間をまたぐトラフィックがブロックされている</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>解決策:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>名前空間をまたぐ場合は常にFQDNを使用する: <code>&lt;service&gt;.&lt;namespace&gt;.svc.cluster.local</code></p>
+</li>
+<li>
+<p>制限的なNetworkPolicyが設定されていないか確認する</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_その他のリソース"><a class="anchor" href="#_その他のリソース"></a>その他のリソース</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/" target="_blank" rel="noopener">Kubernetes DNS for Services and Pods</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-accessing-vm-internal-fqdn" target="_blank" rel="noopener">内部FQDNを使用したVMへのアクセス - OpenShift Virtualization</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-accessing-vm-secondary-network-fqdn" target="_blank" rel="noopener">クラスターFQDNを使用したセカンダリネットワーク上のVMへのアクセス - OpenShift Virtualization</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、以下の内容を学習しました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>DNSベースの探索のために、ヘッドレスKubernetes Serviceを通じてVMを公開する方法</p>
+</li>
+<li>
+<p>クラスター内でCoreDNSがService名をVMのPod IPアドレスに解決する方法</p>
+</li>
+<li>
+<p>ヘッドレスサービス（直接VM IP）とClusterIPサービス（負荷分散付きの仮想IP）の違い</p>
+</li>
+<li>
+<p>FQDN形式の <code>getent hosts</code> を使用してデバッグ用PodからDNS解決をテストする方法</p>
+</li>
+<li>
+<p>DNSにServiceが必要な理由や、検索ドメインにより短い名前の解決が可能になる仕組みなどの重要な概念</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_関連項目"><a class="anchor" href="#_関連項目"></a>関連項目</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../networking/static-ip-configuration.html" class="xref page">静的IP構成</a></p>
+</li>
+<li>
+<p><a href="remote-access-linux-vms.html" class="xref page">Linux VMへのリモートアクセス</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">仮想マシンの設定</a></span>
+  <span class="next"><a href="remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

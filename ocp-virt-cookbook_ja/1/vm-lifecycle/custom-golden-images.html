@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>カスタムOSイメージとゴールデンイメージの作成 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="import-qcow2-boot-volume.html">
+    <link rel="next" href="golden-images-troubleshooting.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">VMライフサイクル管理</a></li>
+    <li><a href="custom-golden-images.html">カスタムゴールデンイメージ</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">カスタムOSイメージとゴールデンイメージの作成</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、OpenShift Virtualization用のカスタムゴールデンイメージを作成する方法を説明します。ゴールデンイメージは、一貫したソフトウェア、構成、設定を持つ複数のVMを展開するためのテンプレートとして機能する、事前構成済みのVMディスクイメージです。このアプローチにより、展開が迅速化され、環境全体で一貫性が保たれ、構成のドリフト（乖離）が削減されます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ゴールデンイメージとは"><a class="anchor" href="#_ゴールデンイメージとは"></a>ゴールデンイメージとは</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ゴールデンイメージとは、以下を含む標準化された事前構成済みのVMイメージです。
+- ベースオペレーティングシステム
+- インストール済みのソフトウェアパッケージ
+- システム構成
+- セキュリティ強化
+- 最適化</p>
+</div>
+<div class="paragraph">
+<p>ゴールデンイメージを使用するメリット：
+- VM展開の高速化（起動後のソフトウェアインストールが不要）
+- すべてのVM間での一貫性
+- 構成ミスの削減
+- メンテナンスと更新の簡素化
+- VM構成のバージョン管理</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以上</p>
+</li>
+<li>
+<p>CLIツール: <code>oc</code>, <code>virtctl</code>, <code>kubectl</code></p>
+</li>
+<li>
+<p>ストレージクラスが構成済みであること（本チュートリアルでは <code>lvms-vg1</code> を使用）</p>
+</li>
+<li>
+<p>Linuxシステム管理に関する基本的な理解</p>
+</li>
+<li>
+<p>cloud-initに関する基本的な理解</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ゴールデンイメージのワークフロー"><a class="anchor" href="#_ゴールデンイメージのワークフロー"></a>ゴールデンイメージのワークフロー</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>プロセスには以下のステップが含まれます。
+. 標準OSイメージからベースVMを展開する
+. VMをカスタマイズする（ソフトウェアのインストール、設定の構成）
+. VMを汎用化する（マシン固有のデータを削除）
+. VMを停止し、そのディスクをキャプチャする
+. ゴールデンイメージ用のDataSourceを作成する
+. ゴールデンイメージから新しいVMを展開する</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_ベースvmの展開"><a class="anchor" href="#_ステップ_1_ベースvmの展開"></a>ステップ 1: ベースVMの展開</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ゴールデンイメージのワークフロー用に名前空間を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>カスタマイズ用のベースFedora VMを作成します。</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+この例で使用しているcloud-initのパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードまたはSSHキー認証を使用してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/custom-golden-images/golden-image-base-vm.yaml" class="xref attachment">golden-image-base-vm.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: base-fedora-vm
+  namespace: golden-images
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: base-fedora-vm-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: base-fedora-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: base-fedora-vm-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これを <code>base-fedora-vm.yaml</code> として保存し、展開します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f base-fedora-vm.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMの準備ができるまで待ちます。ソースイメージからDataVolumeがクローンされるため、数分かかる場合があります。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get dv -n golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>クローン進捗を示す出力例：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                  PHASE             PROGRESS   RESTARTS   AGE
+base-fedora-vm-disk   CloneInProgress   45.2%                 2m</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>DataVolumeが <code>Succeeded</code> になったら、VMステータスを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi -n golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME             AGE   PHASE     IP             NODENAME   READY
+base-fedora-vm   4m    Running   10.128.1.151   ocplab01   True</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注意: ディスクの初期クローンには、ストレージのパフォーマンスに応じて通常3〜5分かかります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_vmのカスタマイズ"><a class="anchor" href="#_ステップ_2_vmのカスタマイズ"></a>ステップ 2: VMのカスタマイズ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VMコンソールにアクセスします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console base-fedora-vm -n golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザー名 <code>fedora</code> とパスワード <code>fedora123</code> でログインします。</p>
+</div>
+<div class="paragraph">
+<p>カスタマイズ手順を実行します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># システムパッケージの更新
+sudo dnf update -y
+
+# nginx Webサーバーと一般的なツールのインストール
+sudo dnf install -y nginx vim htop curl wget git
+
+# 起動時にnginxが開始するように有効化
+sudo systemctl enable nginx
+
+# カスタムウェルカムページの作成
+sudo bash -c 'cat &gt; /usr/share/nginx/html/index.html &lt;&lt; EOF
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Golden Image VM&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;VM from Golden Image&lt;/h1&gt;
+    &lt;p&gt;This VM was deployed from a golden image with pre-installed software.&lt;/p&gt;
+    &lt;p&gt;Nginx is pre-configured and ready to use.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+EOF'
+
+# ファイアウォールの構成
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --reload</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_vmの汎用化"><a class="anchor" href="#_ステップ_3_vmの汎用化"></a>ステップ 3: VMの汎用化</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>イメージをキャプチャする前に、再利用できるようにマシン固有のデータを削除する必要があります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># パッケージキャッシュのクリーンアップ
+sudo dnf clean all
+
+# ログのクリーンアップ
+sudo find /var/log -type f -exec truncate -s 0 {} \;
+
+# マシンIDの削除
+sudo rm -f /etc/machine-id
+sudo touch /etc/machine-id
+
+# cloud-initのクリーンアップ
+sudo cloud-init clean --logs --seed
+
+# bash履歴の消去
+history -c
+cat /dev/null &gt; ~/.bash_history
+
+# 同期して終了
+sync
+exit</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> を押してコンソールから抜けます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_vmの停止"><a class="anchor" href="#_ステップ_4_vmの停止"></a>ステップ 4: VMの停止</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ディスクをキャプチャするためにVMを停止します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl stop base-fedora-vm -n golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>停止したことを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME             AGE   STATUS    READY
+base-fedora-vm   15m   Stopped   False</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_ゴールデンイメージdatasourceの作成"><a class="anchor" href="#_ステップ_5_ゴールデンイメージdatasourceの作成"></a>ステップ 5: ゴールデンイメージDataSourceの作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>次に、ベースVMのディスクを参照するDataSourceを作成します。このDataSourceを使用して、新しいVMを展開します。</p>
+</div>
+<div class="paragraph">
+<p>DataSourceを作成します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/custom-golden-images/golden-image-datasource.yaml" class="xref attachment">golden-image-datasource.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataSource
+metadata:
+  name: fedora-nginx-golden
+  namespace: golden-images
+spec:
+  source:
+    pvc:
+      name: base-fedora-vm-disk
+      namespace: golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>fedora-golden-datasource.yaml</code> として保存し、適用します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f fedora-golden-datasource.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>DataSourceを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get datasource -n golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                   AGE
+fedora-nginx-golden    5s</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_6_ゴールデンイメージからのvm展開"><a class="anchor" href="#_ステップ_6_ゴールデンイメージからのvm展開"></a>ステップ 6: ゴールデンイメージからのVM展開</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このゴールデンイメージから複数のVMを展開できるようになりました。各VMはゴールデンイメージからクローンされます。</p>
+</div>
+<div class="paragraph">
+<p>最初のVMを作成します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/custom-golden-images/webserver-vm-from-golden.yaml" class="xref attachment">webserver-vm-from-golden.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: webserver-vm-1
+  namespace: golden-images
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: webserver-vm-1-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora-nginx-golden
+          namespace: golden-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: webserver-vm-1
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: webserver-vm-1-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              hostname: webserver-vm-1
+              fqdn: webserver-vm-1.example.com
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>2番目のVMを作成します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/custom-golden-images/webserver-vm-2.yaml" class="xref attachment">webserver-vm-2.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: webserver-vm-2
+  namespace: golden-images
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: webserver-vm-2-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora-nginx-golden
+          namespace: golden-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: webserver-vm-2
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: webserver-vm-2-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              hostname: webserver-vm-2
+              fqdn: webserver-vm-2.example.com
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>両方のVMを展開します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f webserver-vm-1.yaml
+oc apply -f webserver-vm-2.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>クローンプロセスを監視します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get dv -n golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                  PHASE             PROGRESS   RESTARTS   AGE
+base-fedora-vm-disk   Succeeded         100.0%                15m
+webserver-vm-1-disk   CloneInProgress   72.5%                 3m
+webserver-vm-2-disk   CloneInProgress   71.8%                 3m</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>DataVolumeはゴールデンイメージからクローンされます。これには通常、VMあたり3〜5分かかります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_7_vmの確認"><a class="anchor" href="#_ステップ_7_vmの確認"></a>ステップ 7: VMの確認</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>両方のVMが実行されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi -n golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME             AGE   PHASE     IP             NODENAME   READY
+webserver-vm-1   5m    Running   10.128.1.152   ocplab01   True
+webserver-vm-2   5m    Running   10.128.1.153   ocplab01   True</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>いずれかのVMにアクセスし、nginxがプリインストールされていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console webserver-vm-1 -n golden-images</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>nginxのステータスを確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo systemctl status nginx</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>サービスがアクティブ（実行中）であるはずです。</p>
+</div>
+<div class="paragraph">
+<p>Webサーバーをテストします。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>カスタマイズ中に作成したカスタムHTMLページが表示されるはずです。</p>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> でコンソールから抜けます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_バージョン管理"><a class="anchor" href="#_バージョン管理"></a>バージョン管理</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ゴールデンイメージの新しいバージョンを作成するには：</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>現在のゴールデンイメージからVMを展開する</p>
+</li>
+<li>
+<p>更新または変更を適用する</p>
+</li>
+<li>
+<p>VMを汎用化する</p>
+</li>
+<li>
+<p>名前にバージョンを含めた新しいDataSourceを作成する（例: <code>fedora-nginx-golden-v2</code>）</p>
+</li>
+<li>
+<p>新しいバージョンを参照するようにVMの展開を更新する</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>DataSourceの命名例：
+- <code>fedora-nginx-golden-v1</code>
+- <code>fedora-nginx-golden-v2</code>
+- <code>fedora-nginx-golden-2025-10</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ベストプラクティス"><a class="anchor" href="#_ベストプラクティス"></a>ベストプラクティス</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_イメージの作成"><a class="anchor" href="#_イメージの作成"></a>イメージの作成</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>カスタマイズは最小限かつ目的に絞る</p>
+</li>
+<li>
+<p>インストールされたすべてのソフトウェアと構成をドキュメント化する</p>
+</li>
+<li>
+<p>本番環境で使用する前にゴールデンイメージを徹底的にテストする</p>
+</li>
+<li>
+<p>ゴールデンイメージのバージョン管理を行う</p>
+</li>
+<li>
+<p>バージョンごとに変更履歴（changelog）を維持する</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_汎用化"><a class="anchor" href="#_汎用化"></a>汎用化</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>常にログと一時ファイルをクリーンアップする</p>
+</li>
+<li>
+<p>SSHホストキーを削除する</p>
+</li>
+<li>
+<p>マシン固有の識別子を削除する</p>
+</li>
+<li>
+<p>cloud-initデータをクリーンアップする</p>
+</li>
+<li>
+<p>bash履歴を消去する</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ストレージ"><a class="anchor" href="#_ストレージ"></a>ストレージ</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>ユースケースに適したディスクサイズを使用する</p>
+</li>
+<li>
+<p>可能であればシンプロビジョニングを検討する</p>
+</li>
+<li>
+<p>ゴールデンイメージのストレージ使用量を監視する</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_セキュリティ"><a class="anchor" href="#_セキュリティ"></a>セキュリティ</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>ゴールデンイメージを作成する前にセキュリティ更新を適用する</p>
+</li>
+<li>
+<p>機密データや資格情報を削除する</p>
+</li>
+<li>
+<p>不要なサービスを無効にする</p>
+</li>
+<li>
+<p>ファイアウォールルールを適切に構成する</p>
+</li>
+<li>
+<p>VM固有のシークレット（SSHキー、パスワード）にはcloud-initを使用する</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルの手順中に問題が発生した場合は、<a href="golden-images-troubleshooting.html" class="xref page">ゴールデンイメージのトラブルシューティングガイド</a>を参照して、詳細な確認コマンド、一般的な問題、および解決策を確認してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルで作成したリソースをクリーンアップするには：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VMの削除
+oc delete vm webserver-vm-1 webserver-vm-2 base-fedora-vm -n golden-images
+
+# DataSourceの削除
+oc delete datasource fedora-nginx-golden -n golden-images
+
+# 名前空間の削除
+oc delete namespace golden-images</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の方法を学びました。
+- ベースVMの展開とカスタマイズ
+- ゴールデンイメージとして再利用するためのVMの汎用化
+- ゴールデンイメージ用DataSourceの作成
+- ゴールデンイメージからの複数VMの展開
+- ゴールデンイメージのバージョン管理</p>
+</div>
+<div class="paragraph">
+<p>ゴールデンイメージにより、OpenShift Virtualization環境におけるVM展開の効率と一貫性が大幅に向上します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/latest/virt/about_virt/about-virt.html" target="_blank" rel="noopener">OpenShift Virtualization Documentation</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/operations/clone_api/" target="_blank" rel="noopener">KubeVirt DataVolume Documentation</a></p>
+</li>
+<li>
+<p><a href="https://github.com/kubevirt/containerized-data-importer" target="_blank" rel="noopener">Containerized Data Importer</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a></span>
+  <span class="next"><a href="golden-images-troubleshooting.html">Golden Images トラブルシューティング</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

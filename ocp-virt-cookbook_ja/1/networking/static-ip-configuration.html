@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>VMへの静的IPの設定 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="cloud-init-troubleshooting.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ネットワーク構成</a></li>
+    <li><a href="static-ip-configuration.html">静的IPの設定</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">VMへの静的IPの設定</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、OpenShift Virtualizationにおいて仮想マシン（VM）に静的IPアドレスを割り当てるために利用可能な手法について説明します。DHCPはデフォルトかつ最もシンプルな手法ですが、外部システムとの統合、コンプライアンス、レガシーアプリケーションの要件などの理由から、予測可能で固定されたIPアドレスを必要とするワークロードは多く存在します。</p>
+</div>
+<div class="paragraph">
+<p>以下の5つの異なる手法を用いて静的IPを設定する方法を学習します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Cloud-init <code>networkData</code></strong>&#8201;&#8212;&#8201;初回起動時にネットワークを設定（Linux VM）</p>
+</li>
+<li>
+<p><strong>固定IPを持つUDNプライマリネットワーク</strong>&#8201;&#8212;&#8201;OVN-Kubernetesによるクラスター管理のIP割り当て</p>
+</li>
+<li>
+<p><strong>DHCP予約</strong>&#8201;&#8212;&#8201;外部DHCPサーバーでMACアドレスに固定IPを紐付け</p>
+</li>
+<li>
+<p><strong><code>nmcli</code> を使用したQEMUゲストエージェント</strong>&#8201;&#8212;&#8201;ゲストエージェント経由で起動後に静的IPを適用</p>
+</li>
+<li>
+<p><strong>Sysprep（Windows VM）</strong>&#8201;&#8212;&#8201;<code>unattend.xml</code> を通じてネットワークを設定</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>それぞれの方法には、自動化、柔軟性、運用負荷の面で異なるトレードオフがあります。環境に最適なものを選択してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_学習目標"><a class="anchor" href="#_学習目標"></a>学習目標</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualizationで静的IPを割り当てる際のトレードオフの理解</p>
+</li>
+<li>
+<p>Cloud-init <code>networkData</code> を使用して初回起動時に静的IPを設定する方法</p>
+</li>
+<li>
+<p>固定IPを持つUDNプライマリネットワークを使用してクラスター管理のアドレス指定を行う方法</p>
+</li>
+<li>
+<p>固定MACアドレスを使用してDHCP予約を行う方法</p>
+</li>
+<li>
+<p>QEMUゲストエージェントと <code>nmcli</code> を使用して起動後に静的IPを適用する方法</p>
+</li>
+<li>
+<p>Sysprepを使用してWindows VMの静的IPを設定する方法</p>
+</li>
+<li>
+<p>環境に応じた適切な手法の選択</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トレードオフと考慮事項"><a class="anchor" href="#_トレードオフと考慮事項"></a>トレードオフと考慮事項</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>静的IPを割り当てる前に、以下の影響を理解しておく必要があります。</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">クラスター管理のネットワーク機能の喪失</dt>
+<dd>
+<p>セカンダリネットワークに静的IPを割り当てると、VMはデフォルトのPodネットワークに依存するOpenShiftの <code>Services</code> や <code>Routes</code> へのアクセスを失う可能性があります。クラスター接続性を維持するために、プライマリインターフェース（Podネットワークに接続）はDHCPで割り当てられたアドレスを保持するようにしてください。</p>
+</dd>
+<dt class="hdlist1">割り当て済みアドレスのクラスター認識の欠如</dt>
+<dd>
+<p>静的IPはOVN-Kubernetes IPAMをバイパスします。クラスターはこれらのアドレスを追跡しないため、外部で適切に管理されていないとIP競合が発生する可能性があります。IPアドレスのインベントリを維持するか、外部のIPAMソリューションを使用してください。</p>
+</dd>
+<dt class="hdlist1">運用上のオーバーヘッド</dt>
+<dd>
+<p>静的IPの割り当ては、VMの作成、移動、削除のたびに手動（または外部IPAM経由）で追跡・更新する必要があります。予約を伴うDHCPを使用すると、この負担を軽減できます。</p>
+</dd>
+<dt class="hdlist1">静的IPが適している場合</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>固定アドレスを必要とするレガシーなワークロード</p>
+</li>
+<li>
+<p>IPを直接参照する外部システム（ファイアウォール、ロードバランサー、監視システム）との統合</p>
+</li>
+<li>
+<p>対象ネットワーク上にDHCPサーバーが存在しない環境</p>
+</li>
+<li>
+<p>アドレスの追跡可能性に関する規制やコンプライアンス要件がある環境</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1">DHCPまたはOVN-Kubernetes IPAMを優先すべき場合</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>一時的なVM、または頻繁に再作成されるVM</p>
+</li>
+<li>
+<p>信頼性の高いDHCPインフラストラクチャが存在する環境</p>
+</li>
+<li>
+<p>KubernetesのServicesおよびDNSを通じてのみ通信するワークロード</p>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以上</p>
+</li>
+<li>
+<p>CLIツール: <code>oc</code>、<code>virtctl</code></p>
+</li>
+<li>
+<p>少なくとも1つの設定済みネットワーク（プライマリPodネットワーク）</p>
+</li>
+<li>
+<p>セカンダリネットワークを使用する場合: NetworkAttachmentDefinition (NAD) が設定済みであること（<a href="localnet-vlan.html" class="xref page">Localnet VLAN チュートリアル</a>を参照）</p>
+</li>
+<li>
+<p>DHCP予約を使用する場合: 外部DHCPサーバーへの管理者アクセス権</p>
+</li>
+<li>
+<p>ネットワークに関する基本的な知識（IPアドレッシング、サブネット、ゲートウェイ、DNS）</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_手法1_cloud_init_networkdata"><a class="anchor" href="#_手法1_cloud_init_networkdata"></a>手法1: Cloud-init networkData</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Cloud-initは、VM起動時に実行される業界標準の初期化ツールです。<code>cloudInitNoCloud</code> ボリューム内の <code>networkData</code> フィールドは、Netplan互換のバージョン2形式を使用して、専用のネットワーク設定を提供します。</p>
+</div>
+<div class="paragraph">
+<p>これはOpenShift VirtualizationにおけるLinux VMの最も一般的な手法です。</p>
+</div>
+<div class="sect2">
+<h3 id="_仕組み"><a class="anchor" href="#_仕組み"></a>仕組み</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>VMが起動し、Cloud-initがNoCloudデータソースから <code>networkData</code> を読み取ります。</p>
+</li>
+<li>
+<p>Cloud-initは、ユーザー空間のサービスが開始される前にネットワーク設定を適用します。</p>
+</li>
+<li>
+<p>設定は再起動後も保持されます。</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_設定形式"><a class="anchor" href="#_設定形式"></a>設定形式</h3>
+<div class="paragraph">
+<p>Cloud-initのネットワーク設定はバージョン2（Netplan）形式を使用します。バージョン2形式は、デバイスタイプとして <code>ethernets</code>、<code>bonds</code>、<code>bridges</code>、<code>vlans</code> をサポートしています。各デバイスには <code>addresses</code>、<code>dhcp4</code>/<code>dhcp6</code>、<code>routes</code>、<code>nameservers</code>（<code>addresses</code> および <code>search</code> を含む）、<code>mtu</code>、および <code>match</code>（<code>macaddress</code>、<code>name</code>、または <code>driver</code> による）オプションを含めることができます。</p>
+</div>
+<div class="paragraph">
+<p>基本的な形式は以下の通りです。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: true
+    enp2s0:
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - 192.168.100.50/24
+      nameservers:
+        addresses:
+          - 192.168.100.1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>この例では、<code>enp1s0</code>（プライマリPodネットワークインターフェース）はDHCPを使用し、<code>enp2s0</code>（セカンダリインターフェース）は静的IPを受け取ります。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_デフォルトゲートウェイの設定"><a class="anchor" href="#_デフォルトゲートウェイの設定"></a>デフォルトゲートウェイの設定</h3>
+<div class="paragraph">
+<p><code>gateway4</code> または <code>gateway6</code> フィールドは使用しないでください。これらはNetplan 0.103およびCloud-init 23.1以降で非推奨となっています。代わりに <code>routes</code> を使用してください。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
+  version: 2
+  ethernets:
+    enp2s0:
+      dhcp4: false
+      addresses:
+        - 192.168.100.50/24
+      routes:
+        - to: 192.168.100.0/24
+          via: 192.168.100.1
+      nameservers:
+        addresses:
+          - 192.168.100.1
+        search:
+          - example.com</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>この例では、<code>search</code> フィールドでDNS検索ドメインを追加する方法と、<code>routes</code> リストで特定のルートを追加する方法も示しています。デフォルトゲートウェイのルートには <code>to: default</code> を使用してください（プライマリインターフェースにデフォルトルートが存在しない場合、セカンダリインターフェースでのみ使用します）。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_優先順位"><a class="anchor" href="#_優先順位"></a>優先順位</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>networkData</code> 設定（最優先）</p>
+</li>
+<li>
+<p>データソースのネットワーク設定</p>
+</li>
+<li>
+<p>DHCPへのフォールバック（デフォルト）</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_kubevirtでのインターフェース命名"><a class="anchor" href="#_kubevirtでのインターフェース命名"></a>KubeVirtでのインターフェース命名</h3>
+<div class="paragraph">
+<p>KubeVirtは、ゲストVM内部で予測可能なネットワークインターフェース命名規則を使用します。インターフェースはPCIスロットに基づいて順番に命名されます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>enp1s0</code>&#8201;&#8212;&#8201;最初のインターフェース（通常はPodネットワーク）</p>
+</li>
+<li>
+<p><code>enp2s0</code>&#8201;&#8212;&#8201;2番目のインターフェース（最初のセカンダリネットワーク）</p>
+</li>
+<li>
+<p><code>enp3s0</code>&#8201;&#8212;&#8201;3番目のインターフェース（2番目のセカンダリネットワーク）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>重要: <code>eth0</code> のようなレガシーな名前は使用しないでください。VM仕様で定義されたインターフェースの順序と一致する、予測可能な名前（<code>enpXs0</code>）を使用してください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_重要なフォーマット規則"><a class="anchor" href="#_重要なフォーマット規則"></a>重要なフォーマット規則</h3>
+<div class="paragraph">
+<p><code>cloudInitNoCloud</code> ボリュームで <code>networkData</code> を提供する際は、以下の規則に注意してください。</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>network:</code> キーでラップしない</dt>
+<dd>
+<p>KubeVirtの <code>networkData</code> フィールドは、設定が直接 <code>version: 2</code> で始まることを期待しています。トップレベルの <code>network:</code> ラッパーは追加しないでください。その形式はスタンドアロンの構成ファイル用であり、NoCloudデータソースの <code>networkData</code> フィールドでは使用しません。</p>
+</dd>
+<dt class="hdlist1">常に <code>userData</code> を含める</dt>
+<dd>
+<p><code>userData</code> も設定されていない限り、Cloud-initは <code>networkData</code> を解析しません。最小限の <code>userData</code> ヘッダー（<code>#cloud-config</code>）でも十分です。本チュートリアルのすべての例には <code>userData</code> が含まれています。</p>
+</dd>
+<dt class="hdlist1">Secret参照よりもインラインの <code>networkData</code> を優先</dt>
+<dd>
+<p>一部の設定において <code>networkDataSecretRef</code> がCloud-initによって適用されないという既知の問題があります。安定した動作のために、インラインの <code>networkData</code> フィールドまたは <code>networkDataBase64</code> を使用してください。</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_静的ipが適用される場所"><a class="anchor" href="#_静的ipが適用される場所"></a>静的IPが適用される場所</h3>
+<div class="paragraph">
+<p>静的IP設定は<strong>セカンダリネットワークインターフェースのみ</strong>に適用されます。プライマリインターフェースはマスカレード経由でPodネットワークに接続し、クラスターから自動的にIPを受け取るため、静的IPを割り当てないでください。マスカレードブリッジは内部サブネット（<code>10.0.2.0/24</code>）上で動作し、NATによってPod IPに変換されます。これを別のサブネットの静的アドレスで上書きすると、接続が切断されます。</p>
+</div>
+<div class="paragraph">
+<p>本チュートリアルのすべての例では、プライマリインターフェース（<code>enp1s0</code>）をDHCPのままにし、セカンダリインターフェース（<code>enp2s0</code> 以降）に静的IPを設定します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_シナリオ_プライマリdhcp_セカンダリ静的ip"><a class="anchor" href="#_シナリオ_プライマリdhcp_セカンダリ静的ip"></a>シナリオ: プライマリDHCP + セカンダリ静的IP</h3>
+<div class="paragraph">
+<p>これが標準的なアプローチです。プライマリインターフェースはPodネットワーク上でDHCPを使用し、VLANまたはブリッジネットワーク上のセカンダリインターフェースが静的IPを取得します。</p>
+</div>
+<div class="paragraph">
+<p>前提条件: セカンダリネットワークが設定されていることを確認してください（例: localnet VLAN 100のNetworkAttachmentDefinition (NAD)）。設定手順については <a href="localnet-vlan.html" class="xref page">Localnet VLAN チュートリアル</a> を参照してください。</p>
+</div>
+<div class="paragraph">
+<p>本チュートリアル用のネームスペースを作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace static-ip-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/static-ip-configuration/fedora-multi-network-vm.yaml" class="xref attachment">fedora-multi-network-vm.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-multi-vm
+  namespace: static-ip-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: fedora-multi-vm-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: fedora-multi-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+            - bridge: {}
+              name: vlan-network
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+        - name: vlan-network
+          multus:
+            networkName: localnet-vlan-100
+      volumes:
+        - dataVolume:
+            name: fedora-multi-vm-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+            networkData: |-
+              version: 2
+              ethernets:
+                enp1s0:
+                  dhcp4: true
+                enp2s0:
+                  dhcp4: false
+                  dhcp6: false
+                  addresses:
+                    - 192.168.100.50/24
+                  nameservers:
+                    addresses:
+                      - 192.168.100.1
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>デプロイして検証します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f fedora-multi-network-vm.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMコンソールにアクセスし、両方のインターフェースを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console fedora-multi-vm -n static-ip-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM内部で、設定を確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ip addr show</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">期待される出力</div>
+<div class="content">
+<pre>1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute
+       valid_lft forever preferred_lft forever
+2: enp1s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1400 qdisc fq_codel state UP group default qlen 1000
+    link/ether 02:7e:e2:23:d7:da brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.2/24 brd 10.0.2.255 scope global dynamic noprefixroute enp1s0
+       valid_lft 86313438sec preferred_lft 86313438sec
+    inet6 fe80::7e:e2ff:fe23:d7da/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+3: enp2s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1400 qdisc fq_codel state UP group default qlen 1000
+    link/ether 02:7e:e2:23:d7:db brd ff:ff:ff:ff:ff:ff
+    inet 192.168.100.50/24 brd 192.168.100.255 scope global noprefixroute enp2s0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::7e:e2ff:fe23:d7db/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ip route show</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">期待される出力</div>
+<div class="content">
+<pre>default via 10.0.2.1 dev enp1s0 proto dhcp src 10.0.2.2 metric 100
+10.0.2.0/24 dev enp1s0 proto kernel scope link src 10.0.2.2 metric 100
+192.168.100.0/24 dev enp2s0 proto kernel scope link src 192.168.100.50 metric 101</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注: 最初のインターフェース（<code>enp1s0</code>）はDHCPを使用し、デフォルトルートを自動的に受け取ります。2番目のインターフェース（<code>enp2s0</code>）は、デフォルトルートなしで静的IP <code>192.168.100.50</code> を保持します。ルーティングの競合を避けるため、セカンダリインターフェースにはデフォルトルートを設定しないでください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cloud_initの検証"><a class="anchor" href="#_cloud_initの検証"></a>Cloud-initの検証</h3>
+<div class="paragraph">
+<p>Cloud-initを使用してVMをデプロイした後、VirtualMachineInstanceステータスを使用してVM外からIP設定を検証できます。QEMUゲストエージェントはインターフェースの詳細をクラスターに報告します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi fedora-multi-vm -n static-ip-demo -o jsonpath='{.status.interfaces}' | python3 -m json.tool</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">期待される出力</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">[
+    {
+        "infoSource": "domain, guest-agent",
+        "interfaceName": "enp1s0",
+        "ipAddress": "10.128.1.106",
+        "ipAddresses": [
+            "10.128.1.106"
+        ],
+        "mac": "02:7e:e2:23:d7:da",
+        "name": "default"
+    },
+    {
+        "infoSource": "domain, guest-agent, multus-status",
+        "interfaceName": "enp2s0",
+        "ipAddress": "192.168.100.50",
+        "ipAddresses": [
+            "192.168.100.50",
+            "fe80::7e:e2ff:fe23:d7db"
+        ],
+        "mac": "02:7e:e2:23:d7:db",
+        "name": "vlan-network"
+    }
+]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>この出力は、<code>networkData</code> で設定した通り、<code>enp2s0</code> が静的IP <code>192.168.100.50</code> を持っていることを確認します。出力が空の場合、ゲストエージェントがまだ起動していない可能性があります。</p>
+</div>
+<div class="paragraph">
+<p>VM内部から検証するには、コンソールに接続します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console fedora-multi-vm -n static-ip-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM内部:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cloud-init status</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">期待される出力</div>
+<div class="content">
+<pre>status: done</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">nmcli connection show</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">期待される出力</div>
+<div class="content">
+<pre>NAME               UUID                                  TYPE      DEVICE
+cloud-init enp1s0  a41601f3-3acc-5f60-ac5f-9d9011ab7c25  ethernet  enp1s0
+cloud-init enp2s0  90ff9077-4cf0-55d5-904d-6cdc4f01d148  ethernet  enp2s0
+lo                 29567487-41a5-4ac6-a312-f00ed799a660  loopback  lo</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> でコンソールから抜けます。</p>
+</div>
+<div class="paragraph">
+<p>Cloud-initがエラーを報告した場合は、ログを確認してください。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo cat /var/log/cloud-init.log</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>詳細なトラブルシューティングについては、<a href="cloud-init-troubleshooting.html" class="xref page">Cloud-init トラブルシューティングガイド</a> を参照してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_手法2_固定ipを持つudnプライマリネットワーク"><a class="anchor" href="#_手法2_固定ipを持つudnプライマリネットワーク"></a>手法2: 固定IPを持つUDNプライマリネットワーク</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>レイヤー2トポロジーを持つユーザー定義ネットワーク（UDN）は、安定したIPアドレッシングのためのクラスター管理された代替案を提供します。UDNが <code>ipam.lifecycle: Persistent</code> を持つネームスペースのプライマリネットワークとして設定されている場合、OVN-Kubernetesは定義されたサブネットからIPを割り当て、<code>IPAMClaim</code> カスタムリソースを使用してVMの再起動、停止/開始サイクル、ライブマイグレーションを通じてIPを維持します。</p>
+</div>
+<div class="paragraph">
+<p>このアプローチにより、手動の静的IP設定や外部DHCPサーバーが不要になります。クラスターがIP割り当てを処理し、各VMが割り当てられたアドレスを保持することを保証します。</p>
+</div>
+<div class="sect2">
+<h3 id="_仕組み_2"><a class="anchor" href="#_仕組み_2"></a>仕組み</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>k8s.ovn.org/primary-user-defined-network</code> ラベルを持つネームスペースを作成します。</p>
+</li>
+<li>
+<p>レイヤー2トポロジー、サブネット、および <code>ipam.lifecycle: Persistent</code> を持つ <code>UserDefinedNetwork</code> リソースを定義します。</p>
+</li>
+<li>
+<p>そのネームスペースにデプロイされたVMは、Cloud-initの <code>networkData</code> やDHCP予約を必要とせず、サブネットから自動的に固定IPを受け取ります。</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_この手法の使用場面"><a class="anchor" href="#_この手法の使用場面"></a>この手法の使用場面</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>手動設定なしでクラスター管理のIP割り当てを行いたい場合</p>
+</li>
+<li>
+<p>VMが再起動やライブマイグレーションを通じて同じIPを保持する必要がある場合</p>
+</li>
+<li>
+<p>外部DHCPサーバーの維持やマニフェストへのIP埋め込みを避けたい場合</p>
+</li>
+<li>
+<p>カスタムサブネットを用いたネームスペース範囲のネットワーク分離が必要な場合</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>ネームスペースの設定、UDNの作成、VMのデプロイ、接続性検証を含む完全なウォークスルーについては、<a href="udn-primary-networks.html" class="xref page">UDNを使用したレイヤー2プライマリネットワークの設定</a> を参照してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_手法3_dhcp予約"><a class="anchor" href="#_手法3_dhcp予約"></a>手法3: DHCP予約</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>DHCP予約（静的DHCPまたは固定アドレスDHCPとも呼ばれます）は、DHCPの自動化と静的IP割り当ての予測可能性を兼ね備えています。DHCPサーバーが特定のMACアドレスを固定IPにマッピングするため、VMは常に同じアドレスを受け取ります。</p>
+</div>
+<div class="sect2">
+<h3 id="_仕組み_3"><a class="anchor" href="#_仕組み_3"></a>仕組み</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>VM仕様でVMのネットワークインターフェースに固定MACアドレスを割り当てます。</p>
+</li>
+<li>
+<p>外部DHCPサーバー上で、そのMACアドレスを特定のIPにマッピングする予約を作成します。</p>
+</li>
+<li>
+<p>VMが起動し、DHCP要求を送信すると、予約されたアドレスを受け取ります。</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_この手法の使用場面_2"><a class="anchor" href="#_この手法の使用場面_2"></a>この手法の使用場面</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>既存のDHCPインフラストラクチャがあり、中央集権的なIP管理を行いたい場合</p>
+</li>
+<li>
+<p>ネットワーク設定をVMマニフェストに埋め込みたくない場合</p>
+</li>
+<li>
+<p>VMのポータビリティが必要な場合（IPはマニフェストではなくMACに追従します）</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_静的macアドレスの割り当て"><a class="anchor" href="#_静的macアドレスの割り当て"></a>静的MACアドレスの割り当て</h3>
+<div class="paragraph">
+<p>DHCP予約を使用するには、VMインターフェースに固定MACアドレスを設定する必要があります。これを行わないと、KubeVirtは起動のたびにランダムなMACを割り当てるため、予約が機能しません。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/static-ip-configuration/fedora-dhcp-reserved-vm.yaml" class="xref attachment">fedora-dhcp-reserved-vm.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-dhcp-reserved-vm
+  namespace: static-ip-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: fedora-dhcp-reserved-vm-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: fedora-dhcp-reserved-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+            - bridge: {}
+              name: vlan-network
+              macAddress: "02:00:00:01:00:01"
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+        - name: vlan-network
+          multus:
+            networkName: localnet-vlan-100
+      volumes:
+        - dataVolume:
+            name: fedora-dhcp-reserved-vm-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Cloud-init手法との主な違いは、セカンダリインターフェース上の <code>macAddress</code> フィールドです。DHCPサーバーがIP割り当てを処理するため、<code>networkData</code> は不要です。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dhcpサーバーの設定"><a class="anchor" href="#_dhcpサーバーの設定"></a>DHCPサーバーの設定</h3>
+<div class="paragraph">
+<p>外部DHCPサーバー上で、MACアドレスに対する予約を作成します。正確な設定は使用しているDHCPソフトウェアによって異なります。</p>
+</div>
+<div class="paragraph">
+<p>ISC DHCPの例 (<code>dhcpd.conf</code>):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">host fedora-dhcp-reserved-vm {
+  hardware ethernet 02:00:00:01:00:01;
+  fixed-address 192.168.100.60;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>dnsmasqの例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">dhcp-host=02:00:00:01:00:01,192.168.100.60,fedora-dhcp-reserved-vm</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>予約の設定後、VMをデプロイします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f fedora-dhcp-reserved-vm.yaml</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_検証"><a class="anchor" href="#_検証"></a>検証</h3>
+<div class="paragraph">
+<p>VMにアクセスし、IPが予約と一致していることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console fedora-dhcp-reserved-vm -n static-ip-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM内部:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ip addr show enp2s0</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>DHCP予約が適用されている場合、出力は固定MAC上の予約済みIPを表示します。</p>
+</div>
+<div class="listingblock">
+<div class="title">期待される出力</div>
+<div class="content">
+<pre>3: enp2s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1400 qdisc fq_codel state UP group default qlen 1000
+    link/ether 02:00:00:01:00:01 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.100.60/24 brd 192.168.100.255 scope global dynamic enp2s0
+       valid_lft 3600sec preferred_lft 3600sec</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>DHCPサーバーが応答しない場合、インターフェースはリンクローカルIPv6アドレスのみを持つことになります。固定MAC <code>02:00:00:01:00:01</code> は、<code>macAddress</code> フィールドが正しく適用されていることを確認します。</p>
+</div>
+<div class="paragraph">
+<p>注: <code>02:</code> で始まるMACアドレスはローカル管理範囲にあるため、ハードウェアベンダーが割り当てたMACと競合することはありません。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ライブマイグレーションに関する考慮事項"><a class="anchor" href="#_ライブマイグレーションに関する考慮事項"></a>ライブマイグレーションに関する考慮事項</h3>
+<div class="paragraph">
+<p>静的IPを持つVMを他のノードにライブマイグレーションする場合、動作はネットワークタイプに依存します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>ブリッジベースのセカンダリネットワーク（localnet、Linuxブリッジ）</strong>: VMはマイグレーション中もMACアドレスとIPを保持します。ネットワークファブリックがMACモビリティをサポートしている必要があります（例: スイッチがMACアドレステーブルを更新する必要がある）。Cloud-init、DHCP予約、または <code>nmcli</code> を通じて割り当てられた静的IPは、マイグレーション後も保持されます。</p>
+</li>
+<li>
+<p><strong>SR-IOVネットワーク</strong>: SR-IOVでのライブマイグレーションには追加の設定が必要であり、同じネットワークパスが保持されない場合があります。詳細については <a href="https://docs.openshift.com/container-platform/latest/virt/live_migration/virt-about-live-migration.html" target="_blank" rel="noopener">OpenShift Virtualization ライブマイグレーションのドキュメント</a> を参照してください。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>プライマリPodネットワークインターフェースは、マイグレーション後に新しいPod IPを受け取りますが、マスカレードモードを使用する場合、これはゲストOSに対して透過的です。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_手法4_nmcli_を使用したqemuゲストエージェント"><a class="anchor" href="#_手法4_nmcli_を使用したqemuゲストエージェント"></a>手法4: nmcli を使用したQEMUゲストエージェント</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>QEMUゲストエージェントを使用すると、ホスト（KubeVirt）は実行中のVMと通信できます。このチャネルを使用して、ゲスト内部の標準ツールである <code>nmcli</code> を使用し、VM起動後にネットワークを設定できます。</p>
+</div>
+<div class="paragraph">
+<p>この手法は、既に実行中のVMでネットワーク設定を変更する必要がある場合や、Cloud-initが使用できない、または実用的でない場合に便利です。</p>
+</div>
+<div class="sect2">
+<h3 id="_仕組み_4"><a class="anchor" href="#_仕組み_4"></a>仕組み</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>VMが対象インターフェース上でDHCPを使用するか、IPなしで起動します。</p>
+</li>
+<li>
+<p>VM内でQEMUゲストエージェントが開始されます。</p>
+</li>
+<li>
+<p>VMコンソール（またはSSH）に接続し、<code>nmcli</code> を使用して静的IPを適用します。</p>
+</li>
+<li>
+<p>NetworkManagerが設定を保存するため、設定は再起動後も保持されます。</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_前提条件_2"><a class="anchor" href="#_前提条件_2"></a>前提条件</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>VMイメージに <code>qemu-guest-agent</code> パッケージが含まれている必要があります（ほとんどのRed HatおよびFedoraイメージにはデフォルトで含まれています）。</p>
+</li>
+<li>
+<p>ゲストエージェントがVM内で実行されている必要があります。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_静的ipの適用"><a class="anchor" href="#_静的ipの適用"></a>静的IPの適用</h3>
+<div class="paragraph">
+<p>まず、セカンダリインターフェースでDHCPを使用するか、またはそのインターフェースに対して <code>networkData</code> を設定せずにVMをデプロイします。</p>
+</div>
+<div class="paragraph">
+<p>VMに接続します（例: 手法2でデプロイしたDHCP予約済みVM）。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console fedora-dhcp-reserved-vm -n static-ip-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲストエージェントが実行されていることを確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">systemctl status qemu-guest-agent</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲストエージェントが実行されていない場合は、起動して有効にします。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo systemctl enable --now qemu-guest-agent</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>現在のネットワーク接続をリスト表示します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">nmcli connection show</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>対象インターフェースの接続名を特定します（例: <code>enp2s0</code> または <code>Wired connection 2</code>）。</p>
+</div>
+<div class="paragraph">
+<p>静的IP設定を適用します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo nmcli connection modify "Wired connection 2" \
+  ipv4.method manual \
+  ipv4.addresses 192.168.100.70/24 \
+  ipv4.dns 192.168.100.1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>更新された設定を有効化します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo nmcli connection up "Wired connection 2"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM内部で結果を検証します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ip addr show enp2s0</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VirtualMachineInstanceステータスを使用してVM外からも検証できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi fedora-dhcp-reserved-vm -n static-ip-demo -o jsonpath='{.status.interfaces[*].ipAddress}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>設定はNetworkManagerによって保存され、VMの再起動後も保持されます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_この手法の使用場面_3"><a class="anchor" href="#_この手法の使用場面_3"></a>この手法の使用場面</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>実行中のVMに対するデプロイ後のネットワーク変更</p>
+</li>
+<li>
+<p>Cloud-initが使用されていなかった他のプラットフォームからマイグレーションされたVM</p>
+</li>
+<li>
+<p>一時的または動的なネットワーク再構成</p>
+</li>
+<li>
+<p>Cloud-init設定を上書きする必要があるトラブルシューティングのシナリオ</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>注意: VMがもともとCloud-initの <code>networkData</code> で設定されていた場合、再起動時にCloud-initが <code>nmcli</code> の変更を上書きする可能性があります（Cloud-initの設定に依存します）。これを防ぐには、VM仕様から <code>networkData</code> を削除するか、対象インターフェースを管理しないようにCloud-initを設定してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_手法5_windows_vm向けsysprep"><a class="anchor" href="#_手法5_windows_vm向けsysprep"></a>手法5: Windows VM向けSysprep</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Windows仮想マシンでは、<code>unattend.xml</code> 回答ファイルを使用したMicrosoft Sysprepにより、Windowsの初期セットアップ（OOBE）またはspecializeパス中に静的IP設定を提供できます。</p>
+</div>
+<div class="sect2">
+<h3 id="_仕組み_5"><a class="anchor" href="#_仕組み_5"></a>仕組み</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>ネットワーク設定を含む <code>unattend.xml</code> ファイルを作成します。</p>
+</li>
+<li>
+<p>そのファイルが <code>sysprep</code> ボリュームを通じてVMに注入されます。</p>
+</li>
+<li>
+<p>Windowsはセットアップ中に回答ファイルを読み取り、ネットワーク設定を適用します。</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_unattend_xml_のネットワークセクションの例"><a class="anchor" href="#_unattend_xml_のネットワークセクションの例"></a>unattend.xml のネットワークセクションの例</h3>
+<div class="paragraph">
+<p>以下のスニペットは、specializeパス中に <code>Ethernet</code> として識別されるセカンダリネットワークインターフェースに静的IPを設定します。マルチNICのWindows VMでは、インターフェースの <code>Identifier</code> がターゲットネットワークに接続されているアダプターと一致することを確認してください。確認にはデバイスマネージャーまたはPowerShellの <code>Get-NetAdapter</code> を使用してください。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;unattend xmlns="urn:schemas-microsoft-com:unattend"&gt;
+  &lt;settings pass="specialize"&gt;
+    &lt;component name="Microsoft-Windows-TCPIP"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"&gt;
+      &lt;Interfaces&gt;
+        &lt;Interface wcm:action="add"&gt;
+          &lt;Identifier&gt;Ethernet&lt;/Identifier&gt;
+          &lt;Ipv4Settings&gt;
+            &lt;DhcpEnabled&gt;false&lt;/DhcpEnabled&gt;
+          &lt;/Ipv4Settings&gt;
+          &lt;UnicastIpAddresses&gt;
+            &lt;IpAddress wcm:action="add" wcm:keyValue="1"&gt;192.168.100.80/24&lt;/IpAddress&gt;
+          &lt;/UnicastIpAddresses&gt;
+          &lt;Routes&gt;
+            &lt;Route wcm:action="add"&gt;
+              &lt;Identifier&gt;0&lt;/Identifier&gt;
+              &lt;NextHopAddress&gt;192.168.100.1&lt;/NextHopAddress&gt;
+              &lt;Prefix&gt;0.0.0.0/0&lt;/Prefix&gt;
+            &lt;/Route&gt;
+          &lt;/Routes&gt;
+        &lt;/Interface&gt;
+      &lt;/Interfaces&gt;
+    &lt;/component&gt;
+    &lt;component name="Microsoft-Windows-DNS-Client"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"&gt;
+      &lt;Interfaces&gt;
+        &lt;Interface wcm:action="add"&gt;
+          &lt;Identifier&gt;Ethernet&lt;/Identifier&gt;
+          &lt;DNSServerSearchOrder&gt;
+            &lt;IpAddress wcm:action="add" wcm:keyValue="1"&gt;8.8.8.8&lt;/IpAddress&gt;
+          &lt;/DNSServerSearchOrder&gt;
+        &lt;/Interface&gt;
+      &lt;/Interfaces&gt;
+    &lt;/component&gt;
+  &lt;/settings&gt;
+&lt;/unattend&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_回答ファイルの注入"><a class="anchor" href="#_回答ファイルの注入"></a>回答ファイルの注入</h3>
+<div class="paragraph">
+<p><code>unattend.xml</code> をConfigMapに保存し、VM仕様で <code>sysprep</code> ボリュームとして参照します。Sysprepを使用したWindows VMデプロイの完全なウォークスルーについては、<a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/virtualization/creating-a-virtual-machine" target="_blank" rel="noopener">Sysprepを使用したWindows VM作成に関するOpenShiftドキュメント</a> を参照してください。</p>
+</div>
+<div class="paragraph">
+<p>回答ファイルを含むConfigMapを作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create configmap windows-sysprep --from-file=unattend.xml -n static-ip-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM仕様で参照します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">volumes:
+  - name: sysprep
+    sysprep:
+      configMap:
+        name: windows-sysprep</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>そして、対応するディスクを追加します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">devices:
+  disks:
+    - cdrom:
+        bus: sata
+      name: sysprep</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_この手法の使用場面_4"><a class="anchor" href="#_この手法の使用場面_4"></a>この手法の使用場面</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>静的IPを必要とするWindows Server VM</p>
+</li>
+<li>
+<p>回答ファイルを使用した自動化されたWindowsデプロイメント</p>
+</li>
+<li>
+<p>VMwareやHyper-VからWindowsワークロードを移行する環境</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>注: SysprepはWindowsの初期セットアップ中にのみ実行されます。Windows VMのデプロイ後のIP変更については、PowerShellリモートアクセスまたはRDPを使用して手動でネットワークを設定してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_手法を選択する"><a class="anchor" href="#_手法を選択する"></a>手法を選択する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>以下の表は、各手法を使用すべきタイミングをまとめたものです。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">基準</th>
+<th class="tableblock halign-left valign-top">Cloud-init networkData</th>
+<th class="tableblock halign-left valign-top">UDN 固定IP</th>
+<th class="tableblock halign-left valign-top">DHCP予約</th>
+<th class="tableblock halign-left valign-top">ゲストエージェント / nmcli</th>
+<th class="tableblock halign-left valign-top">Sysprep</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ゲストOS</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linux</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linux / Windows</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linux / Windows</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linux</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Windows</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">設定タイミング</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">初回起動</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">自動（クラスター管理）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">毎回の起動（DHCP）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">起動後</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">初回起動（OOBE）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">外部サーバーが必要</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">いいえ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">いいえ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい（DHCPサーバー）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">いいえ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">いいえ</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">再起動後も保持</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい (IPAMClaim)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい（DHCP経由）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい (NetworkManager)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ライブマイグレーション後</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい (ブリッジ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい（組み込み）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい (ブリッジ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい (ブリッジ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい (ブリッジ)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">マルチインターフェース対応</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プライマリのみ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">限定的</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">宣言的 / マニフェスト記述</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい (UDNリソース)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">部分的 (MACのみ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">いいえ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">はい (ConfigMap)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">デプロイ後の変更</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM再作成が必要</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クラスターが管理</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">DHCPサーバーを更新</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">実行中のVMに直接</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">手動 (RDP/PowerShell)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_一般的な問題と解決策"><a class="anchor" href="#_一般的な問題と解決策"></a>一般的な問題と解決策</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_network_キーでラップされた_networkdata"><a class="anchor" href="#_network_キーでラップされた_networkdata"></a><code>network:</code> キーでラップされた <code>networkData</code></h3>
+<div class="paragraph">
+<p><strong>問題</strong>: <code>network:</code> キーでラップされていたため、Cloud-initが <code>networkData</code> を無視しました。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>: KubeVirtの <code>cloudInitNoCloud</code> ボリュームでは、<code>networkData</code> フィールドは直接 <code>version: 2</code> で始まる必要があります。トップレベルの <code>network:</code> ラッパーは追加しないでください。正しい形式は <code>network:\n  version: 2\n  ethernets:\n  &#8230;&#8203;</code> ではなく、<code>version: 2\nethernets:\n  &#8230;&#8203;</code> です。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_インターフェース名が一致しない"><a class="anchor" href="#_インターフェース名が一致しない"></a>インターフェース名が一致しない</h3>
+<div class="paragraph">
+<p><strong>問題</strong>: <code>networkData</code> で <code>enp1s0</code> ではなく <code>eth0</code> を使用した。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>: ゲストOS内部で表示される予測可能なインターフェース名を使用してください。最新のLinuxディストリビューション（RHEL 8+、Fedora、Ubuntu 16.04+）は <code>enp1s0</code>、<code>enp2s0</code> などを使用します。順序はVM仕様内のインターフェース順序と一致します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_セカンダリインターフェースで接続できない"><a class="anchor" href="#_セカンダリインターフェースで接続できない"></a>セカンダリインターフェースで接続できない</h3>
+<div class="paragraph">
+<p><strong>問題</strong>: 静的インターフェースでDHCPを無効にするのを忘れた。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>: Cloud-initの <code>networkData</code> で静的IPを使用する場合は、常に <code>dhcp4: false</code> および <code>dhcp6: false</code> を設定してください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_複数のデフォルトルートによる接続問題"><a class="anchor" href="#_複数のデフォルトルートによる接続問題"></a>複数のデフォルトルートによる接続問題</h3>
+<div class="paragraph">
+<p><strong>問題</strong>: プライマリインターフェースとセカンダリインターフェースの両方にデフォルトルートを設定した。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>: デフォルトルートはプライマリインターフェース（通常は <code>enp1s0</code>）のみに設定してください。セカンダリインターフェースにデフォルトルートを設定しないでください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cloud_init設定が適用されない"><a class="anchor" href="#_cloud_init設定が適用されない"></a>Cloud-init設定が適用されない</h3>
+<div class="paragraph">
+<p><strong>問題</strong>: YAMLまたはCloud-init設定の構文エラー。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>: VM内部の <code>/var/log/cloud-init.log</code> でCloud-initログを確認してください。YAMLのインデントを検証し、<code>cloud-init status</code> を使用してエラーがないか確認してください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_セカンダリネットワークでdnsが解決されない"><a class="anchor" href="#_セカンダリネットワークでdnsが解決されない"></a>セカンダリネットワークでDNSが解決されない</h3>
+<div class="paragraph">
+<p><strong>問題</strong>: セカンダリインターフェースでネームサーバーが設定されていない、または誤っている。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>: そのインターフェース用の <code>networkData</code> に適切なネームサーバーを追加してください。セカンダリインターフェースが隔離されたネットワーク上にある場合、外部DNSは不要な場合があります。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_非推奨の_gateway4_フィールドが警告を生成または失敗する"><a class="anchor" href="#_非推奨の_gateway4_フィールドが警告を生成または失敗する"></a>非推奨の <code>gateway4</code> フィールドが警告を生成または失敗する</h3>
+<div class="paragraph">
+<p><strong>問題</strong>: <code>networkData</code> で <code>gateway4: 192.168.100.1</code> を使用すると、新しいCloud-initバージョン（23.1以降）で非推奨警告が発生する、または失敗する。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>: <code>gateway4</code> を <code>routes</code> エントリに置き換えてください。代わりに <code>routes: [{to: default, via: 192.168.100.1}]</code> を使用してください。<code>gateway4</code> および <code>gateway6</code> フィールドは、Netplan 0.103で非推奨となりました。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dhcp予約が機能しない"><a class="anchor" href="#_dhcp予約が機能しない"></a>DHCP予約が機能しない</h3>
+<div class="paragraph">
+<p><strong>問題</strong>: DHCP予約があるにもかかわらず、VMが起動のたびに異なるIPを受け取る。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>: VMインターフェース仕様で <code>macAddress</code> フィールドが設定されていることを確認してください。固定MACがないと、KubeVirtは起動するたびにランダムなMACを割り当てます。また、DHCPサーバーの予約がMACアドレスと正確に一致していることを確認してください。</p>
+</div>
+<div class="paragraph">
+<p>詳細なCloud-initトラブルシューティングについては、<a href="cloud-init-troubleshooting.html" class="xref page">Cloud-init トラブルシューティングガイド</a> を参照してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルで作成されたすべてのリソースを削除するには、デプロイしたVMを削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete vm fedora-multi-vm -n static-ip-demo --ignore-not-found</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete vm fedora-dhcp-reserved-vm -n static-ip-demo --ignore-not-found</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>次に、ネームスペースを削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace static-ip-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、以下について学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualizationで静的IPを使用する場合のトレードオフ</p>
+</li>
+<li>
+<p>Linux VM向けにCloud-init <code>networkData</code> で静的IPを設定する方法</p>
+</li>
+<li>
+<p>クラスター管理されたアドレッシングのために固定IPを持つUDNプライマリネットワークを使用する方法</p>
+</li>
+<li>
+<p>予測可能なアドレッシングのために固定MACアドレスを使用してDHCP予約を行う方法</p>
+</li>
+<li>
+<p>QEMUゲストエージェントと <code>nmcli</code> を使用して起動後に静的IPを適用する方法</p>
+</li>
+<li>
+<p>Sysprepと <code>unattend.xml</code> を使用してWindows VMの静的IPを設定する方法</p>
+</li>
+<li>
+<p>環境や要件に基づいて適切な手法を選択する方法</p>
+</li>
+<li>
+<p>一般的な問題とその解決策</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://cloudinit.readthedocs.io/en/latest/reference/network-config.html" target="_blank" rel="noopener">Cloud-init ネットワーク設定</a></p>
+</li>
+<li>
+<p><a href="https://cloudinit.readthedocs.io/en/latest/reference/network-config-format-v2.html" target="_blank" rel="noopener">Cloud-init ネットワーク設定 バージョン2 (Netplan形式)</a></p>
+</li>
+<li>
+<p><a href="https://cloudinit.readthedocs.io/en/latest/reference/datasources/nocloud.html" target="_blank" rel="noopener">Cloud-init NoCloud データソース</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/user_workloads/startup_scripts/" target="_blank" rel="noopener">KubeVirt スタートアップスクリプト (Cloud-init)</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/network/interfaces_and_networks/" target="_blank" rel="noopener">KubeVirt ネットワークインターフェースとネットワーク</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-connecting-vm-to-default-pod-network.html" target="_blank" rel="noopener">VMをデフォルトのPodネットワークに接続する</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/latest/virt/about_virt/about-virt.html" target="_blank" rel="noopener">OpenShift Virtualization ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/latest/virt/live_migration/virt-about-live-migration.html" target="_blank" rel="noopener">OpenShift Virtualization ライブマイグレーション</a></p>
+</li>
+<li>
+<p><a href="https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/automate-windows-setup" target="_blank" rel="noopener">Microsoft Sysprep および Unattend リファレンス</a></p>
+</li>
+<li>
+<p><a href="https://netplan.readthedocs.io/en/stable/netplan-yaml/" target="_blank" rel="noopener">Netplan YAML 設定リファレンス</a></p>
+</li>
+<li>
+<p><a href="cloud-init-troubleshooting.html" class="xref page">Cloud-init トラブルシューティングガイド</a></p>
+</li>
+<li>
+<p><a href="localnet-vlan.html" class="xref page">Localnet VLAN チュートリアル</a></p>
+</li>
+<li>
+<p><a href="udn-primary-networks.html" class="xref page">UDNを使用したレイヤー2プライマリネットワークの設定</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">ネットワーク構成</a></span>
+  <span class="next"><a href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

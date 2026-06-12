@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>カスタム仮想マシンテンプレートの作成 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="hotplug-volumes-interfaces.html">
+    <link rel="next" href="../performance/index.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">仮想マシンの設定</a></li>
+    <li><a href="vm-templates.html">仮想マシンテンプレート</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">カスタム仮想マシンテンプレートの作成</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>データソースとして準備されたディスクイメージから新しい <code>VirtualMachines</code> を作成するために使用される「ゴールデンイメージ」の概念と同様に、テンプレートは <code>VirtualMachine</code> マニフェストをテンプレート化することで、これをさらに一歩進めたものです。これにより、仮想ハードウェアやその他の設定を以下のように指定できます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>インスタンスタイプ (vCPU 数と RAM サイズを推論)</p>
+</li>
+<li>
+<p>マシン設定 (CPU トポロジーとファームウェアタイプ)</p>
+</li>
+<li>
+<p>ネットワークとインターフェース</p>
+</li>
+<li>
+<p>ディスクとボリューム</p>
+</li>
+<li>
+<p>定義済みのラベルとアノテーション</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>これにより、OpenShift Virtualization コンソールとコマンドラインの両方から、マシン仕様全体を迅速かつ反復的にデプロイできるようになります。</p>
+</div>
+<div class="paragraph">
+<p><code>VirtualMachine</code> は、OpenShift Virtualization コンソールから「テンプレートから作成」オプションを選択し、<code>rhel9-server-large</code>、<code>fedora-desktop-medium</code> などの VM テンプレートを選択するだけで簡単に作成できます。</p>
+</div>
+<div class="paragraph">
+<p>要約すると、このガイドでは <code>VirtualMachine</code> テンプレートを選択、デプロイ、カスタマイズする方法を説明します。</p>
+</div>
+<div class="paragraph">
+<p>テスト済みのバージョン:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>OpenShift 4.21</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_学習内容"><a class="anchor" href="#_学習内容"></a>学習内容</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このガイドでは、以下の順序で各トピックをステップバイステップで説明します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#prerequisites">前提条件</a></p>
+</li>
+<li>
+<p><a href="#step_1_selecting_template">ステップ 1: テンプレートの表示と選択</a></p>
+</li>
+<li>
+<p><a href="#step_2_deploying_template">ステップ 2: テンプレートからの仮想マシンのデプロイ</a></p>
+</li>
+<li>
+<p><a href="#step_3_customizing_template">ステップ 3: テンプレートのカスタマイズ</a></p>
+</li>
+<li>
+<p><a href="#step_4_testing_cleanup">ステップ 4: 最終テストとクリーンアップ</a></p>
+</li>
+<li>
+<p><a href="#summary">まとめ</a></p>
+</li>
+<li>
+<p><a href="#see_also">参照</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="prerequisites"><a class="anchor" href="#prerequisites"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このガイドを完了するには、以下が必要です。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>bash または互換性のあるシェル環境 (zsh でもテスト済み)。</p>
+</li>
+<li>
+<p>OpenShift クライアントツール <code>oc</code>。</p>
+</li>
+<li>
+<p>OpenShift Virtualization がインストールされた OpenShift クラスター。</p>
+</li>
+<li>
+<p>テキスト（またはコード）エディターまたは IDE アプリケーション。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step_1_selecting_template"><a class="anchor" href="#step_1_selecting_template"></a>ステップ 1: テンプレートの表示と選択</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このステップでは、デフォルトで用意されているテンプレートを簡単に確認し、その中から 1 つを選択して、後続のセクションで仮想的なニーズに合わせて変更できるようにします。</p>
+</div>
+<div class="paragraph">
+<p>まず、<code>openshift</code> プロジェクトで利用可能な <code>templates</code> のリストを取得します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get templates -n openshift</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>多くの既存テンプレートが表示されます。その中には OpenShift 開発者コンソールを有効にするためのクイックスタート例もあれば、OpenShift Virtualization に特化したもの（OS や T シャツサイズが指定されていることで判別可能）もあります。</p>
+</div>
+<div class="paragraph">
+<p><code>rhel</code> セクションのテンプレートまでスクロールします（以下の出力はコンテキストを示すために切り抜かれています）。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>...
+rhel8-desktop-tiny                            Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-highperformance-large                   Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-highperformance-medium                  Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-highperformance-small                   Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-highperformance-tiny                    Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-server-large                            Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-server-medium                           Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-server-small                            Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-server-tiny                             Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-desktop-large                           Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-desktop-medium                          Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-desktop-small                           Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-desktop-tiny                            Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-highperformance-large                   Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-highperformance-medium                  Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-highperformance-small                   Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-highperformance-tiny                    Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-server-large                            Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-server-medium                           Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-server-small                            Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-server-tiny                             Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>openshift</code> プロジェクトから <code>rhel9-server-medium</code> テンプレートのソースを取得します（出力形式として <code>-o yaml</code> を使用）。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get template rhel9-server-medium -n openshift -o yaml &gt; rhel9-server.template.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>以下は <code>rhel9-server.template.yaml</code> ファイルの内容です（<code>creationTimestamp</code>、<code>uid</code>、<code>resourceVersion</code> フィールドは除外しています）。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    defaults.template.kubevirt.io/disk: rootdisk
+    description: Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the
+      RHEL disk image must be available.
+    iconClass: icon-rhel
+    name.os.template.kubevirt.io/rhel9.0: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.1: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.2: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.3: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.4: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.5: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.6: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.7: Red Hat Enterprise Linux 9.0 or higher
+    openshift.io/display-name: Red Hat Enterprise Linux 9 VM
+    openshift.io/documentation-url: https://github.com/kubevirt/common-templates
+    openshift.io/provider-display-name: Red Hat
+    openshift.io/support-url: https://github.com/kubevirt/common-templates/issues
+    openshift.kubevirt.io/pronounceable-suffix-for-name-expression: "true"
+    operator-sdk/primary-resource: openshift-cnv/ssp-kubevirt-hyperconverged
+    operator-sdk/primary-resource-type: SSP.ssp.kubevirt.io
+    tags: hidden,kubevirt,virtualmachine,linux,rhel
+    template.kubevirt.io/containerdisks: |
+      registry.redhat.io/rhel9/rhel-guest-image
+    template.kubevirt.io/editable: |
+      /objects[0].spec.template.spec.domain.cpu.sockets
+      /objects[0].spec.template.spec.domain.cpu.cores
+      /objects[0].spec.template.spec.domain.cpu.threads
+      /objects[0].spec.template.spec.domain.memory.guest
+      /objects[0].spec.template.spec.domain.devices.disks
+      /objects[0].spec.template.spec.volumes
+      /objects[0].spec.template.spec.networks
+    template.kubevirt.io/images: |
+      https://access.redhat.com/downloads/content/479/ver=/rhel---9/9.0/x86_64/product-software
+    template.kubevirt.io/provider: Red Hat
+    template.kubevirt.io/provider-support-level: Full
+    template.kubevirt.io/provider-url: https://www.redhat.com
+    template.kubevirt.io/version: v1alpha1
+    template.openshift.io/bindable: "false"
+  labels:
+    app.kubernetes.io/component: templating
+    app.kubernetes.io/managed-by: ssp-operator
+    app.kubernetes.io/name: common-templates
+    app.kubernetes.io/part-of: hyperconverged-cluster
+    app.kubernetes.io/version: 4.21.1
+    flavor.template.kubevirt.io/medium: "true"
+    os.template.kubevirt.io/rhel9.0: "true"
+    os.template.kubevirt.io/rhel9.1: "true"
+    os.template.kubevirt.io/rhel9.2: "true"
+    os.template.kubevirt.io/rhel9.3: "true"
+    os.template.kubevirt.io/rhel9.4: "true"
+    os.template.kubevirt.io/rhel9.5: "true"
+    os.template.kubevirt.io/rhel9.6: "true"
+    os.template.kubevirt.io/rhel9.7: "true"
+    template.kubevirt.io/architecture: amd64
+    template.kubevirt.io/type: base
+    template.kubevirt.io/version: v0.34.1
+    workload.template.kubevirt.io/server: "true"
+  name: rhel9-server-medium
+  namespace: openshift
+objects:
+- apiVersion: kubevirt.io/v1
+  kind: VirtualMachine
+  metadata:
+    annotations:
+      vm.kubevirt.io/validations: |
+        [
+          {
+            "name": "minimal-required-memory",
+            "path": "jsonpath::.spec.domain.memory.guest",
+            "rule": "integer",
+            "message": "This VM requires more memory.",
+            "min": 1610612736
+          }
+        ]
+    labels:
+      app: ${NAME}
+      kubevirt.io/dynamic-credentials-support: "true"
+      vm.kubevirt.io/template: rhel9-server-medium
+      vm.kubevirt.io/template.revision: "1"
+      vm.kubevirt.io/template.version: v0.34.1
+    name: ${NAME}
+  spec:
+    dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: ${NAME}
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: ${DATA_SOURCE_NAME}
+          namespace: ${DATA_SOURCE_NAMESPACE}
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    runStrategy: Halted
+    template:
+      metadata:
+        annotations:
+          vm.kubevirt.io/flavor: medium
+          vm.kubevirt.io/os: rhel9
+          vm.kubevirt.io/workload: server
+        labels:
+          kubevirt.io/domain: ${NAME}
+          kubevirt.io/size: medium
+      spec:
+        architecture: amd64
+        domain:
+          cpu:
+            cores: 1
+            sockets: 1
+            threads: 1
+          devices:
+            disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+            rng: {}
+          features:
+            smm:
+              enabled: true
+          firmware:
+            bootloader:
+              efi: {}
+          memory:
+            guest: 4Gi
+        networks:
+        - name: default
+          pod: {}
+        terminationGracePeriodSeconds: 180
+        volumes:
+        - dataVolume:
+            name: ${NAME}
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: cloud-user
+              password: ${CLOUD_USER_PASSWORD}
+              chpasswd: { expire: False }
+          name: cloudinitdisk
+parameters:
+- description: VM name
+  from: rhel9-[a-z0-9]{16}
+  generate: expression
+  name: NAME
+- description: Name of the DataSource to clone
+  name: DATA_SOURCE_NAME
+  value: rhel9
+- description: Namespace of the DataSource
+  name: DATA_SOURCE_NAMESPACE
+  value: openshift-virtualization-os-images
+- description: Randomized password for the cloud-init user cloud-user
+  from: '[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}'
+  generate: expression
+  name: CLOUD_USER_PASSWORD</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>上記の例を確認し、末尾の <code>parameters</code> セクションまでスクロールしてください。そこにはテンプレートのパラメーター名、フィールド値、および説明のリストがあります。</p>
+</div>
+<div class="paragraph">
+<p>各パラメーターの詳細を以下に示します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>NAME</code></strong> - テンプレートから作成された VM に一意の名前を生成する場所です。文字クラス（<code>[a-z0-9]</code> はシェルや正規表現スタイルと一致）と、VM 名の後半部分を構成するために使用されるカウント（<code>{16}</code>）に注目してください。</p>
+</li>
+<li>
+<p><strong><code>DATA_SOURCE_NAME</code></strong> - VM をクローンする際の <code>DataSource</code>（ゴールデンイメージ）の名前。</p>
+</li>
+<li>
+<p><strong><code>DATA_SOURCE_NAMESPACE</code></strong> - <code>DataSource</code> が存在する名前空間。すべてのデフォルトイメージは <code>openshift-virtualization-os-images</code> プロジェクトに存在します。</p>
+</li>
+<li>
+<p><strong><code>CLOUD_USER_PASSWORD</code></strong> - デフォルトの cloud-user のパスワードが生成される場所。<code>NAME</code> パラメーターと同様に、文字クラスとカウント（4 つの英数字のランダムな文字で構成される 3 つのグループ、ダッシュ区切り）に注目してください。</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>パラメーターは、各パラメーターの名前を参照することでテンプレートマニフェスト内で使用されます。</p>
+</li>
+<li>
+<p>これは、bash シェルの変数名および参照のスタイルと構文を反映しています。</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>rhel9-server.template.yaml</code> ファイルをローカルに保存したら、<code>oc process</code> コマンドを使用してテンプレートがどのようにレンダリングされるかを確認できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc process -f rhel9-server.template.yaml -o yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>レンダリングされたテンプレートの yaml 出力が表示されます。生成された出力は <code>List</code> オブジェクトであり、そのリスト項目としてレンダリングされた <code>VirtualMachine</code> テンプレートが埋め込まれています。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift テンプレートでは、1 つのテンプレート内に複数の Kubernetes オブジェクトを表現できます。</p>
+</li>
+<li>
+<p>OpenShift Virtualization では、テンプレートを作成するために必要なのは単一の <code>VirtualMachine</code> オブジェクトだけです。</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="#step_2_deploying_template">ステップ 2</a> に進みます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step_2_deploying_template"><a class="anchor" href="#step_2_deploying_template"></a>ステップ 2: テンプレートからの VirtualMachine のデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このセクションでは、CLI を使用してテンプレートから <code>VirtualMachine</code> をデプロイする方法を説明します。これは、<code>oc process</code> コマンドの出力を <code>oc create</code> (または <code>oc apply</code>) にパイプすることで実行できます。</p>
+</div>
+<div class="paragraph">
+<p>まず、RHEL 9 <code>VirtualMachine</code> を格納するためのプロジェクト（名前空間）を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc new-project template-example</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>次に、<code>rhel9-server.template.yaml</code> ファイルを処理し、出力を <code>oc apply</code> にパイプします（新しい <code>VirtualMachine</code> オブジェクトであるため <code>oc create</code> でも機能します）。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc process -f rhel9-server.template.yaml | oc create -n template-example -f -</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>RHEL 9 テンプレートによって作成された現在の名前空間のリソースを簡単に確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get all -n template-example</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>DataVolume</code> は <code>PendingPopulation</code> として表示され、<code>VirtualMachine</code> は <code>Stopped</code> 状態であるはずです。</p>
+</div>
+<div class="paragraph">
+<p>作成された <code>rhel9-server</code> VM の名前を含むシェル変数を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export RHEL9_SERVER_VM=$(oc get vm -o custom-columns=:metadata.name --no-headers -n template-example)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>変数を確認して VM 名が正しいこと、および変数が空でないことを確認します。<code>rhel9-abcdef0987654321</code> のような値が表示されるはずです。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">echo $RHEL9_SERVER_VM</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>virtctl</code> を使用して VM に対して開始コマンドを発行できます（以下の VM 名を置き換えてください）。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl start $RHEL9_SERVER_VM</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>oc get vm</code> を数回（または <code>-w</code> フラグを指定して一度）実行し、VM の実行状態が <code>Stopped</code> から <code>Provisioning</code>、そして最終的に <code>Running</code> に変化するのを観察します。</p>
+</div>
+<div class="paragraph">
+<p>VM に接続するには、CLI からのコンソールアクセスについて説明する <a href="#step_4_testing_cleanup">ステップ 4</a> に進んでください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step_3_customizing_template"><a class="anchor" href="#step_3_customizing_template"></a>ステップ 3: テンプレートのカスタマイズ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このセクションでは、カスタマイズのために前の <code>rhel9</code> テンプレートのコピーを作成し、カスタムテンプレートにいくつかの変更を加えます。</p>
+</div>
+<div class="paragraph">
+<p><a href="#step_2_deploying_template">ステップ 2</a> で作成したプロジェクト/名前空間内で作業を継続します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc project template-example</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>rhel9-server.template.yaml</code> ファイルのコピーを <code>rhel9-custom.template.yaml</code> という名前で作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cp rhel9-{server,custom}.template.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>以下は、<code>rhel9-custom.template.yaml</code> ファイルの既存の内容を上書きして貼り付けることができる完全な例です。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    defaults.template.kubevirt.io/disk: rootdisk
+    description: Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the
+      RHEL disk image must be available.
+    iconClass: icon-rhel
+    name.os.template.kubevirt.io/rhel9.0: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.1: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.2: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.3: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.4: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.5: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.6: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.7: Red Hat Enterprise Linux 9.0 or higher
+    openshift.io/display-name: Red Hat Enterprise Linux 9 VM
+    openshift.io/documentation-url: https://github.com/kubevirt/common-templates
+    openshift.io/provider-display-name: Red Hat
+    openshift.io/support-url: https://github.com/kubevirt/common-templates/issues
+    openshift.kubevirt.io/pronounceable-suffix-for-name-expression: "true"
+    operator-sdk/primary-resource: openshift-cnv/ssp-kubevirt-hyperconverged
+    operator-sdk/primary-resource-type: SSP.ssp.kubevirt.io
+    tags: hidden,kubevirt,virtualmachine,linux,rhel
+    template.kubevirt.io/containerdisks: |
+      registry.redhat.io/rhel9/rhel-guest-image
+    template.kubevirt.io/editable: |
+      /objects[0].spec.template.spec.domain.cpu.sockets
+      /objects[0].spec.template.spec.domain.cpu.cores
+      /objects[0].spec.template.spec.domain.cpu.threads
+      /objects[0].spec.template.spec.domain.memory.guest
+      /objects[0].spec.template.spec.domain.devices.disks
+      /objects[0].spec.template.spec.volumes
+      /objects[0].spec.template.spec.networks
+    template.kubevirt.io/images: |
+      https://access.redhat.com/downloads/content/479/ver=/rhel---9/9.0/x86_64/product-software
+    template.kubevirt.io/provider: Red Hat
+    template.kubevirt.io/provider-support-level: Full
+    template.kubevirt.io/provider-url: https://www.redhat.com
+    template.kubevirt.io/version: v1alpha1
+    template.openshift.io/bindable: "false"
+  labels:
+    app.kubernetes.io/component: templating
+    app.kubernetes.io/managed-by: ssp-operator
+    app.kubernetes.io/name: common-templates
+    app.kubernetes.io/part-of: hyperconverged-cluster
+    app.kubernetes.io/version: 4.21.1
+    flavor.template.kubevirt.io/medium: "true"
+    os.template.kubevirt.io/rhel9.0: "true"
+    os.template.kubevirt.io/rhel9.1: "true"
+    os.template.kubevirt.io/rhel9.2: "true"
+    os.template.kubevirt.io/rhel9.3: "true"
+    os.template.kubevirt.io/rhel9.4: "true"
+    os.template.kubevirt.io/rhel9.5: "true"
+    os.template.kubevirt.io/rhel9.6: "true"
+    os.template.kubevirt.io/rhel9.7: "true"
+    template.kubevirt.io/architecture: amd64
+    template.kubevirt.io/type: base
+    template.kubevirt.io/version: v0.34.1
+    workload.template.kubevirt.io/server: "true"
+  name: rhel9-custom
+  namespace: openshift
+objects:
+- apiVersion: kubevirt.io/v1
+  kind: VirtualMachine
+  metadata:
+    annotations:
+      vm.kubevirt.io/validations: |
+        [
+          {
+            "name": "minimal-required-memory",
+            "path": "jsonpath::.spec.domain.memory.guest",
+            "rule": "integer",
+            "message": "This VM requires more memory.",
+            "min": 1610612736
+          }
+        ]
+    labels:
+      app: ${NAME}
+      kubevirt.io/dynamic-credentials-support: "true"
+      vm.kubevirt.io/template: rhel9-server-medium
+      vm.kubevirt.io/template.revision: "1"
+      vm.kubevirt.io/template.version: v0.34.1
+    name: ${NAME}
+  spec:
+    dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: ${NAME}
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: ${DATA_SOURCE_NAME}
+          namespace: ${DATA_SOURCE_NAMESPACE}
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    runStrategy: Always
+    template:
+      metadata:
+        annotations:
+          vm.kubevirt.io/flavor: medium
+          vm.kubevirt.io/os: rhel9
+          vm.kubevirt.io/workload: server
+        labels:
+          kubevirt.io/domain: ${NAME}
+          kubevirt.io/size: medium
+      spec:
+        architecture: amd64
+        domain:
+          cpu:
+            cores: 1
+            sockets: 1
+            threads: 1
+          devices:
+            disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+            rng: {}
+          features:
+            smm:
+              enabled: true
+          firmware:
+            bootloader:
+              efi: {}
+          memory:
+            guest: 4Gi
+        networks:
+        - name: default
+          pod: {}
+        terminationGracePeriodSeconds: 180
+        volumes:
+        - dataVolume:
+            name: ${NAME}
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: ${CLOUD_INIT_USERNAME}
+              password: ${CLOUD_INIT_PASSWORD}
+              chpasswd: { expire: False }
+          name: cloudinitdisk
+parameters:
+- description: VM name
+  from: rhel9-custom-[a-z0-9]{6}
+  generate: expression
+  name: NAME
+- description: Name of the DataSource to clone
+  name: DATA_SOURCE_NAME
+  value: rhel9
+- description: Namespace of the DataSource
+  name: DATA_SOURCE_NAMESPACE
+  value: openshift-virtualization-os-images
+- description: Name of the user account created by cloud-init
+  name: CLOUD_INIT_USERNAME
+  value: shadowman
+- description: Randomized password for the cloud-init user cloud-user
+  from: '[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}'
+  generate: expression
+  name: CLOUD_INIT_PASSWORD</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>以下は、オリジナルの <code>rhel9-server-medium</code> テンプレートからの変更点リストです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>metadata.name</code></strong> - テンプレートの名前が <code>rhel9-custom</code> に変更されました。</p>
+</li>
+<li>
+<p><strong><code>objects[0].spec.runStrategy</code></strong> - マシン作成後すぐに開始されるように <code>Halted</code> から <code>Always</code> に変更されました。</p>
+</li>
+<li>
+<p><strong><code>NAME</code></strong> - <code>NAME</code> パラメーターはプレフィックス <code>rhel9-custom-</code> が付きましたが、自動生成される文字数は少なくなりました。</p>
+</li>
+<li>
+<p><strong><code>CLOUD_INIT_USERNAME</code></strong> - 以前は <code>cloud-user</code> とハードコードされていた cloud-init ユーザーアカウント名をテンプレート化するための新しいパラメーターです。</p>
+</li>
+<li>
+<p><strong><code>CLOUD_INIT_PASSWORD</code></strong> - <code>cloud-user</code> アカウントが存在しなくなったため、明確にするためにこのパラメーターの名前が調整されました。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>重要: 進める前に、上記で提供された yaml データで <code>rhel9-custom.template.yaml</code> ファイルを更新する必要があります。</p>
+</div>
+<div class="paragraph">
+<p>カスタムテンプレートが完成したら、<code>oc process</code> を使用して正しくレンダリングされることをテストします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc process -f rhel9-custom.template.yaml -o yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>カスタムテンプレートが正しくレンダリングされたら、<a href="#step_4_testing_cleanup">ステップ 4</a> に進みます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step_4_testing_cleanup"><a class="anchor" href="#step_4_testing_cleanup"></a>ステップ 4: 最終テストとクリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このセクションでは、<a href="#step_2_deploying_template">ステップ 2</a> と同様にカスタムテンプレートをデプロイし、このチュートリアルに従って作成されたリソースをクリーンアップします。</p>
+</div>
+<div class="paragraph">
+<p><code>rhel9-custom</code> テンプレートを新しい <code>VirtualMachine</code> として起動します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc process -f rhel9-custom.template.yaml | oc apply -n template-example -f -</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ソースボリュームのクローン作成が完了すると、<code>rhel9-custom</code> VM が実行状態になるはずです。<code>oc get vm</code> を実行してステータスを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n template-example</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>以下のコマンドを使用して <code>rhel9-custom</code> VM のシェル変数を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export RHEL9_CUSTOM_VM=$(oc get vm -o custom-columns=:metadata.name --no-headers -n template-example | grep custom)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注: 作成したオリジナルの <code>rhel9</code> VM に接続する場合は、以下の例で <code>$RHEL9_CUSTOM_VM</code> を <code>RHEL9_SERVER_VM</code> に置き換えてください。</p>
+</div>
+<div class="paragraph">
+<p>VM の yaml 出力を表示して、cloud-init パスワードを取得し、記録またはコピーします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe vm $RHEL9_CUSTOM_VM | grep password</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>以前に取得したパスワードを使用して <code>virtctl</code> でコンソールにログインします（VM の <code>username</code> は、VM に応じて <code>shadowman</code> または <code>cloud-user</code> のいずれかです）。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console $RHEL9_CUSTOM_VM</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>ENTER</code> キーを押してログインプロンプトを表示します。<code>CTRL+]</code> を押してコンソール表示を終了します。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualization コンソールからクラスター全体でテンプレートを利用できるようにするには、クラスター管理者として <code>openshift</code> プロジェクトにテンプレートを作成してください。</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>クリーンアップ後の混乱を避けるため、現在の kube コンテキストを別の名前空間（ここでは <code>default</code> を使用していますが、他の OpenShift プロジェクトや名前空間でも構いません）に切り替えます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc project default</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>最後に、クリーンアップは名前空間を削除するだけで完了です。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace template-example</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="summary"><a class="anchor" href="#summary"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の内容を学習しました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>テンプレートとは何か、またその目的。</p>
+</li>
+<li>
+<p>OpenShift Virtualization でデフォルトで利用可能な <code>VirtualMachine</code> テンプレートを表示する方法。</p>
+</li>
+<li>
+<p>デプロイやカスタマイズのために既存のテンプレートを選択してダウンロードする方法。</p>
+</li>
+<li>
+<p>デフォルトのテンプレートから <code>VirtualMachine</code> をデプロイする方法。</p>
+</li>
+<li>
+<p>特化した <code>VirtualMachine</code> デプロイのためにカスタムテンプレートを作成する方法。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="see_also"><a class="anchor" href="#see_also"></a>参照</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/virtualization/creating-a-virtual-machine#virt-creating-vms-from-templates" target="_blank" rel="noopener">テンプレートからの仮想マシンの作成</a></p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a></span>
+  <span class="next"><a href="../performance/index.html">VM パフォーマンスチューニング</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

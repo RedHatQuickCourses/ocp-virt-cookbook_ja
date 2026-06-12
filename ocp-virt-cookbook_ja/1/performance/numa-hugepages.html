@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>仮想マシンのNUMAトポロジーとHugepages :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="cpu-pinning.html">
+    <link rel="next" href="realtime-vms.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">VM パフォーマンスチューニング</a></li>
+    <li><a href="numa-hugepages.html">NUMAとHugepages</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">仮想マシンのNUMAトポロジーとHugepages</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、OpenShift Virtualizationにおいて、Hugepage（ヒュージページ）でバックアップされたメモリとNUMAトポロジーのパススルーを仮想マシン（VM）向けに設定する方法を説明します。デフォルトでは、VMのメモリは標準的な4Kiページを使用し、ゲストOSはホストのNUMAレイアウトを認識できません。NFV/テレコム、HPC、リアルタイム処理、大規模メモリデータベースなどのパフォーマンスが重要なワークロードにおいて、このデフォルト設定は以下の2つの測定可能なボトルネックを引き起こします。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>TLBプレッシャー</strong>: 16Giのメモリを持ち、4KiページでバックアップされたVMは、400万以上のページテーブルエントリを必要とします。CPUのTLB（Translation Lookaside Buffer）はサイズが制限されているため、頻繁なTLBミスが発生し、コストのかかるページテーブルウォークが強制されます。</p>
+</li>
+<li>
+<p><strong>クロスNUMAメモリレイテンシ</strong>: マルチソケットまたはマルチチップレットのホストでは、リモートのNUMAノード上のメモリへのアクセスは、ローカルメモリへのアクセスよりも1.5〜3倍低速になる可能性があります。NUMAを意識しない場合、ゲストOSはメモリとスレッドを同一の物理NUMAノード上に配置できません。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Hugepagesは、4Kiの代わりに2Miまたは1Giのページを使用することでTLBプレッシャーを軽減します。NUMAパススルー（<code>guestMappingPassthrough</code>）は、ホストの物理NUMAトポロジーをゲストに公開し、VM内でのNUMAを意識したスケジューリングを可能にします。専用CPU配置と併せて、これらの機能は決定論的で低レイテンシなVMパフォーマンスの基盤となります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以上（4.21でテスト済み）</p>
+</li>
+<li>
+<p>クラスター管理者アクセス権（`system:admin`または同等の権限）</p>
+</li>
+<li>
+<p><code>oc`および`virtctl</code> CLIがインストールされていること</p>
+</li>
+<li>
+<p>複数の物理CPUコア（推奨8以上）およびHugepage予約のための十分なRAMを備えたワーカーノード</p>
+</li>
+<li>
+<p>CPUマネージャーの静的ポリシーが有効になっていること（<a href="cpu-pinning.html" class="xref page">専用CPU配置</a>を参照）</p>
+</li>
+<li>
+<p>Kubernetes QoSクラスに関する知識（<a href="resource-limits-qos.html" class="xref page">VMリソース制限とQoSの設定</a>を参照）</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_hugepagesの理解"><a class="anchor" href="#_hugepagesの理解"></a>Hugepagesの理解</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>標準的なLinuxのメモリ管理では4Kiページが使用されます。2Giのメモリを持つVMでは、524,288個の個別のページマッピングが必要です。各TLBミスは、数百ナノ秒にわたってCPUを停止させる可能性のあるマルチレベルのページテーブルウォークを引き起こします。</p>
+</div>
+<div class="paragraph">
+<p>Hugepagesは、より大きなページサイズを使用することでこのオーバーヘッドを回避します。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3335%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ページサイズ</th>
+<th class="tableblock halign-left valign-top">2Giあたりのページ数</th>
+<th class="tableblock halign-left valign-top">必要なTLBエントリ</th>
+<th class="tableblock halign-left valign-top">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4Ki（デフォルト）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">524,288</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">524,288</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">汎用ワークロード</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2Mi</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1,024</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1,024</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">パフォーマンスに敏感な多くのVM</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1Gi</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">非常に大きなメモリを必要とするVM、データベース</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>VM仕様に`memory.hugepages.pageSize`が含まれている場合、KubeVirtはホストの事前割り当て済みHugepageプールからすべてのゲストメモリを割り当てるようにQEMUを設定します。このメモリは固定（pinned）され、スワップされることはありません。</p>
+</div>
+<div class="paragraph">
+<p>重要: Hugepagesはオーバーコミットできません。ホストは、VMがスケジュールされるNUMAノード上に十分な空きHugepagesを持っている必要があります。そうでない場合、VMの起動は失敗します。NUMAパススルーを使用する場合、VMのCPUに割り当てられた特定のNUMAノード上でHugepagesが利用可能である必要があります。NUMAノードごとの分散とQEMUのオーバーヘッドを考慮し、すべてのVMメモリ要求の合計よりも多くのHugepagesを予約してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_numaトポロジーの理解"><a class="anchor" href="#_numaトポロジーの理解"></a>NUMAトポロジーの理解</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>NUMA（Non-Uniform Memory Access）は、各CPUソケット（またはチップレット）が独自のローカルメモリを持つハードウェアアーキテクチャです。ローカルメモリへのアクセスは高速ですが、リモートメモリへのアクセスは相互接続を経由するため低速になります。</p>
+</div>
+<div class="paragraph">
+<p>一般的な2ソケットサーバーの場合:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NUMA Node 0: CPUs 0-19, 40-59   Local Memory: 128Gi
+NUMA Node 1: CPUs 20-39, 60-79  Local Memory: 128Gi</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>NUMAを意識しない場合、ゲストOSはNUMAノード0にマップされるvCPU上でスレッドをスケジュールする一方で、バックアップメモリがNUMAノード1に割り当てられる可能性があります。このノード間アクセスは、すべてのメモリオペレーションにレイテンシを追加します。</p>
+</div>
+<div class="paragraph">
+<p>KubeVirtの`guestMappingPassthrough`戦略は、ホストのNUMAトポロジーをゲストにパススルーすることでこれを解決します。ゲストは（割り当てられた専用CPUに基づいて）物理ホストと同じNUMA構造を認識し、独自のNUMAを意識したスケジューリングの決定を行うことができます。</p>
+</div>
+<div class="paragraph">
+<p>NUMAパススルーには以下の3つの前提条件が必要です。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>専用CPU配置（<code>dedicatedCpuPlacement: true</code>）</p>
+</li>
+<li>
+<p>ターゲットノード上に割り当てられたHugepages</p>
+</li>
+<li>
+<p>KubeVirt CRでNUMA機能ゲートが有効であること（OpenShift Virtualization 4.18以降ではデフォルトで有効）</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_ノードでのhugepagesの予約"><a class="anchor" href="#_ステップ_1_ノードでのhugepagesの予約"></a>ステップ 1: ノードでのHugepagesの予約</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>連続した物理メモリを保証するために、Hugepagesはブート時に事前割り当てする必要があります。OpenShiftでは、Node Tuning Operatorが`Tuned`リソースを通じてカーネルブートパラメータの挿入を処理します。</p>
+</div>
+<div class="paragraph">
+<p>以下の`Tuned`プロファイルは、ブート時に各ワーカーノードで2Miサイズのページを1024ページ（合計2Gi）予約します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/numa-hugepages/hugepages-tuned-boottime.yaml" class="xref attachment">hugepages-tuned-boottime.yamlをダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: tuned.openshift.io/v1
+kind: Tuned
+metadata:
+  name: hugepages
+  namespace: openshift-cluster-node-tuning-operator
+spec:
+  profile:
+  - data: |
+      [main]
+      summary=Boot time configuration for hugepages
+      include=openshift-node
+      [bootloader]
+      cmdline_openshift_node_hugepages=hugepagesz=2M hugepages=1024
+    name: openshift-node-hugepages
+  recommend:
+  - machineConfigLabels:
+      machineconfiguration.openshift.io/role: "worker"
+    priority: 20
+    profile: openshift-node-hugepages
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注意: Single Node OpenShift（SNO）では、`machineConfigLabels`ロールの`worker`を`master`に置き換えてください。</p>
+</div>
+<div class="paragraph">
+<p>ヒント: `priority`の値は、同じノードに一致するTunedプロファイル間で一意である必要があります。デフォルトの`openshift-control-plane`および`openshift-node`プロファイルは優先度30を使用します。Hugepagesプロファイルを確実に適用させるには、20のようなより小さい数値（高い優先度）を使用してください。</p>
+</div>
+<div class="paragraph">
+<p>Node Tuning Operatorは、カーネルコマンドラインに`hugepagesz=2M hugepages=1024`を追加する`MachineConfig`を生成します。その後、Machine Config Operatorが各ワーカーノードを再起動して変更を適用します。ロールアウトを監視します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get mcp worker -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`UPDATED`が`True`になり、`MACHINECOUNT`と`READYMACHINECOUNT`が等しくなるまで待ちます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED
+worker   rendered-worker-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   True      False      False</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>警告: これにより、対象のMachineConfigPool内のすべてのノードでローリング再起動がトリガーされます。本番クラスターでは計画的に実施してください。</p>
+</div>
+<div class="sect2">
+<h3 id="_hugepage割り当ての確認"><a class="anchor" href="#_hugepage割り当ての確認"></a>Hugepage割り当ての確認</h3>
+<div class="paragraph">
+<p>ロールアウト完了後、各ノードが期待どおりのHugepage容量を報告していることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get node &lt;node-name&gt; -o jsonpath='{.status.allocatable.hugepages-2Mi}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>2Gi</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>詳細を確認するには、ノードでデバッグセッションを開き、`/proc/meminfo`を調査します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>デバッグシェル内:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">chroot /host grep -i hugepages /proc/meminfo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>AnonHugePages:         0 kB
+ShmemHugePages:        0 kB
+FileHugePages:        0 kB
+HugePages_Total:    1024
+HugePages_Free:     1024
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`HugePages_Total`は設定した数（1024）と一致するはずです。`HugePages_Free`は現在割り当て可能な数を示します。</p>
+</div>
+<div class="paragraph">
+<p>デバッグシェルを終了します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">exit</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_ノードでのnumaトポロジーの確認"><a class="anchor" href="#_ステップ_2_ノードでのnumaトポロジーの確認"></a>ステップ 2: ノードでのNUMAトポロジーの確認</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>NUMAを意識したVMをデプロイする前に、ワーカーノードの物理NUMAレイアウトを調査します。以下のツールは、パッケージを追加インストールすることなく、すべてのRHCOSノードで使用可能です。</p>
+</div>
+<div class="paragraph">
+<p>デバッグセッションを開きます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>システム上のNUMAノードをリストアップします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">chroot /host ls /sys/devices/system/node/</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>2ソケットサーバーでの出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>node0  node1</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>各NUMAノードに属するCPUを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">chroot /host cat /sys/devices/system/node/node0/cpulist</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>0-9,40-49</pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">chroot /host cat /sys/devices/system/node/node1/cpulist</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>20-29,60-69</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>NUMAノードごとのメモリ情報を調査します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">chroot /host cat /sys/devices/system/node/node0/meminfo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例（短縮版）:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Node 0 MemTotal:       131072000 kB
+Node 0 MemFree:        125000000 kB
+Node 0 HugePages_Total:      512
+Node 0 HugePages_Free:       512</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>NUMAノード数とCPU-to-nodeマッピングを含む概要には`lscpu`を使用します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">chroot /host lscpu | grep -i numa</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NUMA node(s):          2
+NUMA node0 CPU(s):     0-9,40-49
+NUMA node1 CPU(s):     20-29,60-69</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注意: シングルソケットシステムやSingle Node OpenShiftでは、NUMAノードが1つしか表示されない場合があります。NUMAパススルーは機能しますが、すべてのCPUとメモリがローカルであるため、ノード間最適化のメリットはありません。</p>
+</div>
+<div class="paragraph">
+<p>デバッグシェルを終了します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">exit</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_namespaceの作成"><a class="anchor" href="#_ステップ_3_namespaceの作成"></a>ステップ 3: Namespaceの作成</h2>
+<div class="sectionbody">
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace numa-hugepages-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_hugepagesを使用したvmのデプロイ"><a class="anchor" href="#_ステップ_4_hugepagesを使用したvmのデプロイ"></a>ステップ 4: Hugepagesを使用したVMのデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この最初のVMは、NUMAパススルーを使用せず、専用CPU配置とHugepageバックアップメモリを使用します。この設定により、TLBオーバーヘッドが排除され、VMマニフェストが簡素化されます。</p>
+</div>
+<div class="paragraph">
+<p>重要なフィールド:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>dedicatedCpuPlacement: true</code>&#8201;&#8212;&#8201;vCPUを物理CPUに固定します（KubeVirtにおけるHugepagesの前提条件）。</p>
+</li>
+<li>
+<p><code>memory.hugepages.pageSize: 2Mi</code>&#8201;&#8212;&#8201;2Mi Hugepageプールからゲストメモリを割り当てます。</p>
+</li>
+<li>
+<p>メモリの`requests`と`limits`は等しくする必要があります（Guaranteed QoS）。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>警告: この例のcloud-initパスワードはデモンストレーション目的専用です。本番環境ではSSHキー認証または強力で一意なパスワードを使用してください。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/numa-hugepages/vm-hugepages.yaml" class="xref attachment">vm-hugepages.yamlをダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-hugepages
+  namespace: numa-hugepages-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-hugepages
+    spec:
+      nodeSelector:
+        cpumanager: "true"
+      domain:
+        cpu:
+          sockets: 2
+          cores: 1
+          threads: 1
+          dedicatedCpuPlacement: true
+        memory:
+          hugepages:
+            pageSize: 2Mi
+        resources:
+          requests:
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMがRunning状態になるまで待ちます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm vm-hugepages -n numa-hugepages-demo -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME           AGE   STATUS    READY
+vm-hugepages   45s   Running   True</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_hugepageバックアップの確認"><a class="anchor" href="#_ステップ_5_hugepageバックアップの確認"></a>ステップ 5: Hugepageバックアップの確認</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ホスト側の検証"><a class="anchor" href="#_ホスト側の検証"></a>ホスト側の検証</h3>
+<div class="paragraph">
+<p>VMが実行されているノードを見つけます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi vm-hugepages -n numa-hugepages-demo -o wide</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>そのノードでデバッグセッションを開きます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Hugepageの消費量を確認します。`HugePages_Free`数は、VMによって消費された分だけ`HugePages_Total`よりも少なくなっているはずです。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">chroot /host grep -i hugepages /proc/meminfo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>2Miページを使用する2GiのVMの場合、1024ページが消費されるため、`HugePages_Free`は元の値から約1024減少するはずです。</p>
+</div>
+<div class="paragraph">
+<p>デバッグシェルを終了します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">exit</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ゲスト側の検証"><a class="anchor" href="#_ゲスト側の検証"></a>ゲスト側の検証</h3>
+<div class="paragraph">
+<p>VMコンソールに接続します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console vm-hugepages -n numa-hugepages-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザー名`fedora`、パスワード`redhat`でログインします。ゲストが使用可能な合計メモリを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">free -h</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲストはメモリを標準的なRAMとして認識します。HugepagesはQEMUレベルではゲストから透過的であり、ゲストOS自身が受け取ったメモリから独自のHugepagesを個別に設定できます。</p>
+</div>
+<div class="paragraph">
+<p>`Ctrl+]`を押してコンソールから切断します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hugepages_vmの停止"><a class="anchor" href="#_hugepages_vmの停止"></a>Hugepages VMの停止</h3>
+<div class="paragraph">
+<p>次に進む前に、最初のVMを停止してHugepage割り当てを解放します。次のステップのNUMAパススルーVMは同じプールからHugepagesを必要とするため、ノードによっては両方のVMを同時に実行できない可能性があります。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl stop vm-hugepages -n numa-hugepages-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMが停止したことを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm vm-hugepages -n numa-hugepages-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME           AGE    STATUS    READY
+vm-hugepages   5m     Stopped   False</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_6_numaパススルーを使用したvmのデプロイ"><a class="anchor" href="#_ステップ_6_numaパススルーを使用したvmのデプロイ"></a>ステップ 6: NUMAパススルーを使用したVMのデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このVMは、専用CPU、Hugepages、NUMAトポロジーパススルーという3つのパフォーマンス機能をすべて組み合わせます。追加された重要な設定は`numa.guestMappingPassthrough: {}`であり、これによりKubeVirtにホストのNUMAトポロジーをゲストにマップするよう指示します。</p>
+</div>
+<div class="paragraph">
+<p>NUMAパススルーのための追加設定:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>isolateEmulatorThread: true</code>&#8201;&#8212;&#8201;QEMUエミュレータスレッドがvCPUと競合するのを防ぎます。</p>
+</li>
+<li>
+<p><code>autoattachMemBalloon: false</code>&#8201;&#8212;&#8201;決定論的なメモリ割り当てと互換性のないメモリバルーンデバイスを無効にします。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/numa-hugepages/vm-numa-hugepages.yaml" class="xref attachment">vm-numa-hugepages.yamlをダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-numa-hugepages
+  namespace: numa-hugepages-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-numa-hugepages
+    spec:
+      nodeSelector:
+        cpumanager: "true"
+      domain:
+        cpu:
+          sockets: 1
+          cores: 2
+          threads: 1
+          dedicatedCpuPlacement: true
+          isolateEmulatorThread: true
+          numa:
+            guestMappingPassthrough: {}
+        memory:
+          hugepages:
+            pageSize: 2Mi
+        resources:
+          requests:
+            memory: 1Gi
+          limits:
+            memory: 1Gi
+        devices:
+          autoattachMemBalloon: false
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMがRunning状態になるまで待ちます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm vm-numa-hugepages -n numa-hugepages-demo -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                AGE   STATUS    READY
+vm-numa-hugepages   60s   Running   True</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_7_vm内でのnumaトポロジーの確認"><a class="anchor" href="#_ステップ_7_vm内でのnumaトポロジーの確認"></a>ステップ 7: VM内でのNUMAトポロジーの確認</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_vmiでのnuma設定の確認"><a class="anchor" href="#_vmiでのnuma設定の確認"></a>VMIでのNUMA設定の確認</h3>
+<div class="paragraph">
+<p>まず、VMIでNUMAパススルーが設定されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi vm-numa-hugepages -n numa-hugepages-demo -o jsonpath='{.spec.domain.cpu.numa}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{"guestMappingPassthrough":{}}</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ゲスト側のnuma検証"><a class="anchor" href="#_ゲスト側のnuma検証"></a>ゲスト側のNUMA検証</h3>
+<div class="paragraph">
+<p>VMコンソールに接続します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console vm-numa-hugepages -n numa-hugepages-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザー名`fedora`、パスワード`redhat`でログインします。ゲストから見えるNUMAトポロジーを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lscpu | grep -i numa</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>複数のNUMAノードを持つホストでは、物理CPUのトポロジーと一致する複数のNUMAノードが報告される可能性があります。単一NUMAノードのホストでは、ゲストは1つのNUMAノードを報告します。</p>
+</div>
+<div class="paragraph">
+<p>詳細なCPUトポロジーを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lscpu</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲストから見えるNUMAノードをリストアップします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ls /sys/devices/system/node/</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>node0</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>各NUMAノードに割り当てられたCPUを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat /sys/devices/system/node/node0/cpulist</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>0-1</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ノードごとのメモリを調査します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat /sys/devices/system/node/node0/meminfo | head -5</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Node 0 MemTotal:        1048576 kB
+Node 0 MemFree:          800000 kB
+Node 0 MemUsed:          248576 kB
+Node 0 Active:           120000 kB
+Node 0 Inactive:          80000 kB</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲストから見えるNUMAトポロジーは、ホストから受け取った専用CPUの物理トポロジーを反映しています。</p>
+</div>
+<div class="paragraph">
+<p>`Ctrl+]`を押してコンソールから切断します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ホスト側のnuma検証"><a class="anchor" href="#_ホスト側のnuma検証"></a>ホスト側のNUMA検証</h3>
+<div class="paragraph">
+<p>ノードを見つけ、CPUマネージャーの状態を通じてCPUの固定状況を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi vm-numa-hugepages -n numa-hugepages-demo -o wide</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">chroot /host cat /var/lib/kubelet/cpu_manager_state</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>`entries`マップには、専用CPU IDを持つ`compute`コンテナが表示されるはずです。`isolateEmulatorThread: true`を使用すると、さらに1つのCPUが予約されます（合計3つ：vCPU 2つ + エミュレータスレッド 1つ）。</p>
+</div>
+<div class="paragraph">
+<p>デバッグシェルを終了します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">exit</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_2miと1gi_hugepagesの選択"><a class="anchor" href="#_2miと1gi_hugepagesの選択"></a>2Miと1Gi Hugepagesの選択</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">検討事項</th>
+<th class="tableblock halign-left valign-top">2Miページ</th>
+<th class="tableblock halign-left valign-top">1Giページ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">エントリあたりのTLBカバレッジ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2Mi</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1Gi（512倍）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">事前割り当ての粒度</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">微細（例: 100Mi単位）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">粗い（最低1Gi）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">メモリの無駄</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">最小限</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">メモリが1Giの倍数でない場合、VMごとに最大1Giが未使用</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ブート時の予約</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">メモリを枯渇させずに数百ページを予約可能</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">大きな塊を予約し、Hugepages以外のワークロードの利用可能ページが減少</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">一般的なユースケース</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ほとんどのVM、適度なTLB改善</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">非常に大きなメモリを持つVM（64Gi以上）、データベース、最高のTLB効率</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>1Giページを使用するには、`Tuned`プロファイルを変更します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-ini hljs" data-lang="ini">[bootloader]
+cmdline_openshift_node_hugepages=hugepagesz=1G hugepages=16</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>そしてVM仕様を更新します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">memory:
+  hugepages:
+    pageSize: 1Gi
+resources:
+  requests:
+    memory: 16Gi
+  limits:
+    memory: 16Gi</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>重要: メモリ要求はHugepageサイズで均等に割り切れる必要があります。1GiのHugepagesで1.5Giのメモリを要求することはできません。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_vmの起動失敗hugepages不足"><a class="anchor" href="#_vmの起動失敗hugepages不足"></a>VMの起動失敗：Hugepages不足</h3>
+<div class="paragraph">
+<p>VMが`Scheduling`または`Pending`状態のままになる場合は、VMIイベントを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe vmi vm-hugepages -n numa-hugepages-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Hugepages不足やスケジューリング失敗に関するイベントを探します。ターゲットノードで使用可能なHugepagesを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get node &lt;node-name&gt; -o jsonpath='{.status.allocatable.hugepages-2Mi}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>割り当て可能な値がVMのメモリ要求よりも小さい場合は、VMのメモリを減らすか、ノードのHugepage予約を増やしてください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_numaパススルーvmの失敗cannot_bind_memory_to_host_numa_nodes"><a class="anchor" href="#_numaパススルーvmの失敗cannot_bind_memory_to_host_numa_nodes"></a>NUMAパススルーVMの失敗：「cannot bind memory to host NUMA nodes」</h3>
+<div class="paragraph">
+<p>このエラーは、<code>virt-launcher</code> Podが特定のNUMAノードにメモリをバインドできない場合に発生します。考えられる原因:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>ターゲットNUMAノード上のHugepages不足</strong>: Hugepagesはホスト全体では利用可能でも、VMのCPUが割り当てられている特定のNUMAノードでは不足している可能性があります。Hugepage割り当てを再調整するか、合計予約量を増やしてください。</p>
+</li>
+<li>
+<p><strong>トポロジーマネージャーが一致していない</strong>: kubeletのトポロジーマネージャーポリシーが`none`に設定されている場合、CPUとメモリの割り当てがNUMAノードをまたぐ可能性があります。厳密なNUMA整合性を必要とするワークロードの場合は、トポロジーマネージャーポリシーを`single-numa-node`または`restricted`に設定することを検討してください。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ゲストが複数のnumaノードを認識しない"><a class="anchor" href="#_ゲストが複数のnumaノードを認識しない"></a>ゲストが複数のNUMAノードを認識しない</h3>
+<div class="paragraph">
+<p>ホストが複数持っているにもかかわらず、ゲストが1つのNUMAノードしか報告しない場合:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>VMI仕様で`guestMappingPassthrough`が設定されていることを確認します。</p>
+</li>
+<li>
+<p>VMの専用CPUが複数の物理NUMAノードにまたがっていることを確認します。割り当てられたCPUがすべて単一のNUMAノード上にある場合、ゲストが1つしかノードを認識しないのは正常です。</p>
+</li>
+<li>
+<p>NUMA境界を越えてより多くの物理CPUを使用するように、VMのvCPU数を増やしてください。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_machineconfigpoolがupdatingのまま停止"><a class="anchor" href="#_machineconfigpoolがupdatingのまま停止"></a>MachineConfigPoolがUpdatingのまま停止</h3>
+<div class="paragraph">
+<p>`Tuned`プロファイルの適用後、MachineConfigPoolのロールアウトが完了しない場合:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get mcp worker</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe mcp worker</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>劣化しているノードがないか確認し、影響を受けているノードのmachine-config-daemonログを調査します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -n openshift-machine-config-operator -l k8s-app=machine-config-daemon --tail=50</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VMとNamespaceを削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace numa-hugepages-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Hugepages Tunedプロファイルを削除し、カーネルブートパラメータを元に戻します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete tuned hugepages -n openshift-cluster-node-tuning-operator</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>警告: `Tuned`プロファイルを削除するとMachineConfigの更新がトリガーされ、Hugepageカーネルパラメータを削除するために影響を受けるノードのローリング再起動が行われます。ロールアウトが完了するまでMachineConfigPoolを監視してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の方法を学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Node Tuning Operatorを使用して、OpenShiftノードでブート時にHugepagesを予約する</p>
+</li>
+<li>
+<p>Kubernetes APIとノードの`/proc/meminfo`の両方からHugepage割り当てを確認する</p>
+</li>
+<li>
+<p>`/sys/devices/system/node/`および`lscpu`を使用してホストのNUMAトポロジーを調査する</p>
+</li>
+<li>
+<p>TLBオーバーヘッドを軽減するために、Hugepageバックアップメモリを持つVMをデプロイする</p>
+</li>
+<li>
+<p>NUMAを意識したゲストスケジューリングのために、NUMAパススルー（<code>guestMappingPassthrough</code>）を持つVMをデプロイする</p>
+</li>
+<li>
+<p>ゲスト内からNUMAトポロジーを検証する</p>
+</li>
+<li>
+<p>ワークロードの要件に基づいて2Miと1GiのHugepageサイズを選択する</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_関連項目"><a class="anchor" href="#_関連項目"></a>関連項目</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="cpu-pinning.html" class="xref page">専用CPU配置</a>&#8201;&#8212;&#8201;前提条件：CPUマネージャーの静的ポリシーと専用vCPU</p>
+</li>
+<li>
+<p><a href="resource-limits-qos.html" class="xref page">VMリソース制限とQoS</a>&#8201;&#8212;&#8201;Guaranteed QoSの要件</p>
+</li>
+<li>
+<p><a href="../vm-configuration/node-placement-affinity.html" class="xref page">ノード配置とアフィニティ</a>&#8201;&#8212;&#8201;VMスケジューリングのための特定ノードのターゲット設定</p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/compute/numa/" target="_blank" rel="noopener">KubeVirt NUMAドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/compute/hugepages/" target="_blank" rel="noopener">KubeVirt Hugepagesドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/scalability_and_performance/what-huge-pages-do-and-how-they-are-consumed" target="_blank" rel="noopener">Huge Pagesによるメモリの最適化 - OpenShiftドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/scalability_and_performance/cnf-numa-aware-scheduling" target="_blank" rel="noopener">NUMAを意識したワークロードのスケジューリング - OpenShiftドキュメント</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="cpu-pinning.html">専用CPU配置</a></span>
+  <span class="next"><a href="realtime-vms.html">リアルタイムVM</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

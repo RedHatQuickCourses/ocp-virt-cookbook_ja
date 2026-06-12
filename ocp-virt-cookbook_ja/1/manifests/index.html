@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>YAML マニフェストライブラリ :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="../vm-lifecycle/boot-order-boot-sources.html">
+    <link rel="next" href="../api/index.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">マニフェスト</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">YAML マニフェストライブラリ</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>クックブックのチュートリアルで使用されるYAMLマニフェストのクイックリファレンスライブラリです。カテゴリごとに整理されています。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クイックナビゲーション"><a class="anchor" href="#_クイックナビゲーション"></a>クイックナビゲーション</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">カテゴリ</th>
+<th class="tableblock halign-left valign-top">数</th>
+<th class="tableblock halign-left valign-top">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#_storage">Storage</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LVM Operatorのインストールと設定</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#_networking">Networking</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Localnet、UDN、ブリッジマッピングの設定</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#_virtual_machines">Virtual Machines</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">14</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">各種チュートリアルのVM例</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#_services">Services</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VMアクセス用のKubernetesサービス</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_storage"><a class="anchor" href="#_storage"></a>Storage</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>LVM Storage Operatorのインストールおよび設定用マニフェストです。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 11.1111%;">
+<col style="width: 33.3333%;">
+<col style="width: 22.2222%;">
+<col style="width: 11.1112%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">名前</th>
+<th class="tableblock halign-left valign-top">Kind</th>
+<th class="tableblock halign-left valign-top">目的</th>
+<th class="tableblock halign-left valign-top">チュートリアル</th>
+<th class="tableblock halign-left valign-top">ダウンロード</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lvm-namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">openshift-lvm-storage名前空間の作成</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/lvm-operator.html" class="xref page">LVM Storage Operatorのインストール</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/_attachments/lvm-operator/lvm-namespace.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lvm-operatorgroup</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OperatorGroup</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LVM Operatorのネームスペーススコープの定義</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/lvm-operator.html" class="xref page">LVM Storage Operatorのインストール</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/_attachments/lvm-operator/lvm-operatorgroup.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lvm-subscription</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Subscription</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OperatorHubからのLVM Storage Operatorのインストール</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/lvm-operator.html" class="xref page">LVM Storage Operatorのインストール</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/_attachments/lvm-operator/lvm-subscription.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lvmcluster-with-wipe</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LVMCluster</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">既存データを含むディスクに対してforceWipeを使用したLVMストレージの設定</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/lvm-operator.html" class="xref page">LVM Storage Operatorのインストール</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/_attachments/lvm-operator/lvmcluster-with-wipe.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lvmcluster-clean-disk</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LVMCluster</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クリーンな（新規）ディスクに対するLVMストレージの設定</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/lvm-operator.html" class="xref page">LVM Storage Operatorのインストール</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/_attachments/lvm-operator/lvmcluster-clean-disk.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">test-pvc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PVC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ストレージプロビジョニングを確認するためのテスト用PVC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/lvm-operator.html" class="xref page">LVM Storage Operatorのインストール</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/_attachments/lvm-operator/test-pvc.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">test-pod</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pod</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PVCのマウントを確認するためのテスト用Pod</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/lvm-operator.html" class="xref page">LVM Storage Operatorのインストール</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../storage/_attachments/lvm-operator/test-pod.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_networking"><a class="anchor" href="#_networking"></a>Networking</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>localnet、UDN、およびブリッジマッピング用のネットワーク設定です。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 11.1111%;">
+<col style="width: 33.3333%;">
+<col style="width: 22.2222%;">
+<col style="width: 11.1112%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">名前</th>
+<th class="tableblock halign-left valign-top">Kind</th>
+<th class="tableblock halign-left valign-top">目的</th>
+<th class="tableblock halign-left valign-top">チュートリアル</th>
+<th class="tableblock halign-left valign-top">ダウンロード</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">localnet-secondary-namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">localnetセカンダリネットワークVM用名前空間</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/localnet-secondary.html" class="xref page">OpenShift VirtualizationにおけるClusterUserDefinedNetworkを用いたLocalnetセカンダリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/localnet-secondary/localnet-secondary-namespace.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">localnet-bridge-mapping-nncp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NNCP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">localnetトポロジー向けにlocalnet1をbr-exブリッジにマッピング</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/localnet-secondary.html" class="xref page">OpenShift VirtualizationにおけるClusterUserDefinedNetworkを用いたLocalnetセカンダリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/localnet-secondary/localnet-bridge-mapping-nncp.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cudn-localnet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CUDN</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">localnetセカンダリネットワーク用ClusterUserDefinedNetwork</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/localnet-secondary.html" class="xref page">OpenShift VirtualizationにおけるClusterUserDefinedNetworkを用いたLocalnetセカンダリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/localnet-secondary/cudn-localnet.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">localnet-vlan-namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VLAN localnet VM用名前空間</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/localnet-vlan.html" class="xref page">OpenShift VirtualizationにおけるNetworkAttachmentDefinitionを使用したVLAN付きlocalnetセカンダリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/localnet-vlan/localnet-vlan-namespace.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">localnet-vlan-bridge-mapping-nncp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NNCP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VLANトラフィック向けにlocalnet-vlanをbr-exブリッジにマッピング</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/localnet-vlan.html" class="xref page">OpenShift VirtualizationにおけるNetworkAttachmentDefinitionを使用したVLAN付きlocalnetセカンダリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/localnet-vlan/localnet-vlan-bridge-mapping-nncp.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">localnet-vlan-100-nad</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NAD</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VLAN 100 localnet用NetworkAttachmentDefinition</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/localnet-vlan.html" class="xref page">OpenShift VirtualizationにおけるNetworkAttachmentDefinitionを使用したVLAN付きlocalnetセカンダリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/localnet-vlan/localnet-vlan-100-nad.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">udn-primary-namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">UDNプライマリネットワークラベル付き名前空間</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/udn-primary-networks.html" class="xref page">UDN を使用したレイヤー 2 プライマリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/udn-primary-networks/udn-primary-namespace.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">udn-primary</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">UDN</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VMプライマリネットワーク用のレイヤー2 UserDefinedNetwork</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/udn-primary-networks.html" class="xref page">UDN を使用したレイヤー 2 プライマリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/udn-primary-networks/udn-primary.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_virtual_machines"><a class="anchor" href="#_virtual_machines"></a>Virtual Machines</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>さまざまな構成を示す、各種チュートリアルのVMマニフェストです。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 11.1111%;">
+<col style="width: 33.3333%;">
+<col style="width: 22.2222%;">
+<col style="width: 11.1112%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">名前</th>
+<th class="tableblock halign-left valign-top">Kind</th>
+<th class="tableblock halign-left valign-top">目的</th>
+<th class="tableblock halign-left valign-top">チュートリアル</th>
+<th class="tableblock halign-left valign-top">ダウンロード</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-localnet-vm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">localnetセカンダリネットワークを持つFedora VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/localnet-secondary.html" class="xref page">OpenShift VirtualizationにおけるClusterUserDefinedNetworkを用いたLocalnetセカンダリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/localnet-secondary/fedora-localnet-vm.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-vlan-vm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VLAN 100セカンダリネットワークを持つFedora VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/localnet-vlan.html" class="xref page">OpenShift VirtualizationにおけるNetworkAttachmentDefinitionを使用したVLAN付きlocalnetセカンダリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/localnet-vlan/fedora-vlan-vm.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-vm-with-udn</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">UDNをプライマリネットワークとして使用するFedora VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/udn-primary-networks.html" class="xref page">UDN を使用したレイヤー 2 プライマリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/udn-primary-networks/fedora-vm-with-udn.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-dhcp-vm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">DHCPネットワーキングを使用する基本的なFedora VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/static-ip-configuration.html" class="xref page">VMへの静的IPの設定</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/cloud-init-ip-configuration/fedora-dhcp-vm.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-multi-network-vm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プライマリDHCP + セカンダリ静的IPを持つFedora VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/static-ip-configuration.html" class="xref page">VMへの静的IPの設定</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/static-ip-configuration/fedora-multi-network-vm.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-vlan-static-ip-vm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VLANインターフェースと静的IPを持つFedora VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/static-ip-configuration.html" class="xref page">VMへの静的IPの設定</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/cloud-init-ip-configuration/fedora-vlan-static-ip-vm.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">golden-image-base-vm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ゴールデンイメージ作成用のベースVM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-lifecycle/custom-golden-images.html" class="xref page">カスタムOSイメージとゴールデンイメージの作成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-lifecycle/_attachments/custom-golden-images/golden-image-base-vm.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">webserver-vm-from-golden</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ゴールデンイメージからデプロイされたVM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-lifecycle/custom-golden-images.html" class="xref page">カスタムOSイメージとゴールデンイメージの作成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-lifecycle/_attachments/custom-golden-images/webserver-vm-from-golden.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">webserver-vm-2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ゴールデンイメージからデプロイされた2台目のVM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-lifecycle/custom-golden-images.html" class="xref page">カスタムOSイメージとゴールデンイメージの作成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-lifecycle/_attachments/custom-golden-images/webserver-vm-2.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-access-vm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SSHアクセス用に設定されたFedora VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/remote-access-linux-vms.html" class="xref page">Linux仮想マシンへのリモートアクセス</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/_attachments/remote-access-linux-vms/fedora-access-vm.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-vlan-access-vm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">直接SSHアクセスのためのVLANを持つFedora VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/remote-access-linux-vms.html" class="xref page">Linux仮想マシンへのリモートアクセス</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/_attachments/remote-access-linux-vms/fedora-vlan-access-vm.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-app-vm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">内部DNSデモ用のFedora VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/internal-dns-for-vms.html" class="xref page">仮想マシンの内部DNS解決</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/_attachments/internal-dns-for-vms/fedora-app-vm.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">golden-image-datasource</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">DataSource</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ゴールデンイメージのPVCを指すDataSource</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-lifecycle/custom-golden-images.html" class="xref page">カスタムOSイメージとゴールデンイメージの作成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-lifecycle/_attachments/custom-golden-images/golden-image-datasource.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_services"><a class="anchor" href="#_services"></a>Services</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VMアクセス用のKubernetesサービスです。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 11.1111%;">
+<col style="width: 33.3333%;">
+<col style="width: 22.2222%;">
+<col style="width: 11.1112%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">名前</th>
+<th class="tableblock halign-left valign-top">Kind</th>
+<th class="tableblock halign-left valign-top">目的</th>
+<th class="tableblock halign-left valign-top">チュートリアル</th>
+<th class="tableblock halign-left valign-top">ダウンロード</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fedora-vm-web-service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VMのWebサーバーを公開するLoadBalancerサービス</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/udn-primary-networks.html" class="xref page">UDN を使用したレイヤー 2 プライマリネットワークの構成</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../networking/_attachments/udn-primary-networks/fedora-vm-web-service.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ssh-nodeport-service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VMへのSSHアクセス用NodePortサービス</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/remote-access-linux-vms.html" class="xref page">Linux仮想マシンへのリモートアクセス</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/_attachments/remote-access-linux-vms/ssh-nodeport-service.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">headless-service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">内部DNS解決用のHeadlessサービス</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/internal-dns-for-vms.html" class="xref page">仮想マシンの内部DNS解決</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vm-configuration/_attachments/internal-dns-for-vms/headless-service.yaml" class="xref attachment">YAML</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_usage"><a class="anchor" href="#_usage"></a>Usage</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ダウンロードと適用"><a class="anchor" href="#_ダウンロードと適用"></a>ダウンロードと適用</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>YAMLリンクをクリックしてマニフェストをダウンロードします。</p>
+</li>
+<li>
+<p>お使いの環境に合わせて値をカスタマイズします。</p>
+</li>
+<li>
+<p><code>oc apply -f &lt;filename&gt;.yaml</code> を使用して適用します。</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_適用前の検証"><a class="anchor" href="#_適用前の検証"></a>適用前の検証</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply --dry-run=client -f &lt;filename&gt;.yaml</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also"><a class="anchor" href="#_see_also"></a>See Also</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../getting-started/index.html" class="xref page">はじめに</a></p>
+</li>
+<li>
+<p><a href="../storage/index.html" class="xref page">ストレージ設定</a></p>
+</li>
+<li>
+<p><a href="../networking/index.html" class="xref page">ネットワーク構成</a></p>
+</li>
+<li>
+<p><a href="../vm-configuration/index.html" class="xref page">仮想マシンの設定</a></p>
+</li>
+<li>
+<p><a href="../performance/index.html" class="xref page">VM パフォーマンスチューニング</a></p>
+</li>
+<li>
+<p><a href="../vm-lifecycle/index.html" class="xref page">VMライフサイクル管理</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a></span>
+  <span class="next"><a href="../api/index.html">API ガイド</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

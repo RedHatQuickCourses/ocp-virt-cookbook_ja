@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>VMリソース制限とQoSの設定 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="cpu-pinning.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">VM パフォーマンスチューニング</a></li>
+    <li><a href="resource-limits-qos.html">リソース制限とQoS</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">VMリソース制限とQoSの設定</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、OpenShift Virtualizationにおける仮想マシン（VM）のCPUおよびメモリのリソース要求（requests）、制限（limits）、およびサービス品質（QoS）クラスの設定方法を解説します。適切なリソース管理を行うことで、リソースの枯渇を防ぎ、予測可能なVMパフォーマンスを確保し、効率的なマルチテナントクラスターの運用が可能になります。</p>
+</div>
+<div class="paragraph">
+<p>KubeVirtがVMのリソース仕様をどのようにコンテナレベルの要求と制限に変換するか、KubernetesのQoSクラスがVMにどのように適用されるか、そしてResourceQuotaやLimitRangeを使用して名前空間レベルでガバナンスを強制する方法について学びます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>OpenShift 4.18以降</strong> （OpenShift Virtualizationオペレーターがインストール済みであること）</p>
+</li>
+<li>
+<p><strong>クラスター管理者権限</strong> (<code>system:admin</code> または同等の権限)</p>
+</li>
+<li>
+<p><strong><code>oc</code> CLI</strong> および <strong><code>virtctl</code> CLI</strong> がインストール済みであること</p>
+</li>
+<li>
+<p><strong>デフォルトのStorageClass</strong> が設定済みであること（VMブートディスク用）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>検証済みバージョン:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>OpenShift 4.20, 4.21</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_vmリソース管理の理解"><a class="anchor" href="#_vmリソース管理の理解"></a>VMリソース管理の理解</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenShift VirtualizationでVMを作成すると、KubeVirtはそのVMのリソース仕様を、VMをホストする <code>virt-launcher</code> コンテナの要求（requests）と制限（limits）に変換します。このマッピングを理解することは、キャパシティプランニングにおいて不可欠です。</p>
+</div>
+<div class="sect2">
+<h3 id="_cpu割り当て"><a class="anchor" href="#_cpu割り当て"></a>CPU割り当て</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>デフォルトでは、コンテナはvCPUあたり <code>1/cpuAllocationRatio</code> のCPUを要求します（<code>cpuAllocationRatio</code> のデフォルト値は10）。1 vCPUを持つVMは100mのCPUを要求します。</p>
+</li>
+<li>
+<p>デフォルトではCPU制限は設定されないため、キャパシティに余裕がある場合にVMは要求値を超えてバーストできます。</p>
+</li>
+<li>
+<p>VMにCPU制限を手動で設定した場合、自動的なCPU要求は導出されません。要求は制限と一致します。</p>
+</li>
+<li>
+<p>vCPUの数は <code>sockets * cores * threads</code> として計算され、デフォルト値は1です。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_メモリ割り当て"><a class="anchor" href="#_メモリ割り当て"></a>メモリ割り当て</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>VMは <code>spec.domain.memory.guest</code> または <code>spec.domain.resources.requests.memory</code> を介して必要なメモリを指定します。</p>
+</li>
+<li>
+<p>KubeVirtは、ゲストメモリに（QEMU、ファームウェア、その他のハイパーバイザーコンポーネント用の）計算されたオーバーヘッドを追加し、コンテナメモリ要求を形成します。</p>
+</li>
+<li>
+<p>デフォルトではメモリ制限は設定されません。</p>
+</li>
+<li>
+<p>メモリ制限を設定する場合、オーバーヘッドを考慮して、ゲストメモリ値よりも少なくとも500 MiBまたは2%以上大きい値を設定する必要があります。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>警告: VMにメモリ制限を設定すると、ゲストOSやハイパーバイザーが一時的にその制限を超えた場合にVMがクラッシュする可能性があります。制限の設定には注意し、ゲストメモリとオーバーヘッドの合計よりも高い値を設定してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_テスト用名前空間の作成"><a class="anchor" href="#_ステップ_1_テスト用名前空間の作成"></a>ステップ 1: テスト用名前空間の作成</h2>
+<div class="sectionbody">
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace resource-qos-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_異なるqosクラスを持つvmのデプロイ"><a class="anchor" href="#_ステップ_2_異なるqosクラスを持つvmのデプロイ"></a>ステップ 2: 異なるQoSクラスを持つVMのデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Kubernetesは、リソース構成に基づいてすべてのPodに3つのQoSクラスのうちの1つを割り当てます。VMはPod内で実行されるため、同じルールが適用されます。</p>
+</div>
+<div class="sect2">
+<h3 id="_burstable_qosデフォルト"><a class="anchor" href="#_burstable_qosデフォルト"></a>Burstable QoS（デフォルト）</h3>
+<div class="paragraph">
+<p>リソースの要求（requests）のみがあり、制限（limits）がないVMはBurstable QoSを取得します。これはOpenShift Virtualization VMのデフォルトの動作です。</p>
+</div>
+<div class="paragraph">
+<p>警告: この例のcloud-initパスワードはデモ用です。本番環境では、常に強力で一意なパスワードまたはSSHキー認証を使用してください。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/resource-limits-qos/vm-burstable.yaml" class="xref attachment">vm-burstable.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-burstable
+  namespace: resource-qos-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-burstable
+    spec:
+      domain:
+        memory:
+          guest: 512Mi
+        resources:
+          requests:
+            memory: 512Mi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+EOF</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_guaranteed_qos"><a class="anchor" href="#_guaranteed_qos"></a>Guaranteed QoS</h3>
+<div class="paragraph">
+<p>CPUとメモリの両方に対して、要求と制限が等しいVMはGuaranteed QoSを取得します。これらのVMは最も高いスケジューリング優先度を持ち、メモリ圧迫時に最後に退避（evict）されます。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/resource-limits-qos/vm-guaranteed.yaml" class="xref attachment">vm-guaranteed.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-guaranteed
+  namespace: resource-qos-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-guaranteed
+    spec:
+      domain:
+        memory:
+          guest: 512Mi
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: "1"
+          limits:
+            memory: 1Gi
+            cpu: "1"
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注記: メモリ制限（1Gi）は、ハイパーバイザーのオーバーヘッドを考慮して、ゲストメモリ（512Mi）よりも十分に大きくする必要があります。制限がゲストメモリに近すぎると、Podは拒否されます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_besteffort_qos"><a class="anchor" href="#_besteffort_qos"></a>BestEffort QoS</h3>
+<div class="paragraph">
+<p>リソースの要求や制限がないVMはBestEffort QoSを取得します。これらのVMは、リソースが逼迫した際に最初に退避されます。この構成は一般的に本番環境では推奨されません。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/resource-limits-qos/vm-besteffort.yaml" class="xref attachment">vm-besteffort.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-besteffort
+  namespace: resource-qos-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-besteffort
+    spec:
+      domain:
+        memory:
+          guest: 512Mi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_qosクラスの検証"><a class="anchor" href="#_ステップ_3_qosクラスの検証"></a>ステップ 3: QoSクラスの検証</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VMの起動を待ちます：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n resource-qos-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME             AGE   STATUS    READY
+vm-besteffort    30s   Running   True
+vm-burstable     60s   Running   True
+vm-guaranteed    45s   Running   True</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>各VMのPodに割り当てられたQoSクラスを確認します。</p>
+</div>
+<div class="paragraph">
+<p>Burstable VMの場合：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-burstable -o jsonpath='{.items[0].status.qosClass}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Burstable</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Guaranteed VMの場合：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-guaranteed -o jsonpath='{.items[0].status.qosClass}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Guaranteed</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>BestEffort VMの場合：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-besteffort -o jsonpath='{.items[0].status.qosClass}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Burstable</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注記: <code>virt-launcher</code> コンテナのオーバーヘッドに対してKubeVirtが常に一定の基本リソース要求を追加するため、<code>vm-besteffort</code> であってもBestEffortではなくBurstableと表示されます。</p>
+</div>
+<div class="paragraph">
+<p><code>virt-launcher</code> Podの実際の詳細リソース値を確認します。</p>
+</div>
+<div class="paragraph">
+<p>Burstable VMの場合：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-burstable -o yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Guaranteed VMの場合：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-guaranteed -o yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>BestEffort VMの場合：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-besteffort -o yaml</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_resourcequotaの適用"><a class="anchor" href="#_ステップ_4_resourcequotaの適用"></a>ステップ 4: ResourceQuotaの適用</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ResourceQuota（リソースクォータ）は、名前空間内のすべてのVMとPodにわたる集計リソース制限を強制します。制限付きのResourceQuotaが適用されると、KubeVirtは自動的にVMにリソース制限を設定します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/resource-limits-qos/resource-quota.yaml" class="xref attachment">resource-quota.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: vm-resource-quota
+  namespace: resource-qos-demo
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    pods: "10"
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>クォータを確認します：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe resourcequota vm-resource-quota -n resource-qos-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力には、名前空間の現在の使用量とハード制限が表示されます。この名前空間で新しく作成されるVMには、クォータに制限フィールドが含まれているため、自動的にCPU制限（1 vCPUあたり1）とメモリ制限（要求の2倍）が適用されます。</p>
+</div>
+<div class="sect2">
+<h3 id="_自動メモリ制限比率のカスタマイズ"><a class="anchor" href="#_自動メモリ制限比率のカスタマイズ"></a>自動メモリ制限比率のカスタマイズ</h3>
+<div class="paragraph">
+<p>デフォルトでは、自動メモリ制限は要求メモリの2倍に設定されます。これは名前空間ごとにカスタマイズ可能です：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc label namespace resource-qos-demo alpha.kubevirt.io/auto-memory-limits-ratio=1.5</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これにより、その名前空間内のすべての新しいVMに対して、自動メモリ制限比率が1.5倍に設定されます。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_limitrangeの適用"><a class="anchor" href="#_ステップ_5_limitrangeの適用"></a>ステップ 5: LimitRangeの適用</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>LimitRangeは、名前空間内のPodごとのデフォルト値および最大リソース値を設定し、すべてのVMが最小限のリソース割り当てを確実に受けられるようにします。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/resource-limits-qos/limit-range.yaml" class="xref attachment">limit-range.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: vm-limit-range
+  namespace: resource-qos-demo
+spec:
+  limits:
+  - type: Pod
+    max:
+      cpu: "4"
+      memory: 8Gi
+    min:
+      cpu: 100m
+      memory: 256Mi
+  - type: Container
+    default:
+      cpu: 500m
+      memory: 1Gi
+    defaultRequest:
+      cpu: 100m
+      memory: 512Mi
+    max:
+      cpu: "4"
+      memory: 8Gi
+    min:
+      cpu: 50m
+      memory: 128Mi
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>検証します：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe limitrange vm-limit-range -n resource-qos-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>このLimitRangeが適用されている状態では、リソースの要求や制限を指定していない新しいPod（VM用の <code>virt-launcher</code> Podを含む）には、デフォルト値が適用されます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_6_リソース使用状況の監視"><a class="anchor" href="#_ステップ_6_リソース使用状況の監視"></a>ステップ 6: リソース使用状況の監視</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM Podの実際のリソース消費量を確認します：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm top pods -n resource-qos-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>各 <code>virt-launcher</code> Podの現在のCPUおよびメモリ使用量が表示されます。これらの値を要求および制限と比較することで、サイジング最適化の機会を特定します。</p>
+</div>
+<div class="paragraph">
+<p>クォータに対する名前空間レベルのリソース消費量を確認します：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe resourcequota vm-resource-quota -n resource-qos-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_qosクラスのまとめ"><a class="anchor" href="#_qosクラスのまとめ"></a>QoSクラスのまとめ</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">QoSクラス</th>
+<th class="tableblock halign-left valign-top">構成</th>
+<th class="tableblock halign-left valign-top">退避の優先度</th>
+<th class="tableblock halign-left valign-top">ユースケース</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Guaranteed</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CPUとメモリの要求 == 制限</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">最後に退避</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">本番データベース、重要なアプリケーション</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Burstable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">要求が設定済み、制限は未設定または異なる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BestEffortの後に退避</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">一般的なワークロード、開発用VM</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BestEffort</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">要求も制限も未設定</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">最初に退避</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">一時的な、破棄可能なワークロード</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_サイジングの推奨事項"><a class="anchor" href="#_サイジングの推奨事項"></a>サイジングの推奨事項</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>新しいワークロードにはBurstableから始める</strong>: メモリ要求を予想される使用量に設定し、必要に応じてVMがバーストできるようにします。</p>
+</li>
+<li>
+<p><strong>予測可能なパフォーマンスが必要で、退避させたくない本番用VMにはGuaranteedを使用する</strong>。</p>
+</li>
+<li>
+<p><strong>メモリ制限は控えめに設定する</strong>: ハイパーバイザーのオーバーヘッドとメモリスパイクを考慮して、ゲストメモリの少なくとも2倍に設定します。</p>
+</li>
+<li>
+<p><strong>制限する前に監視する</strong>: 厳格な制限を設定する前に、<code>oc adm top pods</code> を使用して実際の使用量を観察します。</p>
+</li>
+<li>
+<p><strong>名前空間レベルでResourceQuotaを使用する</strong>: 特定のチームがすべてのクラスターリソースを消費するのを防ぎます。</p>
+</li>
+<li>
+<p><strong>LimitRangeを使用して、すべてのVMに最小リソース割り当てと妥当なデフォルト設定を確保する</strong>。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルで作成したすべてのリソースを削除します：</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace resource-qos-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の方法を学びました：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>VMのCPUおよびメモリの要求と制限を設定する</p>
+</li>
+<li>
+<p>KubeVirtがどのようにVMリソースをコンテナリソースにマッピングするかを理解する</p>
+</li>
+<li>
+<p>Guaranteed、Burstable、BestEffort QoSクラスを持つVMをデプロイする</p>
+</li>
+<li>
+<p>ResourceQuotaを適用して名前空間レベルのリソースガバナンスを強制する</p>
+</li>
+<li>
+<p>LimitRangeを適用してPodごとのデフォルト値と境界を設定する</p>
+</li>
+<li>
+<p>VMのリソース使用量を監視し、割り当てを最適化する</p>
+</li>
+<li>
+<p>名前空間ごとに自動メモリ制限比率をカスタマイズする</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照情報"><a class="anchor" href="#_参照情報"></a>参照情報</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://kubevirt.io/user-guide/compute/resources_requests_and_limits/" target="_blank" rel="noopener">KubeVirt Resource Requests and Limits (KubeVirt ユーザーガイド)</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.18/virt/managing_vms/advanced_vm_management/virt-working-with-resource-quotas-for-vms.html" target="_blank" rel="noopener">Working with Resource Quotas for VMs - OpenShift ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/" target="_blank" rel="noopener">Configure QoS for Pods - Kubernetes ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.18/applications/quotas/quotas-setting-per-project.html" target="_blank" rel="noopener">Resource Quotas Per Project - OpenShift ドキュメント</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">VM パフォーマンスチューニング</a></span>
+  <span class="next"><a href="cpu-pinning.html">専用CPU配置</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

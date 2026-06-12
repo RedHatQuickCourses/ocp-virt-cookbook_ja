@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ローカルのqcow2イメージからブートボリュームを作成する :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="custom-golden-images.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">VMライフサイクル管理</a></li>
+    <li><a href="import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">ローカルのqcow2イメージからブートボリュームを作成する</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、既存のqcow2ディスクイメージをローカルのKVMプラットフォームからOpenShift Virtualizationにインポートして、ブートボリュームを作成する方法を説明します。これは、他の仮想化プラットフォームから仮想マシン（VM）を移行する場合や、OVA形式では利用できないカスタムOSテンプレートをデプロイする場合に特に役立ちます。</p>
+</div>
+<div class="paragraph">
+<p>qcow2 (QEMU Copy-On-Write version 2) は、KVMやその他のQEMUベースの仮想化プラットフォームで一般的に使用されるディスクイメージ形式です。これらのイメージをインポートすることで、既存のワークロードをOpenShift Virtualizationへ迅速に移行できます。</p>
+</div>
+<div class="paragraph">
+<p>注意: このチュートリアルは、OpenShift Virtualizationを導入したOpenShift 4.18.33環境で、AWS EBS gp3-csiストレージクラスを使用してテストされています。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift 4.18以降と <a href="../getting-started/install-openshift-virtualization.html" class="xref page">OpenShift Virtualizationオペレーターのインストール</a></p>
+</li>
+<li>
+<p>CLIツール: <code>oc</code>, <a href="../getting-started/virtctl-basics.html" class="xref page"><code>virtctl</code></a></p>
+</li>
+<li>
+<p><code>qemu-img</code> (オプション) - qcow2イメージの詳細をローカルで調査するために使用</p>
+</li>
+<li>
+<p>ローカルで利用可能な（またはHTTP/S3経由でアクセス可能な）qcow2イメージファイル</p>
+</li>
+<li>
+<p><a href="../getting-started/default-storage-class.html" class="xref page">ストレージクラスの設定</a> - 動的なボリュームプロビジョニング用</p>
+</li>
+<li>
+<p>名前空間（namespace）内の十分なストレージクォータ</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_インポート方法の概要"><a class="anchor" href="#_インポート方法の概要"></a>インポート方法の概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>qcow2イメージをOpenShift Virtualizationにインポートする主な方法は4つあります。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">方法</th>
+<th class="tableblock halign-left valign-top">用途</th>
+<th class="tableblock halign-left valign-top">主な特徴</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>virtctl image-upload</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ワークステーションからの単発インポート</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">最もシンプルな手法。DataVolume/PVCへ直接アップロード</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>DataVolume with HTTP/S3</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">共有イメージや自動化</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Webサーバー上のイメージを指定し、DataVolumeが自動的にプル</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ContainerDisk</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">イミュータブルでバージョン管理されたイメージ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンテナイメージとしてqcow2をパッケージ化し、レジストリへプッシュ</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>VM with DataVolumeTemplate</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">アップロードを伴うVM作成</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM仕様にアップロードソースを含むDataVolumeTemplateを組み込む</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>このチュートリアルでは、導入として最も分かりやすい <strong>virtctl image-upload</strong> メソッドに焦点を当てます。その他の方法は後のセクションで扱います。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_qcow2イメージの準備"><a class="anchor" href="#_ステップ_1_qcow2イメージの準備"></a>ステップ 1: qcow2イメージの準備</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>インポートの前に、qcow2イメージがOpenShift Virtualizationに適した状態であることを確認してください。</p>
+</div>
+<div class="sect2">
+<h3 id="_イメージのダウンロードまたは場所の特定"><a class="anchor" href="#_イメージのダウンロードまたは場所の特定"></a>イメージのダウンロードまたは場所の特定</h3>
+<div class="paragraph">
+<p>このチュートリアルでは、例としてFedora Cloudイメージを使用します。自身のqcow2イメージに置き換えて実行できます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Download Fedora Cloud image (example)
+curl -LO https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
+
+# Verify the image
+ls -lh Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_イメージ詳細の確認オプション"><a class="anchor" href="#_イメージ詳細の確認オプション"></a>イメージ詳細の確認（オプション）</h3>
+<div class="paragraph">
+<p>ローカルに <code>qemu-img</code> がインストールされている場合は、イメージを調査できます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">qemu-img info Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">image: Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
+file format: qcow2
+virtual size: 5 GiB (5368709120 bytes)
+disk size: 420 MiB</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>仮想サイズ（virtual size）に注意してください。DataVolumeを作成する際は、少なくともこの容量以上のストレージを指定する必要があります。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_名前空間の作成"><a class="anchor" href="#_ステップ_2_名前空間の作成"></a>ステップ 2: 名前空間の作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>インポートするVM用の名前空間を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace imported-vms</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_virtctl_を使用したqcow2イメージのアップロード"><a class="anchor" href="#_ステップ_3_virtctl_を使用したqcow2イメージのアップロード"></a>ステップ 3: virtctl を使用したqcow2イメージのアップロード</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>virtctlを使用してqcow2イメージを直接アップロードします。PVCは自動的に作成されます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl image-upload pvc fedora-imported-disk \
+  --image-path=./Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2 \
+  --size=10Gi \
+  --namespace=imported-vms \
+  --insecure \
+  --force-bind</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>コマンドパラメータの説明:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>pvc fedora-imported-disk</code> - 作成されるPVCの名前</p>
+</li>
+<li>
+<p><code>--image-path</code> - ローカルのqcow2ファイルへのパス</p>
+</li>
+<li>
+<p><code>--size</code> - 作成するPVCのサイズ（qcow2イメージの仮想サイズ以上である必要があります）</p>
+</li>
+<li>
+<p><code>--namespace</code> - 対象の名前空間</p>
+</li>
+<li>
+<p><code>--insecure</code> - TLS検証をスキップ（自己署名証明書を使用する場合）</p>
+</li>
+<li>
+<p><code>--force-bind</code> - PVCの即時バインドを強制（`WaitForFirstConsumer`モードのStorageClassで必須）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>重要: <code>--force-bind</code> フラグは、<code>volumeBindingMode: WaitForFirstConsumer</code> を使用するStorageClass（AWS EBS、Azure Disk、その他のクラウドプロバイダーで一般的）を使用する場合に必須です。このフラグがないと、PVCが保留（pending）状態のままとなり、アップロードが開始されません。</p>
+</div>
+<div class="paragraph">
+<p>アップロードの進行状況の出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">PVC imported-vms/fedora-imported-disk created
+Uploading data to https://cdi-uploadproxy-openshift-cnv.apps...
+
+ 420.00 MiB / 420.00 MiB [=================================] 100.00% 1m30s
+
+Uploading data completed successfully, waiting for processing to complete
+Processing completed successfully</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注意: アップロード時間はイメージのサイズとネットワーク速度に依存します。1GBのイメージであれば、通常1〜3分程度かかります。</p>
+</div>
+<div class="sect2">
+<h3 id="_アップロード進行状況の監視"><a class="anchor" href="#_アップロード進行状況の監視"></a>アップロード進行状況の監視</h3>
+<div class="paragraph">
+<p>別のターミナルで、PVCのステータスを確認することでアップロードプロセスを監視できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc fedora-imported-disk -n imported-vms --watch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>アップロード中、PVCがPendingからBoundへ移行するのがわかります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                   STATUS    VOLUME                                     CAPACITY   ACCESS MODES
+fedora-imported-disk   Pending
+fedora-imported-disk   Bound     pvc-xxxxx                                  10Gi       RWO</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>必要に応じて <code>cdi-upload</code> ポッドのログを確認してください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n imported-vms
+oc logs -n imported-vms cdi-upload-fedora-imported-disk -f</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_インポートしたブートボリュームを使用したvmの作成"><a class="anchor" href="#_ステップ_4_インポートしたブートボリュームを使用したvmの作成"></a>ステップ 4: インポートしたブートボリュームを使用したVMの作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>イメージのアップロードが完了したので、そのPVCをブートディスクとして使用するVMを作成します。</p>
+</div>
+<div class="paragraph">
+<p>警告: この例のcloud-initパスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSHキー認証を使用してください。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/import-qcow2-boot-volume/vm-from-imported-qcow2.yaml" class="xref attachment">vm-from-imported-qcow2.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-imported-vm
+  namespace: imported-vms
+  labels:
+    app: fedora-imported
+spec:
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: fedora-imported-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          persistentVolumeClaim:
+            claimName: fedora-imported-disk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: false }
+              ssh_pwauth: true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMマニフェストを適用します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f vm-from-imported-qcow2.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMを起動します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl start fedora-imported-vm -n imported-vms</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_vmが実行中であることを確認"><a class="anchor" href="#_ステップ_5_vmが実行中であることを確認"></a>ステップ 5: VMが実行中であることを確認</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VMの起動を監視します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi -n imported-vms --watch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMが起動し、実行中であることを示す出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                 AGE   PHASE       IP             NODENAME    READY
+fedora-imported-vm   15s   Scheduling                             False
+fedora-imported-vm   30s   Scheduled                  worker-01   False
+fedora-imported-vm   45s   Running     10.128.2.54    worker-01   True</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMコンソールにアクセスします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console fedora-imported-vm -n imported-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>cloud-initで設定した資格情報（ユーザー: <code>fedora</code>、パスワード: <code>fedora123</code>）でログインします。</p>
+</div>
+<div class="paragraph">
+<p>インポートしたイメージからシステムが起動したことを確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check OS version
+cat /etc/os-release
+
+# Check disk configuration
+lsblk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> でコンソールを終了します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_その他のインポート方法"><a class="anchor" href="#_その他のインポート方法"></a>その他のインポート方法</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>virtctl image-uploadは最もシンプルな方法ですが、ユースケースに応じて他にも手法があります。</p>
+</div>
+<div class="sect2">
+<h3 id="_方法_2_httpソースを指定したdatavolume"><a class="anchor" href="#_方法_2_httpソースを指定したdatavolume"></a>方法 2: HTTPソースを指定したDataVolume</h3>
+<div class="paragraph">
+<p>qcow2イメージにHTTP/HTTPS経由でアクセスできる場合、DataVolumeを使用してCDIに自動ダウンロードおよびインポートさせることができます。この方法は、公開されているクラウドイメージや、社内Webサーバーでホストされているイメージを使用する場合に非常に有効です。</p>
+</div>
+<div class="paragraph">
+<p>公式のFedora Cloudイメージを使用する例:</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/import-qcow2-boot-volume/datavolume-http-import.yaml" class="xref attachment">datavolume-http-import.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: fedora-http-imported
+  namespace: imported-vms
+  annotations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+  source:
+    http:
+      url: "https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2"
+  storage:
+    resources:
+      requests:
+        storage: 10Gi</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注意: アノテーション <code>cdi.kubevirt.io/storage.bind.immediate.requested: "true"</code> はPVCの即時バインドを強制します。これは <code>WaitForFirstConsumer</code> モードのStorageClassを使用する場合に必須です。</p>
+</div>
+<div class="paragraph">
+<p>DataVolumeを適用すると、CDIが自動的にイメージをダウンロードしてインポートします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f datavolume-http-import.yaml
+oc get dv -n imported-vms --watch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ダウンロードの進行状況を監視します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                   PHASE              PROGRESS   RESTARTS   AGE
+fedora-http-imported   ImportScheduled    N/A                   5s
+fedora-http-imported   ImportInProgress   12.5%                 15s
+fedora-http-imported   ImportInProgress   67.3%                 45s
+fedora-http-imported   Succeeded          100.0%                1m30s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>DataVolumeが <code>Succeeded</code> になったら、それを参照するVMを作成できます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">volumes:
+  - name: rootdisk
+    dataVolume:
+      name: fedora-http-imported</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ヒント: この方法は手動のアップロードが不要なため、自動化やCI/CDパイプラインに最適です。適切な資格情報を設定すればS3 URLも使用できます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_方法_3_containerdisk"><a class="anchor" href="#_方法_3_containerdisk"></a>方法 3: ContainerDisk</h3>
+<div class="paragraph">
+<p>バージョン管理されたイミュータブルなイメージを作成するには、qcow2をコンテナイメージとしてパッケージ化します。</p>
+</div>
+<div class="paragraph">
+<p>Containerfileを作成します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-docker hljs" data-lang="docker">FROM scratch
+ADD Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2 /disk/</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ビルドしてプッシュします。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">podman build -t quay.io/youruser/fedora-disk:v1 .
+podman push quay.io/youruser/fedora-disk:v1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM仕様で使用します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">volumes:
+  - name: rootdisk
+    containerDisk:
+      image: quay.io/youruser/fedora-disk:v1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注意: ContainerDiskは一時的なものです。変更はVM停止時に失われるため、個別の永続ボリュームをアタッチしない限り保持されません。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_方法_4_datavolumetemplateとアップロードソースを用いたvm"><a class="anchor" href="#_方法_4_datavolumetemplateとアップロードソースを用いたvm"></a>方法 4: DataVolumeTemplateとアップロードソースを用いたVM</h3>
+<div class="paragraph">
+<p>この方法は、DataVolumeTemplateを使用して、VM作成とアップロード機能を組み合わせます。DataVolumeはVM仕様内にインラインで定義され、VM作成時に自動的に作成されます。</p>
+</div>
+<div class="paragraph">
+<p><strong>この方法の用途:</strong>
+- VMとそのストレージを単一のマニフェストで定義したい
+- GitOpsや宣言的なワークフローを使用している
+- DataVolumeのライフサイクルをVMに連動させたい</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/import-qcow2-boot-volume/vm-with-upload-datavolume.yaml" class="xref attachment">vm-with-upload-datavolume.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-with-upload
+  namespace: imported-vms
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-with-upload-disk
+      spec:
+        source:
+          upload: {}
+        storage:
+          resources:
+            requests:
+              storage: 10Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-with-upload
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-with-upload-disk
+          name: rootdisk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMを作成します（これによりVMとDataVolumeの両方が作成されます）。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f vm-with-upload-datavolume.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>DataVolumeは作成されますが、ディスクにデータがないためVMはまだ起動しません。ここでイメージをアップロードします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl image-upload dv vm-with-upload-disk \
+  --image-path=./Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2 \
+  --size=10Gi \
+  --namespace=imported-vms \
+  --insecure \
+  --force-bind</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>アップロードが完了したら、VMを起動します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl start vm-with-upload -n imported-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>この方法のメリット:</strong>
+- 単一マニフェストでVMとストレージの両方を定義できる
+- DataVolumeのライフサイクルがVMとともに管理される
+- Infrastructure-as-Codeワークフローに適している</p>
+</div>
+<div class="paragraph">
+<p><strong>デメリット:</strong>
+- PVCを個別に作成するよりも複雑
+- VM作成後にアップロードを行う必要がある
+- DataVolume/virtctlの互換性問題の影響を受ける可能性がある</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ベストプラクティス"><a class="anchor" href="#_ベストプラクティス"></a>ベストプラクティス</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_イメージの準備"><a class="anchor" href="#_イメージの準備"></a>イメージの準備</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>イメージ整合性の検証</strong> - アップロード前にチェックサムを確認</p>
+</li>
+<li>
+<p><strong>イメージサイズの最適化</strong> - <code>virt-sparsify</code> を使用してqcow2ファイルサイズを削減</p>
+</li>
+<li>
+<p><strong>機密データの削除</strong> - 資格情報やマシン固有の設定をクリーンアップ</p>
+</li>
+<li>
+<p><strong>cloud-initのインストール</strong> - 適切な初期化のためにcloud-initがインストールされていることを確認</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ストレージのサイジング"><a class="anchor" href="#_ストレージのサイジング"></a>ストレージのサイジング</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>拡張性を考慮</strong> - VM操作を見越して、仮想サイズよりも多くのストレージを割り当て</p>
+</li>
+<li>
+<p><strong>シンプロビジョニング</strong> - 利用可能な場合はシンプロビジョニングをサポートするストレージクラスを使用</p>
+</li>
+<li>
+<p><strong>使用状況の監視</strong> - 定期的にPVCの使用状況を追跡</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_セキュリティ"><a class="anchor" href="#_セキュリティ"></a>セキュリティ</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>イメージスキャン</strong> - インポート前にqcow2イメージの脆弱性をスキャン</p>
+</li>
+<li>
+<p><strong>TLSの利用</strong> - 可能であれば <code>--insecure</code> フラグを外し、適切な証明書を設定</p>
+</li>
+<li>
+<p><strong>アクセス制御</strong> - RBACを使用してイメージアップロード権限を制御</p>
+</li>
+<li>
+<p><strong>暗号化ストレージ</strong> - 保存時の暗号化をサポートするストレージクラスを検討</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_パフォーマンス"><a class="anchor" href="#_パフォーマンス"></a>パフォーマンス</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>ローカルアップロード</strong> - 速度を向上させるため、クラスターネットワーク内からアップロード</p>
+</li>
+<li>
+<p><strong>並列インポート</strong> - 帯域幅が許す限り、複数のイメージを同時にインポート</p>
+</li>
+<li>
+<p><strong>ネットワーク配置</strong> - 最適な転送速度のため、アップロード元とクラスターを近接させる</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_アップロードが_waiting_for_pvc_upload_pod_to_be_ready_で停止する"><a class="anchor" href="#_アップロードが_waiting_for_pvc_upload_pod_to_be_ready_で停止する"></a>アップロードが "Waiting for PVC upload pod to be ready" で停止する</h3>
+<div class="paragraph">
+<p>アップロードがポッドを待機したままになり、PVCが "WaitForFirstConsumer" ステータスになる場合は、StorageClassのバインドモードの問題です。</p>
+</div>
+<div class="paragraph">
+<p>PVCのステータスを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc -n imported-vms
+oc describe pvc fedora-imported-disk -n imported-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>イベントに "waiting for first consumer to be created before binding" と表示されている場合、StorageClassに <code>volumeBindingMode: WaitForFirstConsumer</code> が設定されています。</p>
+</div>
+<div class="paragraph">
+<p><strong>解決策</strong>: virtctlコマンドに <code>--force-bind</code> フラグを追加します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl image-upload pvc fedora-imported-disk \
+  --image-path=./image.qcow2 \
+  --size=10Gi \
+  --namespace=imported-vms \
+  --insecure \
+  --force-bind</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>スタックしたPVCを削除してから再度実行してください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete pvc fedora-imported-disk -n imported-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>その後、<code>--force-bind</code> をつけて再試行します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_アップロードが_unable_to_get_pvc_prime_name_from_pvc_で失敗する"><a class="anchor" href="#_アップロードが_unable_to_get_pvc_prime_name_from_pvc_で失敗する"></a>アップロードが "Unable to get PVC Prime name from PVC" で失敗する</h3>
+<div class="paragraph">
+<p>このエラーは、DataVolumeベースのアップロードを使用する特定のCDIバージョンで発生する可能性があります。解決策は、代わりにPVCメソッドを使用することです（このチュートリアルで採用している方法です）。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Use PVC upload (not DataVolume)
+virtctl image-upload pvc &lt;pvc-name&gt; \
+  --image-path=./image.qcow2 \
+  --size=10Gi \
+  --namespace=imported-vms \
+  --insecure</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>一般的な原因:
+* <strong>CDIオペレーターの問題</strong>: <code>cdi-deployment</code> と <code>cdi-operator</code> ポッドが実行されているか確認
+* <strong>ストレージクラスの問題</strong>: StorageClassがボリュームをプロビジョニングできることを確認</p>
+</div>
+<div class="paragraph">
+<p>CDIポッドの状態を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n openshift-cnv | grep cdi</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_アップロードがスタックするまたは非常に低速"><a class="anchor" href="#_アップロードがスタックするまたは非常に低速"></a>アップロードがスタックする、または非常に低速</h3>
+<div class="paragraph">
+<p>CDIアップロードプロキシポッドの状態を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n openshift-cnv | grep cdi-uploadproxy
+oc logs -n openshift-cnv &lt;cdi-uploadproxy-pod&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ワークステーションからクラスターへのネットワーク接続を確認してください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pvcサイズ不足エラー"><a class="anchor" href="#_pvcサイズ不足エラー"></a>PVCサイズ不足エラー</h3>
+<div class="paragraph">
+<p><code>--size</code> パラメータは、qcow2イメージの仮想サイズよりも大きくする必要があります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">qemu-img info image.qcow2 | grep "virtual size"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>サイズ不足でアップロードが失敗した場合は、PVCを削除して、より大きなサイズで再試行します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete pvc fedora-imported-disk -n imported-vms
+
+# Retry upload with larger --size parameter
+virtctl image-upload pvc fedora-imported-disk \
+  --image-path=./image.qcow2 \
+  --size=20Gi \
+  --namespace=imported-vms \
+  --insecure</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vmがインポートしたイメージから起動しない"><a class="anchor" href="#_vmがインポートしたイメージから起動しない"></a>VMがインポートしたイメージから起動しない</h3>
+<div class="paragraph">
+<p>VMのイベントとログを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe vm fedora-imported-vm -n imported-vms
+oc get events -n imported-vms --field-selector involvedObject.name=fedora-imported-vm</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>コンソールにアクセスして起動メッセージを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console fedora-imported-vm -n imported-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>一般的な原因:
+* イメージが破損している - チェックサムを確認
+* マシンの種類が誤っている - VM仕様で <code>machine.type</code> を調整
+* ブートローダーがない - イメージに適切なブート設定があるか確認</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルで作成したリソースを削除するには以下を実行します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Delete the VM
+oc delete vm fedora-imported-vm -n imported-vms
+
+# Delete the PVC
+oc delete pvc fedora-imported-disk -n imported-vms
+
+# Delete the namespace
+oc delete namespace imported-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>警告: PVCを削除すると、インポートしたイメージデータは完全に削除されます。必要に応じてバックアップがあることを確認してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の方法を学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualizationへインポートするためのqcow2イメージの準備</p>
+</li>
+<li>
+<p><code>virtctl image-upload pvc</code> を使用したqcow2イメージの直接アップロード</p>
+</li>
+<li>
+<p>インポートしたブートボリュームを使用したVMの作成</p>
+</li>
+<li>
+<p>アップロードプロセスの監視</p>
+</li>
+<li>
+<p>その他のインポート方法（HTTP, ContainerDisk, DataVolumeTemplate）の使用</p>
+</li>
+<li>
+<p>イメージインポートとストレージ管理のベストプラクティス</p>
+</li>
+<li>
+<p>一般的なインポートの問題のトラブルシューティング</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>既存のqcow2イメージをインポートすることで、他のKVMベースのプラットフォームからOpenShift Virtualizationへのワークロード移行が容易になります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_次のステップ"><a class="anchor" href="#_次のステップ"></a>次のステップ</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="custom-golden-images.html" class="xref page">カスタムゴールデンイメージの作成</a> - 再利用可能なVMテンプレートの構築</p>
+</li>
+<li>
+<p><a href="../networking/static-ip-configuration.html" class="xref page">静的IPの設定</a> - VMの静的IP設定</p>
+</li>
+<li>
+<p><a href="../vm-configuration/remote-access-linux-vms.html" class="xref page">SSHアクセスの設定</a> - リモートからVMへ接続</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/kubevirt/containerized-data-importer" target="_blank" rel="noopener">Containerized Data Importer (CDI)</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/operations/virtctl_client_tool/" target="_blank" rel="noopener">virtctl ドキュメント</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">VMライフサイクル管理</a></span>
+  <span class="next"><a href="custom-golden-images.html">カスタムゴールデンイメージ</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

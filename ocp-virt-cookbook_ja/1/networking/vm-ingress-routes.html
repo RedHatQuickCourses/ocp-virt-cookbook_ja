@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>OpenShift Ingress を使用した VM の HTTP/HTTPS トラフィック統合 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="sriov-secondary.html">
+    <link rel="next" href="ovs-bridge-troubleshooting.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ネットワーク構成</a></li>
+    <li><a href="vm-ingress-routes.html">VM Ingress およびルート</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">OpenShift Ingress を使用した VM の HTTP/HTTPS トラフィック統合</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、OpenShift Virtualization VM で実行されているアプリケーションを、OpenShift ルート (Routes) およびサービス (Services) を使用して外部クライアントに公開する方法を説明します。Web サーバーを実行する VM をデプロイし、内部からアクセスするための ClusterIP サービスを作成し、オプションの TLS 終端を備えた OpenShift ルートを通じて外部に公開します。</p>
+</div>
+<div class="paragraph">
+<p>このアプローチでは、コンテナワークロードを提供するために使用されるものと同じ OpenShift Ingress インフラストラクチャを使用するため、VM と Pod の両方に対して一貫した外部アクセスモデルを提供できます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>OpenShift 4.18+</strong> (OpenShift Virtualization オペレーターがインストールされていること)</p>
+</li>
+<li>
+<p><strong>クラスター管理者権限</strong> (<code>system:admin</code> または同等の権限)</p>
+</li>
+<li>
+<p><strong><code>oc</code> CLI</strong> および <strong><code>virtctl</code> CLI</strong> がインストールされていること</p>
+</li>
+<li>
+<p><strong>デフォルトの StorageClass</strong> が設定されていること</p>
+</li>
+<li>
+<p><strong>Ingress コントローラー</strong> が実行されていること (OpenShift インストール時にデフォルトで設定)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>テスト済みバージョン:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>OpenShift 4.20</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_名前空間の作成"><a class="anchor" href="#_ステップ_1_名前空間の作成"></a>ステップ 1: 名前空間の作成</h2>
+<div class="sectionbody">
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace ingress-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_web_サーバーを備えた_vm_のデプロイ"><a class="anchor" href="#_ステップ_2_web_サーバーを備えた_vm_のデプロイ"></a>ステップ 2: Web サーバーを備えた VM のデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>cloud-init を使用して Nginx Web サーバーを自動的に起動する Fedora VM をデプロイします。サービスが選択できるように、VM にはラベルが付けられます。</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードを使用するか、SSH 鍵認証を使用してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/vm-ingress-routes/vm-webserver.yaml" class="xref attachment">vm-webserver.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: web-vm
+  namespace: ingress-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: web-vm
+        app: web-vm
+    spec:
+      domain:
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 1Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+            packages:
+            - nginx
+            write_files:
+            - path: /usr/share/nginx/html/index.html
+              content: |
+                &lt;html&gt;
+                &lt;head&gt;&lt;title&gt;OpenShift Virt - Ingress Demo&lt;/title&gt;&lt;/head&gt;
+                &lt;body&gt;
+                &lt;h1&gt;Hello from OpenShift Virtualization&lt;/h1&gt;
+                &lt;p&gt;This page is served by Nginx inside a VM, exposed via an OpenShift Route.&lt;/p&gt;
+                &lt;/body&gt;
+                &lt;/html&gt;
+            runcmd:
+            - systemctl enable nginx
+            - systemctl start nginx
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>spec.template.metadata.labels</code> の <code>app: web-vm</code> ラベルは virt-launcher Pod に引き継がれ、サービスがそれを選択できるようになります。</p>
+</div>
+<div class="paragraph">
+<p>VM の起動を待機します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n ingress-demo -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM が <code>Running</code> かつ <code>Ready=True</code> になったら、次のステップに進みます。<code>Ctrl+C</code> を押して監視を終了します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_web_サーバーの検証"><a class="anchor" href="#_ステップ_3_web_サーバーの検証"></a>ステップ 3: Web サーバーの検証</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>cloud-init による Nginx のインストールと起動が完了するまで待機します (VM が Running 状態になってから 1〜2 分かかる場合があります)。</p>
+</div>
+<div class="paragraph">
+<p>VM コンソールに接続します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console web-vm -n ingress-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザー名 <code>fedora</code> とパスワード <code>redhat</code> でログインし、以下のコマンドを実行します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -s http://localhost</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>カスタム HTML ページが表示されるはずです。<code>Ctrl+]</code> を押してコンソールを終了します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_サービスの作成"><a class="anchor" href="#_ステップ_4_サービスの作成"></a>ステップ 4: サービスの作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM のポート 80 をターゲットとする ClusterIP サービスを作成します。サービスのセレクターは、VM テンプレートで定義されたラベルと一致する必要があります。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/vm-ingress-routes/service-web-vm.yaml" class="xref attachment">service-web-vm.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-vm-svc
+  namespace: ingress-demo
+spec:
+  selector:
+    app: web-vm
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>サービスが存在することを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get svc web-vm-svc -n ingress-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>エンドポイントがあることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get endpoints web-vm-svc -n ingress-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>予想される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+web-vm-svc   ClusterIP   172.30.x.x      &lt;none&gt;        80/TCP    5s
+
+NAME         ENDPOINTS          AGE
+web-vm-svc   10.128.x.x:80      5s</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>エンドポイントの IP は VM の Pod IP と一致しており、サービスが VM に正しくルーティングされていることを確認できます。</p>
+</div>
+<div class="paragraph">
+<p>クラスター内からの内部接続をテストします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc run curl-test --rm -it --restart=Never --image=registry.access.redhat.com/ubi9/ubi:latest -n ingress-demo -- curl -s http://web-vm-svc.ingress-demo.svc.cluster.local</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>HTML ページの内容が表示されるはずです。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_openshift_ルートを介したサービスの公開"><a class="anchor" href="#_ステップ_5_openshift_ルートを介したサービスの公開"></a>ステップ 5: OpenShift ルートを介したサービスの公開</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_http_ルート_自動生成された証明書によるエッジ終端"><a class="anchor" href="#_http_ルート_自動生成された証明書によるエッジ終端"></a>HTTP ルート (自動生成された証明書によるエッジ終端)</h3>
+<div class="paragraph">
+<p>エッジ TLS 終端を使用してルートを作成します。OpenShift は、ルートホスト名に対して自動的に証明書を提供します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/vm-ingress-routes/route-web-vm.yaml" class="xref attachment">route-web-vm.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: web-vm-route
+  namespace: ingress-demo
+spec:
+  to:
+    kind: Service
+    name: web-vm-svc
+    weight: 100
+  port:
+    targetPort: 80
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+EOF</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_設定パラメーター"><a class="anchor" href="#_設定パラメーター"></a>設定パラメーター</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>spec.to.name</code></strong>: ステップ 4 で作成したサービスを参照します。</p>
+</li>
+<li>
+<p><strong><code>spec.port.targetPort</code></strong>: サービスポート (80) と一致する必要があります。</p>
+</li>
+<li>
+<p><strong><code>tls.termination: edge</code></strong>: TLS はルーターで終端されます。ルーターから VM へのトラフィックはプレーンな HTTP となります。</p>
+</li>
+<li>
+<p><strong><code>insecureEdgeTerminationPolicy: Redirect</code></strong>: HTTP リクエストは自動的に HTTPS にリダイレクトされます。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ルートの検証"><a class="anchor" href="#_ルートの検証"></a>ルートの検証</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get route web-vm-route -n ingress-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>予想される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME           HOST/PORT                                          PATH  SERVICES     PORT  TERMINATION     WILDCARD
+web-vm-route   web-vm-route-ingress-demo.apps.ocplab01.example.com       web-vm-svc   80    edge/Redirect   None</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_外部アクセスのテスト"><a class="anchor" href="#_外部アクセスのテスト"></a>外部アクセスのテスト</h3>
+<div class="paragraph">
+<p>ルートホスト名を取得します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ROUTE_HOST=$(oc get route web-vm-route -n ingress-demo -o jsonpath='{.spec.host}')
+echo "Route URL: https://$ROUTE_HOST"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>curl</code> を使用して外部アクセスをテストします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -sk https://$ROUTE_HOST</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM 内の Nginx が提供する HTML ページが表示されるはずです。</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+DNS がワークステーションからルートホスト名を解決できない場合は、ホスト名をクラスターの Ingress IP に向けるエントリを <code>/etc/hosts</code> に追加するか、<code>curl --resolve</code> を使用してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_6_パススルー_tls_オプション"><a class="anchor" href="#_ステップ_6_パススルー_tls_オプション"></a>ステップ 6: パススルー TLS (オプション)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM 内で独自の TLS 証明書を処理するアプリケーションの場合は、パススルー終端を使用します。ルーターは、暗号化されたトラフィックを復号化せずに VM に直接転送します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: web-vm-passthrough
+  namespace: ingress-demo
+spec:
+  to:
+    kind: Service
+    name: web-vm-svc
+    weight: 100
+  port:
+    targetPort: 443
+  tls:
+    termination: passthrough
+  wildcardPolicy: None
+EOF</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+パススルーでは、VM 内のアプリケーションがターゲットポートで HTTPS を提供する必要があります。このチュートリアルの Nginx インスタンスは HTTP のみを提供するため、このルートタイプは参考として提示しています。これを使用するには、VM 内で TLS 証明書を使用して Nginx を設定してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_仕組み"><a class="anchor" href="#_仕組み"></a>仕組み</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenShift ルートを介して公開された VM のトラフィックフローは以下の通りです。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>外部クライアントがルートホスト名に対して HTTPS リクエストを送信します。</p>
+</li>
+<li>
+<p>OpenShift Ingress コントローラー (HAProxy ルーター) が TLS を終端します (エッジ終端の場合)。</p>
+</li>
+<li>
+<p>ルーターは、リクエストを ClusterIP サービスのポート 80 に転送します。</p>
+</li>
+<li>
+<p>サービスは、トラフィックを virt-launcher Pod の IP ポート 80 にルーティングします。</p>
+</li>
+<li>
+<p>virt-launcher Pod 内で、リクエストはマスカレードネットワークインターフェイスを介して VM の Nginx プロセスに到達します。</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>これはコンテナワークロードが公開される仕組みと同一であり、VM は OpenShift ネットワーキングモデルにおけるファーストクラスの市民となります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ルートが_503_service_unavailable_を返す"><a class="anchor" href="#_ルートが_503_service_unavailable_を返す"></a>ルートが 503 Service Unavailable を返す</h3>
+<div class="paragraph">
+<p>サービスに正常なエンドポイントがありません。以下を確認してください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get endpoints web-vm-svc -n ingress-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>空の場合は、サービスセレクターが VM ラベルと一致していることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n ingress-demo -l app=web-vm</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ルートが_504_gateway_timeout_を返す"><a class="anchor" href="#_ルートが_504_gateway_timeout_を返す"></a>ルートが 504 Gateway Timeout を返す</h3>
+<div class="paragraph">
+<p>VM アプリケーションが予期されたポートで応答していません。VM コンソールに接続します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console web-vm -n ingress-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM 内で、Nginx が実行されており応答していることを確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">systemctl status nginx
+curl -s http://localhost</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dns_解決に失敗する"><a class="anchor" href="#_dns_解決に失敗する"></a>DNS 解決に失敗する</h3>
+<div class="paragraph">
+<p>ルートホスト名が解決されない場合は、Ingress ワイルドカード DNS が設定されていることを確認してください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.status.domain}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ルートホスト名は <code>&lt;route-name&gt;-&lt;namespace&gt;.&lt;ingress-domain&gt;</code> のパターンに従います。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルで作成したすべてのリソースを削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace ingress-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の方法を学習しました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>cloud-init を使用して Web サーバーを実行する VM をデプロイする</p>
+</li>
+<li>
+<p>Kubernetes サービスを作成して VM ポートを内部に公開する</p>
+</li>
+<li>
+<p>外部 HTTPS アクセス用にエッジ TLS 終端を備えた OpenShift ルートを作成する</p>
+</li>
+<li>
+<p>独自の証明書を管理する VM 用のパススルー TLS を理解する</p>
+</li>
+<li>
+<p>VM に関する一般的なサービスおよびルートの問題をトラブルシューティングする</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_関連項目"><a class="anchor" href="#_関連項目"></a>関連項目</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.18/virt/vm_networking/virt-exposing-vm-with-service.html" target="_blank" rel="noopener">Exposing a VM by Using a Service - OpenShift ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/index" target="_blank" rel="noopener">Route Configuration - OpenShift ドキュメント</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a></span>
+  <span class="next"><a href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

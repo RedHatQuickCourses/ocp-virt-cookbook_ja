@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>OpenShift Virtualization API コンポーネントの概要 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="../appendix/glossary.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">API ガイド</a></li>
+    <li><a href="api-component-overview.html">API コンポーネントの概要</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">OpenShift Virtualization API コンポーネントの概要</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+テスト済みの OpenShift バージョン: v4.19, v4.20
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+このリファレンスガイドでは、OpenShift Virtualization API コンポーネントの概要を説明し、これらのコンポーネントおよびプラットフォーム全体のアーキテクチャに関する最も重要な内容を扱います。
+これは包括的な API リファレンスではありません。新しい API 開発者向けのクイックスタートガイドとして意図されています。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>初心者の方や他の仮想化プラットフォームから移行される方のために補足すると、OpenShift Virtualization はアップストリームプロジェクトである <a href="https://kubevirt.io" target="_blank" rel="noopener">KubeVirt</a> をベースにしており、その KubeVirt は Kubernetes をベースとする OpenShift の上に構築されています。
+OpenShift (およびその基盤である Kubernetes) のアーキテクチャは、json または yaml 形式で表現できる API オブジェクトによって定義される宣言型の設計を採用しています。
+OpenShift Virtualization は、この宣言型 API を仮想化固有のオブジェクトで拡張しています。初心者にとって、これらの各オブジェクトの役割や相互の関係は混乱を招く可能性があります。</p>
+</div>
+<div class="paragraph">
+<p>本ガイドでは、一般的なアーキテクチャガイドと API ガイドを統合し、各 API コンポーネント（オブジェクトやリソースとも呼ばれます）の役割とコンポーネント間の関係を明確にするとともに、各コンポーネントの API の詳細にも触れます。</p>
+</div>
+<div class="paragraph">
+<p>そのため、完全な yaml の例やスキーマは避け、特定オブジェクトの断片や最も重要なフィールドのサブセット（<code>ドット.表記</code>）を優先しています。
+詳細な例については <a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/index" target="_blank" rel="noopener">OpenShift Virtualization</a> および <a href="https://kubevirt.io/user-guide/" target="_blank" rel="noopener">KubeVirt</a> のドキュメントを参照し、完全な API スキーマについては <a href="https://kubevirt.io/api-reference/main/index.html" target="_blank" rel="noopener">KubeVirt API reference</a> を参照してください。</p>
+</div>
+<div class="paragraph">
+<p>扱われる内容は以下の通りです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#virtualization_apis">仮想化 API</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#virtual_machines">VirtualMachines</a></p>
+</li>
+<li>
+<p><a href="#virtual_machine_instances">VirtualMachineInstances</a></p>
+</li>
+<li>
+<p><a href="#instance_types">インスタンスタイプ</a></p>
+</li>
+<li>
+<p><a href="#vm_cluster_instance_types">VirtualMachineClusterInstanceTypes</a></p>
+</li>
+<li>
+<p><a href="#vm_instance_types">VirtualMachineInstanceTypes</a></p>
+</li>
+<li>
+<p><a href="#virtual_machine_preferences">VirtualMachinePreferences および VirtualMachineClusterPreferences</a></p>
+</li>
+<li>
+<p><a href="#preferred_cpu_topology">PreferredCPUTopology</a></p>
+</li>
+<li>
+<p><a href="#vcpu_spread_options">vCPU SpreadOptions</a></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="#networking_apis">ネットワーキング API</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#networks">Networks</a></p>
+</li>
+<li>
+<p><a href="#interfaces">Interfaces</a></p>
+</li>
+<li>
+<p><a href="#default_network">デフォルトネットワーク</a></p>
+</li>
+<li>
+<p><a href="#multus_cni_plugin">Multus CNI プラグイン</a></p>
+</li>
+<li>
+<p><a href="#nmstate_operator">NMState Operator</a></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="#storage_apis">ストレージ API</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#persistent_volumes">PersistentVolumes</a></p>
+</li>
+<li>
+<p><a href="#persistent_volume_claims">PersistentVolumeClaims</a></p>
+</li>
+<li>
+<p><a href="#volume_snapshots">VolumeSnapshots</a></p>
+</li>
+<li>
+<p><a href="#data_volumes">DataVolumes</a></p>
+</li>
+<li>
+<p><a href="#data_sources">DataSources</a></p>
+</li>
+<li>
+<p><a href="#storage_classes">StorageClasses</a></p>
+</li>
+<li>
+<p><a href="#virtual_machine_snapshots">VirtualMachineSnapshots</a></p>
+</li>
+<li>
+<p><a href="#virtual_machine_restores">VirtualMachineRestores</a></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="#clone_api">クローン API</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#virtual_machine_clones">VirtualMachineClones</a></p>
+</li>
+<li>
+<p><a href="#mutating_vm_clones">クローン VM の変更</a></p>
+</li>
+<li>
+<p><a href="#patching_vm_clones">クローン VM のパッチ適用</a></p>
+</li>
+<li>
+<p><a href="#vm_cloning_strategies">クローニング戦略と StorageProfiles</a></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="#export_api">エクスポート API</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#virtual_machine_exports">VirtualMachineExports</a></p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="virtualization_apis"><a class="anchor" href="#virtualization_apis"></a>仮想化 API</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="virtual_machines"><a class="anchor" href="#virtual_machines"></a>VirtualMachines</h3>
+<div class="paragraph">
+<p>VirtualMachine は API オブジェクト（厳密には Kubernetes カスタムリソース）であり、OpenShift Virtualization において実行されていない VirtualMachine を表現します。</p>
+</div>
+<div class="paragraph">
+<p>VirtualMachine には VirtualMachineInstance（次セクションで解説）のテンプレートが含まれており、Status の一部として実行状態を反映します。</p>
+</div>
+<div class="paragraph">
+<p>VirtualMachine には <code>spec</code> 内に VM の詳細を定義する多数のフィールドが含まれます。その一部を以下に示します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>instanceType</code> - VirtualMachine に使用する <a href="#instance_types">インスタンスタイプ</a> 名（RAM と CPU の割り当て量でサイズ指定されます）。</p>
+</li>
+<li>
+<p><code>volumes</code> - 仮想ディスクとして VM に接続されるボリュームのリスト。このフィールドは <a href="https://kubevirt.io/user-guide/storage/disks_and_volumes/#volumes" target="_blank" rel="noopener">複数のボリュームタイプ</a> をサポートしていますが、<code>dataVolume</code> と <code>persistentVolumeClaims</code> が最も一般的です。</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>dataVolume</code> - この VM 用にプロビジョニングされる <a href="#data_volumes">DataVolume(s)</a> の名前を示します。作成される DataVolume(s) は <code>dataVolumeTemplates</code> セクション内で定義されます。</p>
+</li>
+<li>
+<p><code>persistentVolumeClaim</code> - <a href="#persistent_volume_claim">PersistentVolumeClaim</a> をディスクとして VM に接続します。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><code>networks</code> - VM に接続されたインターフェースにバインドされる <a href="#networks">networks</a> のリスト。空のフィールドの場合、デフォルトでデフォルトの Pod/VM ネットワークが使用されます。</p>
+</li>
+<li>
+<p><code>interfaces</code> - VM に接続されたネットワーク <a href="#interfaces">interfaces</a> のリスト。インターフェースは仮想化された NIC と考えることができ、Pod/VM を特定のネットワークに接続するために使用されます。</p>
+</li>
+<li>
+<p><code>dataVolumeTemplates</code> - 作成される <a href="#data_volumes">DataVolume マニフェスト</a> のリスト。ここにリストされている DataVolume は、<code>volumes</code> セクションで名前によって参照される必要があります。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>VirtualMachine の実行状態は、通常 <code>spec.runStrategy</code> フィールドを介して管理され、以下の値を指定できます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Always</strong> - 電源オン状態がデフォルトとなり、何らかの理由で（手動シャットダウンやクラッシュなどを問わず）停止した場合に VM が再起動します。</p>
+</li>
+<li>
+<p><strong>RerunOnFailure</strong> - Always と同様ですが、VM がクラッシュした場合のみ再起動し、正常にシャットダウンされた場合（スケジュールやゲスト内からの手動シャットダウンなど）は再起動しません。</p>
+</li>
+<li>
+<p><strong>Once</strong> - VM は一度だけ起動され、クラッシュしたか手動でシャットダウンされたかに関わらず、二度と起動されません。</p>
+</li>
+<li>
+<p><strong>Manual</strong> - 実行状態は自動管理されず、VM のステータスサブサブリソースに対して POST された電源コマンドにのみ応答します。</p>
+</li>
+<li>
+<p><strong>Halted</strong> - <code>spec.runStrategy</code> が変更されるか、VM に対して <code>start</code> コマンドが発行されるまで VM をシャットダウン状態にします（このトピックについては後述）。</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>spec.running</code> フィールドは非推奨となっており、<code>spec.runStrategy</code> フィールドと相互排他です。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>virtctl</code> コマンドを使用して、VirtualMachine のステータスサブリソースに影響を与える <code>start</code>、<code>stop</code>、<code>restart</code> コマンドを発行することもできます。これは KubeVirt が VM の現在の状態を反映するために使用する <code>../status</code> API エンドポイントです。</p>
+</div>
+<div class="paragraph">
+<p>これらの各コマンドが発行された場合、その発行先である VirtualMachine の <code>runStrategy</code> に影響を与える可能性があります。各ケースは以下の通りです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>start</strong> - VM を起動し、<code>Halted</code> 実行戦略を <code>Always</code> に戻します。これは <code>RerunOnFailure</code> や <code>Manual</code> 実行戦略には影響しません。</p>
+</li>
+<li>
+<p><strong>restart</strong> - 実行中の VM を再起動しますが、実行戦略には影響しません。これは <code>Halted</code> VM に対しては何もしません。</p>
+</li>
+<li>
+<p><strong>stop</strong> - VM を停止し、<code>Always</code> 実行戦略を <code>Halted</code> に戻します。これは <code>RerunOnFailure</code> や <code>Manual</code> 実行戦略には影響しません。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>API レベルでは、<code>Manual</code> 実行戦略を持つ VM に対して電源コマンドが発行されると、以下のように <code>stateChangeRequests[]</code> リストが VirtualMachine ステータスサブリソースに追加されます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">status:
+  stateChangeRequests:
+  - action: &lt;Stop|Start&gt; <i class="conum" data-value="1"></i><b>(1)</b>
+    uid: &lt;uid-of-the-virtual-machine-instance&gt; <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>要求されているアクション。以下のいずれかの文字列値 (<code>Stop</code>, <code>Start</code>)。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>アクションを実行する対象の VirtualMachineInstance (VirtualMachine ではない) のオプションの UID。VM が起動すると VMI が作成されるため、<code>Start</code> コマンドでは不要です。</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>VirtualMachine に対して API アクションを実行する場合、VM <code>status</code> に現在の実行状態を反映するいくつかの異なるフィールドがあります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>status.printableStatus</strong> - VM の電源状態を確認するための最もシンプルなフィールドで、<code>Running</code> (起動済み/準備完了)、<code>Starting</code> (処理中/起動中)、<code>Stopped</code> 状態を反映します。</p>
+</li>
+<li>
+<p><strong>status.runStrategy</strong> - アクティブな実行戦略を反映します。<code>spec.runStrategy</code> フィールドと同様の <code>Always</code>、<code>RerunOnFailure</code>、<code>Once</code>、<code>Manual</code>、<code>Halted</code> といった値を反映します。</p>
+</li>
+<li>
+<p><strong>status.conditions["type": "Ready"]</strong> - <code>conditions</code> は以下のフィールドを含むオブジェクトのリストを受け入れます: <code>type</code> - 文字列値（この場合は <code>Ready</code>）、<code>status</code> - ブール値、<code>Reason</code> および <code>Message</code> - それぞれオプションの理由コードと説明。
+「まだ準備ができていない」状態の例は以下の通りです。</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-status-example
+spec:
+  ...
+status:
+  conditions:
+    - lastProbeTime: "2025-11-10T15:00:46Z"
+      lastTransitionTime: "2025-11-10T15:00:46Z"
+      message: Guest VM is not reported as running
+      reason: GuestNotRunning
+      status: "False"
+      type: Ready</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="virtual_machine_instances"><a class="anchor" href="#virtual_machine_instances"></a>VirtualMachineInstances</h3>
+<div class="paragraph">
+<p>VirtualMachineInstance (VMI) は、OpenShift Virtualization における実行中の VM の現在の設定を反映します。</p>
+</div>
+<div class="paragraph">
+<p>内部的には、VirtualMachineInstances は Kubernetes Pod に紐付いています。Pod は QEMU / KVM ハイパーバイザーを格納して実行し、VM ディスクイメージ（ルートディスクおよび追加ディスク）を PersistentVolumeClaim としてマウントするコンテナ（のグループ）です。</p>
+</div>
+<div class="paragraph">
+<p>VirtualMachine との関係において、VirtualMachineInstance は VM が起動された際、VM <code>template</code>、具体的には <code>spec.template</code> の yaml (json) 定義から生成されます。</p>
+</div>
+<div class="paragraph">
+<p>VM 起動時に VMI が作成されるのと同様に、VM が停止されて VMI が削除されると、その逆のプロセスが発生します。
+VMI が削除されても、基盤となるストレージボリューム（DataVolumes、PVC、およびその下の PV）は影響を受けず、そのまま保持されます。</p>
+</div>
+<div class="paragraph">
+<p>VM が再度起動されると、VM の yaml/json で定義されたテンプレートから新しい VMI が作成され、同じボリュームがその新しい VMI に接続されます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="instance_types"><a class="anchor" href="#instance_types"></a>インスタンスタイプ</h3>
+<div class="paragraph">
+<p>他のクラウドプラットフォームと同様に、OpenShift Virtualization では CPU およびメモリリソースは名前付きのインスタンスタイプに基づいて決定されます。
+これらのインスタンスタイプは、目的や機能セットに応じて文字でグループ化され、世代によって番号付けされています（例: u1）。
+各グループには、リソース割り当てによってスケールされた T シャツサイズ（small, medium, large, xlarge, 2xlarge など）のインスタンスタイプの選択が含まれており、サイズはインスタンスの文字と番号の後に続きます（例: u1.xlarge）。
+各インスタンスグループのスケーリング比率は、想定される用途（メモリ集約型 vs CPU 集約型）によって異なります。</p>
+</div>
+<div class="paragraph">
+<p>OpenShift Virtualization では、以下のデフォルトインスタンスタイプが利用可能です。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Network (N)</strong> - ネットワーク集約型のワークロード用。DPDK 対応ノードが必要。CPU/RAM 比率は 1:2。</p>
+</li>
+<li>
+<p><strong>Overcommitted (O)</strong> - 完全な RAM 消費が期待されない、または不要な場合に使用。ホストメモリのオーバープロビジョニングを許可。CPU/RAM 比率は 1:4。</p>
+</li>
+<li>
+<p><strong>Compute Exclusive (CX)</strong> - CPU 集約型のワークロード用。専用の CPU コア/スレッドで実行。CPU/RAM 比率は 1:2。</p>
+</li>
+<li>
+<p><strong>General Purpose (U)</strong> - 「ユニバーサル」または一般的なワークロード用。共有ホスト CPU コア/スレッドで実行。CPU/RAM 比率は 1:4。</p>
+</li>
+<li>
+<p><strong>Memory Intensive (M)</strong> - メモリ集約型のワークロード用。ホストメモリのオーバープロビジョニングを許可しない。CPU/RAM 比率は 1:8。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>上記の各インスタンスタイプのすべてのサイズは、クラスターレベルで VirtualMachineClusterInstanceType として定義されています。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vm_cluster_instance_types"><a class="anchor" href="#vm_cluster_instance_types"></a>VirtualMachineClusterInstanceTypes</h3>
+<div class="paragraph">
+<p>VirtualMachineClusterInstanceType は、クラスタースコープでインスタンスタイプを定義します。前述の通り、これらは OpenShift Virtualization で新しい VM をプロビジョニングする際にデフォルトのインスタンスタイプを選択できるようにするために使用されます。</p>
+</div>
+<div class="paragraph">
+<p>VirtualMachineClusterInstanceTypes は以下のフィールド仕様をサポートしています（トップレベルのフィールドの一部は省略）。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>annotations</strong> - このタイプのインスタンスに適用するオプションの注釈セット</p>
+</li>
+<li>
+<p><strong>cpu</strong> (必須) - このインスタンスタイプの CPU 関連の設定を定義します</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>dedicatedCPUPlacement</strong> - VM の vCPU をホストノードの物理 CPU コア/スレッドに分離するかどうか。デフォルトは <code>false</code>。</p>
+</li>
+<li>
+<p><strong>guest</strong> (必須) - ゲストに公開する vCPU の数。デフォルトは <code>0</code>。</p>
+</li>
+<li>
+<p><strong>isolateEmulatorThread</strong> - VMI のエミュレーター・スレッドを追加の専用物理 CPU コア/スレッドに配置するかどうか。デフォルトは <code>false</code>。</p>
+</li>
+<li>
+<p><strong>maxSockets</strong> - ホットプラグ可能なソケットの最大数を指定します。</p>
+</li>
+<li>
+<p><strong>model</strong> - VMI 内で使用する CPU モデルを指定します。デフォルトは <code>host-model</code>。</p>
+</li>
+<li>
+<p><strong>numa</strong> - ホストの NUMA 設定を構成するために使用されます</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>guestMappingPassthrough</strong> - 仮想 NUMA ノード上のメモリと CPU がホスト上の別の NUMA ノードにまたがらないことを保証するゲストトポロジーを作成します。デフォルトは <code>{}</code>。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>realtime</strong> - virt-launcher Pod に対して低レイテンシー向けに VMI をチューニングするよう指示します。リアルタイムワークロード向け（オプション）。</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>mask</strong> - リアルタイムに使用される vCPU を定義するマスク式。<code>"0-3,^1"</code>, <code>"1,2,3"</code>, <code>"1-2"</code> などの基盤となる libvirt 式フォーマットと一致します。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>gpu</strong> - インスタンスタイプに関連付けられた GPU デバイスを定義します</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>deviceName</strong> - 文字列値。デフォルトは <code>""</code>。</p>
+</li>
+<li>
+<p><strong>name</strong> (必須) - デバイスプラグインに関連付けられた GPU デバイスの名前。デフォルトは <code>""</code>。</p>
+</li>
+<li>
+<p><strong>tag</strong> - 設定ドライブを介してゲストに公開する指定のタグおよび仮想ネットワークインターフェースアドレス。</p>
+</li>
+<li>
+<p><strong>virtualGPUOptions</strong> - vGPU 用のオプションフィールド</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>display</strong> - vGPU の表示オプション</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>enabled</strong> - vGPU をバックアップするディスプレイアダプターを有効にするかどうか。デフォルトは <code>true</code>。</p>
+</li>
+<li>
+<p><strong>ramFB</strong> - ゲスト OS が実際の GPU ドライバーをロードするまでブートフレームバッファを有効にするかどうか。</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>enabled</strong> - デフォルトは <code>true</code>。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>hostDevices</strong> - オプションで、インスタンスタイプとともに公開するデバイスを定義します</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>deviceName</strong> (必須) - ホストデバイスのリソース名。デフォルトは <code>""</code>。</p>
+</li>
+<li>
+<p><strong>name</strong> (必須) - デフォルトは <code>""</code>。</p>
+</li>
+<li>
+<p><strong>tag</strong> - 設定ドライブを介してゲストに公開する指定のタグおよび仮想インターフェースアドレス</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>memory</strong> (必須) - このインスタンスタイプのメモリ関連の設定を定義します</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>guest</strong> (必須) - ゲスト OS に公開するメモリの単位付き文字列値（<code>"4096Mi"</code> や <code>"6Gi"</code> など）。</p>
+</li>
+<li>
+<p><strong>hugepages</strong> - 通常のメモリの代わりに VMI 用のヒュージページを使用できるようにします</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>pageSize</strong> - ヒュージページサイズを指定します。amd64 アーキテクチャの有効なサイズは <code>1Gi</code> および <code>2Mi</code> です。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>maxGuest</strong> - ゲスト内部で表示される最大メモリ量を指定します。<code>maxGuest</code> と <code>guest</code> の差分が、ホットプラグ可能なメモリ量となります。</p>
+</li>
+<li>
+<p><strong>overcommitPercent</strong> - オーバーコミットされるゲストメモリの割合、または virt-launcher Pod で必要とされるメモリの削減率。デフォルトは <code>0</code>。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>nodeSelector</strong> - このインスタンスタイプで希望するノードをスケジュールするために使用される Kubernetes セレクターラベル</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>schedulerName</strong> - インスタンスタイプ用のカスタム Kubernetes スケジューラーを指定します。空の場合、デフォルトの K8s スケジューラーが使用されます。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vm_instance_types"><a class="anchor" href="#vm_instance_types"></a>VirtualMachineInstanceTypes</h3>
+<div class="paragraph">
+<p>VirtualMachineInstanceType は VirtualMachineClusterInstanceType と同様ですが、クラスタースコープではなくネームスペーススコープです。これは、通常の（クラスター管理者ではない）ユーザーが独自のカスタムインスタンスタイプを定義し、アクセス権のあるプロジェクト/ネームスペース内でのみ利用できるようにする場合に便利です。</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<code>spec.instancetype</code> フィールドは OpenShift Virtualization Web コンソールで必須であり、<code>spec.template.spec.domain.cpu</code> または <code>spec.template.spec.domain.memory</code> が設定されている場合は設定できないため、CPU とメモリの設定を手動で指定するのではなく、VirtualMachine に使用するインスタンスタイプを選択または定義する必要があります。これは、インスタンスタイプが VM 起動時に VirtualMachineInstance の後者 2 つのフィールドを補完するために使用されるためです。
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="virtual_machine_preferences"><a class="anchor" href="#virtual_machine_preferences"></a>VirtualMachinePreferences および VirtualMachineClusterPreferences</h3>
+<div class="paragraph">
+<p>VirtualMachineInstanceTypes と同様に、VirtualMachinePreferences はインスタンスタイプオブジェクトではカバーされない残りのマシン固有の設定を保存するために使用されます。
+ただし、これらの設定は単なる「好み（preference）」であり、VirtualMachine オブジェクトを直接変更することでオーバーライドできます。</p>
+</div>
+<div class="paragraph">
+<p>インスタンスタイプと同様に、同じ <code>spec</code> を受け入れる VirtualMachineClusterPreferences も存在しますが、これらはクラスタースコープに適用されます。</p>
+</div>
+<div class="paragraph">
+<p>OpenShift Virtualization では、VirtualMachineClusterPreferences は OS ごとに最適化された設定を保存するために使用され、OS に従って名前が付けられています（<code>fedora</code>、<code>rhel10</code>、<code>win11</code> など）。
+たとえば、一部の OS イメージは UEFI ファームウェアではなく従来の BIOS を使用して起動するように構築されているため、特定の OS を実行する VM が適切に起動できるように VirtualMachineClusterPreference で設定されます。</p>
+</div>
+<div class="paragraph">
+<p>以下は、SecureBoot を有効にした EFI ファームウェアを使用して起動するように設定された VirtualMachineClusterPreference の例です。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: instancetype.kubevirt.io/v1beta1
+kind: VirtualMachineClusterPreference
+metadata:
+  name: rhel10-custom
+spec:
+  firmware:
+    preferredUseEfi: true
+    preferredUseSecureBoot: true</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+VirtualMachinePreference spec で VM に BIOS ファームウェアを指定するには、<code>preferredUseEfi</code> の代わりに <code>spec.firmware.preferredUseBios</code> を使用してください。SecureBoot は UEFI の排他的機能であることに留意してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="preferred_cpu_topology"><a class="anchor" href="#preferred_cpu_topology"></a>PreferredCPUTopology</h3>
+<div class="paragraph">
+<p>VirtualMachinePreferences のもう 1 つの便利な機能は、VirtualMachineInstanceType で定義された vCPU 数がゲスト OS にどのように提示されるか（CPU トポロジー）を調整できることです。
+これは、CPU ソケット、コア、およびスレッドの数が vCPU 数全体にどのように分割されるかを制御するもので、ゲスト内部から VM が CPU トポロジーをどのように「見る」かのみに影響し、ホストの CPU ソケット、コア、またはスレッドの割り当てとは無関係です。</p>
+</div>
+<div class="paragraph">
+<p>preferredCPUTopology にはいくつかの異なる設定があります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>sockets</strong> (デフォルト) - vCPU はゲスト OS にソケットとして提示されます</p>
+</li>
+<li>
+<p><strong>cores</strong> - vCPU はゲスト OS にコアとして提示されます</p>
+</li>
+<li>
+<p><strong>threads</strong> - vCPU はゲスト OS にスレッドとして提示されます</p>
+</li>
+<li>
+<p><strong>spread</strong> - vCPU はデフォルトでソケットとコアに分散されますが、<code>spreadOptions</code> を設定することでチューニング可能です（下記参照）。</p>
+</li>
+<li>
+<p><strong>any</strong> - vCPU はソケットとしてゲスト OS に割り当てられ、vCPU の割り当てはすべてこの設定の要件となります（関連するインスタンスタイプなしで優先順位を定義するために使用されます）</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vcpu_spread_options"><a class="anchor" href="#vcpu_spread_options"></a>vCPU SpreadOptions</h3>
+<div class="paragraph">
+<p>preferredCPUTopology が <code>spread</code> に設定されている場合はいつでも、<code>spreadOptions</code> を使用して vCPU をコア、スレッド、ソケット全体にどのように提示するかを調整できます。</p>
+</div>
+<div class="paragraph">
+<p><code>spreadOptions</code> には 2 つのフィールドが含まれます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>across</strong> - vCPU をソケット、コア、スレッド全体にどのように分散するかを定義するために使用されます</p>
+</li>
+<li>
+<p><strong>ratio</strong> (デフォルトは <code>2</code>) - ソケットあたりのコア数（以下 <code>N</code> と呼びます）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>across</code> の値は以下の通りです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>SocketsCores</strong> (デフォルト) - vCPU は、1 ソケットあたり <code>N</code> コアの比率でソケットとコアに分散されます。</p>
+</li>
+<li>
+<p><strong>SocketsCoresThreads</strong> - vCPU は、1 ソケットあたり <code>N</code> コア、1 コアあたり 2 スレッドの比率でソケット、コア、スレッドに分散されます。</p>
+</li>
+<li>
+<p><strong>CoresThreads</strong> (2 つ以上の vCPU が必要) - vCPU はコアとスレッドに分散されますが、1 コアあたり 2 スレッドという比率が「強制」されます。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>カスタム <code>preferredCPUTopology</code> を使用した VirtualMachinePreference の例を以下に示します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: instancetype.kubevirt.io/v1beta1
+kind: VirtualMachinePreference
+metadata:
+  name: cpu-topology-example
+spec:
+  cpu:
+    preferredCPUTopology: spread
+    spreadOptions:
+      across: SocketsCoresThreads
+      ratio: 6</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="networking_apis"><a class="anchor" href="#networking_apis"></a>ネットワーキング API</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このセクションでは、VirtualMachine および VirtualMachineInstances 内にあるネットワーク関連のサブ API に焦点を当てますが、Multus CNI や NMState Operator など、VM/VMI 外部のネットワーキングコンポーネントについても触れます。</p>
+</div>
+<div class="paragraph">
+<p>VirtualMachine レベルでのネットワーキングの構成は、2 つの部分（相互に依存しているため両方が必須）に分かれています。以下で解説する <code>networks</code> と <code>interfaces</code> です。</p>
+</div>
+<div class="sect2">
+<h3 id="networks"><a class="anchor" href="#networks"></a>Networks</h3>
+<div class="paragraph">
+<p>VirtualMachine では、ネットワークは Pod スペック (<code>spec.template.spec</code>) の <code>networks[]</code> フィールドで設定されます。複数のネットワークをリストできます（<code>[]</code> で示される通り）が、各ネットワークの名前は一意である必要があります（特定の <code>kind</code> のすべての Kubernetes リソース名と同様）。ネットワークには、VirtualMachine マニフェスト内で定義された同じ名前のインターフェース（後述）が必要です。</p>
+</div>
+<div class="paragraph">
+<p>各ネットワークは、<code>spec.template.spec.networks[]</code> に 2 つの異なるタイプのいずれかとして宣言する必要があります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>pod</strong> - デフォルトの Kubernetes ネットワーク。プライマリネットワークとしてのみ使用。</p>
+</li>
+<li>
+<p><strong>multus</strong> - Multus CNI プラグインは追加ネットワークの使用を可能にします。プライマリネットワークとしても使用可能。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="interfaces"><a class="anchor" href="#interfaces"></a>Interfaces</h3>
+<div class="paragraph">
+<p>VirtualMachine において、インターフェースは VM に接続された仮想ネットワークインターフェースカード（NIC）を表します。
+インターフェースはホスト Pod 内で実行されているゲスト VM に仮想化アダプターとして提示され、<code>virtio</code> をサポートしないゲスト（Windows など）に対しては、OpenShift Virtualization によって異なるモデル（完全仮想化 NIC）がサポートされます。</p>
+</div>
+<div class="paragraph">
+<p>インターフェースは VirtualMachine オブジェクト内の <code>spec.domain.devices.interfaces[]</code> で定義され、機能させるためには関連付けられた <code>network</code> が必要です。</p>
+</div>
+<div class="paragraph">
+<p>インターフェース内でサポートされているフィールドの網羅的ではないリストを以下に示します（必須なのは 2 つのフィールドのみであることに注意してください）。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong> (必須) - VirtualMachine の <code>spec.template.spec.networks[]</code> 内で定義された <code>network</code> と一致する名前。</p>
+</li>
+<li>
+<p>(必須) - 以下の中核バインディングまたはネストされたネットワーク <code>binding</code> プラグインの名前:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>bridge</strong> - Linux ブリッジを使用して名前付きネットワークに接続します</p>
+</li>
+<li>
+<p><strong>sriov</strong> - パススルー SR-IOV VF（<code>vfio</code> を使用）を使用して接続します</p>
+</li>
+<li>
+<p><strong>masquerade</strong> - 送信および受信の両方で NAT または IP マスカレード（<code>nftables</code> ルールを使用）を使用してネットワークに接続します</p>
+</li>
+<li>
+<p><strong>binding</strong> - 追加の（非中核）ネットワークバインディングプラグインの使用を可能にします</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong> - サポートされているネットワークバインディングプラグインの名前。具体的には以下の「いずれか」の値:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>l2bridge</strong> - VM <code>interface</code> と目的の <code>network</code> との間に直接レイヤー 2 接続を作成します</p>
+</li>
+<li>
+<p><strong>passt</strong> (テクノロジープレビュー) - Plug a Simple Socket Transport。Pod ネットワークとの統合性が向上し、結果として OpenShift ネットワークエコシステムとの統合が向上するユーザースペースソリューションです。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>model</strong> - サポートされている以下のアダプターのいずれかの名前 (10/100 アダプターは省略)</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>e1000</strong> - Intel 82545EM PCI ギガビットイーサネットアダプターを仮想化します</p>
+</li>
+<li>
+<p><strong>e1000e</strong> - Intel 82574 PCI-E ギガビットイーサネットアダプターを仮想化します</p>
+</li>
+<li>
+<p><strong>virtio</strong> - ディスクおよびネットワークデバイス用の仮想化標準であり、Linux ゲスト（推奨）でのパフォーマンスを向上させます。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>macAddress</strong> - ゲスト内部から見える MAC アドレス</p>
+</li>
+<li>
+<p><strong>ports</strong> - VM ゲストに転送するポートのリスト</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong> - 特定ポートのフレンドリーネーム</p>
+</li>
+<li>
+<p><strong>port</strong> - ポート番号（<code>0</code> から <code>65535</code> までの整数値）</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>pciAddress</strong> - <code>0000:81:00.1</code> のようにゲスト内でアダプターに割り当てる PCI アドレス</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>VM を定義する際の具体的な使用例については、ネットワーキングのセクションを参照してください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="default_network"><a class="anchor" href="#default_network"></a>デフォルトネットワーク</h3>
+<div class="paragraph">
+<p>これは（名前が示す通り）OpenShift および Kubernetes の Pod で使用されるデフォルトのネットワークです。
+以下の例のように、空の <code>pod: {}</code> ネットワークと空の <code>masquerade: {}</code> インターフェースを定義するだけで選択されます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: default-network-example
+  namespace: my-namespace
+spec:
+  template:
+    spec:
+      domain:
+        devices:
+          interfaces:
+          - name: default <i class="conum" data-value="1"></i><b>(1)</b>
+            masquerade: {} <i class="conum" data-value="2"></i><b>(2)</b>
+      networks:
+      - name: default <i class="conum" data-value="1"></i><b>(1)</b>
+        pod: {} <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>domain.devices.interfaces</code> (<code>spec.template.spec</code> の下) で定義されたネットワーク名は、VM テンプレートスペック内の <code>networks</code> 下にある目的のネットワーク名と一致する必要があります。</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>デフォルトネットワークは IP マスカレード（NAT）を使用して NIC を基盤ネットワークに接続します</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>これにより、基盤ネットワークとして Kubernetes Pod ネットワークが選択されます</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>デフォルトネットワークを使用する利点は以下の通りです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift にネイティブであり、ネイティブな方法で設定できる</p>
+</li>
+<li>
+<p>送信や、同じネームスペースおよび同じノード上の Pod 間通信に追加の設定が不要</p>
+</li>
+<li>
+<p>ロードバランシングと（内部的な）IP アドレスの安定性のために Kubernetes サービスを使用できる</p>
+</li>
+<li>
+<p>サポートされているプラットフォーム上で OpenShift Route や LoadBalancer サービスを使用して外部に公開できる</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>デフォルトネットワークの欠点はわずかですが、注目に値します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>VM が使用するマスカレード IP アドレスは、外部からルーティングできない</p>
+</li>
+<li>
+<p>外部ネットワークには接続できず、同じプロジェクト/ネームスペース内のサービスを使用しない限り、他のノード上の Pod にも接続できない</p>
+</li>
+<li>
+<p>VLAN をサポートしていない</p>
+</li>
+<li>
+<p>一部のプラットフォーム (AWS) では、LoadBalancer サービスが混合モード（TCP と UDP の同時）のポートフォワーディングをサポートしていない</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="multus_cni_plugin"><a class="anchor" href="#multus_cni_plugin"></a>Multus CNI プラグイン</h3>
+<div class="paragraph">
+<p>Multus は、コンテナネットワークインターフェース（CNI）の「メタプラグイン」です。CNI では単一のプラグインしかデプロイできませんが、
+Multus は仲介役として機能し、複数の CNI プラグインを同時に、または相互に入れ替えて使用できるようにします。</p>
+</div>
+<div class="paragraph">
+<p><a href="#networks">Networks</a> セクションで述べたように、Multus を使用すると、サポートされているさまざまな CNI プラグインを使用して追加のネットワークを定義できます。</p>
+</div>
+<div class="paragraph">
+<p>これらのプラグインは以下の通りです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>bridge</strong> - 同じノードで実行されている Pod 間のネットワークスイッチとして機能し、外部ネットワークへの接続用にホストネットワークインターフェースにリンクできます。</p>
+</li>
+<li>
+<p><strong>host-device</strong> - ホストネットワークインターフェースを Pod ネットワークネームスペースに「移動」させ、インターフェースをルートネットワークネームスペースから消滅させます。</p>
+</li>
+<li>
+<p><strong>ipvlan</strong> - ネットワーク上の Pod が MAC アドレスを共有します。これは、セキュリティ制限（VPC ネットワーク）によりポートあたりの MAC アドレス数や未知の MAC アドレスが制限されている場合に使用されます。</p>
+</li>
+<li>
+<p><strong>macvlan</strong> - ネットワーク上の各 Pod が独自の MAC アドレスを持ち、従来のネットワーク接続に準拠します。</p>
+</li>
+<li>
+<p><strong>SR-IOV</strong> - 単一ルート I/O 仮想化は、単一の物理デバイスを複数の Pod で共有するために使用されますが、この機能をサポートするホストデバイスが必要です。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>OpenShift（および Kubernetes）では、Multus は NetworkAttachmentDefinition という名前のカスタムリソースタイプを使用します。これは、特定のプロジェクト/ネームスペースに対してサポートされているプラグインのいずれかを使用してネットワークを定義するために使用されます。</p>
+</div>
+<div class="paragraph">
+<p>あるいは、OpenShift（Kubernetes ではない）では <code>cluster</code> Network リソースを編集して <code>spec.additionalNetworks[]</code> を定義することもでき、
+これにより、目的のプロジェクト/ネームスペースに NetworkAttachmentDefinition が自動的に作成されます。
+これは、クラスター全体で NetworkAttachmentDefinition を一元管理するためのポイントとして便利です。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="nmstate_operator"><a class="anchor" href="#nmstate_operator"></a>NMState Operator</h3>
+<div class="paragraph">
+<p>NMState ("NM" は NetworkManager の略。RHEL、Fedora、およびその他の Linux ディストリビューション用のネットワーク設定ツール) は、Linux ホスト上のネットワーク設定を管理するために使用される宣言型 API です。</p>
+</div>
+<div class="paragraph">
+<p>NMState Operator は、独自の API (NodeNetworkConfigurationPolicy) を公開する Kubernetes Operator です。これは NMState を使用して、デプロイ先の Kubernetes (または OpenShift) クラスター内のノードホストのネットワーキングを構成します。</p>
+</div>
+<div class="paragraph">
+<p>一部の Multus ネットワーク設定（<code>linux-bridge</code> など）では、Pod（または VM）が実行される予定のノード上にブリッジインターフェースを作成するために、実際に NMState Operator の使用が必要になる場合があります。</p>
+</div>
+<div class="paragraph">
+<p>Multus で (NetworkAttachmentDefinition を使用して) ノードホスト上に存在しない可能性のあるインターフェースを使用するネットワークを定義することは可能です。
+このようなネットワークに Pod や VM を接続すると、その Pod/VM が実行されるノード上にインターフェースが存在しない限り、失敗します。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="storage_apis"><a class="anchor" href="#storage_apis"></a>ストレージ API</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このセクションでは、OpenShift Virtualization におけるストレージ関連オブジェクトの要点を説明します。以下の各サブセクションは、その特定リソースの Kubernetes <code>Kind</code> に従ってタイトルが付けられています。</p>
+</div>
+<div class="paragraph">
+<p>直接操作することはありませんが、簡単に言及しておくべき API オブジェクトがいくつかあります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>VolumeSnapshotContents</strong> - 基盤となるストレージシステム内の実際の「オンディスク」スナップショットオブジェクトを表します。</p>
+</li>
+<li>
+<p><strong>VirtualMachineSnapshotContents</strong> - <a href="#volume_snapshots">VolumeSnapshot</a> を作成するために使用されるソース VM、<a href="#persistent_volume_claims">PVCs</a>、VolumeSnapshots への参照が含まれています。</p>
+</li>
+<li>
+<p><strong>VolumeSnapshotClasses</strong> - <a href="#storage_classes">StorageClasses</a> と同様に、VolumeSnapshotClasses は CSI ドライバーを使用して、特定のストレージプラットフォームの VolumeSnapshot 作成を容易にします。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>次のセクションでは、概念が重複しているように見える（ボリューム、スナップショット、データソースなど）いくつかの異なるオブジェクトについて説明します。
+その理由は、OpenShift Virtualization が低レベルの Kubernetes ネイティブなリソースの高レベルな抽象化を使用しているためです。</p>
+</div>
+<div class="paragraph">
+<p>これは、低レベルのリソースを直接扱うのではなく、API レベルでのストレージタスク（クローニング、スナップショット、復元など）を簡素化するためです。
+これにより、高レベルのリソースを仮想化のユースケースにより適したものに調整することも可能になります。</p>
+</div>
+<div class="sect2">
+<h3 id="persistent_volumes"><a class="anchor" href="#persistent_volumes"></a>PersistentVolumes</h3>
+<div class="paragraph">
+<p>PersistentVolume (PV) は、マウント可能なストレージボリュームを表す Kubernetes ネイティブなリソースであり、<a href="#persistent_volume_claims">PersistentVolumeClaim</a> (PVC) を使用して任意の Pod にバインドできます。
+PersistentVolume には、それが表すボリュームのサイズ、アクセスモード（ReadWriteOnce、ReadWriteMany など）、リサイクルポリシー、および権限が定義されています。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="persistent_volume_claims"><a class="anchor" href="#persistent_volume_claims"></a>PersistentVolumeClaims</h3>
+<div class="paragraph">
+<p>PersistentVolumeClaim (PVC) は、Pod 用の PersistentVolume にバインドするか、それを要求するために使用されます。これも Kubernetes の主要なリソースであり、
+Kubernetes のコンテナワークロードで PersistentVolume を実際に使用するための手段です。PVC は 1:1 マッピングで単一の PV にバインドされ、
+その PV がバインドされると（PV で <code>ReadWriteMany</code> モードが有効になっていない限り）、解放されてリサイクルまたはガベージコレクションされるまで、他の PVC によって要求または使用されることはありません。</p>
+</div>
+<div class="paragraph">
+<p>OpenShift と Kubernetes の初期の頃は、ホスト（または SAN / NAS）ストレージレベルで PersistentVolumes を手動でプロビジョニングし、
+ストレージホスト上でプロビジョニングされた各ボリュームに対してクラスター上で PersistentVolumes を作成する必要がありました。
+しかし、<a href="#storage_classes">StorageClasses</a> という新しいリソースのおかげで、ほとんどのクラウドプラットフォームやストレージプロバイダーで PersistentVolumes のプロビジョニングとガベージコレクションが自動化されています。</p>
+</div>
+<div class="paragraph">
+<p>OpenShift Virtualization では、<a href="#data_sources">DataSources</a> と <a href="#data_volumes">DataVolumes</a> を使用して kube-ネイティブな PV および PVC を抽象化しており、
+それらが VirtualMachines で使用される主要なストレージリソースとなっています。</p>
+</div>
+<div class="paragraph">
+<p>StorageClasses に依存して空のボリュームをプロビジョニングすることに加えて、PersistentVolumeClaim オブジェクトの <code>dataSource</code> フィールドを使用することで、（後述の）VolumeSnapshot からデータを事前入力した PVC を作成できます。
+既存の PVC を <code>dataSource</code> としてリストした新しい PVC を作成することで、PVC のクローン作成も可能です。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="volume_snapshots"><a class="anchor" href="#volume_snapshots"></a>VolumeSnapshots</h3>
+<div class="paragraph">
+<p>VolumeSnapshots は PersistentVolume 状態の特定の時点でのコピーであり、VM ディスクイメージのクローン作成や、PersistentVolume を以前の状態に復元するために使用できます。</p>
+</div>
+<div class="paragraph">
+<p>VolumeSnapshots は、VirtualMachine の状態を保存するために（後述の）VirtualMachineSnapshots によって使用される低レベルのオブジェクトですが、
+KubeVirt DataVolume や DataSource をバックアップする PersistentVolume 状態を保存するために手動で作成することもできます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="storage_classes"><a class="anchor" href="#storage_classes"></a>StorageClasses</h3>
+<div class="paragraph">
+<p>StorageClass は、PersistentVolumeClaim が作成されるたびに PersistentVolumes の自動プロビジョニングを提供するために OpenShift および Kubernetes で使用されます。</p>
+</div>
+<div class="paragraph">
+<p>StorageClasses は CSI ドライバーを使用して、OpenShift 上でベンダーのストレージプラットフォームの実装を提供し、特定のプラットフォーム上で新しいボリューム（Amazon Elastic Block Store など）をプロビジョニングするために使用されるベンダー固有の API を抽象化するため、kube-ネイティブな API (PV および PVC) を使用してそれらを利用できるようになります。</p>
+</div>
+<div class="paragraph">
+<p>StorageClasses は、プロビジョニング、ガベージコレクション、リサイクルに関するベンダー固有の設定を調整したり、機能を拡張するために OpenShift Virtualization にサポートされていないクラウドやストレージプラットフォームを追加したりする場合を除き、OpenShift Virtualization のユーザーや管理者が直接対話するポイントではありません。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="data_volumes"><a class="anchor" href="#data_volumes"></a>DataVolumes</h3>
+<div class="paragraph">
+<p>DataVolumes は PersistentVolumeClaims の抽象化を提供し、サポートされているデータソースからの自動プロビジョニングとデータ入力を行います。</p>
+</div>
+<div class="paragraph">
+<p>DataVolumes がないと、ディスクとして VM に接続する前に、イメージデータを含む PVC を手動で作成して入力する必要があります。
+DataVolumes は、基盤となる PVC へのデータのインポートという実際のタスクを処理するために Containerized Data Importer (CDI) に依存しています。</p>
+</div>
+<div class="paragraph">
+<p>DataVolumes (より具体的には CDI) は、2 つの異なるイメージタイプ (qcow2 および raw) と、PVC に入力するための多数のデータ取り込み手段をサポートしており、
+後者のメソッドは 3 つの主なユースケースのいずれかに該当します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>クライアントマシンからのアップロード</p>
+</li>
+<li>
+<p>外部ソース（Web サーバー、オブジェクトストレージプロバイダー、またはコンテナレジストリ）からのダウンロード</p>
+</li>
+<li>
+<p>既存のソースからのクローン作成（以前に入力された PVC、スナップショットなど）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>CDI（および DataVolumes）でサポートされているデータ取り込みメソッドの完全なリストは以下の通りです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>blank</strong> - 空のボリュームをプロビジョニング</p>
+</li>
+<li>
+<p><strong>gcs</strong> - GCS エンドポイントからイメージをダウンロード</p>
+</li>
+<li>
+<p><strong>http</strong> - HTTP/S URL からイメージをダウンロード</p>
+</li>
+<li>
+<p><strong>imageio</strong> - ovirt-imageio からイメージをダウンロード</p>
+</li>
+<li>
+<p><strong>pvc</strong> - 既存の PersistentVolumeClaim を使用して新しいボリュームを作成</p>
+</li>
+<li>
+<p><strong>registry</strong> - コンテナイメージレジストリをイメージダウンロードソースとして使用</p>
+</li>
+<li>
+<p><strong>s3</strong> - AWS または互換性のある S3 (MinIO) エンドポイントからイメージをダウンロード</p>
+</li>
+<li>
+<p><strong>snapshot</strong> - 既存の VolumeSnapshot を使用して新しいボリュームを作成</p>
+</li>
+<li>
+<p><strong>upload</strong> - クライアントマシンからイメージをアップロード</p>
+</li>
+<li>
+<p><strong>vddk</strong> - VMware イメージソースを使用</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="data_sources"><a class="anchor" href="#data_sources"></a>DataSources</h3>
+<div class="paragraph">
+<p>DataSources は「ブート可能なイメージ」と考えることができ、新しい DataVolume をプロビジョニングするために使用される既存の PersistentVolumeClaim または VolumeSnapshot を指すだけです。
+OpenShift Virtualization Web コンソールからは、DataSource のみを選択してルートディスクイメージにでき、そこでは「Bootable Volumes」とラベル付けされています。</p>
+</div>
+<div class="paragraph">
+<p>DataSource <code>spec</code> 内でサポートされているフィールドは 1 つだけです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>source</strong> - <code>pvc</code> または <code>snapshot</code> フィールドのみをサポート（これらは相互排他）</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>pvc</strong> または <strong>snapshot</strong> - データソースが PersistentVolumeClaim か VolumeSnapshot かに応じて、ここにある適切なサブフィールドを使用</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong> - pvc または snapshot の名前</p>
+</li>
+<li>
+<p><strong>namespace</strong> - pvc または snapshot が存在するネームスペース</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="virtual_machine_snapshots"><a class="anchor" href="#virtual_machine_snapshots"></a>VirtualMachineSnapshots</h3>
+<div class="paragraph">
+<p>VirtualMachineSnapshot は、特定の VM に接続されているすべてのディスク/ボリュームの状態の特定の時点でのコピーです。</p>
+</div>
+<div class="paragraph">
+<p>VirtualMachineSnapshot が作成されると、接続されている各ディスクに対して個別の VolumeSnapshot が目的のネームスペースに作成され、
+スナップショット処理が完了すると VirtualMachineSnapshot オブジェクトは最終的に完了した Status で更新されます。</p>
+</div>
+<div class="paragraph">
+<p>VirtualMachineSnapshot オブジェクトは <code>source</code> VM 参照を受け入れ、オプションで <code>1m</code>、<code>3600s</code>、<code>1h30m</code> などの時間単位サフィックスや <code>-1h</code> などの符号付き値を持つ <code>failureDeadline</code> を受け入れます。
+デフォルトの期限値は <code>5m</code> です。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="virtual_machine_restores"><a class="anchor" href="#virtual_machine_restores"></a>VirtualMachineRestores</h3>
+<div class="paragraph">
+<p>スナップショットの作成は、そのスナップショットを復元する機能（スナップショットが撮影された時点に「時間を巻き戻す」）が存在する場合にのみ役立ちます。
+そのため、VM スナップショットから復元する必要が生じたときに VirtualMachineRestore オブジェクトが作成されます。</p>
+</div>
+<div class="paragraph">
+<p>VirtualMachineRestore は、作成する目的の VM の <code>apiGroup</code>、<code>kind</code>、<code>name</code> を含む <code>target</code> VM 参照を受け入れ、復元のソースとして使用する <code>virtualMachineSnapshotName</code> を受け入れます。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="clone_api"><a class="anchor" href="#clone_api"></a>クローン API</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM のクローンを作成する方法は 3 つあります。最も難しい方法から最も簡単な方法の順にリストします。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ソース VM から個々の PVC のスナップショットを取得し（VolumeSnapshots を介して）、VM 名やディスク名などの参照を置き換えて VirtualMachine オブジェクトをコピーする。</p>
+</li>
+<li>
+<p>VirtualMachineSnapshot を作成する（ボリュームスナップショットは自動作成されますが、VirtualMachine オブジェクトをコピーし、VM/ディスク名、MAC アドレスなどを置き換える必要がある）。</p>
+</li>
+<li>
+<p>クローン API を活用して、ソースとターゲットの VirtualMachine（または VirtualMachineSnapshot）名を定義する VirtualMachineClone オブジェクトを作成するだけで、すべてのステップを実行する。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>VirtualMachine のクローニングは、<a href="#virtual_machine_clones">VirtualMachineClones</a> オブジェクトを作成することによって実行されます。</p>
+</div>
+<div class="sect2">
+<h3 id="virtual_machine_clones"><a class="anchor" href="#virtual_machine_clones"></a>VirtualMachineClones</h3>
+<div class="paragraph">
+<p>スナップショットおよび復元 API をベースにした VirtualMachineClone は、VirtualMachine のスナップショットプロセスと、スナップショットから VM のコピーを復元するプロセスを簡素化するように設計された高レベルの操作です
+（特に VM に複数のディスクが接続されている場合）。</p>
+</div>
+<div class="paragraph">
+<p>クローニングにはスナップショットと復元操作の両方が含まれるため、VirtualMachineClone オブジェクトには <code>source</code> と（オプションで）<code>target</code> の VirtualMachine 参照の両方が含まれ、各フィールドには目的のソースまたはターゲット VM オブジェクトの <code>apiGroup</code>、<code>kind</code>、<code>name</code> が含まれます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="mutating_vm_clones"><a class="anchor" href="#mutating_vm_clones"></a>クローン VM の変更</h3>
+<div class="paragraph">
+<p>VM またはテンプレートのメタデータ (<code>labels</code> および/または <code>annotations</code>)、MAC アドレス、BIOS / UEFI シリアル番号、あるいはターゲット VM の CPU や RAM スペックなどの詳細など、VM クローンの詳細を変更する必要がある場合があります。</p>
+</div>
+<div class="paragraph">
+<p>そのような変更に使用されるオブジェクトフィールドを以下に示します（すべてのフィールドは「オプション」です）。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>labelFilters</strong> - ソース VM からどのラベル (<code>metadata.labels</code> から) をクローン VM にコピーするか、またはコピー「しない」かを定義するために使用されます</p>
+</li>
+<li>
+<p><strong>annotationFilters</strong> - ソース VM からどの注釈 (<code>metadata.annotations</code> から) を VM クローンにコピーするか、またはコピー「しない」かを定義するために使用されます</p>
+</li>
+<li>
+<p><strong>template</strong> - VM / VMI <code>template</code> のメタデータフィルターを定義するために使用され、トップレベルと同じ 2 つのフィルターをサポートします。</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>labelFilters</strong> - ソース VM の <code>template.metadata.labels</code> からクローン VM に指定のラベルをコピーまたは除外するために使用されます</p>
+</li>
+<li>
+<p><strong>annotationFilters</strong> - ソース VM の <code>template.metadata.annotations</code> からクローン VM に指定の注釈をコピー/除外するために使用されます</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>newMacAddresses</strong> - クローン VM の名前付き <code>interface</code> ごとに新しい MAC アドレスを明示的に定義します。このフィールドには、<code>&lt;interface-name&gt;</code> キーからハイフンで区切られた文字列 (<code>00-01-ff-00-01-00</code>) MAC アドレス値への 1 対 1 のマップが含まれます。</p>
+</li>
+<li>
+<p><strong>newSMBiosSerial</strong> - 新しい SMBios シリアル番号を文字列値として受け入れます</p>
+</li>
+<li>
+<p><strong>patches</strong> (v4.20+) - 上記のオプションではサポートされていないクローン VM の他のフィールドを変更するために使用できる、文字列化された json パッチコマンドのリストを受け入れます。</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>すべてのフィルターフィールドは、ワイルドカード (<code>label-or-annotation-name/*</code>) と否定 (<code>!label-or-annotation-name</code>) の両方を（それぞれ）含める、または除外するためにサポートしており、単一のフィルター文字列に結合できます。</p>
+</li>
+<li>
+<p>デフォルトでは、VM のクローン作成時にすべての MAC アドレスが削除されます。</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>上記以外の変更については、<code>patches</code> フィールドも受け入れられます。これは、<code>op</code>、フィールド <code>path</code>、<code>value</code> をそれぞれ含む文字列リテラルとして json パッチ（json マージパッチ「ではない」）のリストを受け入れます。</p>
+</div>
+<div class="paragraph">
+<p>以下は、言及された各フィールドを含む VirtualMachineClone spec の短い例です。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: clone.kubevirt.io/v1beta1
+kind: VirtualMachineClone
+metadata:
+  name: example-vm-clone
+  namespace: my-namespace
+spec:
+  source:
+    apiGroup: kubevirt.io
+    kind: VirtualMachine
+    name: my-virtual-app
+  target:
+    apiGroup: kubevirt.io
+    kind: VirtualMachine
+    name: my-clone-app
+  labelFilters:
+  - "metadata-labels-to-include/*"
+  - "!metadata-labels-to-omit/*"
+  annotationFilters:
+  - "metadata-annotations-to-include/*"
+  - "!metadata-annotations-to-omit/*"
+  template:
+    labelFilters:
+    - "template-labels-to-include/*"
+    - "!template-labels-to-omit/*"
+    annotationFilters:
+    - "template-annotations-to-include/*"
+    - "!template-annotations-to-omit/*"
+  newMacAddresses:
+    nameOfInterface: "ff-00-00-bb-aa-aa"
+  newSMBiosSerial: "S3R14LNUM83R"
+  patches:
+  - '{"op": "add", "path": "/metadata/labels/my-app", "value": "cloned"}'
+  - '{"op": "replace", "path": "/spec/instanceType/name", "value": "u1.xlarge"}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="patching_vm_clones"><a class="anchor" href="#patching_vm_clones"></a>クローン VM のパッチ適用</h3>
+<div class="paragraph">
+<p>VirtualMachine マニフェストに存在しないフィールド値を追加しており、そのフィールドに存在しない親オブジェクトもある場合は、欠落しているフィールド値を設定する前に空の親オブジェクトを追加する必要があります。</p>
+</div>
+<div class="paragraph">
+<p>例えば、親オブジェクトは空の値 <code>{}</code> を持つ <code>add</code> コマンドを使用してパッチを適用する必要があります。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: clone.kubevirt.io/v1beta1
+kind: VirtualMachineClone
+metadata:
+  name: missing-parent-patch-example
+  namespace: my-namespace
+spec:
+  source:
+    apiGroup: kubevirt.io
+    kind: VirtualMachine
+    name: example-source-vm
+  patches:
+  - '{ "op": "add", "path": "/spec/template/spec/domain/cpu", "value": {} }'
+  - '{ "op": "add", "path": "/spec/template/spec/domain/cpu/cores", "value": 6 }'</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>VirtualMachine で <code>cpu</code> または <code>memory</code> フィールドを手動で設定すると、<code>spec.instancetype</code> フィールドと競合します。</p>
+</li>
+<li>
+<p><code>spec.instancetype</code> を削除すると、VM が UI に表示されなくなります。</p>
+</li>
+<li>
+<p>CPU とメモリの使用量を構成するには <a href="#instance_types">InstanceTypes</a> のセクションを、CPU トポロジーを変更するには <a href="#virtual_machine_preferences">VirtualMachine[Cluster]Preferences</a> を参照してください。</p>
+</li>
+<li>
+<p><code>spec.instancetype</code> が設定されている VM で <code>cpu</code> または <code>memory</code> 値にパッチを適用しようとすると、VM の復元が完了せず、クローン操作が無期限にハングします。</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vm_cloning_strategies"><a class="anchor" href="#vm_cloning_strategies"></a>クローニング戦略と StorageProfiles</h3>
+<div class="paragraph">
+<p>OpenShift Virtualization では、cloneStrategy を使用して、特定のストレージタイプ（OpenShift/Kubernetes で StorageClass として定義されます）のクローニング方法を調整できます。
+OpenShift Virtualization（具体的には CDI）は、特定の StorageClass（特定の CSI ドライバーを公開します）の推奨設定を StorageProfile に保存します。
+StorageProfile は、そのストレージプロバイダーに最適化された設定でクラスター上の各 StorageClass に対して作成されます。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+CDI が認識しないストレージプロバイダーの場合、その StorageClass に対して StorageProfile を構成する必要があります。そうしないと、その StorageClass を使用して DataVolumes が定義されるたびに PVC がプロビジョニングされません。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>デフォルトでは、OpenShift Virtualization で VirtualMachine のクローンを作成すると、VM のスナップショットが（VolumeSnapshot を作成することによって）取得され、新しい PVC と関連する DataVolumes が作成されてスナップショットが復元されます。</p>
+</div>
+<div class="paragraph">
+<p>クローニングプロセスが即座に完了しないことに気づくかもしれませんが、これはクローニング（スナップショット/復元）プロセスそのものよりも、CSI ドライバーのブロックレイヤー実装に関係しています。
+一部の仮想化プラットフォーム（および OpenShift/Kubernetes 用のいくつかの CSI ドライバー）は、ブロックレベルでのハードリンクや CoW (Copy on Write) 実装により、スナップショットからのインスタントクローニングをサポートしています。</p>
+</div>
+<div class="paragraph">
+<p>例えば、AWS EBS ボリュームは高速スナップショット復元をサポートしていませんが（<a href="https://github.com/kubernetes-sigs/aws-ebs-csi-driver/issues/869" target="_blank" rel="noopener">この GitHub イシューを参照</a>）、オンプレミスのソリューションの中にはサポートしているものがあるかもしれません。</p>
+</div>
+<div class="paragraph">
+<p>そうは言っても、StorageProfile の cloneStrategy を調整するためのオプションがいくつかあります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>snapshot</strong> (デフォルト) - ストレージプロバイダーが認識されており、CSI スナップショットもサポートしている場合（その CSI ドライバー用の VolumeSnapshotClass が存在する場合）、CDI はスナップショットメソッドを使用します。</p>
+</li>
+<li>
+<p><strong>copy</strong> - ソースボリュームからターゲットボリュームへデータをコピーするためにソース Pod とターゲット Pod の両方を使用するフォールバックオプションです。これは最も効率の悪いクローニング方法です。</p>
+</li>
+<li>
+<p><strong>csi-clone</strong> - スナップショットを最初に作成せずに既存のボリュームをクローンするために CSI クローン API を使用します。これは最も効率的な方法ですが、特定の StorageClass 用に StorageProfile で手動指定する必要があります。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>cloneStrategy</code> を <code>csi-clone</code> に設定した StorageProfile オブジェクトの例：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: cdi.kubevirt.io/v1beta1
+kind: StorageProfile
+metadata:
+  name: example-provisioner
+spec:
+  claimPropertySets:
+  - accessModes:
+    - ReadWriteOnce
+    volumeMode: Filesystem
+  cloneStrategy: csi-clone</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="export_api"><a class="anchor" href="#export_api"></a>エクスポート API</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenShift Virtualization は、異なるクラスターや別の仮想化プラットフォームへ移行する場合など、VM やディスクイメージをクラスター外に保存または移動するために使用できるエクスポート API をサポートしています。</p>
+</div>
+<div class="paragraph">
+<p>VM ディスクイメージは OS、アプリケーション、データを含んでおり、サイズが非常に大きくなる可能性があるため、エクスポートの主要な懸念事項です。
+OpenShift API サーバーに過負荷をかけずにクラスター外へのイメージ転送をサポートするために、プロキシサーバーが利用されます。これは、接続された Ingress、Route、または NodePort を持つサービスを使用してインターネットに公開する必要があります。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Ingress や Route を使用する代わりに <code>virtctl port-forward</code> を使用してエクスポートプロキシサーバーに接続することもできます。
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="export_tokens"><a class="anchor" href="#export_tokens"></a>エクスポートトークン</h3>
+<div class="paragraph">
+<p>VM ディスクにアクセスするユーザーを認証するために（VM 自体と同じネームスペース内の）エクスポートトークンを作成する必要があります。
+これは、トークン文字列を保存する K8s シークレットを作成することで行われます。トークンは、エクスポートプロキシエンドポイントにアクセスする際にヘッダー (<code>x-kubevirt-export-token</code>) として渡されます。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+推奨されるトークン文字列は、長さが 12 文字以上の英数字の値です。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>エクスポートトークンの例を以下に示します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: export-token
+stringData:
+  token: abc098765421def</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>トークンシークレットは、VM をエクスポートするために使用される（後述の）VirtualMachineExport オブジェクトから参照されます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="virtual_machine_exports"><a class="anchor" href="#virtual_machine_exports"></a>VirtualMachineExports</h3>
+<div class="paragraph">
+<p>VirtualMachineExport オブジェクトを作成することで、任意の VirtualMachine、VirtualMachineSnapshot、または PersistentVolumeClaim をエクスポートできます。</p>
+</div>
+<div class="paragraph">
+<p>エクスポートトークンシークレットの名前を含む <code>tokenSecretRef</code> を定義し、上記の <code>source</code> タイプのいずれかを定義する必要があります。</p>
+</div>
+<div class="paragraph">
+<p>VirtualMachine をエクスポートすると VM の yaml マニフェストに加え、VM に関連付けられている PVC、DataVolumes、または MemoryDump ボリュームがエクスポートされますが、VirtualMachineSnapshot や PVC をエクスポートしても VM マニフェストは提供されません。</p>
+</div>
+<div class="paragraph">
+<p>エクスポートされたアーティファクトには、VirtualMachineExport の <code>status</code> ブロックを表示し、提供された URL を使用して準備ができ次第エクスポートされた VM イメージ、ファイル、またはアーカイブをダウンロードすることでアクセスできます。</p>
+</div>
+<div class="paragraph">
+<p>ダウンロード用に 4 つのフォーマットが提供されています。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>raw</strong> - ビット単位の qcow2 ディスクイメージ</p>
+</li>
+<li>
+<p><strong>gzip</strong> - gzip 圧縮されたディスクイメージ</p>
+</li>
+<li>
+<p><strong>dir</strong> - PVC 内で検出されたファイルを検索するためのディレクトリリストを提供します。特定のファイルにアクセスするには、URL 内の <code>/dir</code> を <code>/path/to/file.txt</code> に置き換えます</p>
+</li>
+<li>
+<p><strong>tar.gz</strong> - 単一の gzip 圧縮された tar アーカイブとしての PVC の全内容</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>コンテンツタイプによって、エクスポートに使用されるフォーマットが決定されます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>KubeVirt content-type</strong> - PVC が KubeVirt ディスクとして検出された場合、<code>raw</code> および <code>gzip</code> フォーマットが使用されます</p>
+</li>
+<li>
+<p><strong>Archive content-type</strong> - それ以外の場合、PVC に KubeVirt ディスクが「含まれていない」なら <code>dir</code> および <code>tar.gz</code> フォーマットが使用されます</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>VirtualMachineExport の例を以下に示します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: export.kubevirt.io/v1beta1
+kind: VirtualMachineExport
+metadata:
+  name: export-example <i class="conum" data-value="1"></i><b>(1)</b>
+spec:
+  tokenSecretRef: export-token <i class="conum" data-value="2"></i><b>(2)</b>
+  source: <i class="conum" data-value="3"></i><b>(3)</b>
+    apiGroup: "kubevirt.io"
+    kind: VirtualMachine
+    name: virtual-machine-example</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>定義されている VirtualMachineExport オブジェクトの名前</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>エクスポートトークンを含むシークレットの名前</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>ソースは、特定のグループ/バージョンおよび kind への名前付き参照</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>サポートされているソースタイプは以下の通りです。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">apiGroup</th>
+<th class="tableblock halign-left valign-top">kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">kubevirt.io</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachine</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">snapshot.kubevirt.io</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtualMachineSnapshot</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">""</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PersistentVolumeClaim</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">API ガイド</a></span>
+  <span class="next"><a href="../appendix/glossary.html">Glossary</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

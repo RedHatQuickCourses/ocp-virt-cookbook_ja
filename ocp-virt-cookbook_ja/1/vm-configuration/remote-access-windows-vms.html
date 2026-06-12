@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Red Hat OpenShift 上の Windows 11 VM にリモートデスクトップでアクセスする方法 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="remote-access-linux-troubleshooting.html">
+    <link rel="next" href="windows-vm-virtio-drivers.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">仮想マシンの設定</a></li>
+    <li><a href="remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Red Hat OpenShift 上の Windows 11 VM にリモートデスクトップでアクセスする方法</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、OpenShift 上で実行されている Windows 11 仮想マシンに対して、外部からリモートデスクトッププロトコル (RDP) でアクセスするための設定方法を説明します。このガイドを完了すると、Windows リモートデスクトップを使用して VM に直接接続できるようになります。これにより、VNC コンソールよりもシームレスで高機能なエクスペリエンスが得られます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_このチュートリアルで解決する課題"><a class="anchor" href="#_このチュートリアルで解決する課題"></a>このチュートリアルで解決する課題</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Red Hat OpenShift Virtualization 上でホストされている Windows VM に、Microsoft リモートデスクトップを使用してアクセスする必要があるユーザー向けです。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ネットワークトポロジー"><a class="anchor" href="#_ネットワークトポロジー"></a>ネットワークトポロジー</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ネットワークアーキテクチャの理解"><a class="anchor" href="#_ネットワークアーキテクチャの理解"></a>ネットワークアーキテクチャの理解</h3>
+<div class="paragraph">
+<p>表示される IP アドレスの差異は予期される動作です。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>10.0.2.2</strong>: Windows OS 内の VM の内部ネットワークインターフェース IP</p>
+</li>
+<li>
+<p><strong>10.128.1.132</strong>: OpenShift クラスター内の内部 Pod IP</p>
+</li>
+<li>
+<p><strong>いずれも外部から直接ルーティング不可</strong> - サービスによる公開が必要</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift 上で Windows 11 VM が正常にデプロイされていること</p>
+</li>
+<li>
+<p>OpenShift Web コンソールまたは <code>oc</code> CLI へのアクセス権</p>
+</li>
+<li>
+<p>VNC コンソール経由で VM にアクセス可能であること</p>
+</li>
+<li>
+<p>Windows 11 VM への管理者アクセス権</p>
+</li>
+<li>
+<p>リモートデスクトップ接続クライアントがインストールされたローカルの Windows マシン</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_チュートリアルの手順"><a class="anchor" href="#_チュートリアルの手順"></a>チュートリアルの手順</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ステップバイステップの設定"><a class="anchor" href="#_ステップバイステップの設定"></a>ステップバイステップの設定</h3>
+<div class="sect3">
+<h4 id="_ステップ_1_windows_11_でリモートデスクトップを有効にする"><a class="anchor" href="#_ステップ_1_windows_11_でリモートデスクトップを有効にする"></a>ステップ 1: Windows 11 でリモートデスクトップを有効にする</h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>VM コンソールにアクセス</strong></p>
+<div class="paragraph">
+<p>OpenShift VNC コンソールを使用して Windows 11 VM にログインします。</p>
+</div>
+</li>
+<li>
+<p><strong>システム設定を開く</strong></p>
+<div class="paragraph">
+<p><strong>スタートメニュー</strong>を右クリックします。</p>
+</div>
+<div class="paragraph">
+<p><strong>システム</strong>を選択します。</p>
+</div>
+</li>
+<li>
+<p><strong>リモートデスクトップを設定する</strong></p>
+<div class="paragraph">
+<p>左側のメニューから<strong>リモートデスクトップ</strong>に移動します。</p>
+</div>
+<div class="paragraph">
+<p><strong>リモートデスクトップ</strong>のトグルを<strong>オン</strong>にします。</p>
+</div>
+<div class="paragraph">
+<p>プロンプトが表示されたら<strong>確認</strong>をクリックします。</p>
+</div>
+<div class="paragraph">
+<p>後で使用するため、表示された<strong>PC 名</strong>をメモしておきます。</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_ステップ_2_外部ネットワークに対して_vm_を公開する"><a class="anchor" href="#_ステップ_2_外部ネットワークに対して_vm_を公開する"></a>ステップ 2: 外部ネットワークに対して VM を公開する</h4>
+<div class="paragraph">
+<p>RDP ポート 3389 を公開するサービスを作成する必要があります。推奨される方法を選択してください。</p>
+</div>
+<div class="sect4">
+<h5 id="_オプション_a_openshift_web_コンソール_推奨"><a class="anchor" href="#_オプション_a_openshift_web_コンソール_推奨"></a>オプション A: OpenShift Web コンソール (推奨)</h5>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>サービスへ移動</strong></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">OpenShift Console → Your Project → Networking → Services</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><strong>新しいサービスを作成</strong></p>
+<div class="paragraph">
+<p><strong>サービスの作成</strong>をクリックします。</p>
+</div>
+<div class="paragraph">
+<p>以下のように設定します。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">フィールド</th>
+<th class="tableblock halign-left valign-top">値</th>
+<th class="tableblock halign-left valign-top">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>サービスタイプ</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>LoadBalancer</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">専用の外部 IP を提供</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>サービス名</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>win11-rdp-service</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">分かりやすいサービス名</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>セレクター</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm.kubevirt.io/name: &lt;your-vm-name&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>重要</strong>: 実際の VM 名に置き換えてください</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ポート</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>3389</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サービスで公開するポート</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ターゲットポート</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>3389</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Windows VM の RDP ポート</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>プロトコル</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>TCP</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RDP に必須</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+LoadBalancer が利用できない場合は、<code>NodePort</code> を使用してください (ポート 30000～32767 が割り当てられます)。
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p><strong>サービスを作成</strong></p>
+<div class="paragraph">
+<p><strong>作成</strong>をクリックします。</p>
+</div>
+<div class="paragraph">
+<p>NodePort を使用する場合は、割り当てられたポートを記録してください。</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_オプション_b_コマンドラインインターフェース_cli"><a class="anchor" href="#_オプション_b_コマンドラインインターフェース_cli"></a>オプション B: コマンドラインインターフェース (CLI)</h5>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>サービス定義を作成</strong></p>
+<div class="paragraph">
+<p><code>rdp-service.yaml</code> を作成します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: win11-rdp-service
+spec:
+  selector:
+    vm.kubevirt.io/name: your-vm-name  # REPLACE with your VM's actual name
+  ports:
+    - protocol: TCP
+      port: 3389
+      targetPort: 3389
+  type: LoadBalancer  # or NodePort</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p><strong>設定を適用</strong></p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f rdp-service.yaml</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_ステップ_3_接続情報の取得"><a class="anchor" href="#_ステップ_3_接続情報の取得"></a>ステップ 3: 接続情報の取得</h4>
+<div class="sect4">
+<h5 id="_loadbalancer_サービスの場合"><a class="anchor" href="#_loadbalancer_サービスの場合"></a>LoadBalancer サービスの場合:</h5>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>ネットワーキング → サービス</strong> に移動します。</p>
+</li>
+<li>
+<p><code>win11-rdp-service</code> を見つけます。</p>
+</li>
+<li>
+<p><strong>外部 IP</strong> アドレスを記録します。</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_nodeport_サービスの場合"><a class="anchor" href="#_nodeport_サービスの場合"></a>NodePort サービスの場合:</h5>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>サービスを見つけて、割り当てられた <strong>NodePort</strong> (例: <code>31234</code>) をメモします。</p>
+</li>
+<li>
+<p>ワーカーノードの外部 IP を取得します。</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nodes -o wide</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>EXTERNAL-IP</strong> カラムを確認します。</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_ステップ_4_リモートデスクトップ経由で接続する"><a class="anchor" href="#_ステップ_4_リモートデスクトップ経由で接続する"></a>ステップ 4: リモートデスクトップ経由で接続する</h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>リモートデスクトップ接続を開く</strong></p>
+<div class="paragraph">
+<p>ローカルの Windows マシンで「リモートデスクトップ接続」を検索します。</p>
+</div>
+</li>
+<li>
+<p><strong>接続情報を入力する</strong></p>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">サービスタイプ</th>
+<th class="tableblock halign-left valign-top">コンピューターフィールドの形式</th>
+<th class="tableblock halign-left valign-top">例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>LoadBalancer</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;External-IP&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>203.0.113.5</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>NodePort</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;Node-External-IP&gt;:&lt;NodePort&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>203.0.113.10:31234</code></p></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>接続を開始する</strong></p>
+<div class="paragraph">
+<p><strong>接続</strong>をクリックします。</p>
+</div>
+<div class="paragraph">
+<p>プロンプトが表示されたら、Windows 11 VM の資格情報を入力します。</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_セキュリティ上の考慮事項"><a class="anchor" href="#_セキュリティ上の考慮事項"></a>セキュリティ上の考慮事項</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+RDP をインターネットに公開するとセキュリティ上のリスクが生じます。本番環境では VPN や踏み台ホストの使用を検討してください。可能であれば、Windows でネットワークレベル認証 (NLA) を有効にしてください。強力なパスワードを使用し、証明書ベースの認証も検討してください。アクセスログを定期的に監視してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_検証とトラブルシューティング"><a class="anchor" href="#_検証とトラブルシューティング"></a>検証とトラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_接続成功の指標"><a class="anchor" href="#_接続成功の指標"></a>接続成功の指標</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>リモートデスクトップクライアントがタイムアウトせずに接続できる</p>
+</li>
+<li>
+<p>Windows 11 デスクトップがフル機能で表示される</p>
+</li>
+<li>
+<p>マウスおよびキーボード入力に応答する</p>
+</li>
+<li>
+<p>オーディオ/クリップボードのリダイレクトが機能する (設定されている場合)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_一般的な問題と解決策"><a class="anchor" href="#_一般的な問題と解決策"></a>一般的な問題と解決策</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">問題</th>
+<th class="tableblock halign-left valign-top">考えられる原因</th>
+<th class="tableblock halign-left valign-top">解決策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>接続タイムアウト</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サービスが正しく作成されていない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サービスが存在し、外部 IP を持っているか確認する</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>接続拒否</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Windows で RDP が有効になっていない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Windows の設定でリモートデスクトップを再有効化する</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>資格情報の間違い</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM のログイン詳細が誤っている</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VNC コンソール経由でユーザー名/パスワードを確認する</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>サービスに外部 IP がない</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LoadBalancer が利用できない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NodePort サービスタイプに切り替える</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の内容を学習しました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualization で実行されている Windows 11 VM でリモートデスクトッププロトコル (RDP) を有効にする方法</p>
+</li>
+<li>
+<p>LoadBalancer または NodePort サービスを使用して VM の RDP ポート (3389) を公開する方法</p>
+</li>
+<li>
+<p>リモートデスクトップアクセスのための接続詳細 (外部 IP または NodePort を含むノード IP) を取得する方法</p>
+</li>
+<li>
+<p>リモートデスクトップ接続クライアントを使用して Windows VM に接続する方法</p>
+</li>
+<li>
+<p>RDP アクセスを公開する際のセキュリティ上の考慮事項および一般的なトラブルシューティング手順</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/latest/virt/about-virt.html" target="_blank" rel="noopener">OpenShift Virtualization Documentation</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/" target="_blank" rel="noopener">KubeVirt User Guide</a></p>
+</li>
+<li>
+<p><a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/" target="_blank" rel="noopener">Windows Remote Desktop Best Practices</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a></span>
+  <span class="next"><a href="windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

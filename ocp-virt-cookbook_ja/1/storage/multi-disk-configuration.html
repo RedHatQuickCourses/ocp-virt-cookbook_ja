@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>異なるストレージクラスを使用したマルチディスクVMの構成 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="creating-managing-storage-class.html">
+    <link rel="next" href="../networking/index.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ストレージ設定</a></li>
+    <li><a href="multi-disk-configuration.html">マルチディスクVM</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">異なるストレージクラスを使用したマルチディスクVMの構成</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、それぞれ異なるストレージクラスを使用する複数のディスクを持つ仮想マシン（VM）を構成する方法を解説します。マルチディスク構成により、OSのブートディスクには高速なストレージを、データボリュームには低速で安価なストレージを使用するといった「ストレージのティアリング（階層化）」が可能になります。このパターンは、データベースのワークロード、アプリケーションサーバー、およびOSとアプリケーションデータを分離するあらゆるVMで一般的です。</p>
+</div>
+<div class="paragraph">
+<p>2つのディスクを持つVMを作成します。1つはデフォルトのStorageClassを使用するブートディスク、もう1つは2番目のStorageClassを使用するデータディスクです。その後、ゲストOS内で両方のディスクがアクセス可能であることを確認します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>OpenShift 4.18以上</strong>（OpenShift Virtualizationオペレーターがインストール済みであること）</p>
+</li>
+<li>
+<p><strong>クラスター管理者アクセス</strong> (<code>system:admin</code> または同等の権限)</p>
+</li>
+<li>
+<p><strong><code>oc</code> CLI</strong> および <strong><code>virtctl</code> CLI</strong> がインストール済みであること</p>
+</li>
+<li>
+<p><strong>デフォルトのStorageClass</strong> が構成済みであること (例: <code>lvms-vg1</code>)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>テスト済みバージョン:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>OpenShift 4.20, 4.21</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_ディスクとボリュームのマッピングを理解する"><a class="anchor" href="#_ステップ_1_ディスクとボリュームのマッピングを理解する"></a>ステップ 1: ディスクとボリュームのマッピングを理解する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>KubeVirtのVM仕様では、ディスクとボリュームは連携して動作します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>spec.template.spec.domain.devices.disks</code></strong>: 各ディスクがゲストOSにどのように提示されるか（バスの種類、ディスクの順序）を定義します。</p>
+</li>
+<li>
+<p><strong><code>spec.template.spec.volumes</code></strong>: 各ディスクのバックエンドストレージ（PVC、DataVolume、containerDisk、cloudInitNoCloud）を定義します。</p>
+</li>
+<li>
+<p>各ディスクの <code>name</code> は、対応するボリュームの <code>name</code> と一致する必要があります。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>ディスクは、定義された順序でゲストOS内部の <code>/dev/vda</code>, <code>/dev/vdb</code> などとして認識されます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_名前空間の作成"><a class="anchor" href="#_ステップ_2_名前空間の作成"></a>ステップ 2: 名前空間の作成</h2>
+<div class="sectionbody">
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace multi-disk-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_2番目のstorageclassの作成オプション"><a class="anchor" href="#_ステップ_3_2番目のstorageclassの作成オプション"></a>ステップ 3: 2番目のStorageClassの作成（オプション）</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>クラスターにStorageClassが1つしかない場合でも、両方のディスクに同じStorageClassを指定することで本チュートリアルを進めることは可能です。ただし、ストレージのティアリングを実演するために、2番目のStorageClassを作成します。</p>
+</div>
+<div class="paragraph">
+<p>LVMストレージを使用するクラスターでは、デフォルトの <code>lvms-vg1</code> StorageClassが既に存在します。本チュートリアルでは、異なるストレージ層をシミュレートするために、<code>Retain</code>（保持）リクレイムポリシーを持つ2番目のStorageClassを作成します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/multi-disk-configuration/sc-data-retain.yaml" class="xref attachment">sc-data-retain.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: lvms-vg1-retain
+provisioner: topolvm.io
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>両方のStorageClassを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get storageclass</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                 PROVISIONER   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+lvms-vg1 (default)   topolvm.io    Delete          WaitForFirstConsumer   true                   30d
+lvms-vg1-retain      topolvm.io    Retain          WaitForFirstConsumer   true                   5s</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_複数のディスクを持つvmをデプロイする"><a class="anchor" href="#_ステップ_4_複数のディスクを持つvmをデプロイする"></a>ステップ 4: 複数のディスクを持つVMをデプロイする</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>3つのディスクを持つVMを作成します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>rootdisk</strong>: ブートディスク（30Gi、デフォルトのStorageClass）。Fedoraブートソースからクローンします。</p>
+</li>
+<li>
+<p><strong>datadisk</strong>: データディスク（10Gi、2番目のStorageClass）。空のボリュームとして作成します。</p>
+</li>
+<li>
+<p><strong>cloudinitdisk</strong>: Cloud-init構成ディスク。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>警告: この例で使用されているcloud-initのパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードを使用するか、SSHキー認証を使用してください。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/multi-disk-configuration/vm-multi-disk.yaml" class="xref attachment">vm-multi-disk.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: multi-disk-vm
+  namespace: multi-disk-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: multi-disk-vm
+    spec:
+      domain:
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+            bootOrder: 1
+          - name: datadisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 1Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: multi-disk-rootdisk
+      - name: datadisk
+        dataVolume:
+          name: multi-disk-datadisk
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+  dataVolumeTemplates:
+  - metadata:
+      name: multi-disk-rootdisk
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 30Gi
+        storageClassName: lvms-vg1
+      source:
+        registry:
+          pullMethod: node
+          url: docker://quay.io/containerdisks/fedora:latest
+  - metadata:
+      name: multi-disk-datadisk
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: lvms-vg1-retain
+      source:
+        blank: {}
+EOF</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_構成の重要な詳細"><a class="anchor" href="#_構成の重要な詳細"></a>構成の重要な詳細</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>rootdisk上の <strong><code>bootOrder: 1</code></strong> は、VMがOSディスクから起動することを保証します。</p>
+</li>
+<li>
+<p>rootdisk上の <strong><code>source.registry</code></strong> は、Fedoraのコンテナディスクイメージをプルします。</p>
+</li>
+<li>
+<p>datadisk上の <strong><code>source.blank: {}</code></strong> は、空のフォーマットされていないボリュームを作成します。</p>
+</li>
+<li>
+<p>各 <code>dataVolumeTemplates</code> エントリで、異なる <code>storageClassName</code> を指定できます。</p>
+</li>
+<li>
+<p><code>devices.disks</code> 内のディスク名は <code>volumes</code> 内のボリューム名と一致し、それがさらに <code>dataVolumeTemplates</code> のメタデータ名と一致している必要があります。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_vmとディスクを確認する"><a class="anchor" href="#_ステップ_5_vmとディスクを確認する"></a>ステップ 5: VMとディスクを確認する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>両方のDataVolumeが完了し、VMが起動するまで待ちます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get dv -n multi-disk-demo -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>両方が <code>Succeeded</code> になったら、VMを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n multi-disk-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME            AGE   STATUS    READY
+multi-disk-vm   3m    Running   True</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>PVCがそれぞれのStorageClassでバインドされていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc -n multi-disk-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                   STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS      AGE
+multi-disk-rootdisk    Bound    pvc-xxxx     30Gi       RWO            lvms-vg1          3m
+multi-disk-datadisk    Bound    pvc-yyyy     10Gi       RWO            lvms-vg1-retain   3m</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_6_vm内部でデータディスクをフォーマットしてマウントする"><a class="anchor" href="#_ステップ_6_vm内部でデータディスクをフォーマットしてマウントする"></a>ステップ 6: VM内部でデータディスクをフォーマットしてマウントする</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VMコンソールにアクセスします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console multi-disk-vm -n multi-disk-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザー名 <code>fedora</code>、パスワード <code>redhat</code> でログインします。</p>
+</div>
+<div class="paragraph">
+<p>ゲスト内部のすべてのブロックデバイスをリスト表示します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lsblk</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+vda    252:0    0   30G  0 disk
+|-vda1 252:1    0    1M  0 part
+|-vda2 252:2    0  1.9G  0 part [SWAP]
+|-vda3 252:3    0    1G  0 part /boot
+`-vda4 252:4    0 27.1G  0 part /
+vdb    252:16   0   10G  0 disk
+vdc    252:32   0    1M  0 disk</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>データディスクは <code>vdb</code>（10G、未フォーマット）として表示されます。これをXFSでフォーマットします。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo mkfs.xfs /dev/vdb</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>マウントポイントを作成し、ディスクをマウントします。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo mkdir -p /mnt/data
+sudo mount /dev/vdb /mnt/data</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>マウントを確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">df -h /mnt/data</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>期待される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Filesystem      Size  Used Avail Use% Mounted on
+/dev/vdb         10G   105M  9.9G   2% /mnt/data</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>テストファイルを作成します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo sh -c "echo 'Multi-disk test data' &gt; /mnt/data/test.txt"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>読み戻して確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat /mnt/data/test.txt</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>再起動後もマウントを維持するために、<code>/etc/fstab</code> に追加します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo sh -c "echo '/dev/vdb /mnt/data xfs defaults 0 0' &gt;&gt; /etc/fstab"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> を押してコンソールを終了します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_7_ストレージの分離を確認する"><a class="anchor" href="#_ステップ_7_ストレージの分離を確認する"></a>ステップ 7: ストレージの分離を確認する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>各PVCが異なるStorageClassとPersistentVolumeを使用していることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc multi-disk-rootdisk -n multi-disk-demo -o jsonpath='StorageClass: {.spec.storageClassName}, Volume: {.spec.volumeName}, Capacity: {.status.capacity.storage}'</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc multi-disk-datadisk -n multi-disk-demo -o jsonpath='StorageClass: {.spec.storageClassName}, Volume: {.spec.volumeName}, Capacity: {.status.capacity.storage}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これにより、各ディスクが独立してプロビジョニングされており、個別に管理（例：異なるバックアップポリシー、拡張スケジュール、リクレイム動作など）できることが確認できました。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_マルチディスクvmのユースケース"><a class="anchor" href="#_マルチディスクvmのユースケース"></a>マルチディスクVMのユースケース</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ユースケース</th>
+<th class="tableblock halign-left valign-top">ブートディスク</th>
+<th class="tableblock halign-left valign-top">データディスク</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">データベースサーバー</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">高速SSD (OS + バイナリ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">大容量HDD (データファイル、ログ)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">アプリケーションサーバー</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">標準ストレージ (OS)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">高速SSD (アプリケーションの状態)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">開発用VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">共有ストレージ (OSテンプレート)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ローカルストレージ (一時領域)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ロギング/監視</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">標準ストレージ (OS)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">大容量ストレージ (ログ保持)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>名前空間を削除します。これにより、VM、PVC、DataVolumeが削除されます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace multi-disk-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>2番目のStorageClassを削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete storageclass lvms-vg1-retain</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>lvms-vg1-retain</code> ストレージクラスは <code>reclaimPolicy: Retain</code> を使用しているため、PVCが削除されても基盤となるPersistentVolumeは自動的に削除されません。<code>Released</code> 状態のPVがないか確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pv | grep Released</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>表示されるものがあれば、手動で削除してストレージを解放してください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete pv &lt;pv-name&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、以下の方法を学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>異なるStorageClassを使用して複数のディスクを持つVMを構成する</p>
+</li>
+<li>
+<p><code>dataVolumeTemplates</code> を使用して、各ディスクのストレージを個別に定義する</p>
+</li>
+<li>
+<p>ブート順序を設定し、VMがどのディスクから起動するかを制御する</p>
+</li>
+<li>
+<p>追加ストレージ用の空のデータボリュームを作成する</p>
+</li>
+<li>
+<p>ゲストOS内部で追加ディスクをフォーマットおよびマウントする</p>
+</li>
+<li>
+<p>VMにおけるストレージの階層化パターンを理解する</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://kubevirt.io/user-guide/storage/disks_and_volumes/" target="_blank" rel="noopener">Disks and Volumes - KubeVirt User Guide</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/virtualization/storage#virt-configuring-storage-profile" target="_blank" rel="noopener">Configuring Storage Profiles - OpenShift Documentation</a></p>
+</li>
+<li>
+<p><a href="../vm-lifecycle/boot-order-boot-sources.html" class="xref page">ブート順序とブートソース</a></p>
+</li>
+<li>
+<p><a href="lvm-operator.html" class="xref page">LVM Storage Operator</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="creating-managing-storage-class.html">StorageClass の作成と管理</a></span>
+  <span class="next"><a href="../networking/index.html">ネットワーク構成</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>

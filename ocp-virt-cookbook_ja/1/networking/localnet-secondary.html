@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>OpenShift VirtualizationにおけるClusterUserDefinedNetworkを用いたLocalnetセカンダリネットワークの構成 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="udn-primary-networks.html">
+    <link rel="next" href="localnet-vlan.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="static-ip-configuration.html">静的IPの設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="linux-bridges.html">Linuxブリッジ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress およびルート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ネットワーク構成</a></li>
+    <li><a href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">OpenShift VirtualizationにおけるClusterUserDefinedNetworkを用いたLocalnetセカンダリネットワークの構成</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>検証済みバージョン:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>OpenShift 4.20</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>本チュートリアルでは、OpenShift VirtualizationにおいてClusterUserDefinedNetwork (CUDN) を使用してlocalnetセカンダリネットワークを構成する方法を解説します。Localnetトポロジーは物理ネットワークインフラストラクチャへの直接アクセスを提供し、Podネットワークの接続性を維持しながらVMが外部ネットワークと通信できるようにします。このアプローチは、既存のインフラストラクチャとの統合や、レイヤー2接続を必要とするレガシーシステムの利用に適しています。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>NMState Operator</strong>: クラスター内でインストールおよび実行されていること</p>
+</li>
+<li>
+<p><strong>NMState CR</strong>: Operatorが実行された後にnmstateインスタンスが作成されていること</p>
+</li>
+<li>
+<p><strong>ワーカーノード</strong>: ブリッジマッピングがワーカーノードに適用されること</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>検証済みバージョン:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>OpenShift 4.19</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_vmの名前空間を作成する"><a class="anchor" href="#_ステップ_1_vmの名前空間を作成する"></a>ステップ 1: VMの名前空間を作成する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>localnetセカンダリネットワークを使用するVM用の名前空間を作成します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/localnet-secondary/localnet-secondary-namespace.yaml" class="xref attachment">localnet-secondary-namespace.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vm-guests-localnet
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_ブリッジマッピングを構成する"><a class="anchor" href="#_ステップ_2_ブリッジマッピングを構成する"></a>ステップ 2: ブリッジマッピングを構成する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>論理的なphysnet名を <code>br-ex</code> ブリッジインターフェースに接続するブリッジマッピングを構成します。これにより、どの物理インターフェースがlocalnetトラフィックを処理するかをOVN-Kubernetesに通知します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/localnet-secondary/localnet-bridge-mapping-nncp.yaml" class="xref attachment">localnet-bridge-mapping-nncp.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: localnet-bridge-mapping
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
+  desiredState:
+    ovn:
+      bridge-mappings:
+      - localnet: localnet1
+        bridge: br-ex
+        state: present
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>注</strong>: これは、論理的な <code>localnet1</code> 名をワーカーノード上の <code>br-ex</code> ブリッジにマッピングし、VMが外部ネットワークにアクセスできるようにします。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_clusteruserdefinednetworkを作成する"><a class="anchor" href="#_ステップ_3_clusteruserdefinednetworkを作成する"></a>ステップ 3: ClusterUserDefinedNetworkを作成する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>外部ネットワークへのセカンダリネットワーク接続用に、localnetトポロジーを持つClusterUserDefinedNetworkを作成します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/localnet-secondary/cudn-localnet.yaml" class="xref attachment">cudn-localnet.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: cudn-localnet
+spec:
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: In
+      values: ["vm-guests-localnet"]
+  network:
+    topology: Localnet
+    localnet:
+        role: Secondary
+        physicalNetworkName: localnet1
+        ipam:
+          mode: Disabled
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_デュアルネットワーク接続を持つvmをデプロイする"><a class="anchor" href="#_ステップ_4_デュアルネットワーク接続を持つvmをデプロイする"></a>ステップ 4: デュアルネットワーク接続を持つVMをデプロイする</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Podネットワークとlocalnetセカンダリネットワークの両方に接続し、デュアル接続を実現するVMを作成します。</p>
+</div>
+<div class="paragraph">
+<p>警告: この例のcloud-initパスワードはデモンストレーション用です。本番環境では、常に強力で固有のパスワードまたはSSH鍵認証を使用してください。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/localnet-secondary/fedora-localnet-vm.yaml" class="xref attachment">fedora-localnet-vm.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-localnet-vm
+  namespace: vm-guests-localnet
+  labels:
+    app: fedora-localnet-vm
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+  - metadata:
+      name: fedora-localnet-volume
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 33Gi
+      sourceRef:
+        kind: DataSource
+        name: fedora
+        namespace: openshift-virtualization-os-images
+  template:
+    metadata:
+      labels:
+        app: fedora-localnet-vm
+    spec:
+      domain:
+        devices:
+          disks:
+          - name: datavolumedisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            bridge: {}
+          - name: secondary_localnet
+            bridge: {}
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 1
+      networks:
+      - name: default
+        pod: {}
+      - name: secondary_localnet
+        multus:
+          networkName: cudn-localnet
+      volumes:
+      - name: datavolumedisk
+        dataVolume:
+          name: fedora-localnet-volume
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd: { expire: False }
+            packages:
+            - python3
+            runcmd:
+            - echo "&lt;h1&gt;Welcome to OpenShift Virtualization Localnet!&lt;/h1&gt;" &gt; /root/index.html
+            - cd /root &amp;&amp; nohup python3 -m http.server 8080 &gt; /dev/null 2&gt;&amp;1 &amp;
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_ネットワーク接続を確認する"><a class="anchor" href="#_ステップ_5_ネットワーク接続を確認する"></a>ステップ 5: ネットワーク接続を確認する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VMコンソールにアクセスして、デュアルネットワーク接続を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VMの状態を確認
+oc get vm -n vm-guests-localnet
+
+# 実行中のVMインスタンスを確認
+oc get vmi -n vm-guests-localnet
+
+# VMコンソールにアクセス (認証情報: cloud-init経由で fedora/fedora)
+virtctl console -n vm-guests-localnet fedora-localnet-vm</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VMコンソール内で、ネットワーク構成を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ネットワークインターフェースを確認 - プライマリ (Podネットワーク) とセカンダリ (localnet)
+ip addr show
+
+# ルートを確認 - 2つのデフォルトゲートウェイ (メトリック値が低い方が優先)
+# プライマリネットワーク: メトリック 100, セカンダリ: メトリック 101
+ip route show
+
+# 期待される出力例:
+
+default via 10.128.0.1 dev enp1s0 proto dhcp src 10.128.0.172 metric 100
+default via 192.168.2.1 dev enp2s0 proto dhcp src 192.168.2.128 metric 101
+
+# 外部接続をテスト
+ping 8.8.8.8
+
+# Webサービスが実行中であることを確認
+curl localhost:8080
+
+# localnetインターフェースの接続性をテスト (&lt;localnet-ip&gt; を実際のIPに置き換えてください)
+curl &lt;localnet-ip&gt;:8080</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>本チュートリアルでは、以下の内容を学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>NodeNetworkConfigurationPolicy</code> を使用して、OVN-Kubernetesを <code>br-ex</code> ブリッジに接続するブリッジマッピングを構成する方法</p>
+</li>
+<li>
+<p>セカンダリネットワーク接続用に、localnetトポロジーを持つ <code>ClusterUserDefinedNetwork</code> を作成する方法</p>
+</li>
+<li>
+<p>Podネットワークとlocalnetアクセスの両方を提供する、デュアルネットワークインターフェースを持つVMをデプロイする方法</p>
+</li>
+<li>
+<p>IPアドレス設定、ルーティング、外部到達可能性を含むデュアルネットワーク接続の検証方法</p>
+</li>
+<li>
+<p>CUDNがどのようにlocalnetセカンダリネットワークのクラスター単位での集中管理を実現するか</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/understanding-multiple-networks" target="_blank" rel="noopener">OpenShift - 複数ネットワークの理解</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/virtualization/networking#virt-creating-secondary-localnet-udn_virt-connecting-vm-to-secondary-udn" target="_blank" rel="noopener">OCP VirtualizationのLocalnetトポロジー構成</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="udn-primary-networks.html">UDN プライマリネットワーク</a></span>
+  <span class="next"><a href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>
