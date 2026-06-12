@@ -1,0 +1,231 @@
+= OpenShift VirtualizationにおけるClusterUserDefinedNetworkを用いたLocalnetセカンダリネットワークの構成
+:navtitle: CUDNを使用したLocalnetセカンダリネットワーク
+
+検証済みバージョン:
+----
+OpenShift 4.20
+----
+
+本チュートリアルでは、OpenShift VirtualizationにおいてClusterUserDefinedNetwork (CUDN) を使用してlocalnetセカンダリネットワークを構成する方法を解説します。Localnetトポロジーは物理ネットワークインフラストラクチャへの直接アクセスを提供し、Podネットワークの接続性を維持しながらVMが外部ネットワークと通信できるようにします。このアプローチは、既存のインフラストラクチャとの統合や、レイヤー2接続を必要とするレガシーシステムの利用に適しています。
+
+== 前提条件
+
+* **NMState Operator**: クラスター内でインストールおよび実行されていること
+* **NMState CR**: Operatorが実行された後にnmstateインスタンスが作成されていること
+* **ワーカーノード**: ブリッジマッピングがワーカーノードに適用されること
+
+検証済みバージョン:
+----
+OpenShift 4.19
+----
+
+== ステップ 1: VMの名前空間を作成する
+
+localnetセカンダリネットワークを使用するVM用の名前空間を作成します。
+
+xref:attachment$localnet-secondary/localnet-secondary-namespace.yaml[localnet-secondary-namespace.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vm-guests-localnet
+EOF
+----
+
+== ステップ 2: ブリッジマッピングを構成する
+
+論理的なphysnet名を `br-ex` ブリッジインターフェースに接続するブリッジマッピングを構成します。これにより、どの物理インターフェースがlocalnetトラフィックを処理するかをOVN-Kubernetesに通知します。
+
+xref:attachment$localnet-secondary/localnet-bridge-mapping-nncp.yaml[localnet-bridge-mapping-nncp.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: localnet-bridge-mapping
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''  
+  desiredState:
+    ovn:
+      bridge-mappings:
+      - localnet: localnet1
+        bridge: br-ex
+        state: present
+EOF
+----
+
+**注**: これは、論理的な `localnet1` 名をワーカーノード上の `br-ex` ブリッジにマッピングし、VMが外部ネットワークにアクセスできるようにします。
+
+== ステップ 3: ClusterUserDefinedNetworkを作成する
+
+外部ネットワークへのセカンダリネットワーク接続用に、localnetトポロジーを持つClusterUserDefinedNetworkを作成します。
+
+xref:attachment$localnet-secondary/cudn-localnet.yaml[cudn-localnet.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: cudn-localnet
+spec:
+  namespaceSelector: 
+    matchExpressions: 
+    - key: kubernetes.io/metadata.name
+      operator: In 
+      values: ["vm-guests-localnet"]
+  network:
+    topology: Localnet 
+    localnet:
+        role: Secondary 
+        physicalNetworkName: localnet1 
+        ipam:
+          mode: Disabled
+EOF
+----
+
+== ステップ 4: デュアルネットワーク接続を持つVMをデプロイする
+
+Podネットワークとlocalnetセカンダリネットワークの両方に接続し、デュアル接続を実現するVMを作成します。
+
+警告: この例のcloud-initパスワードはデモンストレーション用です。本番環境では、常に強力で固有のパスワードまたはSSH鍵認証を使用してください。
+
+xref:attachment$localnet-secondary/fedora-localnet-vm.yaml[fedora-localnet-vm.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-localnet-vm
+  namespace: vm-guests-localnet
+  labels:
+    app: fedora-localnet-vm
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+  - metadata:
+      name: fedora-localnet-volume
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 33Gi
+      sourceRef:
+        kind: DataSource
+        name: fedora
+        namespace: openshift-virtualization-os-images
+  template:
+    metadata:
+      labels:
+        app: fedora-localnet-vm
+    spec:
+      domain:
+        devices:
+          disks:
+          - name: datavolumedisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            bridge: {}
+          - name: secondary_localnet
+            bridge: {}
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 1
+      networks:
+      - name: default
+        pod: {}
+      - name: secondary_localnet
+        multus:
+          networkName: cudn-localnet
+      volumes:
+      - name: datavolumedisk
+        dataVolume:
+          name: fedora-localnet-volume
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd: { expire: False }
+            packages:
+            - python3
+            runcmd:
+            - echo "<h1>Welcome to OpenShift Virtualization Localnet!</h1>" > /root/index.html
+            - cd /root && nohup python3 -m http.server 8080 > /dev/null 2>&1 &
+EOF
+----
+
+== ステップ 5: ネットワーク接続を確認する
+
+VMコンソールにアクセスして、デュアルネットワーク接続を確認します。
+
+[source,bash,role=execute]
+----
+# VMの状態を確認
+oc get vm -n vm-guests-localnet
+
+# 実行中のVMインスタンスを確認
+oc get vmi -n vm-guests-localnet
+
+# VMコンソールにアクセス (認証情報: cloud-init経由で fedora/fedora)
+virtctl console -n vm-guests-localnet fedora-localnet-vm
+----
+
+VMコンソール内で、ネットワーク構成を確認します。
+
+[source,bash,role=execute]
+----
+# ネットワークインターフェースを確認 - プライマリ (Podネットワーク) とセカンダリ (localnet)
+ip addr show
+
+# ルートを確認 - 2つのデフォルトゲートウェイ (メトリック値が低い方が優先)
+# プライマリネットワーク: メトリック 100, セカンダリ: メトリック 101
+ip route show
+
+# 期待される出力例:
+
+default via 10.128.0.1 dev enp1s0 proto dhcp src 10.128.0.172 metric 100 
+default via 192.168.2.1 dev enp2s0 proto dhcp src 192.168.2.128 metric 101 
+
+# 外部接続をテスト
+ping 8.8.8.8
+
+# Webサービスが実行中であることを確認
+curl localhost:8080
+
+# localnetインターフェースの接続性をテスト (<localnet-ip> を実際のIPに置き換えてください)
+curl <localnet-ip>:8080
+----
+
+== まとめ
+
+本チュートリアルでは、以下の内容を学びました。
+
+* `NodeNetworkConfigurationPolicy` を使用して、OVN-Kubernetesを `br-ex` ブリッジに接続するブリッジマッピングを構成する方法
+* セカンダリネットワーク接続用に、localnetトポロジーを持つ `ClusterUserDefinedNetwork` を作成する方法
+* Podネットワークとlocalnetアクセスの両方を提供する、デュアルネットワークインターフェースを持つVMをデプロイする方法
+* IPアドレス設定、ルーティング、外部到達可能性を含むデュアルネットワーク接続の検証方法
+* CUDNがどのようにlocalnetセカンダリネットワークのクラスター単位での集中管理を実現するか
+
+== 参照
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/understanding-multiple-networks[OpenShift - 複数ネットワークの理解,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/virtualization/networking#virt-creating-secondary-localnet-udn_virt-connecting-vm-to-secondary-udn[OCP VirtualizationのLocalnetトポロジー構成,window=_blank]

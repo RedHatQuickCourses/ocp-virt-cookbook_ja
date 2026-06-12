@@ -1,0 +1,816 @@
+= Cloud-init IP 設定トラブルシューティングガイド
+:navtitle: Cloud-init トラブルシューティング
+
+本ガイドでは、OpenShift Virtualization における cloud-init を使用した IP アドレス設定に関する問題のトラブルシューティング手順、検証コマンド、および解決策を提供します。
+
+== 目次
+
+* <<quick-health-checks,クイックヘルスチェック>>
+* <<debugging-cloud-init,cloud-init のデバッグ>>
+* <<common-issues-by-scenario,シナリオ別の一般的な問題>>
+* <<diagnostic-commands,診断コマンド>>
+
+== クイックヘルスチェック
+
+=== VM ステータスの確認
+
+[source,bash,role=execute]
+----
+oc get vm <vm-name> -n <namespace>
+oc get vmi <vm-name> -n <namespace>
+----
+
+=== VM が IP アドレスを持っているか確認
+
+[source,bash,role=execute]
+----
+oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.interfaces[*].ipAddress}'
+----
+
+=== Guest Agent が実行中か確認
+
+[source,bash,role=execute]
+----
+oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.guestOSInfo}'
+----
+
+空の場合、Guest Agent は実行されていません（<<issue-1-guest-agent-not-running,Guest Agent の問題>> を参照）。
+
+== cloud-init のデバッグ
+
+=== VM コンソールへのアクセス
+
+[source,bash,role=execute]
+----
+virtctl console <vm-name> -n <namespace>
+----
+
+=== cloud-init ステータスの確認
+
+VM 内で実行:
+
+[source,bash]
+----
+# cloud-init の完了ステータスを確認
+cloud-init status
+
+# 成功時の期待される出力:
+# status: done
+
+# 詳細なステータスを確認
+cloud-init status --long
+----
+
+=== cloud-init ログの確認
+
+[source,bash]
+----
+# メインの cloud-init ログ
+cat /var/log/cloud-init.log
+
+# 出力ログ (コマンドの実行結果を表示)
+cat /var/log/cloud-init-output.log
+
+# エラーを確認
+grep -i error /var/log/cloud-init.log
+grep -i failed /var/log/cloud-init.log
+----
+
+=== 適用された cloud-init 設定の表示
+
+[source,bash]
+----
+# userdata を表示
+sudo cat /var/lib/cloud/instance/user-data.txt
+
+# ネットワーク設定を表示 (networkData を使用している場合)
+sudo cat /var/lib/cloud/instance/network-config.txt
+
+# cloud-init データを表示
+sudo cat /var/lib/cloud/instance/cloud-config.txt
+----
+
+=== ネットワーク設定の確認
+
+[source,bash]
+----
+# ネットワークインターフェースを表示
+ip addr show
+
+# ルーティングテーブルを表示
+ip route show
+
+# DNS 設定を確認
+cat /etc/resolv.conf
+
+# NetworkManager を使用するシステム (Fedora, RHEL) の場合
+nmcli device status
+nmcli connection show
+----
+
+=== 接続性のテスト
+
+[source,bash]
+----
+# ネットワーク接続のテスト
+ping -c 3 8.8.8.8
+
+# DNS 解決のテスト
+nslookup google.com
+
+# Pod ネットワークからテスト
+curl http://<vm-ip>
+----
+
+== シナリオ別の一般的な問題
+
+=== シナリオ 1: DHCP 設定
+
+==== 問題: DHCP 経由で VM が IP を取得できない
+
+**症状**:
+
+[source,bash]
+----
+$ oc get vmi fedora-dhcp-vm -n vms -o jsonpath='{.status.interfaces[0].ipAddress}'
+# 空を返す、または IP が表示されない
+----
+
+**診断**:
+
+[source,bash,role=execute]
+----
+# VM コンソールにアクセス
+virtctl console fedora-dhcp-vm -n vms
+
+# インターフェースステータスを確認
+ip addr show enp1s0
+
+# DHCP クライアントを確認
+journalctl -u NetworkManager | grep -i dhcp
+----
+
+**一般的な原因**:
+
+* DHCP クライアントが実行されていない
+* ネットワークインターフェースがダウンしている
+* cloud-init の DHCP 設定エラー
+
+**解決策**:
+
+. VM 定義の cloud-init DHCP 設定を確認:
++
+[source,yaml]
+----
+cloudInitNoCloud:
+  networkData: |
+    version: 2
+    ethernets:
+      enp1s0:
+        dhcp4: true
+----
+. ネットワークインターフェースを手動で再起動:
++
+[source,bash]
+----
+sudo nmcli connection down "Wired connection 1"
+sudo nmcli connection up "Wired connection 1"
+----
+. NetworkManager ログを確認:
++
+[source,bash]
+----
+sudo journalctl -u NetworkManager --since "5 minutes ago"
+----
+
+==== 問題: cloud-init 内のインターフェース名が間違っている
+
+**症状**:
+ネットワーク設定が適用されず、ログに「device eth0 not found」と表示される。
+
+**診断**:
+
+[source,bash]
+----
+# VM 内 - 実際のインターフェース名を確認
+ip link show
+----
+
+**一般的な原因**:
+
+* ゲスト OS で使用されているインターフェース名ではなく、汎用名 (`eth0`, `eth1`) を使用している
+
+**解決策**:
+
+. ゲスト OS 内の実際のインターフェース名を確認してください。最新の Linux ディストリビューション (RHEL 8+, Fedora, Ubuntu 16.04+) では、予測可能な命名規則が使用されます。
+   * 最初のインターフェース: `enp1s0`
+   * 2番目のインターフェース: `enp2s0`
+   * 3番目のインターフェース: `enp3s0`
+. cloud-init の networkData を更新し、正しい名前を使用します:
++
+[source,yaml]
+----
+networkData: |
+  version: 2
+  ethernets:
+    enp1s0:  # eth0 ではなく
+      dhcp4: true
+----
+
+=== シナリオ 2: 静的 IP 設定
+
+==== 問題: 静的 IP が適用されない
+
+**症状**:
+設定した静的 IP ではなく、VM が DHCP IP を取得してしまう。
+
+**診断**:
+
+[source,bash]
+----
+# VM 内
+ip addr show enp1s0
+
+# エラーがないか cloud-init ログを確認
+grep -i "network" /var/log/cloud-init.log
+----
+
+**一般的な原因**:
+
+* networkData 内のインターフェース名が間違っている
+* DHCP が有効のままになっている
+* networkData YAML の構文エラー
+* cloud-init が networkData を処理していない
+
+**解決策**:
+
+. networkData の構文 (インデント、YAML 形式) を確認:
++
+[source,yaml]
+----
+networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: false  # DHCP を無効化
+      addresses:
+        - 192.168.1.100/24
+      routes:
+        - to: default
+          via: 192.168.1.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+----
+. cloud-init のエラーを確認:
++
+[source,bash]
+----
+cloud-init status --long
+cat /var/log/cloud-init.log | grep -A 5 -B 5 "network"
+----
+. ネットワーク設定を手動で適用:
++
+[source,bash]
+----
+sudo nmcli connection modify "Wired connection 1" \
+  ipv4.method manual \
+  ipv4.addresses 192.168.1.100/24 \
+  ipv4.gateway 192.168.1.1 \
+  ipv4.dns "8.8.8.8 8.8.4.4"
+
+sudo nmcli connection up "Wired connection 1"
+----
+
+==== 問題: 静的 IP は適用されたが接続できない
+
+**症状**:
+
+[source,bash]
+----
+# VM 内
+ip addr show enp1s0
+# 正しい IP が表示される
+
+ping 192.168.1.1
+# Network unreachable
+----
+
+**診断**:
+
+[source,bash]
+----
+# ルーティングテーブルを確認
+ip route show
+
+# ゲートウェイに到達可能か確認
+ping -c 1 192.168.1.1
+----
+
+**一般的な原因**:
+
+* ゲートウェイの設定漏れ、または誤り
+* サブネットマスクの誤り
+* 静的 IP 用に構成されていない物理ネットワーク
+* スイッチポートの VLAN 設定ミス
+
+**解決策**:
+
+. cloud-init 設定でゲートウェイを確認
+. サブネットマスクがネットワーク設定と一致しているか確認
+. 物理ネットワークがこのサブネット上で静的 IP を許可しているか確認
+. VLAN を使用している場合は、NetworkAttachmentDefinition (NAD) とブリッジマッピングが正しいか確認
+
+=== シナリオ 3: 複数のネットワークインターフェース
+
+==== 問題: セカンダリインターフェースが設定されない
+
+**症状**:
+プライマリインターフェースのみ IP を取得し、セカンダリインターフェースがダウンしているか未設定の状態。
+
+**診断**:
+
+[source,bash]
+----
+# VM 内
+ip addr show
+
+# NetworkManager 接続を確認
+nmcli connection show
+----
+
+**一般的な原因**:
+
+* networkData にセカンダリインターフェースが定義されていない
+* セカンダリインターフェースの名前が間違っている
+* セカンダリネットワーク接続が機能していない
+
+**解決策**:
+
+. VM が複数のネットワーク接続を持っているか確認:
++
+[source,yaml]
+----
+spec:
+  template:
+    spec:
+      networks:
+        - name: default
+          pod: {}
+        - name: secondary-net
+          multus:
+            networkName: my-nad
+----
+. networkData 内のインターフェース両方を確認:
++
+[source,yaml]
+----
+networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: true
+    enp2s0:  # セカンダリインターフェース
+      dhcp4: false
+      addresses:
+        - 192.168.100.10/24
+----
+. NAD が存在し、正しく設定されているか確認:
++
+[source,bash,role=execute]
+----
+oc get network-attachment-definition -n <namespace>
+oc describe network-attachment-definition <nad-name> -n <namespace>
+----
+
+==== 問題: デフォルトルートの競合
+
+**症状**:
+両方のインターフェースにデフォルトルートがあり、ルーティングの問題が発生している。
+
+**診断**:
+
+[source,bash]
+----
+# VM 内
+ip route show
+
+# 複数のデフォルトルートが表示される
+# default via 10.128.0.1 dev enp1s0
+# default via 192.168.100.1 dev enp2s0
+----
+
+**一般的な原因**:
+
+* 両方のインターフェースがデフォルトゲートウェイで構成されている
+* DHCP がプライマリインターフェースにデフォルトルートを追加している
+* 静的設定がセカンダリインターフェースにデフォルトルートを追加している
+
+**解決策**:
+
+. networkData でセカンダリインターフェースからデフォルトルートを削除:
++
+[source,yaml]
+----
+enp2s0:
+  dhcp4: false
+  addresses:
+    - 192.168.100.10/24
+  # 'routes' セクションなし - デフォルトゲートウェイなし
+----
+. 両方にルートが必要な場合は、メトリックを使用して優先順位を付けます:
++
+[source,yaml]
+----
+enp1s0:
+  dhcp4: true
+  dhcp4-overrides:
+    route-metric: 100  # 数値が低い方が優先される
+
+enp2s0:
+  dhcp4: false
+  addresses:
+    - 192.168.100.10/24
+  routes:
+    - to: default
+      via: 192.168.100.1
+      metric: 200  # 数値が高い = 優先順位が低い
+----
+
+=== シナリオ 4: VLAN インターフェースの設定
+
+==== 問題: VLAN インターフェースが作成されない
+
+**症状**:
+VLAN インターフェース (例: `enp2s0.100`) が存在しない。
+
+**診断**:
+
+[source,bash]
+----
+# VM 内
+ip link show
+
+# cloud-init ログを確認
+grep -i vlan /var/log/cloud-init.log
+----
+
+**一般的な原因**:
+
+* networkData の VLAN 設定構文エラー
+* 親インターフェースがアップしていない
+* VLAN モジュールがロードされていない
+
+**解決策**:
+
+. networkData の VLAN 設定を確認:
++
+[source,yaml]
+----
+networkData: |
+  version: 2
+  ethernets:
+    enp2s0: {}  # 親インターフェースを定義する必要がある
+  vlans:
+    vlan100:
+      id: 100
+      link: enp2s0
+      addresses:
+        - 192.168.100.10/24
+----
+. VLAN インターフェースを手動で作成:
++
+[source,bash]
+----
+sudo nmcli connection add type vlan \
+  con-name vlan100 \
+  ifname enp2s0.100 \
+  dev enp2s0 \
+  id 100 \
+  ip4 192.168.100.10/24
+----
+
+==== 問題: VLAN インターフェースに接続性がない
+
+**症状**:
+VLAN インターフェースは存在するがネットワークに到達できない。
+
+**診断**:
+
+[source,bash]
+----
+# VLAN インターフェースのステータスを確認
+ip addr show enp2s0.100
+
+# トラフィックがタグ付けされているか確認
+tcpdump -i enp2s0 -n vlan 100
+----
+
+**一般的な原因**:
+
+* 物理スイッチポートがトランクモードになっていない
+* スイッチトランクで VLAN が許可されていない
+* 設定の VLAN ID が間違っている
+* NAD が VLAN 用に設定されていない
+
+**解決策**:
+
+. スイッチポートがトランクモードで、VLAN 100 を許可しているか確認
+. NAD の VLAN 設定を確認:
++
+[source,bash,role=execute]
+----
+oc get network-attachment-definition <nad-name> -n <namespace> -o yaml
+----
++
+`"vlan": 100` があるか確認してください。
+. localnet 用の OVN ブリッジマッピングを確認:
++
+[source,bash,role=execute]
+----
+oc get nncp -A
+----
+
+=== シナリオ 5: IPv6 設定
+
+==== 問題: IPv6 アドレスが適用されない
+
+**症状**:
+IPv4 のみ設定され、IPv6 アドレスがない。
+
+**診断**:
+
+[source,bash]
+----
+# VM 内
+ip -6 addr show
+----
+
+**一般的な原因**:
+
+* cloud-init で IPv6 が有効になっていない
+* OS で IPv6 が無効になっている
+
+**解決策**:
+
+. networkData で IPv6 を有効化:
++
+[source,yaml]
+----
+networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: true
+      dhcp6: true
+      # または静的 IPv6:
+      addresses:
+        - 2001:db8::10/64
+----
+. IPv6 が無効になっていないことを確認:
++
+[source,bash]
+----
+cat /proc/sys/net/ipv6/conf/all/disable_ipv6
+# 0 (有効) である必要があります
+----
+
+=== シナリオ 6: DNS 設定
+
+==== 問題: DNS が機能しない
+
+**症状**:
+
+[source,bash]
+----
+# VM 内
+ping 8.8.8.8
+# 成功
+
+ping google.com
+# Unknown host
+----
+
+**診断**:
+
+[source,bash]
+----
+cat /etc/resolv.conf
+
+# DNS 解決を確認
+nslookup google.com
+----
+
+**一般的な原因**:
+
+* cloud-init でネームサーバーが設定されていない
+* DHCP が DNS サーバーを提供していない
+* `/etc/resolv.conf` が空、または間違っている
+
+**解決策**:
+
+. networkData にネームサーバーを追加:
++
+[source,yaml]
+----
+networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: false
+      addresses:
+        - 192.168.1.100/24
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+        search:
+          - example.com
+----
+. DNS を手動で設定:
++
+[source,bash]
+----
+echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+----
+
+== 診断コマンド
+
+=== ネットワークステータスの全確認
+
+[source,bash]
+----
+# VM 内 - ネットワークチェック
+echo "=== Interfaces ==="
+ip addr show
+
+echo "=== Routes ==="
+ip route show
+
+echo "=== DNS ==="
+cat /etc/resolv.conf
+
+echo "=== Cloud-init Status ==="
+cloud-init status --long
+
+echo "=== Cloud-init Network Config ==="
+sudo cat /var/lib/cloud/instance/network-config.txt
+
+echo "=== NetworkManager Connections ==="
+nmcli connection show
+
+echo "=== Connectivity Tests ==="
+ping -c 2 8.8.8.8 && echo "IP connectivity: OK" || echo "IP connectivity: FAILED"
+nslookup google.com && echo "DNS: OK" || echo "DNS: FAILED"
+----
+
+=== OpenShift クラスターからの確認
+
+[source,bash,role=execute]
+----
+# VM ステータスの確認
+oc get vm,vmi <vm-name> -n <namespace>
+
+# VM IP アドレスの確認
+oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.interfaces}' | jq
+
+# ネットワーク接続の確認
+oc get vm <vm-name> -n <namespace> -o jsonpath='{.spec.template.spec.networks}' | jq
+
+# NADs の確認
+oc get network-attachment-definition -n <namespace>
+
+# VM イベントの確認
+oc get events -n <namespace> --field-selector involvedObject.name=<vm-name> --sort-by='.lastTimestamp'
+
+# VM 定義の cloud-init セクションを確認
+oc get vm <vm-name> -n <namespace> -o yaml | grep -A 50 cloudInitNoCloud
+----
+
+=== cloud-init の再実行 (テスト用)
+
+[source,bash]
+----
+# VM 内 - cloud-init のクリーンアップと再実行 (破壊的)
+sudo cloud-init clean --logs
+sudo cloud-init init
+sudo cloud-init modules --mode config
+sudo cloud-init modules --mode final
+
+# ステータスを確認
+cloud-init status --long
+----
+
+== インターフェース命名リファレンス
+
+VM 内の最新 Linux ディストリビューションは、PCI スロット位置に基づいた予測可能なインターフェース名を使用します。
+
+[cols="1,1,2"]
+|===
+|ネットワーク接続順序 |インターフェース名 |一般的な用途
+
+|1番目 (デフォルト Pod ネットワーク)
+|`enp1s0`
+|プライマリネットワーク (DHCP)
+
+|2番目 (Multus/NAD)
+|`enp2s0`
+|セカンダリネットワーク
+
+|3番目 (Multus/NAD)
+|`enp3s0`
+|3番目のネットワーク
+
+|4番目 (Multus/NAD)
+|`enp4s0`
+|4番目のネットワーク
+|===
+
+**ゲスト OS に表示されるインターフェース名を使用してください。最新の Linux ディストリビューション (RHEL 8+、Fedora、Ubuntu 16.04+) は、上記に示す enpXsY 形式を使用します。古いディストリビューションでは、eth0、eth1 などが使用される場合があります。**
+
+== cloud-init バージョンの違い
+
+=== cloud-init v1 vs v2 ネットワーク設定
+
+**Version 1** (旧式、レガシー):
+
+[source,yaml]
+----
+networkData: |
+  version: 1
+  config:
+    - type: physical
+      name: eth0
+      subnets:
+        - type: dhcp
+----
+
+**Version 2** (最新、推奨):
+
+[source,yaml]
+----
+networkData: |
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: true
+----
+
+**推奨**: 新しい設定には必ずバージョン 2 を使用してください。
+
+== 参考資料
+
+* link:https://cloudinit.readthedocs.io/en/latest/reference/network-config.html[Cloud-init ドキュメント - ネットワーク設定,window=_blank]
+* link:https://netplan.io/examples/[Netplan 設定例,window=_blank]
+* link:https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-about-vm-networking.html[OpenShift Virtualization ネットワーキング,window=_blank]
+* link:https://kubevirt.io/user-guide/virtual_machines/interfaces_and_networks/[KubeVirt ネットワーク設定,window=_blank]
+* xref:networking:ovs-bridge-troubleshooting.adoc[OVS ブリッジの検証]
+
+== 例: ocplab01 クラスターのテスト
+
+SNO クラスター (ocplab01) でのテスト結果:
+
+[source,bash]
+----
+$ oc get vmi fedora-dhcp-vm -n cloud-init-test -o jsonpath='{.status.interfaces}' | jq
+[
+  {
+    "infoSource": "domain, guest-agent, multus-status",
+    "interfaceName": "eth0",
+    "ipAddress": "10.128.0.165",
+    "ipAddresses": [
+      "10.128.0.165",
+      "fd02::5e"
+    ],
+    "mac": "02:92:c2:00:00:05",
+    "name": "default",
+    "queueCount": 1
+  }
+]
+----
+
+**注意**: VMI ステータス上は `interfaceName` が `eth0` と表示されますが (内部的な KubeVirt の命名)、Fedora VM 内部のインターフェースは `enp1s0` です。cloud-init 設定には、必ずゲスト OS 内で表示されるインターフェース名を使用してください。
+
+VM 内部での確認:
+
+[source,bash]
+----
+[fedora@fedora ~]$ ip addr show enp1s0
+2: enp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1400 qdisc fq_codel state UP group default qlen 1000
+    link/ether 02:92:c2:00:00:05 brd ff:ff:ff:ff:ff:ff
+    inet 10.128.0.165/23 brd 10.128.1.255 scope global dynamic noprefixroute enp1s0
+       valid_lft 86295sec preferred_lft 86295sec
+    inet6 fd02::5e/64 scope global dynamic noprefixroute
+       valid_lft 86296sec preferred_lft 14296sec
+----
+
+cloud-init ステータス:
+
+[source,bash]
+----
+[fedora@fedora ~]$ cloud-init status
+status: done
+----
+
+これは、適切なインターフェース命名を行うことで DHCP シナリオが正しく機能することを確認しています。

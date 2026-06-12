@@ -1,27 +1,63 @@
-= An Example Quick Course
-:navtitle: Home
+= OpenShift Virtualization クックブック
+:navtitle: はじめに
 
-== Introduction
+== はじめに
 
-Course Title: Course title FIXME
+OpenShift Virtualization でのワークロード開始およびデプロイに関する実践的なフィールドガイドです。
 
-Description:
-Course description FIXME
+このクックブックでは、OpenShift を使い始めたばかりの方に向けて、すぐに役立つレシピ、マニフェストの例、およびトラブルシューティングのメモを提供します。本書は、理論的な学習に代わるものではなく、実際の導入を促進するための、link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html-single/virtualization/index[公式ドキュメント,window=_blank] および link:https://www.redhat.com/en/services/training/do316-managing-virtual-machines-red-hat-openshift-virtualization[トレーニングコース,window=_blank] を補完する __実践的なガイド__ として設計されています。
 
-Duration: pass:[<span class="course-total-duration" aria-live="polite">…</span>]
+(__最終更新日: {build-date}__)
 
-== Objectives
+== 前提条件
 
-On completing this course, you should be able to:
+このクックブックを効果的に活用するには、以下が必要です。
 
-* Observable, measurable objective...
-* Observable, measurable objective...
-* Observable, measurable objective...
+* **クラスター**: OpenShift Virtualization オペレーターがインストールされた OpenShift 4.18 以降。
+* **ツール**: `oc`、`kubectl`、および `virtctl`。（オプション: `kustomize`、`helm`、`ansible`）。
+* **知識**: YAML および CLI ワークフローの習熟（必須ではありませんが、強く推奨します）。Kubernetes/OpenShift の概念に関する基本的な理解。
 
-== Prerequisites
+環境を準備または検証するために、特にこの技術が初めての場合は、**xref:getting-started:index.adoc[]** の全モジュールを一通り確認してください。
 
-This course assumes that you have the following prior experience:
+== クックブックのモジュール
 
-* Course or experience...
-* Course or experience...
-* Course or experience...
+左側のメニューからモジュールを 1 つ選択して開始してください。
+
+* **xref:getting-started:index.adoc[]** - 必須ツールのセットアップと環境検証。
+* **xref:storage:index.adoc[]** - 仮想マシンのストレージ設定。
+* **xref:networking:index.adoc[]** - ネットワークおよび IP 設定ガイド。
+* **xref:vm-configuration:index.adoc[]** - VM アクセス、DNS、ノード配置、およびテンプレート。
+* **xref:performance:index.adoc[]** - CPU ピニング、NUMA、Hugepages、およびリアルタイム VM。
+* **xref:vm-lifecycle:index.adoc[]** - ゴールデンイメージ、クローニング、スナップショット、およびブート設定。
+* **xref:manifests:index.adoc[]** - すぐにデプロイ可能なマニフェスト例のライブラリ。
+* **xref:api:index.adoc[]** - クローニング、エクスポート、マシン・トポロジーなどの API コンポーネントのアーキテクチャと機能。
+
+== 追加リソース
+
+* OpenShift Virtualization
+** link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/virtualization/about[公式ドキュメント,window=_blank]
+** link:https://www.redhat.com/en/technologies/cloud-computing/openshift/virtualization/learn[ラーニングハブ,window=_blank]
+** link:https://access.redhat.com/sites/default/files/attachments/openshift_virtualization_reference_implementation_guide.pdf[リファレンス実装ガイド (pdf),window=_blank]
+** link:https://access.redhat.com/articles/7119411[アーキテクチャガイド,window=_blank]
+** link:https://access.redhat.com/articles/7067871[アーキテクチャ例,window=_blank]
+* link:https://kubevirt.io/[KubeVirt プロジェクト,window=_blank]
+* link:https://cloudinit.readthedocs.io/[Cloud-init ドキュメント,window=_blank]
+* xref:appendix:glossary.adoc[用語集] - 主要な用語と定義
+
+== コントリビューション
+
+質問、問題、またはコントリビューションについては、link:https://github.com/RedHatQuickCourses/ocp-virt-cookbook/issues/new/choose[プロジェクトリポジトリ,window=_blank] で Issue をオープンするか、ocp-virt-cookbook@redhat.com までチームにご連絡ください。
+
+== クレジット
+
+このクックブックは、オリジナルの link:https://github.com/acmenezes/ocp-virt-onboarding-kit[OpenShift Virtualization Onboarding Kit,window=_blank] の優れた成果を基に構築されています。Alexandre Menezes、Andrea Perotti、Daphne Hoover、Josh Manning、Melvin Hillsman、Roshan Warrier、Yash Devan Oza、およびコミュニティの貢献に深く感謝いたします。
+
+コンテンツ作成、テスト、およびフィードバックを通じて、このリソースの形成を支援してくださったすべてのコントリビューターに心から感謝します。
+
+== ライセンス
+
+このプロジェクトは link:https://github.com/RedHatQuickCourses/ocp-virt-cookbook/blob/main/LICENSE[MIT ライセンス,window=_blank] の下でライセンスされています。
+
+---
+
+NOTE: このクックブックは、コンテンツ開発の加速とドキュメントの品質向上のために、AI ツールの支援を受けて作成されました。ただし、すべてのコンテンツは、技術的な正確さと実用性を確保するために、経験豊富な人間のエンジニアによって構築、編集、テスト、およびレビューされています。私たちは、あらゆる段階で人間の専門知識と監督を維持しつつ、使用ツールについて透明性を保つことを信条としています。

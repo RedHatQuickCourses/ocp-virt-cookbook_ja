@@ -1,0 +1,220 @@
+= UDN を使用したレイヤー 2 プライマリネットワークの構成
+:navtitle: UDN プライマリネットワーク
+
+== 概要
+
+このチュートリアルでは、OpenShift Virtualization で User Defined Networks (UDN) を使用したレイヤー 2 トポロジーのプライマリネットワークを作成する方法を説明します。クラスターのデフォルトネットワークを使用する代わりに、UDN を使用するとカスタム IP 範囲を定義し、特定の名前空間内のアプリケーションに対して完全なネットワーク分離を提供できます。このアプローチは、アプリケーションが IP アドレッシングを直接制御する必要がある場合や、独自のネットワーク要件がある場合に最適です。ネットワーク接続定義 (Network Attachment Definition) を追加することなく、5 つの簡単なステップでセットアップ全体が完了します。
+
+検証済みバージョン:
+----
+OpenShift 4.19, 4.20, 4.21
+----
+
+== 前提条件
+
+* OpenShift Virtualization オペレーターがインストールされた OpenShift 4.19 以降のクラスター
+* OVN-Kubernetes ネットワークプラグイン (OpenShift のデフォルト)
+* 名前空間および UserDefinedNetwork リソースを作成するためのクラスター管理者権限
+* インストール済みの CLI ツール: `oc`、`virtctl`
+
+== ステップ 1: UDN を有効にした名前空間の作成
+
+UDN プライマリネットワークラベルが付いた名前空間を作成し、User Defined Network 機能を有効にします。特殊なラベル `k8s.ovn.org/primary-user-defined-network` を付与することで、OpenShift に対してこの名前空間がクラスターのデフォルトではなくカスタムプライマリネットワークを使用することを伝えます。
+
+注記: 名前空間は、ワークロードをデプロイする前に作成およびラベル付けを行う必要があり、作成後の変更はできません。
+
+xref:attachment$udn-primary-networks/udn-primary-namespace.yaml[udn-primary-namespace.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-primary-vm-guests
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+EOF
+----
+
+== ステップ 2: UserDefinedNetwork リソースの構成
+
+レイヤー 2 トポロジーとカスタムサブネット構成を使用して、プライマリ UDN を定義します。このリソースは、IP 範囲、IPAM ライフサイクル、およびデフォルトのクラスターネットワークを名前空間内の Pod に対してオーバーライドするためのプライマリロール指定を含む、ネットワークの特性を指定します。
+
+xref:attachment$udn-primary-networks/udn-primary.yaml[udn-primary.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: udn-primary
+  namespace: udn-primary-vm-guests
+spec:
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets: 
+    - "192.168.100.0/24"
+  ipam:
+    lifecycle: Persistent
+EOF
+----
+
+== ステップ 3: プライマリ UDN を使用したワークロードのデプロイ
+
+プライマリ UDN 構成を利用し、接続テスト用に単純な Python HTTP サーバーを実行する仮想マシンを作成します。ワークロードは、UDN の IPAM を介して 192.168.100.0/24 サブネットから自動的に IP アドレスを受け取り、UDN をそのプライマリネットワークインターフェイスとして使用します。
+
+警告: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、必ず強力で一意なパスワードまたは SSH 鍵認証を使用してください。
+
+xref:attachment$udn-primary-networks/fedora-vm-with-udn.yaml[fedora-vm-with-udn.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-vm-with-udn
+  namespace: udn-primary-vm-guests
+  labels:
+    app: fedora-web-vm
+    network-type: udn-primary
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+  - metadata:
+      name: fedora-udn-volume
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 33Gi
+      sourceRef:
+        kind: DataSource
+        name: fedora
+        namespace: openshift-virtualization-os-images
+  template:
+    metadata:
+      labels:
+        app: fedora-web-vm
+    spec:
+      domain:
+        devices:
+          disks:
+          - name: datavolumedisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            binding:
+              name: l2bridge
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 1
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: datavolumedisk
+        dataVolume:
+          name: fedora-udn-volume
+      - name: cloudinitdisk
+        cloudInitNoCloud:          
+          userData: |
+            #cloud-config
+            write_files:
+            - path: /etc/resolv.conf
+              content: |
+                nameserver 172.30.0.10      # cluster DNS
+                search udn-primary-vm-guests.svc.cluster.local svc.cluster.local
+                options ndots:5            
+            user: fedora
+            password: fedora
+            chpasswd: { expire: False }
+            packages:
+            - python3
+            runcmd:
+            - echo "<h1>Welcome to OpenShift Virtualization !!!</h1>" > /root/index.html
+            - cd /root && nohup python3 -m http.server 80 > /dev/null 2>&1 &
+EOF
+----
+
+== ステップ 4: VM をサービスとして公開
+
+Kubernetes サービスを作成し、LoadBalancer を使用して VM の Python HTTP サーバーを公開します。
+
+注記: AWS などのクラウドサービスでは、この構成に対してロードバランサーが自動的にデプロイされます。ベアメタル環境へのデプロイでは、ロードバランサーとして link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/ingress_and_load_balancing/load-balancing-with-metallb[MetalLB,window=_blank] の利用を検討してください。
+
+xref:attachment$udn-primary-networks/fedora-vm-web-service.yaml[fedora-vm-web-service.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: fedora-vm-web-service
+  namespace: udn-primary-vm-guests
+  labels:
+    app: fedora-web-vm
+spec:
+  selector:
+    app: fedora-web-vm
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  type: LoadBalancer
+EOF
+----
+
+== ステップ 5: サービスの可用性の確認
+
+このテストは、ロードバランサーを自動的にデプロイし、外部名を作成するベアメタル型インスタンスを使用した AWS ベースのクラスターで実行されました。外部サービス IP に名前が表示されます:
+
+[source,bash,role=execute]
+----
+oc get svc
+----
+
+出力例:
+----
+NAME                    TYPE           CLUSTER-IP      EXTERNAL-IP                                                                  PORT(S)        AGE
+fedora-vm-web-service   LoadBalancer   172.30.72.140   aa32981df19ad4959ae9a82fb9990db9-1996929606.ca-central-1.elb.amazonaws.com   80:32291/TCP   45m
+----
+
+curl を使用してサービスをテストします:
+
+[source,bash,role=execute]
+----
+curl aa32981df19ad4959ae9a82fb9990db9-1996929606.ca-central-1.elb.amazonaws.com
+----
+
+期待される出力:
+----
+<h1>Welcome to OpenShift Virtualization !!!</h1>
+----
+
+== まとめ
+
+このチュートリアルでは、以下の内容を学習しました:
+
+* `k8s.ovn.org/primary-user-defined-network` ラベルを使用して UDN が有効な名前空間を作成する方法
+* レイヤー 2 トポロジーとカスタムサブネット構成で `UserDefinedNetwork` リソースを定義する方法
+* 永続的な IPAM を備えた、UDN をプライマリネットワークとして使用する VM をデプロイする方法
+* UDN プライマリネットワーク上で実行されている VM を LoadBalancer サービス経由で公開する方法
+* UDN プライマリネットワークがカスタム IP アドレッシングによってどのように完全なネットワーク分離を提供するのか
+
+== 関連情報
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/understanding-multiple-networks[OpenShift - 複数のネットワークの理解,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/primary-networks[プライマリネットワークの構成,window=_blank]

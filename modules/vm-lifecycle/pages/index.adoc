@@ -1,0 +1,54 @@
+= VMライフサイクル管理
+:navtitle:
+
+== 概要
+
+本モジュールでは、OpenShift Virtualizationにおける仮想マシンのライフサイクル管理について学習します。イメージのインポート、ゴールデンイメージ、クローニング、スナップショット、および起動設定が含まれます。これらのワークフローを理解することで、再利用可能なVMイメージの作成、コピーの迅速なデプロイ、およびバックアップと復旧の管理が可能になります。
+
+== 学習目標
+
+* 既存の qcow2 ディスクイメージを OpenShift Virtualization にインポートする方法
+* 一貫したデプロイのために再利用可能なゴールデンイメージを作成および管理する方法
+* 名前空間内および名前空間間でVMをクローンする方法
+* VMスナップショットを作成、管理、および復元する方法
+* 起動順序、起動ソース、および UEFI/Secure Boot モードを設定する方法
+
+== 前提条件
+
+VMライフサイクル管理に取り組む前に、以下の環境が整っていることを確認してください。
+
+* OpenShift 4.18以降とOpenShift Virtualizationオペレーターがインストールされていること
+* ReadWriteMany アクセスモードをサポートする StorageClass が設定されていること
+* CLIツールがインストールされていること: `oc`, `virtctl`, `kubectl`
+* PersistentVolumeClaims および DataVolumes に関する基本的な理解
+
+== トピック
+
+xref:import-qcow2-boot-volume.adoc[]::
+既存のKVMプラットフォームから qcow2 ディスクイメージをインポートし、OpenShift Virtualization でブートボリュームを作成して、スムーズなVM移行を実現します。
+
+xref:custom-golden-images.adoc[]::
+事前にソフトウェアと設定が構成された再利用可能なゴールデンイメージを作成し、環境全体で一貫したVMデプロイを行います。
+
+xref:golden-images-troubleshooting.adoc[]::
+カスタムゴールデンイメージの作成および使用に関するトラブルシューティングガイド。検証コマンドや一般的な問題の解決策が含まれます。
+
+xref:cloning-vms.adoc[]::
+既存のVMをクローンして同一またはカスタマイズされたインスタンスを迅速にデプロイします。名前空間をまたいだクローンや、cloud-init を使用したクローン後のカスタマイズも含まれます。
+
+xref:vm-snapshots.adoc[]::
+VMスナップショットを作成、管理、復元し、迅速なロールバック、安全な変更テスト、およびメンテナンス前のバックアップポイントとして活用します。
+
+xref:boot-order-boot-sources.adoc[]::
+VMの起動順序、起動ソース（PVC、ContainerDisk、HTTP）、および UEFI と BIOS モードや Secure Boot を含む起動オプションを設定し、さまざまなデプロイシナリオに対応します。
+
+== 関連トピック
+
+* xref:vm-configuration:index.adoc[VM Configuration] - VMの一般的な設定とアクセス
+* xref:storage:index.adoc[Storage Configuration] - VM用の永続ストレージ
+* xref:performance:index.adoc[Performance Tuning] - リソース制限、CPUピニング、NUMA
+
+== その他のリソース
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/about#about-virt[OpenShift Virtualization Documentation,window=_blank]
+* link:https://kubevirt.io/user-guide/[KubeVirt User Guide,window=_blank]

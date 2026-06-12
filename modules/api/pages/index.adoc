@@ -1,0 +1,43 @@
+= API 統合
+:navtitle: API ガイド
+
+== 概要
+
+本モジュールでは、OpenShift Virtualization の API について、コンポーネント API オブジェクトの概要と各オブジェクト内の主要フィールドを含めて解説します。
+
+API は、OpenShift Virtualization およびその基盤となる OpenShift Container Platform とのより緊密な製品統合を実現するために活用できる強力な機能です。
+
+== 学習内容
+
+本セクションで扱うトピックは以下の通りです。
+
+* ドメイン別（仮想マシン、ネットワーク、ストレージなど）の仮想化に関連する主要な API オブジェクト
+* 各 API オブジェクトの役割
+* API オブジェクト間の関連性（他のオブジェクトの上位レベルの抽象化となっているものなど）
+* 各 API オブジェクトの必須フィールド（および各フィールドの役割と許容される値）
+* 上位レベルの API 機能（スナップショット、リストア、クローン作成）
+* オブジェクトの状態（VM、スナップショット、クローン）の監視と管理方法
+* 他のクラスターへのインポートを目的とした VM およびボリュームのエクスポート方法
+
+== 前提条件
+
+本セクションを完了するには、以下の前提条件が必要です。
+
+* OpenShift Virtualization がインストールされた OpenShift v4.18 以降のクラスター
+* クラスターレベルの管理者アクセス権（テスト用またはシングルテナントのクラスターの場合は `kubeadmin` アカウントの認証情報）
+* REST API および関連する HTTP CRUD 操作（GET、PUT、POST、PATCH、DELETE）、トークンベースの認証、JSON などに関する理解
+* REST API 開発ツール（Postman、cURL など）
+
+== セクション
+
+xref:api-component-overview.adoc[API コンポーネントの概要]::
+OpenShift Virtualization の API コンポーネントの概要です。
+
+== 次のステップ
+
+本モジュールを完了することで、OpenShift Virtualization との製品統合を開始するために十分な理解が得られるはずです。
+今後のパートナー様（および現在のパートナー様）の市場投入までの時間を短縮できるよう、他のベンダーによる統合で遭遇した注意点や落とし穴についても、このガイド内で言及するように努めています。
+
+== 参照
+* link:https://kubevirt.io/api-reference/main/index.html[KubeVirt API リファレンス,window=_blank]
+* link:https://kubevirt.io/user-guide/architecture/[KubeVirt アーキテクチャ,window=_blank]

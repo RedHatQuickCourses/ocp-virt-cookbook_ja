@@ -1,0 +1,55 @@
+= VM パフォーマンスチューニング
+:navtitle:
+
+== 概要
+
+このモジュールでは、OpenShift Virtualization における仮想マシンのパフォーマンスチューニングについて学習します。このチュートリアルは、リソース管理の基礎から、CPU ピアニング、NUMA トポロジー、リアルタイムワークロードまで、段階的に進む構成になっています。
+
+== 学習内容
+
+* 仮想マシンの CPU/メモリ要求 (requests)、制限 (limits)、および QoS クラスの設定方法
+* レイテンシーに敏感なワークロード向けに、仮想マシンの vCPU を物理 CPU に固定 (pinning) する方法
+* Hugepage を使用したメモリおよび NUMA トポロジーパススルーの設定方法
+* 最悪実行時間 (worst-case latency) が制限されたリアルタイム仮想マシンの実行方法
+
+== 前提条件
+
+VM パフォーマンスチューニングに取り組む前に、以下が準備されていることを確認してください。
+
+* OpenShift 4.18+ および OpenShift Virtualization オペレーターがインストールされていること
+* Kubernetes のリソース管理の概念を理解していること
+* 必要な CLI ツール (`oc`, `virtctl`, `kubectl`) がインストールされていること
+* ノードレベルの設定 (CPU Manager、hugepages) を行うためのクラスター管理者権限があること
+
+== トピック
+
+xref:resource-limits-qos.adoc[]::
+仮想マシンの CPU/メモリ要求 (requests)、制限 (limits)、および QoS クラスを設定します。これには、名前空間レベルのガバナンスのための ResourceQuota や LimitRange の設定も含まれます。
+
+xref:cpu-pinning.adoc[]::
+Kubernetes CPU Manager の static ポリシーを使用して、仮想マシンの vCPU を物理 CPU に固定 (pinning) し、レイテンシーに敏感でパフォーマンスが重要なワークロードにおいて CPU の競合 (CPU steal) を排除します。
+
+xref:numa-hugepages.adoc[]::
+Hugepage でサポートされるメモリと NUMA トポロジーのパススルーを仮想マシンに設定し、TLB オーバーヘッドを削減して NUMA を考慮したゲストスケジューリングを有効にします。
+
+xref:realtime-vms.adoc[]::
+専用 CPU、NUMA パススルー、hugepages、RT カーネル、および SCHED_FIFO スケジューリングを使用して、最悪実行時間が保証されたリアルタイム仮想マシンを設定します。
+
+== 推奨される学習順序
+
+パフォーマンスに関するチュートリアルは、以下の順序で段階的に構築されています。
+
+. **Resource Limits and QoS** -- 専用 CPU を有効にする前に、Guaranteed QoS の要件を理解する
+. **CPU Pinning** -- CPU Manager の static ポリシーを有効にし、vCPU を割り当てる
+. **NUMA and Hugepages** -- hugepage メモリの追加と NUMA トポロジーの認識を有効にする
+. **Real-time VMs** -- 上記すべてを組み合わせ、RT カーネルと SCHED_FIFO スケジューリングを適用する
+
+== 関連トピック
+
+* xref:vm-configuration:index.adoc[VM Configuration] - 仮想マシンの一般的な設定とアクセス
+* xref:storage:index.adoc[Storage Configuration] - 仮想マシン用の永続ストレージ
+
+== 追加リソース
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/about#about-virt[OpenShift Virtualization ドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/[KubeVirt ユーザーガイド,window=_blank]

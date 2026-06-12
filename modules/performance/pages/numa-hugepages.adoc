@@ -1,0 +1,782 @@
+= 仮想マシンのNUMAトポロジーとHugepages
+:navtitle: NUMAとHugepages
+
+== 概要
+
+このチュートリアルでは、OpenShift Virtualizationにおいて、Hugepage（ヒュージページ）でバックアップされたメモリとNUMAトポロジーのパススルーを仮想マシン（VM）向けに設定する方法を説明します。デフォルトでは、VMのメモリは標準的な4Kiページを使用し、ゲストOSはホストのNUMAレイアウトを認識できません。NFV/テレコム、HPC、リアルタイム処理、大規模メモリデータベースなどのパフォーマンスが重要なワークロードにおいて、このデフォルト設定は以下の2つの測定可能なボトルネックを引き起こします。
+
+* *TLBプレッシャー*: 16Giのメモリを持ち、4KiページでバックアップされたVMは、400万以上のページテーブルエントリを必要とします。CPUのTLB（Translation Lookaside Buffer）はサイズが制限されているため、頻繁なTLBミスが発生し、コストのかかるページテーブルウォークが強制されます。
+* *クロスNUMAメモリレイテンシ*: マルチソケットまたはマルチチップレットのホストでは、リモートのNUMAノード上のメモリへのアクセスは、ローカルメモリへのアクセスよりも1.5〜3倍低速になる可能性があります。NUMAを意識しない場合、ゲストOSはメモリとスレッドを同一の物理NUMAノード上に配置できません。
+
+Hugepagesは、4Kiの代わりに2Miまたは1Giのページを使用することでTLBプレッシャーを軽減します。NUMAパススルー（`guestMappingPassthrough`）は、ホストの物理NUMAトポロジーをゲストに公開し、VM内でのNUMAを意識したスケジューリングを可能にします。専用CPU配置と併せて、これらの機能は決定論的で低レイテンシなVMパフォーマンスの基盤となります。
+
+== 前提条件
+
+* OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以上（4.21でテスト済み）
+* クラスター管理者アクセス権（`system:admin`または同等の権限）
+* `oc`および`virtctl` CLIがインストールされていること
+* 複数の物理CPUコア（推奨8以上）およびHugepage予約のための十分なRAMを備えたワーカーノード
+* CPUマネージャーの静的ポリシーが有効になっていること（xref:cpu-pinning.adoc[専用CPU配置]を参照）
+* Kubernetes QoSクラスに関する知識（xref:resource-limits-qos.adoc[]を参照）
+
+== Hugepagesの理解
+
+標準的なLinuxのメモリ管理では4Kiページが使用されます。2Giのメモリを持つVMでは、524,288個の個別のページマッピングが必要です。各TLBミスは、数百ナノ秒にわたってCPUを停止させる可能性のあるマルチレベルのページテーブルウォークを引き起こします。
+
+Hugepagesは、より大きなページサイズを使用することでこのオーバーヘッドを回避します。
+
+[cols="1,1,2,2",options="header"]
+|===
+|ページサイズ |2Giあたりのページ数 |必要なTLBエントリ |用途
+
+|4Ki（デフォルト）
+|524,288
+|524,288
+|汎用ワークロード
+
+|2Mi
+|1,024
+|1,024
+|パフォーマンスに敏感な多くのVM
+
+|1Gi
+|2
+|2
+|非常に大きなメモリを必要とするVM、データベース
+|===
+
+VM仕様に`memory.hugepages.pageSize`が含まれている場合、KubeVirtはホストの事前割り当て済みHugepageプールからすべてのゲストメモリを割り当てるようにQEMUを設定します。このメモリは固定（pinned）され、スワップされることはありません。
+
+重要: Hugepagesはオーバーコミットできません。ホストは、VMがスケジュールされるNUMAノード上に十分な空きHugepagesを持っている必要があります。そうでない場合、VMの起動は失敗します。NUMAパススルーを使用する場合、VMのCPUに割り当てられた特定のNUMAノード上でHugepagesが利用可能である必要があります。NUMAノードごとの分散とQEMUのオーバーヘッドを考慮し、すべてのVMメモリ要求の合計よりも多くのHugepagesを予約してください。
+
+== NUMAトポロジーの理解
+
+NUMA（Non-Uniform Memory Access）は、各CPUソケット（またはチップレット）が独自のローカルメモリを持つハードウェアアーキテクチャです。ローカルメモリへのアクセスは高速ですが、リモートメモリへのアクセスは相互接続を経由するため低速になります。
+
+一般的な2ソケットサーバーの場合:
+
+----
+NUMA Node 0: CPUs 0-19, 40-59   Local Memory: 128Gi
+NUMA Node 1: CPUs 20-39, 60-79  Local Memory: 128Gi
+----
+
+NUMAを意識しない場合、ゲストOSはNUMAノード0にマップされるvCPU上でスレッドをスケジュールする一方で、バックアップメモリがNUMAノード1に割り当てられる可能性があります。このノード間アクセスは、すべてのメモリオペレーションにレイテンシを追加します。
+
+KubeVirtの`guestMappingPassthrough`戦略は、ホストのNUMAトポロジーをゲストにパススルーすることでこれを解決します。ゲストは（割り当てられた専用CPUに基づいて）物理ホストと同じNUMA構造を認識し、独自のNUMAを意識したスケジューリングの決定を行うことができます。
+
+NUMAパススルーには以下の3つの前提条件が必要です。
+
+. 専用CPU配置（`dedicatedCpuPlacement: true`）
+. ターゲットノード上に割り当てられたHugepages
+. KubeVirt CRでNUMA機能ゲートが有効であること（OpenShift Virtualization 4.18以降ではデフォルトで有効）
+
+== ステップ 1: ノードでのHugepagesの予約
+
+連続した物理メモリを保証するために、Hugepagesはブート時に事前割り当てする必要があります。OpenShiftでは、Node Tuning Operatorが`Tuned`リソースを通じてカーネルブートパラメータの挿入を処理します。
+
+以下の`Tuned`プロファイルは、ブート時に各ワーカーノードで2Miサイズのページを1024ページ（合計2Gi）予約します。
+
+xref:attachment$numa-hugepages/hugepages-tuned-boottime.yaml[hugepages-tuned-boottime.yamlをダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: tuned.openshift.io/v1
+kind: Tuned
+metadata:
+  name: hugepages
+  namespace: openshift-cluster-node-tuning-operator
+spec:
+  profile:
+  - data: |
+      [main]
+      summary=Boot time configuration for hugepages
+      include=openshift-node
+      [bootloader]
+      cmdline_openshift_node_hugepages=hugepagesz=2M hugepages=1024
+    name: openshift-node-hugepages
+  recommend:
+  - machineConfigLabels:
+      machineconfiguration.openshift.io/role: "worker"
+    priority: 20
+    profile: openshift-node-hugepages
+EOF
+----
+
+注意: Single Node OpenShift（SNO）では、`machineConfigLabels`ロールの`worker`を`master`に置き換えてください。
+
+ヒント: `priority`の値は、同じノードに一致するTunedプロファイル間で一意である必要があります。デフォルトの`openshift-control-plane`および`openshift-node`プロファイルは優先度30を使用します。Hugepagesプロファイルを確実に適用させるには、20のようなより小さい数値（高い優先度）を使用してください。
+
+Node Tuning Operatorは、カーネルコマンドラインに`hugepagesz=2M hugepages=1024`を追加する`MachineConfig`を生成します。その後、Machine Config Operatorが各ワーカーノードを再起動して変更を適用します。ロールアウトを監視します。
+
+[source,bash,role=execute]
+----
+oc get mcp worker -w
+----
+
+`UPDATED`が`True`になり、`MACHINECOUNT`と`READYMACHINECOUNT`が等しくなるまで待ちます。
+
+----
+NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED
+worker   rendered-worker-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   True      False      False
+----
+
+警告: これにより、対象のMachineConfigPool内のすべてのノードでローリング再起動がトリガーされます。本番クラスターでは計画的に実施してください。
+
+=== Hugepage割り当ての確認
+
+ロールアウト完了後、各ノードが期待どおりのHugepage容量を報告していることを確認します。
+
+[source,bash,role=execute]
+----
+oc get node <node-name> -o jsonpath='{.status.allocatable.hugepages-2Mi}{"\n"}'
+----
+
+期待される出力:
+
+----
+2Gi
+----
+
+詳細を確認するには、ノードでデバッグセッションを開き、`/proc/meminfo`を調査します。
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name>
+----
+
+デバッグシェル内:
+
+[source,bash,role=execute]
+----
+chroot /host grep -i hugepages /proc/meminfo
+----
+
+期待される出力:
+
+----
+AnonHugePages:         0 kB
+ShmemHugePages:        0 kB
+FileHugePages:        0 kB
+HugePages_Total:    1024
+HugePages_Free:     1024
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+----
+
+`HugePages_Total`は設定した数（1024）と一致するはずです。`HugePages_Free`は現在割り当て可能な数を示します。
+
+デバッグシェルを終了します。
+
+[source,bash,role=execute]
+----
+exit
+----
+
+== ステップ 2: ノードでのNUMAトポロジーの確認
+
+NUMAを意識したVMをデプロイする前に、ワーカーノードの物理NUMAレイアウトを調査します。以下のツールは、パッケージを追加インストールすることなく、すべてのRHCOSノードで使用可能です。
+
+デバッグセッションを開きます。
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name>
+----
+
+システム上のNUMAノードをリストアップします。
+
+[source,bash,role=execute]
+----
+chroot /host ls /sys/devices/system/node/
+----
+
+2ソケットサーバーでの出力例:
+
+----
+node0  node1
+----
+
+各NUMAノードに属するCPUを確認します。
+
+[source,bash,role=execute]
+----
+chroot /host cat /sys/devices/system/node/node0/cpulist
+----
+
+----
+0-9,40-49
+----
+
+[source,bash,role=execute]
+----
+chroot /host cat /sys/devices/system/node/node1/cpulist
+----
+
+----
+20-29,60-69
+----
+
+NUMAノードごとのメモリ情報を調査します。
+
+[source,bash,role=execute]
+----
+chroot /host cat /sys/devices/system/node/node0/meminfo
+----
+
+出力例（短縮版）:
+
+----
+Node 0 MemTotal:       131072000 kB
+Node 0 MemFree:        125000000 kB
+Node 0 HugePages_Total:      512
+Node 0 HugePages_Free:       512
+----
+
+NUMAノード数とCPU-to-nodeマッピングを含む概要には`lscpu`を使用します。
+
+[source,bash,role=execute]
+----
+chroot /host lscpu | grep -i numa
+----
+
+出力例:
+
+----
+NUMA node(s):          2
+NUMA node0 CPU(s):     0-9,40-49
+NUMA node1 CPU(s):     20-29,60-69
+----
+
+注意: シングルソケットシステムやSingle Node OpenShiftでは、NUMAノードが1つしか表示されない場合があります。NUMAパススルーは機能しますが、すべてのCPUとメモリがローカルであるため、ノード間最適化のメリットはありません。
+
+デバッグシェルを終了します。
+
+[source,bash,role=execute]
+----
+exit
+----
+
+== ステップ 3: Namespaceの作成
+
+[source,bash,role=execute]
+----
+oc create namespace numa-hugepages-demo
+----
+
+== ステップ 4: Hugepagesを使用したVMのデプロイ
+
+この最初のVMは、NUMAパススルーを使用せず、専用CPU配置とHugepageバックアップメモリを使用します。この設定により、TLBオーバーヘッドが排除され、VMマニフェストが簡素化されます。
+
+重要なフィールド:
+
+* `dedicatedCpuPlacement: true` -- vCPUを物理CPUに固定します（KubeVirtにおけるHugepagesの前提条件）。
+* `memory.hugepages.pageSize: 2Mi` -- 2Mi Hugepageプールからゲストメモリを割り当てます。
+* メモリの`requests`と`limits`は等しくする必要があります（Guaranteed QoS）。
+
+警告: この例のcloud-initパスワードはデモンストレーション目的専用です。本番環境ではSSHキー認証または強力で一意なパスワードを使用してください。
+
+xref:attachment$numa-hugepages/vm-hugepages.yaml[vm-hugepages.yamlをダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-hugepages
+  namespace: numa-hugepages-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-hugepages
+    spec:
+      nodeSelector:
+        cpumanager: "true"
+      domain:
+        cpu:
+          sockets: 2
+          cores: 1
+          threads: 1
+          dedicatedCpuPlacement: true
+        memory:
+          hugepages:
+            pageSize: 2Mi
+        resources:
+          requests:
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+EOF
+----
+
+VMがRunning状態になるまで待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm vm-hugepages -n numa-hugepages-demo -w
+----
+
+期待される出力:
+
+----
+NAME           AGE   STATUS    READY
+vm-hugepages   45s   Running   True
+----
+
+== ステップ 5: Hugepageバックアップの確認
+
+=== ホスト側の検証
+
+VMが実行されているノードを見つけます。
+
+[source,bash,role=execute]
+----
+oc get vmi vm-hugepages -n numa-hugepages-demo -o wide
+----
+
+そのノードでデバッグセッションを開きます。
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name>
+----
+
+Hugepageの消費量を確認します。`HugePages_Free`数は、VMによって消費された分だけ`HugePages_Total`よりも少なくなっているはずです。
+
+[source,bash,role=execute]
+----
+chroot /host grep -i hugepages /proc/meminfo
+----
+
+2Miページを使用する2GiのVMの場合、1024ページが消費されるため、`HugePages_Free`は元の値から約1024減少するはずです。
+
+デバッグシェルを終了します。
+
+[source,bash,role=execute]
+----
+exit
+----
+
+=== ゲスト側の検証
+
+VMコンソールに接続します。
+
+[source,bash,role=execute]
+----
+virtctl console vm-hugepages -n numa-hugepages-demo
+----
+
+ユーザー名`fedora`、パスワード`redhat`でログインします。ゲストが使用可能な合計メモリを確認します。
+
+[source,bash,role=execute]
+----
+free -h
+----
+
+ゲストはメモリを標準的なRAMとして認識します。HugepagesはQEMUレベルではゲストから透過的であり、ゲストOS自身が受け取ったメモリから独自のHugepagesを個別に設定できます。
+
+`Ctrl+]`を押してコンソールから切断します。
+
+=== Hugepages VMの停止
+
+次に進む前に、最初のVMを停止してHugepage割り当てを解放します。次のステップのNUMAパススルーVMは同じプールからHugepagesを必要とするため、ノードによっては両方のVMを同時に実行できない可能性があります。
+
+[source,bash,role=execute]
+----
+virtctl stop vm-hugepages -n numa-hugepages-demo
+----
+
+VMが停止したことを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm vm-hugepages -n numa-hugepages-demo
+----
+
+期待される出力:
+
+----
+NAME           AGE    STATUS    READY
+vm-hugepages   5m     Stopped   False
+----
+
+== ステップ 6: NUMAパススルーを使用したVMのデプロイ
+
+このVMは、専用CPU、Hugepages、NUMAトポロジーパススルーという3つのパフォーマンス機能をすべて組み合わせます。追加された重要な設定は`numa.guestMappingPassthrough: {}`であり、これによりKubeVirtにホストのNUMAトポロジーをゲストにマップするよう指示します。
+
+NUMAパススルーのための追加設定:
+
+* `isolateEmulatorThread: true` -- QEMUエミュレータスレッドがvCPUと競合するのを防ぎます。
+* `autoattachMemBalloon: false` -- 決定論的なメモリ割り当てと互換性のないメモリバルーンデバイスを無効にします。
+
+xref:attachment$numa-hugepages/vm-numa-hugepages.yaml[vm-numa-hugepages.yamlをダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-numa-hugepages
+  namespace: numa-hugepages-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-numa-hugepages
+    spec:
+      nodeSelector:
+        cpumanager: "true"
+      domain:
+        cpu:
+          sockets: 1
+          cores: 2
+          threads: 1
+          dedicatedCpuPlacement: true
+          isolateEmulatorThread: true
+          numa:
+            guestMappingPassthrough: {}
+        memory:
+          hugepages:
+            pageSize: 2Mi
+        resources:
+          requests:
+            memory: 1Gi
+          limits:
+            memory: 1Gi
+        devices:
+          autoattachMemBalloon: false
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+EOF
+----
+
+VMがRunning状態になるまで待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm vm-numa-hugepages -n numa-hugepages-demo -w
+----
+
+期待される出力:
+
+----
+NAME                AGE   STATUS    READY
+vm-numa-hugepages   60s   Running   True
+----
+
+== ステップ 7: VM内でのNUMAトポロジーの確認
+
+=== VMIでのNUMA設定の確認
+
+まず、VMIでNUMAパススルーが設定されていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi vm-numa-hugepages -n numa-hugepages-demo -o jsonpath='{.spec.domain.cpu.numa}{"\n"}'
+----
+
+期待される出力:
+
+----
+{"guestMappingPassthrough":{}}
+----
+
+=== ゲスト側のNUMA検証
+
+VMコンソールに接続します。
+
+[source,bash,role=execute]
+----
+virtctl console vm-numa-hugepages -n numa-hugepages-demo
+----
+
+ユーザー名`fedora`、パスワード`redhat`でログインします。ゲストから見えるNUMAトポロジーを確認します。
+
+[source,bash,role=execute]
+----
+lscpu | grep -i numa
+----
+
+複数のNUMAノードを持つホストでは、物理CPUのトポロジーと一致する複数のNUMAノードが報告される可能性があります。単一NUMAノードのホストでは、ゲストは1つのNUMAノードを報告します。
+
+詳細なCPUトポロジーを確認します。
+
+[source,bash,role=execute]
+----
+lscpu
+----
+
+ゲストから見えるNUMAノードをリストアップします。
+
+[source,bash,role=execute]
+----
+ls /sys/devices/system/node/
+----
+
+出力例:
+
+----
+node0
+----
+
+各NUMAノードに割り当てられたCPUを確認します。
+
+[source,bash,role=execute]
+----
+cat /sys/devices/system/node/node0/cpulist
+----
+
+出力例:
+
+----
+0-1
+----
+
+ノードごとのメモリを調査します。
+
+[source,bash,role=execute]
+----
+cat /sys/devices/system/node/node0/meminfo | head -5
+----
+
+出力例:
+
+----
+Node 0 MemTotal:        1048576 kB
+Node 0 MemFree:          800000 kB
+Node 0 MemUsed:          248576 kB
+Node 0 Active:           120000 kB
+Node 0 Inactive:          80000 kB
+----
+
+ゲストから見えるNUMAトポロジーは、ホストから受け取った専用CPUの物理トポロジーを反映しています。
+
+`Ctrl+]`を押してコンソールから切断します。
+
+=== ホスト側のNUMA検証
+
+ノードを見つけ、CPUマネージャーの状態を通じてCPUの固定状況を確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi vm-numa-hugepages -n numa-hugepages-demo -o wide
+----
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name>
+----
+
+[source,bash,role=execute]
+----
+chroot /host cat /var/lib/kubelet/cpu_manager_state
+----
+
+`entries`マップには、専用CPU IDを持つ`compute`コンテナが表示されるはずです。`isolateEmulatorThread: true`を使用すると、さらに1つのCPUが予約されます（合計3つ：vCPU 2つ + エミュレータスレッド 1つ）。
+
+デバッグシェルを終了します。
+
+[source,bash,role=execute]
+----
+exit
+----
+
+== 2Miと1Gi Hugepagesの選択
+
+[cols="1,2,2",options="header"]
+|===
+|検討事項 |2Miページ |1Giページ
+
+|エントリあたりのTLBカバレッジ
+|2Mi
+|1Gi（512倍）
+
+|事前割り当ての粒度
+|微細（例: 100Mi単位）
+|粗い（最低1Gi）
+
+|メモリの無駄
+|最小限
+|メモリが1Giの倍数でない場合、VMごとに最大1Giが未使用
+
+|ブート時の予約
+|メモリを枯渇させずに数百ページを予約可能
+|大きな塊を予約し、Hugepages以外のワークロードの利用可能ページが減少
+
+|一般的なユースケース
+|ほとんどのVM、適度なTLB改善
+|非常に大きなメモリを持つVM（64Gi以上）、データベース、最高のTLB効率
+|===
+
+1Giページを使用するには、`Tuned`プロファイルを変更します。
+
+[source,ini]
+----
+[bootloader]
+cmdline_openshift_node_hugepages=hugepagesz=1G hugepages=16
+----
+
+そしてVM仕様を更新します。
+
+[source,yaml]
+----
+memory:
+  hugepages:
+    pageSize: 1Gi
+resources:
+  requests:
+    memory: 16Gi
+  limits:
+    memory: 16Gi
+----
+
+重要: メモリ要求はHugepageサイズで均等に割り切れる必要があります。1GiのHugepagesで1.5Giのメモリを要求することはできません。
+
+== トラブルシューティング
+
+=== VMの起動失敗：Hugepages不足
+
+VMが`Scheduling`または`Pending`状態のままになる場合は、VMIイベントを確認します。
+
+[source,bash,role=execute]
+----
+oc describe vmi vm-hugepages -n numa-hugepages-demo
+----
+
+Hugepages不足やスケジューリング失敗に関するイベントを探します。ターゲットノードで使用可能なHugepagesを確認します。
+
+[source,bash,role=execute]
+----
+oc get node <node-name> -o jsonpath='{.status.allocatable.hugepages-2Mi}{"\n"}'
+----
+
+割り当て可能な値がVMのメモリ要求よりも小さい場合は、VMのメモリを減らすか、ノードのHugepage予約を増やしてください。
+
+=== NUMAパススルーVMの失敗：「cannot bind memory to host NUMA nodes」
+
+このエラーは、`virt-launcher` Podが特定のNUMAノードにメモリをバインドできない場合に発生します。考えられる原因:
+
+* *ターゲットNUMAノード上のHugepages不足*: Hugepagesはホスト全体では利用可能でも、VMのCPUが割り当てられている特定のNUMAノードでは不足している可能性があります。Hugepage割り当てを再調整するか、合計予約量を増やしてください。
+* *トポロジーマネージャーが一致していない*: kubeletのトポロジーマネージャーポリシーが`none`に設定されている場合、CPUとメモリの割り当てがNUMAノードをまたぐ可能性があります。厳密なNUMA整合性を必要とするワークロードの場合は、トポロジーマネージャーポリシーを`single-numa-node`または`restricted`に設定することを検討してください。
+
+=== ゲストが複数のNUMAノードを認識しない
+
+ホストが複数持っているにもかかわらず、ゲストが1つのNUMAノードしか報告しない場合:
+
+* VMI仕様で`guestMappingPassthrough`が設定されていることを確認します。
+* VMの専用CPUが複数の物理NUMAノードにまたがっていることを確認します。割り当てられたCPUがすべて単一のNUMAノード上にある場合、ゲストが1つしかノードを認識しないのは正常です。
+* NUMA境界を越えてより多くの物理CPUを使用するように、VMのvCPU数を増やしてください。
+
+=== MachineConfigPoolがUpdatingのまま停止
+
+`Tuned`プロファイルの適用後、MachineConfigPoolのロールアウトが完了しない場合:
+
+[source,bash,role=execute]
+----
+oc get mcp worker
+----
+
+[source,bash,role=execute]
+----
+oc describe mcp worker
+----
+
+劣化しているノードがないか確認し、影響を受けているノードのmachine-config-daemonログを調査します。
+
+[source,bash,role=execute]
+----
+oc logs -n openshift-machine-config-operator -l k8s-app=machine-config-daemon --tail=50
+----
+
+== クリーンアップ
+
+VMとNamespaceを削除します。
+
+[source,bash,role=execute]
+----
+oc delete namespace numa-hugepages-demo
+----
+
+Hugepages Tunedプロファイルを削除し、カーネルブートパラメータを元に戻します。
+
+[source,bash,role=execute]
+----
+oc delete tuned hugepages -n openshift-cluster-node-tuning-operator
+----
+
+警告: `Tuned`プロファイルを削除するとMachineConfigの更新がトリガーされ、Hugepageカーネルパラメータを削除するために影響を受けるノードのローリング再起動が行われます。ロールアウトが完了するまでMachineConfigPoolを監視してください。
+
+== まとめ
+
+このチュートリアルでは、以下の方法を学びました。
+
+* Node Tuning Operatorを使用して、OpenShiftノードでブート時にHugepagesを予約する
+* Kubernetes APIとノードの`/proc/meminfo`の両方からHugepage割り当てを確認する
+* `/sys/devices/system/node/`および`lscpu`を使用してホストのNUMAトポロジーを調査する
+* TLBオーバーヘッドを軽減するために、Hugepageバックアップメモリを持つVMをデプロイする
+* NUMAを意識したゲストスケジューリングのために、NUMAパススルー（`guestMappingPassthrough`）を持つVMをデプロイする
+* ゲスト内からNUMAトポロジーを検証する
+* ワークロードの要件に基づいて2Miと1GiのHugepageサイズを選択する
+
+== 関連項目
+
+* xref:cpu-pinning.adoc[専用CPU配置] -- 前提条件：CPUマネージャーの静的ポリシーと専用vCPU
+* xref:resource-limits-qos.adoc[VMリソース制限とQoS] -- Guaranteed QoSの要件
+* xref:vm-configuration:node-placement-affinity.adoc[ノード配置とアフィニティ] -- VMスケジューリングのための特定ノードのターゲット設定
+* link:https://kubevirt.io/user-guide/compute/numa/[KubeVirt NUMAドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/compute/hugepages/[KubeVirt Hugepagesドキュメント,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/scalability_and_performance/what-huge-pages-do-and-how-they-are-consumed[Huge Pagesによるメモリの最適化 - OpenShiftドキュメント,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/scalability_and_performance/cnf-numa-aware-scheduling[NUMAを意識したワークロードのスケジューリング - OpenShiftドキュメント,window=_blank]

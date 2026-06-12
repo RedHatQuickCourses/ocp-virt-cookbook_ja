@@ -1,0 +1,1095 @@
+= 仮想マシンのクローン作成による迅速なデプロイ
+:navtitle: VMのクローン作成
+
+== 概要
+
+このチュートリアルでは、OpenShift Virtualizationで既存の仮想マシン（VM）をクローンし、同一またはカスタマイズされたVMインスタンスを迅速にデプロイする方法を説明します。VMのクローン作成では、ディスク内容全体、設定、インストール済みのソフトウェアを含めて既存のVMのコピーが作成されるため、環境の迅速なプロビジョニングが可能になります。
+
+== VMクローンとは
+
+VMクローンは、既存のVMを複製して新しい仮想マシンを作成するものです。OpenShift Virtualizationでは、クローン作成のために主に2つの手法が用意されています。
+
+* **Webコンソールでのクローン作成**: VMをクローンするためのシンプルなポイント＆クリック型のインターフェース
+* **CLIベースのクローン作成**: PVCをクローンし、新しいVMを作成する手動プロセス
+
+VMクローンの主な利点:
+
+* 事前設定済みの環境を迅速にデプロイ
+* インスタンス間でソフトウェアと設定を統一
+* 開発およびテストワークフローの加速
+* 同一ワークロードの迅速なスケールアウト
+* デプロイから本番稼働可能な状態までの時間を短縮
+
+== クローン作成とゴールデンイメージの比較
+
+どちらのアプローチもVMの迅速なデプロイを実現しますが、目的は異なります。
+
+[cols="2,3,3"]
+|===
+|側面 |VMクローン |ゴールデンイメージ
+
+|ユースケース
+|データと状態をすべて保持した特定のVMの複製
+|標準化された設定を持つ多数のVMのためのテンプレート
+
+|カスタマイズ
+|ソースVMのデータを保持し、cloud-initでカスタマイズ可能
+|各VMはテンプレートから新規に開始
+
+|データ保持
+|ソースVMの全データを保持
+|基本設定のみを含む
+
+|ソースの状態
+|実行中または停止中のVMからクローン可能
+|準備・一般化されたイメージがソース
+
+|一般的なシナリオ
+|テスト用に設定済みの開発環境をクローン
+|同じ基本セットアップを持つ複数のWebサーバーをデプロイ
+|===
+
+== 前提条件
+
+* OpenShift 4.18以降およびOpenShift Virtualizationオペレーターのインストール済み環境
+* OpenShift WebコンソールまたはCLIツール (`oc`, `virtctl`) へのアクセス権
+* ボリュームのクローン作成をサポートするストレージクラス
+* クローン元のVM（または作成するVM）
+* PersistentVolumeClaim (PVC) に関する基本的な理解
+
+== クローン手法の理解
+
+OpenShift Virtualizationには、VMをクローンする2つのアプローチがあります。
+
+=== Webコンソールでのクローン作成（推奨）
+
+Webコンソールは、効率的なクローン作成エクスペリエンスを提供します。
+
+* 自動的にPVCのクローン処理を実行
+* クローンされたディスクを使用して新しいVMを作成
+* 実行中または停止中のVMからのクローンをサポート
+* VM設定（CPU、メモリ、ネットワーク）を保持
+
+=== 手動でのCLIクローン作成
+
+自動化やカスタマイズが必要な場合:
+
+* ソースVMのPVCをクローン
+* クローンされたPVCを参照する新しいVMを作成
+* クローンプロセス中のカスタマイズが可能
+* 名前空間をまたぐクローン作成に有用
+
+=== ストレージのクローン動作
+
+基盤となるストレージシステムによってクローンのパフォーマンスが決まります。
+
+* **スマートクローン**: ストレージスナップショットを使用（高速、CSI対応ストレージクラス）
+* **ホスト支援型クローン**: ポッド経由でデータをコピー（低速、任意のストレージクラス）
+
+== Webコンソールを使用したVMのクローン作成
+
+Webコンソールは、VMをクローンするための最もシンプルな方法です。
+
+=== セットアップ：ソースVMの作成
+
+まず、名前空間とソースVMを作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace vm-cloning-demo
+----
+
+nginxがプリインストールされたソースVMをデプロイします。
+
+WARNING: この例のcloud-initパスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードを使用するか、SSH鍵認証を使用してください。
+
+xref:attachment$cloning-vms/source-webserver-vm.yaml[source-webserver-vm.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: source-webserver
+  namespace: vm-cloning-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: source-webserver-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: source-webserver
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: source-webserver-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+              runcmd:
+                - dnf install -y nginx
+                - systemctl enable --now nginx
+                - echo "<h1>Source Webserver VM</h1><p>Hostname: $(hostname)</p>" > /usr/share/nginx/html/index.html
+                - firewall-cmd --permanent --add-service=http
+                - firewall-cmd --reload
+          name: cloudinitdisk
+----
+
+ソースVMをデプロイします。
+
+[source,bash,role=execute]
+----
+oc apply -f source-webserver-vm.yaml
+----
+
+VMが実行状態になるまで待ちます。
+
+[source,bash,role=execute]
+----
+oc get vmi -n vm-cloning-demo
+----
+
+=== Webコンソールを使用したクローン作成
+
+OpenShift Webコンソールを使用してVMをクローンするには:
+
+. *仮想化* → *仮想マシン* に移動します。
++
+image::clone-vm-list.png[source-webserver VMが表示された仮想マシンリスト]
+
+. クローンしたいVM (`source-webserver`) を探します。
+. VMの横にある *⋮* （アクションメニュー）をクリックします。
+. *クローン* を選択します。
++
+image::clone-vm-actions-menu.png[クローンオプションが強調表示されたアクションメニュー]
+
+. 「仮想マシンのクローン」ダイアログで:
+  * 新しいVMの名前を入力します（例: `webserver-clone-1`）。
+  * 必要に応じて「作成後に仮想マシンを開始する」にチェックを入れて即座に開始します。
+  * 設定の詳細（オペレーティングシステム、CPU、メモリ、NIC、ディスク）を確認します。
+. *クローン* をクリックします。
++
+image::clone-vm-dialog.png[名前と設定が表示された仮想マシンのクローンダイアログ]
+
+Webコンソールは以下の処理を実行します。
+
+* ソースVMのPVCをクローン
+* クローンされたディスクを使用して新しいVMを作成
+* VMの設定（CPU、メモリ、ネットワーク）を保持
+* オプションを選択した場合はVMを開始
+
+仮想マシンリストでクローンの進捗状況を監視します。PVCのクローンが完了するまで、クローンは「プロビジョニング中」と表示されます。
+
+image::clone-vm-dialog-full.png[要求の進捗状況が表示された仮想マシンのクローンダイアログ]
+
+=== Webコンソールによるクローンの検証
+
+クローンされたVMのステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm -n vm-cloning-demo
+oc get vmi -n vm-cloning-demo
+----
+
+クローンされたVMにアクセスします。
+
+[source,bash,role=execute]
+----
+virtctl console webserver-clone-1 -n vm-cloning-demo
+----
+
+クローンされたVMには、nginxがプリインストールされており（ソースから継承）、最初は同じホスト名になっています。
+
+== CLIを使用したVMのクローン作成
+
+自動化やカスタマイズ、あるいは名前空間をまたぐクローン作成には、CLIを使用します。
+
+=== 手法1：PVCをクローンし、その後にVMを作成（推奨）
+
+これはCLIでの推奨されるアプローチです。まず、ソースVMのPVCを特定します。
+
+[source,bash,role=execute]
+----
+oc get pvc -n vm-cloning-demo
+----
+
+出力例:
+[source,text]
+----
+NAME                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+source-webserver-disk   Bound    pvc-1234abcd-5678-efgh-9012-ijklmnop3456   30Gi       RWO            lvms-vg1       10m
+----
+
+ソースPVCをクローンする独立したDataVolumeを作成します。
+
+xref:attachment$cloning-vms/clone-datavolume.yaml[clone-datavolume.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: webserver-clone-2-disk
+  namespace: vm-cloning-demo
+  annotations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"  # <1>
+spec:
+  source:
+    pvc:
+      name: source-webserver-disk
+      namespace: vm-cloning-demo
+  storage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 30Gi
+    storageClassName: gp3-csi  # <2>
+----
+<1> `WaitForFirstConsumer` バインディングモードを使用するストレージクラスで必要
+<2> ストレージクラスを指定（省略した場合はソースPVCから継承）
+
+IMPORTANT: `cdi.kubevirt.io/storage.bind.immediate.requested: "true"` アノテーションは、`WaitForFirstConsumer` バインディングモードを使用するストレージクラス（AWS EBS gp3-csi、Azure Diskなど）において重要です。このアノテーションがないと、VMが使用しようとするまでDataVolumeは `PendingPopulation` 状態のままになります。
+
+DataVolumeを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f clone-datavolume.yaml
+----
+
+クローンの進捗を監視します。
+
+[source,bash,role=execute]
+----
+oc get dv webserver-clone-2-disk -n vm-cloning-demo -w
+----
+
+以下のようなフェーズが表示されます。
+
+[source,text]
+----
+NAME                     PHASE                               PROGRESS   RESTARTS   AGE
+webserver-clone-2-disk   CloneFromSnapshotSourceInProgress   N/A                   4s
+webserver-clone-2-disk   PrepClaimInProgress                 N/A                   68s
+webserver-clone-2-disk   RebindInProgress                    N/A                   78s
+webserver-clone-2-disk   Succeeded                           100.0%                79s
+----
+
+DataVolumeが `Succeeded` と表示されたら、クローンされたディスクを使用するVMを作成します。
+
+xref:attachment$cloning-vms/vm-from-cloned-pvc.yaml[vm-from-cloned-pvc.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: webserver-clone-2
+  namespace: vm-cloning-demo
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: webserver-clone-2
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          persistentVolumeClaim:
+            claimName: webserver-clone-2-disk
+----
+
+VMを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f vm-from-cloned-pvc.yaml
+----
+
+VMを開始します。
+
+[source,bash,role=execute]
+----
+virtctl start webserver-clone-2 -n vm-cloning-demo
+----
+
+=== 手法2：VM全体をクローンする（代替アプローチ）
+
+NOTE: この手法は手動での編集が必要であり、推奨されません。より信頼性が高くトラブルシューティングが容易な「手法1」を使用してください。
+
+クリーンなクローンを作成するためにソースVMを停止します。
+
+[source,bash,role=execute]
+----
+virtctl stop source-webserver -n vm-cloning-demo
+----
+
+VMが停止するまで待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm source-webserver -n vm-cloning-demo
+----
+
+ソースVMの設定をエクスポートします。
+
+[source,bash,role=execute]
+----
+oc get vm source-webserver -n vm-cloning-demo -o yaml > clone-base.yaml
+----
+
+クローンを作成するために `clone-base.yaml` を編集します。以下の変更が必要です。
+
+*1. VM名を変更:*
+
+[source,yaml]
+----
+metadata:
+  name: source-webserver  # 変更: webserver-manual-clone
+  namespace: vm-cloning-demo
+----
+
+*2. DataVolume名を更新し、PVCソースを追加:*
+
+[source,yaml]
+----
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: source-webserver-disk  # 変更: webserver-manual-clone-disk
+      spec:
+        # 元の sourceRef セクションを削除
+        # 代わりに以下を追加:
+        source:
+          pvc:
+            name: source-webserver-disk
+            namespace: vm-cloning-demo
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+----
+
+*3. ラベルとドメイン名を更新:*
+
+[source,yaml]
+----
+spec:
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: source-webserver  # 変更: webserver-manual-clone
+    spec:
+      domain:
+        # ... 設定の残り
+      volumes:
+        - dataVolume:
+            name: source-webserver-disk  # 変更: webserver-manual-clone-disk
+          name: rootdisk
+----
+
+*4. 不要なフィールドを削除:*
+
+自動生成される以下のメタデータフィールドを削除します。
+* `metadata.uid`
+* `metadata.resourceVersion`
+* `metadata.creationTimestamp`
+* `metadata.generation`
+* `status` セクション（セクション全体）
+
+*5. MACアドレスを削除（重要）:*
+
+自動割り当てを行うために、ネットワークインターフェースから `macAddress` フィールドを削除します。
+
+[source,yaml]
+----
+spec:
+  template:
+    spec:
+      domain:
+        devices:
+          interfaces:
+            - masquerade: {}
+              name: default
+              macAddress: "52:54:00:xx:xx:xx"  # この行を削除
+----
+
+MACアドレスを削除しないと、以下のエラーが発生します。
+`Failed to allocate mac to the vm object: failed to allocate requested mac address`
+
+これらの編集を行った後、変更したYAMLを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f clone-base.yaml
+----
+
+== Cloud-initを使用したクローンVMのカスタマイズ
+
+クローンされたVMは、ホスト名や認証情報を含むソースの全データを継承します。クローンをカスタマイズするにはcloud-initを使用します。
+
+=== 新しいホスト名とパスワードでのクローン作成
+
+DataVolumeクローンを作成します（手法2と同様）。
+
+[source,bash,role=execute]
+----
+cat <<EOF | oc apply -f -
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: webserver-custom-disk
+  namespace: vm-cloning-demo
+  annotations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+  source:
+    pvc:
+      name: source-webserver-disk
+      namespace: vm-cloning-demo
+  storage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 30Gi
+EOF
+----
+
+クローン完了まで待ちます。
+
+[source,bash,role=execute]
+----
+oc get dv webserver-custom-disk -n vm-cloning-demo -w
+----
+
+cloud-initでカスタマイズしたVMを作成します。
+
+xref:attachment$cloning-vms/cloned-vm-with-cloudinit.yaml[cloned-vm-with-cloudinit.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: webserver-custom
+  namespace: vm-cloning-demo
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: webserver-custom
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          persistentVolumeClaim:
+            claimName: webserver-custom-disk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              hostname: webserver-custom
+              fqdn: webserver-custom.local
+              manage_etc_hosts: true
+              password: fedora123
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+              runcmd:
+                - hostnamectl set-hostname webserver-custom
+                - echo "<h1>Customized Clone</h1><p>Hostname: $(hostname)</p>" > /usr/share/nginx/html/index.html
+                - systemctl restart nginx
+          name: cloudinitdisk
+----
+
+このcloud-init設定の役割:
+
+* 新しいホスト名 (`webserver-custom`) を設定
+* fedoraユーザーのパスワードを設定
+* nginxのウェルカムページを更新
+* ソースVMからnginxのインストール状態を保持
+
+適用して開始します。
+
+[source,bash,role=execute]
+----
+oc apply -f cloned-vm-with-cloudinit.yaml
+virtctl start webserver-custom -n vm-cloning-demo
+----
+
+カスタマイズを検証します。
+
+[source,bash,role=execute]
+----
+virtctl console webserver-custom -n vm-cloning-demo
+----
+
+VM内:
+
+[source,bash]
+----
+hostname
+# 出力: webserver-custom
+
+systemctl status nginx
+# nginxが実行中であることを確認（ソースから継承）
+
+curl localhost
+# カスタムHTMLを表示
+----
+
+== 名前空間をまたぐクローン作成
+
+環境分離（開発、テスト、本番）のために、別の名前空間へVMをクローンします。
+
+=== ターゲット名前空間の作成
+
+[source,bash,role=execute]
+----
+oc create namespace vm-cloning-production
+----
+
+=== 名前空間をまたぐクローン作成のためのRBAC設定
+
+ターゲット名前空間のサービスアカウントには、ソース名前空間のPVCへアクセスする権限が必要です。
+
+xref:attachment$cloning-vms/cross-namespace-clone-rbac.yaml[cross-namespace-clone-rbac.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: datavolume-cloner
+  namespace: vm-cloning-demo
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list"]
+  - apiGroups: ["cdi.kubevirt.io"]
+    resources: ["datavolumes"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: allow-clone-from-demo
+  namespace: vm-cloning-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: datavolume-cloner
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: vm-cloning-production
+----
+
+RBACを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f cross-namespace-clone-rbac.yaml
+----
+
+=== 名前空間をまたぐクローン作成
+
+デモ名前空間からクローンするDataVolumeを本番名前空間に作成します。
+
+xref:attachment$cloning-vms/cross-namespace-clone-datavolume.yaml[cross-namespace-clone-datavolume.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: webserver-production-disk
+  namespace: vm-cloning-production
+  annotations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+  source:
+    pvc:
+      name: source-webserver-disk
+      namespace: vm-cloning-demo
+  storage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 30Gi
+----
+
+DataVolumeを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f cross-namespace-clone-datavolume.yaml
+----
+
+クローンを監視します。
+
+[source,bash,role=execute]
+----
+oc get dv -n vm-cloning-production -w
+----
+
+本番VMを作成します。
+
+xref:attachment$cloning-vms/cloned-webserver-production.yaml[cloned-webserver-production.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: webserver-production
+  namespace: vm-cloning-production
+  labels:
+    environment: production
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: webserver-production
+    spec:
+      domain:
+        cpu:
+          cores: 4
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 8Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          persistentVolumeClaim:
+            claimName: webserver-production-disk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              hostname: webserver-prod
+              fqdn: webserver-prod.production.local
+              manage_etc_hosts: true
+              password: fedora123
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+              runcmd:
+                - hostnamectl set-hostname webserver-prod
+                - echo "<h1>Production Webserver</h1><p>Environment: Production</p>" > /usr/share/nginx/html/index.html
+                - systemctl restart nginx
+          name: cloudinitdisk
+----
+
+本番環境の主な違い:
+
+* 異なる名前空間
+* より多くのリソース（4コア、8Gi RAM）
+* 本番固有のラベル
+* アクセス用パスワードの設定
+* 本番固有のカスタマイズ
+
+適用して開始します。
+
+[source,bash,role=execute]
+----
+oc apply -f cloned-webserver-production.yaml
+virtctl start webserver-production -n vm-cloning-production
+----
+
+== ストレージに関する考慮事項
+
+=== クローンのパフォーマンス
+
+クローン速度はストレージに依存します。
+
+* **スマートクローン**（CSIスナップショット）: 非常に高速、ストレージスナップショットを使用
+  - Ceph RBD, AWS EBS, Azure Disk, GCP PD
+  - フェーズ: `SnapshotForSmartCloneInProgress` → `SmartClonePVCInProgress`
+
+* **ホスト支援型クローン**: 低速、ポッド経由でデータをコピー
+  - スナップショットサポートがないストレージクラス
+  - フェーズ: 進捗率が表示される `CloneInProgress`
+
+どちらの手法が使用されているか確認します。
+
+[source,bash,role=execute]
+----
+oc get dv <datavolume-name> -n <namespace> -o yaml | grep cloneType
+----
+
+出力:
+[source,yaml]
+----
+cdi.kubevirt.io/cloneType: snapshot  # スマートクローン
+# または
+cdi.kubevirt.io/cloneType: copy      # ホスト支援型クローン
+----
+
+=== ストレージ容量の要件
+
+各クローンには完全なストレージ割り当てが必要です。
+
+* クローンは独立したコピーであり、スナップショットではありません。
+* 各クローンはソースボリュームと同じサイズのストレージを必要とします。
+* 容量の計画: （クローン数 × ソースボリュームサイズ）
+* 名前空間のクォータとストレージクラスの容量を確認してください。
+
+使用可能なストレージを検証します。
+
+[source,bash,role=execute]
+----
+oc get sc
+oc describe sc <storage-class-name>
+----
+
+=== ストレージのベストプラクティス
+
+* より高速なクローン作成のために、スナップショット対応のストレージクラスを使用する
+* クローンを作成する前に十分なストレージ容量を確保する
+* 名前空間内のストレージ使用量を監視する
+* 使用していないクローンを定期的にクリーンアップする
+* 名前空間に対するストレージクォータを検討する
+
+== 検証とトラブルシューティング
+
+=== クローン完了の検証
+
+DataVolumeのステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc get dv -n vm-cloning-demo
+----
+
+クローン成功時は `Succeeded` と表示されます。
+
+[source,text]
+----
+NAME                          PHASE       PROGRESS   AGE
+webserver-custom-disk         Succeeded   N/A        5m
+----
+
+=== クローンのイベントを確認
+
+クローンイベントを表示します。
+
+[source,bash,role=execute]
+----
+oc describe dv <datavolume-name> -n <namespace>
+----
+
+進捗状況を示すイベントを探します。
+
+[source,text]
+----
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  CloneInProgress    5m    datavolume-controller  Cloning from vm-cloning-demo/source-webserver-disk in progress
+  Normal  CloneSucceeded     2m    datavolume-controller  Successfully cloned from vm-cloning-demo/source-webserver-disk
+----
+
+=== VMが実行中か確認
+
+[source,bash,role=execute]
+----
+oc get vmi -n vm-cloning-demo
+----
+
+=== カスタマイズの検証
+
+VMコンソールにアクセスします。
+
+[source,bash,role=execute]
+----
+virtctl console <vm-name> -n <namespace>
+----
+
+VM内:
+
+[source,bash]
+----
+# ホスト名の確認
+hostname
+
+# ソースVMから継承したソフトウェアの確認
+systemctl status nginx
+
+# cloud-initステータスの確認
+cloud-init status
+
+# cloud-initログの表示
+sudo cat /var/log/cloud-init-output.log
+
+# マシンIDの確認（カスタマイズされている場合）
+cat /etc/machine-id
+----
+
+== よくある問題と解決策
+
+=== 問題：クローンが「プロビジョニング中」または「CloneInProgress」でスタックする
+
+**状況**: DataVolumeが長時間 `CloneInProgress` と表示される。
+
+**考えられる原因**:
+* ソースボリュームが大きい
+* ストレージまたはネットワークが遅い
+* 大規模ボリュームでのホスト支援型クローン
+
+**解決策**:
+
+[source,bash,role=execute]
+----
+# クローンイベントを確認
+oc describe dv <datavolume-name> -n <namespace>
+
+# CDIポッドを確認
+oc get pods -n <namespace> | grep cdi
+
+# CDIログを表示
+oc logs <cdi-pod> -n <namespace>
+----
+
+ボリュームが大きい場合、ホスト支援型クローンにはかなりの時間がかかることがあります。これは正常な動作です。
+
+=== 問題：クローンが「permission denied」で失敗する
+
+**状況**: 名前空間をまたぐクローンがRBACエラーで失敗する。
+
+**解決策**: RBAC権限を確認します。
+
+[source,bash,role=execute]
+----
+# ロールが存在するか確認
+oc get role datavolume-cloner -n <source-namespace>
+
+# ロールバインディングを確認
+oc get rolebinding -n <source-namespace>
+
+# 権限をテスト
+oc auth can-i get pvc --as=system:serviceaccount:<target-namespace>:default -n <source-namespace>
+----
+
+出力は `yes` になるはずです。
+
+=== 問題：クローンされたVMがソースと同じホスト名を持つ
+
+**状況**: クローンが元のホスト名で起動する。
+
+**解決策**: VMにcloud-init設定を追加します。
+
+* `cloudinitdisk` ボリュームが定義されていることを確認する
+* cloud-initのuserDataで `hostname` フィールドを設定する
+* `runcmd` を使用してホスト名を設定する: `hostnamectl set-hostname <new-name>`
+* cloud-initログを確認する: `sudo cat /var/log/cloud-init.log`
+
+=== 問題：ストレージクォータを超過した
+
+**状況**: ストレージクォータ不足でクローンに失敗する。
+
+**解決策**:
+
+[source,bash,role=execute]
+----
+# クォータを確認
+oc get resourcequota -n <namespace>
+oc describe resourcequota -n <namespace>
+
+# 必要に応じてクォータを増やす
+oc edit resourcequota <quota-name> -n <namespace>
+----
+
+=== 問題：ソースPVCが見つからない
+
+**状況**: DataVolumeがソースPVCを見つけられない。
+
+**解決策**:
+
+[source,bash,role=execute]
+----
+# ソースPVCが存在するか確認
+oc get pvc -n <source-namespace>
+
+# DataVolumeのソース参照を確認
+oc get dv <datavolume-name> -n <namespace> -o yaml
+----
+
+`spec.source.pvc.name` と `spec.source.pvc.namespace` が正しいことを確認してください。
+
+=== 問題：クローンは成功したがVMが起動しない
+
+**状況**: DataVolumeは成功したが、VMが「スケジューリング中」または「起動中」のままになる。
+
+**考えられる原因**:
+* PVCがバインドされていない
+* リソース不足
+* ノードスケジューリングの問題
+
+**解決策**:
+
+[source,bash,role=execute]
+----
+# PVCステータスを確認
+oc get pvc -n <namespace>
+
+# VMイベントを確認
+oc describe vm <vm-name> -n <namespace>
+
+# VMIを確認（存在する場合）
+oc describe vmi <vm-name> -n <namespace>
+----
+
+== クリーンアップ
+
+このチュートリアルで作成したリソースをすべて削除します。
+
+[source,bash,role=execute]
+----
+# デモ名前空間内のすべてのVMを削除
+oc delete vm --all -n vm-cloning-demo
+
+# デモ名前空間内のすべてのDataVolumeを削除
+oc delete dv --all -n vm-cloning-demo
+
+# 本番VMを削除
+oc delete vm webserver-production -n vm-cloning-production
+oc delete dv --all -n vm-cloning-production
+
+# RBACリソースを削除
+oc delete role datavolume-cloner -n vm-cloning-demo
+oc delete rolebinding allow-clone-from-demo -n vm-cloning-demo
+
+# 名前空間を削除
+oc delete namespace vm-cloning-demo
+oc delete namespace vm-cloning-production
+----
+
+クリーンアップを検証します。
+
+[source,bash,role=execute]
+----
+oc get namespace | grep vm-cloning
+----
+
+== まとめ
+
+このチュートリアルで学んだ内容:
+
+* OpenShift VirtualizationにおけるVMクローンの仕組み
+* WebコンソールとCLIによるクローン手法の違い
+* OpenShift Webコンソールを使用したVMのクローン作成方法
+* スタンドアロンDataVolumeを使用したCLIによるクローン作成方法
+* cloud-initによるクローンのカスタマイズ方法
+* RBACを使用した名前空間をまたぐVMのクローン作成方法
+* スケールアウトシナリオ向けの複数クローン作成
+* ストレージの考慮事項：スマートクローンとホスト支援型クローンの違い
+* クローン後のカスタマイズに関するベストプラクティス
+* 認証情報とシステムIDに関するセキュリティプラクティス
+* よくある問題とトラブルシューティング手法
+* VMクローンの本番ユースケース
+
+VMのクローン作成は、OpenShift Virtualizationで事前設定済みの環境を迅速に作成できるようにすることで、開発、テスト、デプロイのワークフローを加速させます。
+
+== 参照
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/advanced-vm-creation#virt-creating-vms-by-cloning-pvcs[PVCのクローン作成によるVMの作成,window=_blank]

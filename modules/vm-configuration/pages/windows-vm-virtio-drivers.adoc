@@ -1,0 +1,381 @@
+= VirtIOドライバーを使用したWindows VMのデプロイ
+:navtitle: VirtIOドライバーを使用したWindows VM
+
+== 概要
+
+このチュートリアルでは、最適なパフォーマンスを得るために、VirtIOドライバーを使用してOpenShift Virtualization上にWindows仮想マシン（VM）をデプロイする方法を説明します。VirtIOドライバーは、ネットワーク、ストレージ、およびその他の重要なVMコンポーネントに対して準仮想化I/O操作を有効にすることで、エミュレートされたハードウェアと比較して大幅なパフォーマンス向上を実現します。
+
+Windows VMを作成し、Windowsのインストールプロセス中にVirtIOドライバーをインストールして、OpenShift Virtualizationとの統合を強化するためにゲストエージェントを構成します。
+
+== 前提条件
+
+* **OpenShift 4.18+**（OpenShift Virtualizationオペレーターがインストール済みであること）
+* **CLIツール**: `oc` および `virtctl` がインストールされていること
+* **WindowsインストールISO** (Windows 10/11 または Server 2019/2022)
+* **VirtIOドライバーISO** (Red HatカスタマーポータルまたはFedoraプロジェクトから入手)
+* **有効なWindowsライセンス**およびプロダクトキー
+* **クラスターリソース**: 4GB以上のRAM、60GB以上の利用可能なストレージ
+
+検証済みバージョン:
+----
+OpenShift 4.20, 4.21
+----
+
+== ステップ 1: VirtIOドライバーのダウンロードとアップロード
+
+FedoraプロジェクトからVirtIOドライバーのISOをダウンロードします。
+
+[source,bash,role=execute]
+----
+curl -L -O https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+----
+
+VirtIOドライバーISO用のDataVolumeを作成します。
+
+xref:attachment$windows-vm-virtio-drivers/virtio-drivers-dv.yaml[virtio-drivers-dv.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: virtio-drivers-iso
+  annotations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+  storage:
+    resources:
+      requests:
+        storage: 1Gi
+    accessModes:
+      - ReadWriteOnce
+  source:
+    upload: {}
+EOF
+----
+
+VirtIOドライバーのISOをアップロードします。
+
+[source,bash,role=execute]
+----
+virtctl image-upload dv virtio-drivers-iso --image-path=virtio-win.iso --insecure
+----
+
+重要: CDIアップロードプロキシが自己署名証明書を使用する開発環境では、`--insecure` フラグが必要になることがよくあります。
+
+== ステップ 2: WindowsインストールISOのアップロード
+
+WindowsインストールISO用のDataVolumeを作成します。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: windows-installation-iso
+  annotations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+  storage:
+    resources:
+      requests:
+        storage: 6Gi
+    accessModes:
+      - ReadWriteOnce
+  source:
+    upload: {}
+EOF
+----
+
+WindowsインストールISOをアップロードします（`windows.iso` は実際のISOファイル名に置き換えてください）。
+
+[source,bash,role=execute]
+----
+virtctl image-upload dv windows-installation-iso --image-path=windows.iso --insecure
+----
+
+== ステップ 3: VirtIO構成を使用したWindows VMの作成
+
+VirtIOデバイスと適切なブート順序を使用してWindows仮想マシンを作成します。
+
+xref:attachment$windows-vm-virtio-drivers/windows-vm-virtio.yaml[windows-vm-virtio.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: windows-vm-virtio
+  labels:
+    app: windows-vm-virtio
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/size: medium
+        kubevirt.io/domain: windows-vm-virtio
+        vm.kubevirt.io/name: windows-vm-virtio
+    spec:
+      domain:
+        cpu:
+          cores: 2
+          sockets: 1
+          threads: 2
+        resources:
+          requests:
+            memory: 4Gi
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+              bootOrder: 2
+            - name: windows-installation-iso
+              cdrom:
+                bus: sata
+              bootOrder: 1
+            - name: virtio-drivers-iso
+              cdrom:
+                bus: sata
+          interfaces:
+            - name: default
+              masquerade: {}
+              model: virtio
+          tpm: {}
+          rng: {}
+        clock:
+          utc: {}
+          timer:
+            hpet:
+              present: false
+            pit:
+              tickPolicy: delay
+            rtc:
+              tickPolicy: catchup
+            hyperv: {}
+        features:
+          acpi: {}
+          apic: {}
+          hyperv:
+            relaxed: {}
+            vapic: {}
+            spinlocks:
+              spinlocks: 8191
+            vpindex: {}
+            runtime: {}
+            synic: {}
+            stimer: {}
+            reset: {}
+            frequencies: {}
+            reenlightenment: {}
+            tlbflush: {}
+            ipi: {}
+          smm:
+            enabled: true
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: true
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: windows-vm-virtio-rootdisk
+        - name: windows-installation-iso
+          dataVolume:
+            name: windows-installation-iso
+        - name: virtio-drivers-iso
+          dataVolume:
+            name: virtio-drivers-iso
+  dataVolumeTemplates:
+    - metadata:
+        name: windows-vm-virtio-rootdisk
+        annotations:
+          cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+      spec:
+        storage:
+          resources:
+            requests:
+              storage: 60Gi
+          accessModes:
+            - ReadWriteOnce
+        source:
+          blank: {}
+EOF
+----
+
+VMが起動するのを待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm windows-vm-virtio -w
+----
+
+`STATUS=Running` かつ `READY=True` になったら、次に進みます。`Ctrl+C` を押して監視を終了します。
+
+== ステップ 4: VirtIOストレージドライバーを使用したWindowsのインストール
+
+VMコンソールにアクセスしてWindowsのインストールを開始します。
+
+[source,bash,role=execute]
+----
+virtctl vnc windows-vm-virtio
+----
+
+または、OpenShift Webコンソールを使用します: **Virtualization** → **VirtualMachines** → **windows-vm-virtio** → **Console** タブ。
+
+. **Windowsのインストールを開始**:
++
+VMが起動すると、最初に「No bootable device found」というメッセージが表示される場合があります。これは通常の動作です。UEFIブートメニューを操作する必要があります。
++
+* UEFIメニューが表示されるのを待つか、プロンプトが表示されたら何かキーを押して「boot from other media or DVD」を実行します。
+* ブートメニューに移動し、「Boot from DVD/CD」を選択します。
+* 利用可能な最初のオプション（通常はWindows ISO）を選択します。
+* Windowsのインストールが開始されます。初期セットアップ画面を進めてください。
+
+. **VirtIOストレージドライバーの読み込み**: 「Windowsのインストール場所を選択してください」画面に到達したら、以下を実行します。
++
+* **ドライバーの読み込み**をクリックします。
+* VirtIOドライバーCD（通常は D: または E: ドライブ）を参照します。
+* `viostor\{windows-version}\amd64\` フォルダーに移動します。
+* Windows Server 2022の場合: `viostor\2k22\amd64\`
+* Windows 11の場合: `viostor\w11\amd64\`
+* **Red Hat VirtIO SCSI Controller** を選択し、**次へ**をクリックします。
+
+. **インストールディスクの選択**: インストール対象のリストにVirtIOディスクが表示されます。これを選択してWindowsのインストールを続行します。
+
+. **インストールの完了**: 標準のWindowsセットアップ手順に従います。
+
+== ステップ 5: 残りのVirtIOドライバーのインストール
+
+Windowsのインストールが完了し、デスクトップに到達したら、以下を実行します。
+
+. **デバイスマネージャーを開く**: **PC**を右クリック → **プロパティ** → **デバイスマネージャー**
+
+. **ネットワークドライバーのインストール**:
++
+* 警告アイコンが付いたネットワークデバイスを右クリックします。
+* **ドライバーの更新** → **コンピューターを参照してドライバーを検索**を選択します。
+* VirtIO CD内の `NetKVM\{windows-version}\amd64\` に移動します。
+* インストールを完了します。
+
+. **追加ドライバーのインストール**:
++
+* **Balloonドライバー**: 「PCIデバイス」を更新 → `Balloon\{windows-version}\amd64\`
+* **シリアルドライバー**: 「PCIシンプル通信コントローラー」を更新 → `vioserial\{windows-version}\amd64\`
+* **入力ドライバー**: 「PCI入力デバイス」を更新 → `vioinput\{windows-version}\amd64\`
+
+. **QEMUゲストエージェントのインストール**:
++
+VirtIOドライバーCDから `guest-agent\qemu-ga-x86_64.msi` を実行し、インストールウィザードに従います。
+
+== ステップ 6: インストールの確認
+
+すべてのVirtIOドライバーが正しくインストールされていることを確認します。
+
+. **デバイスマネージャーの確認**: すべてのデバイスに警告アイコンが表示されていないことを確認します。
+. **ゲストエージェントの確認**: **サービス** (services.msc) を開き、**QEMU Guest Agent** が実行中であることを確認します。
+. **統合のテスト**: OpenShiftから、ゲストエージェントの通信を確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi windows-vm-virtio -o jsonpath='{.status.guestOSInfo}'
+----
+
+VMのパフォーマンスメトリックを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi windows-vm-virtio -o jsonpath='{.status.interfaces[0].ipAddress}'
+----
+
+== VirtIOドライバーの利点
+
+VirtIOドライバーをインストールすると、Windows VMで以下の利点が得られます。
+
+[cols="1,2"]
+|===
+|コンポーネント |パフォーマンス向上
+
+|**ネットワーク (NetKVM)**
+|ネットワークスループットが最大10倍向上
+
+|**ストレージ (viostor)**
+|ストレージのレイテンシが大幅に削減され、IOPSが向上
+
+|**バルーン (vioser)**
+|動的なメモリ管理とリソース利用率の向上
+
+|**ゲストエージェント**
+|統合の強化、正常なシャットダウン、監視機能
+|===
+
+== トラブルシューティング
+
+=== 一般的な問題
+
+[cols="1,1,2"]
+|===
+|問題 |原因 |解決策
+
+|**インストール中のTPM 2.0エラー**
+|TPMデバイスの不足
+|VMテンプレートにはWindows 11の要件を満たすTPMサポートが含まれています
+
+|**起動デバイスが見つからない**
+|ブート順序の誤り
+|Windows ISOが `bootOrder: 1` で、ルートディスクが `bootOrder: 2` であることを確認してください
+
+|**インストール中にディスクが表示されない**
+|VirtIOストレージドライバーが読み込まれていない
+|インストールディスクを選択する前にviostorドライバーを読み込んでください
+
+|**ネットワークパフォーマンスが低い**
+|NetKVMドライバーの不足
+|Windowsインストール後にデバイスマネージャーからネットワークドライバーをインストールしてください
+|===
+
+=== アップロードの問題
+
+ISOアップロード中にTLS証明書エラーが発生する場合:
+
+[source,bash,role=execute]
+----
+# 開発環境では --insecure フラグを使用します
+virtctl image-upload dv <datavolume-name> --image-path=<iso-file> --insecure
+----
+
+== クリーンアップ
+
+このチュートリアルで作成したすべてのリソースを削除します。
+
+[source,bash,role=execute]
+----
+oc delete vm windows-vm-virtio
+oc delete dv windows-installation-iso virtio-drivers-iso
+----
+
+== まとめ
+
+このチュートリアルでは、以下の方法を学びました。
+
+* DataVolumeを使用してVirtIOドライバーとWindowsインストールISOをアップロードする
+* VirtIOデバイスと適切なハードウェア構成を備えたWindows VMを作成する
+* 最適なパフォーマンスを得るために、Windowsインストール中にVirtIOストレージドライバーをインストールする
+* インストール後に残りのVirtIOドライバーとQEMUゲストエージェントを構成する
+* ドライバーの適切なインストールと、OpenShift VirtualizationとのVM統合を確認する
+* 一般的なインストール問題のトラブルシューティングを行う
+
+これで、Windows VMは完全なVirtIOドライバーサポートとOpenShift Virtualizationとの統合を備え、エンタープライズグレードのパフォーマンスを発揮できるようになりました。
+
+== 参照
+
+* link:https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-installing-virtio-drivers.html[OpenShift VirtIOドライバーのインストール,window=_blank]
+* link:https://kubevirt.io/user-guide/[KubeVirtユーザーガイド,window=_blank]
+* xref:remote-access-windows-vms.adoc[Windows VMへのリモートアクセス]

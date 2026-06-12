@@ -1,0 +1,649 @@
+= ローカルのqcow2イメージからブートボリュームを作成する
+:navtitle: qcow2ブートボリュームのインポート
+
+== 概要
+
+このチュートリアルでは、既存のqcow2ディスクイメージをローカルのKVMプラットフォームからOpenShift Virtualizationにインポートして、ブートボリュームを作成する方法を説明します。これは、他の仮想化プラットフォームから仮想マシン（VM）を移行する場合や、OVA形式では利用できないカスタムOSテンプレートをデプロイする場合に特に役立ちます。
+
+qcow2 (QEMU Copy-On-Write version 2) は、KVMやその他のQEMUベースの仮想化プラットフォームで一般的に使用されるディスクイメージ形式です。これらのイメージをインポートすることで、既存のワークロードをOpenShift Virtualizationへ迅速に移行できます。
+
+注意: このチュートリアルは、OpenShift Virtualizationを導入したOpenShift 4.18.33環境で、AWS EBS gp3-csiストレージクラスを使用してテストされています。
+
+== 前提条件
+
+* OpenShift 4.18以降と xref:getting-started:install-openshift-virtualization.adoc[OpenShift Virtualizationオペレーターのインストール]
+* CLIツール: `oc`, xref:getting-started:virtctl-basics.adoc[`virtctl`]
+* `qemu-img` (オプション) - qcow2イメージの詳細をローカルで調査するために使用
+* ローカルで利用可能な（またはHTTP/S3経由でアクセス可能な）qcow2イメージファイル
+* xref:getting-started:default-storage-class.adoc[ストレージクラスの設定] - 動的なボリュームプロビジョニング用
+* 名前空間（namespace）内の十分なストレージクォータ
+
+== インポート方法の概要
+
+qcow2イメージをOpenShift Virtualizationにインポートする主な方法は4つあります。
+
+[cols="1,2,2",options="header"]
+|===
+|方法 |用途 |主な特徴
+
+|**virtctl image-upload**
+|ワークステーションからの単発インポート
+|最もシンプルな手法。DataVolume/PVCへ直接アップロード
+
+|**DataVolume with HTTP/S3**
+|共有イメージや自動化
+|Webサーバー上のイメージを指定し、DataVolumeが自動的にプル
+
+|**ContainerDisk**
+|イミュータブルでバージョン管理されたイメージ
+|コンテナイメージとしてqcow2をパッケージ化し、レジストリへプッシュ
+
+|**VM with DataVolumeTemplate**
+|アップロードを伴うVM作成
+|VM仕様にアップロードソースを含むDataVolumeTemplateを組み込む
+|===
+
+このチュートリアルでは、導入として最も分かりやすい **virtctl image-upload** メソッドに焦点を当てます。その他の方法は後のセクションで扱います。
+
+== ステップ 1: qcow2イメージの準備
+
+インポートの前に、qcow2イメージがOpenShift Virtualizationに適した状態であることを確認してください。
+
+=== イメージのダウンロードまたは場所の特定
+
+このチュートリアルでは、例としてFedora Cloudイメージを使用します。自身のqcow2イメージに置き換えて実行できます。
+
+[source,bash]
+----
+# Download Fedora Cloud image (example)
+curl -LO https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
+
+# Verify the image
+ls -lh Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
+----
+
+=== イメージ詳細の確認（オプション）
+
+ローカルに `qemu-img` がインストールされている場合は、イメージを調査できます。
+
+[source,bash]
+----
+qemu-img info Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
+----
+
+出力例:
+[source,text]
+----
+image: Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
+file format: qcow2
+virtual size: 5 GiB (5368709120 bytes)
+disk size: 420 MiB
+----
+
+仮想サイズ（virtual size）に注意してください。DataVolumeを作成する際は、少なくともこの容量以上のストレージを指定する必要があります。
+
+== ステップ 2: 名前空間の作成
+
+インポートするVM用の名前空間を作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace imported-vms
+----
+
+== ステップ 3: virtctl を使用したqcow2イメージのアップロード
+
+virtctlを使用してqcow2イメージを直接アップロードします。PVCは自動的に作成されます。
+
+[source,bash,role=execute]
+----
+virtctl image-upload pvc fedora-imported-disk \
+  --image-path=./Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2 \
+  --size=10Gi \
+  --namespace=imported-vms \
+  --insecure \
+  --force-bind
+----
+
+コマンドパラメータの説明:
+
+* `pvc fedora-imported-disk` - 作成されるPVCの名前
+* `--image-path` - ローカルのqcow2ファイルへのパス
+* `--size` - 作成するPVCのサイズ（qcow2イメージの仮想サイズ以上である必要があります）
+* `--namespace` - 対象の名前空間
+* `--insecure` - TLS検証をスキップ（自己署名証明書を使用する場合）
+* `--force-bind` - PVCの即時バインドを強制（`WaitForFirstConsumer`モードのStorageClassで必須）
+
+重要: `--force-bind` フラグは、`volumeBindingMode: WaitForFirstConsumer` を使用するStorageClass（AWS EBS、Azure Disk、その他のクラウドプロバイダーで一般的）を使用する場合に必須です。このフラグがないと、PVCが保留（pending）状態のままとなり、アップロードが開始されません。
+
+アップロードの進行状況の出力:
+[source,text]
+----
+PVC imported-vms/fedora-imported-disk created
+Uploading data to https://cdi-uploadproxy-openshift-cnv.apps...
+
+ 420.00 MiB / 420.00 MiB [=================================] 100.00% 1m30s
+
+Uploading data completed successfully, waiting for processing to complete
+Processing completed successfully
+----
+
+注意: アップロード時間はイメージのサイズとネットワーク速度に依存します。1GBのイメージであれば、通常1〜3分程度かかります。
+
+=== アップロード進行状況の監視
+
+別のターミナルで、PVCのステータスを確認することでアップロードプロセスを監視できます。
+
+[source,bash,role=execute]
+----
+oc get pvc fedora-imported-disk -n imported-vms --watch
+----
+
+アップロード中、PVCがPendingからBoundへ移行するのがわかります。
+[source,text]
+----
+NAME                   STATUS    VOLUME                                     CAPACITY   ACCESS MODES
+fedora-imported-disk   Pending
+fedora-imported-disk   Bound     pvc-xxxxx                                  10Gi       RWO
+----
+
+必要に応じて `cdi-upload` ポッドのログを確認してください。
+
+[source,bash,role=execute]
+----
+oc get pods -n imported-vms
+oc logs -n imported-vms cdi-upload-fedora-imported-disk -f
+----
+
+== ステップ 4: インポートしたブートボリュームを使用したVMの作成
+
+イメージのアップロードが完了したので、そのPVCをブートディスクとして使用するVMを作成します。
+
+警告: この例のcloud-initパスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSHキー認証を使用してください。
+
+xref:attachment$import-qcow2-boot-volume/vm-from-imported-qcow2.yaml[vm-from-imported-qcow2.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-imported-vm
+  namespace: imported-vms
+  labels:
+    app: fedora-imported
+spec:
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: fedora-imported-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          persistentVolumeClaim:
+            claimName: fedora-imported-disk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+----
+
+VMマニフェストを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f vm-from-imported-qcow2.yaml
+----
+
+VMを起動します。
+
+[source,bash,role=execute]
+----
+virtctl start fedora-imported-vm -n imported-vms
+----
+
+== ステップ 5: VMが実行中であることを確認
+
+VMの起動を監視します。
+
+[source,bash,role=execute]
+----
+oc get vmi -n imported-vms --watch
+----
+
+VMが起動し、実行中であることを示す出力:
+[source,text]
+----
+NAME                 AGE   PHASE       IP             NODENAME    READY
+fedora-imported-vm   15s   Scheduling                             False
+fedora-imported-vm   30s   Scheduled                  worker-01   False
+fedora-imported-vm   45s   Running     10.128.2.54    worker-01   True
+----
+
+VMコンソールにアクセスします。
+
+[source,bash,role=execute]
+----
+virtctl console fedora-imported-vm -n imported-vms
+----
+
+cloud-initで設定した資格情報（ユーザー: `fedora`、パスワード: `fedora123`）でログインします。
+
+インポートしたイメージからシステムが起動したことを確認します。
+
+[source,bash]
+----
+# Check OS version
+cat /etc/os-release
+
+# Check disk configuration
+lsblk
+----
+
+`Ctrl+]` でコンソールを終了します。
+
+== その他のインポート方法
+
+virtctl image-uploadは最もシンプルな方法ですが、ユースケースに応じて他にも手法があります。
+
+=== 方法 2: HTTPソースを指定したDataVolume
+
+qcow2イメージにHTTP/HTTPS経由でアクセスできる場合、DataVolumeを使用してCDIに自動ダウンロードおよびインポートさせることができます。この方法は、公開されているクラウドイメージや、社内Webサーバーでホストされているイメージを使用する場合に非常に有効です。
+
+公式のFedora Cloudイメージを使用する例:
+
+xref:attachment$import-qcow2-boot-volume/datavolume-http-import.yaml[datavolume-http-import.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: fedora-http-imported
+  namespace: imported-vms
+  annotations:
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+  source:
+    http:
+      url: "https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2"
+  storage:
+    resources:
+      requests:
+        storage: 10Gi
+----
+
+注意: アノテーション `cdi.kubevirt.io/storage.bind.immediate.requested: "true"` はPVCの即時バインドを強制します。これは `WaitForFirstConsumer` モードのStorageClassを使用する場合に必須です。
+
+DataVolumeを適用すると、CDIが自動的にイメージをダウンロードしてインポートします。
+
+[source,bash,role=execute]
+----
+oc apply -f datavolume-http-import.yaml
+oc get dv -n imported-vms --watch
+----
+
+ダウンロードの進行状況を監視します。
+[source,text]
+----
+NAME                   PHASE              PROGRESS   RESTARTS   AGE
+fedora-http-imported   ImportScheduled    N/A                   5s
+fedora-http-imported   ImportInProgress   12.5%                 15s
+fedora-http-imported   ImportInProgress   67.3%                 45s
+fedora-http-imported   Succeeded          100.0%                1m30s
+----
+
+DataVolumeが `Succeeded` になったら、それを参照するVMを作成できます。
+
+[source,yaml]
+----
+volumes:
+  - name: rootdisk
+    dataVolume:
+      name: fedora-http-imported
+----
+
+ヒント: この方法は手動のアップロードが不要なため、自動化やCI/CDパイプラインに最適です。適切な資格情報を設定すればS3 URLも使用できます。
+
+=== 方法 3: ContainerDisk
+
+バージョン管理されたイミュータブルなイメージを作成するには、qcow2をコンテナイメージとしてパッケージ化します。
+
+Containerfileを作成します。
+
+[source,docker]
+----
+FROM scratch
+ADD Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2 /disk/
+----
+
+ビルドしてプッシュします。
+
+[source,bash]
+----
+podman build -t quay.io/youruser/fedora-disk:v1 .
+podman push quay.io/youruser/fedora-disk:v1
+----
+
+VM仕様で使用します。
+
+[source,yaml]
+----
+volumes:
+  - name: rootdisk
+    containerDisk:
+      image: quay.io/youruser/fedora-disk:v1
+----
+
+注意: ContainerDiskは一時的なものです。変更はVM停止時に失われるため、個別の永続ボリュームをアタッチしない限り保持されません。
+
+=== 方法 4: DataVolumeTemplateとアップロードソースを用いたVM
+
+この方法は、DataVolumeTemplateを使用して、VM作成とアップロード機能を組み合わせます。DataVolumeはVM仕様内にインラインで定義され、VM作成時に自動的に作成されます。
+
+**この方法の用途:**
+- VMとそのストレージを単一のマニフェストで定義したい
+- GitOpsや宣言的なワークフローを使用している
+- DataVolumeのライフサイクルをVMに連動させたい
+
+xref:attachment$import-qcow2-boot-volume/vm-with-upload-datavolume.yaml[vm-with-upload-datavolume.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-with-upload
+  namespace: imported-vms
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-with-upload-disk
+      spec:
+        source:
+          upload: {}
+        storage:
+          resources:
+            requests:
+              storage: 10Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-with-upload
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-with-upload-disk
+          name: rootdisk
+----
+
+VMを作成します（これによりVMとDataVolumeの両方が作成されます）。
+
+[source,bash,role=execute]
+----
+oc apply -f vm-with-upload-datavolume.yaml
+----
+
+DataVolumeは作成されますが、ディスクにデータがないためVMはまだ起動しません。ここでイメージをアップロードします。
+
+[source,bash,role=execute]
+----
+virtctl image-upload dv vm-with-upload-disk \
+  --image-path=./Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2 \
+  --size=10Gi \
+  --namespace=imported-vms \
+  --insecure \
+  --force-bind
+----
+
+アップロードが完了したら、VMを起動します。
+
+[source,bash,role=execute]
+----
+virtctl start vm-with-upload -n imported-vms
+----
+
+**この方法のメリット:**
+- 単一マニフェストでVMとストレージの両方を定義できる
+- DataVolumeのライフサイクルがVMとともに管理される
+- Infrastructure-as-Codeワークフローに適している
+
+**デメリット:**
+- PVCを個別に作成するよりも複雑
+- VM作成後にアップロードを行う必要がある
+- DataVolume/virtctlの互換性問題の影響を受ける可能性がある
+
+== ベストプラクティス
+
+=== イメージの準備
+* **イメージ整合性の検証** - アップロード前にチェックサムを確認
+* **イメージサイズの最適化** - `virt-sparsify` を使用してqcow2ファイルサイズを削減
+* **機密データの削除** - 資格情報やマシン固有の設定をクリーンアップ
+* **cloud-initのインストール** - 適切な初期化のためにcloud-initがインストールされていることを確認
+
+=== ストレージのサイジング
+* **拡張性を考慮** - VM操作を見越して、仮想サイズよりも多くのストレージを割り当て
+* **シンプロビジョニング** - 利用可能な場合はシンプロビジョニングをサポートするストレージクラスを使用
+* **使用状況の監視** - 定期的にPVCの使用状況を追跡
+
+=== セキュリティ
+* **イメージスキャン** - インポート前にqcow2イメージの脆弱性をスキャン
+* **TLSの利用** - 可能であれば `--insecure` フラグを外し、適切な証明書を設定
+* **アクセス制御** - RBACを使用してイメージアップロード権限を制御
+* **暗号化ストレージ** - 保存時の暗号化をサポートするストレージクラスを検討
+
+=== パフォーマンス
+* **ローカルアップロード** - 速度を向上させるため、クラスターネットワーク内からアップロード
+* **並列インポート** - 帯域幅が許す限り、複数のイメージを同時にインポート
+* **ネットワーク配置** - 最適な転送速度のため、アップロード元とクラスターを近接させる
+
+== トラブルシューティング
+
+=== アップロードが "Waiting for PVC upload pod to be ready" で停止する
+
+アップロードがポッドを待機したままになり、PVCが "WaitForFirstConsumer" ステータスになる場合は、StorageClassのバインドモードの問題です。
+
+PVCのステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc get pvc -n imported-vms
+oc describe pvc fedora-imported-disk -n imported-vms
+----
+
+イベントに "waiting for first consumer to be created before binding" と表示されている場合、StorageClassに `volumeBindingMode: WaitForFirstConsumer` が設定されています。
+
+**解決策**: virtctlコマンドに `--force-bind` フラグを追加します。
+
+[source,bash,role=execute]
+----
+virtctl image-upload pvc fedora-imported-disk \
+  --image-path=./image.qcow2 \
+  --size=10Gi \
+  --namespace=imported-vms \
+  --insecure \
+  --force-bind
+----
+
+スタックしたPVCを削除してから再度実行してください。
+
+[source,bash,role=execute]
+----
+oc delete pvc fedora-imported-disk -n imported-vms
+----
+
+その後、`--force-bind` をつけて再試行します。
+
+=== アップロードが "Unable to get PVC Prime name from PVC" で失敗する
+
+このエラーは、DataVolumeベースのアップロードを使用する特定のCDIバージョンで発生する可能性があります。解決策は、代わりにPVCメソッドを使用することです（このチュートリアルで採用している方法です）。
+
+[source,bash,role=execute]
+----
+# Use PVC upload (not DataVolume)
+virtctl image-upload pvc <pvc-name> \
+  --image-path=./image.qcow2 \
+  --size=10Gi \
+  --namespace=imported-vms \
+  --insecure
+----
+
+一般的な原因:
+* **CDIオペレーターの問題**: `cdi-deployment` と `cdi-operator` ポッドが実行されているか確認
+* **ストレージクラスの問題**: StorageClassがボリュームをプロビジョニングできることを確認
+
+CDIポッドの状態を確認します。
+
+[source,bash,role=execute]
+----
+oc get pods -n openshift-cnv | grep cdi
+----
+
+=== アップロードがスタックする、または非常に低速
+
+CDIアップロードプロキシポッドの状態を確認します。
+
+[source,bash,role=execute]
+----
+oc get pods -n openshift-cnv | grep cdi-uploadproxy
+oc logs -n openshift-cnv <cdi-uploadproxy-pod>
+----
+
+ワークステーションからクラスターへのネットワーク接続を確認してください。
+
+=== PVCサイズ不足エラー
+
+`--size` パラメータは、qcow2イメージの仮想サイズよりも大きくする必要があります。
+
+[source,bash]
+----
+qemu-img info image.qcow2 | grep "virtual size"
+----
+
+サイズ不足でアップロードが失敗した場合は、PVCを削除して、より大きなサイズで再試行します。
+
+[source,bash,role=execute]
+----
+oc delete pvc fedora-imported-disk -n imported-vms
+
+# Retry upload with larger --size parameter
+virtctl image-upload pvc fedora-imported-disk \
+  --image-path=./image.qcow2 \
+  --size=20Gi \
+  --namespace=imported-vms \
+  --insecure
+----
+
+=== VMがインポートしたイメージから起動しない
+
+VMのイベントとログを確認します。
+
+[source,bash,role=execute]
+----
+oc describe vm fedora-imported-vm -n imported-vms
+oc get events -n imported-vms --field-selector involvedObject.name=fedora-imported-vm
+----
+
+コンソールにアクセスして起動メッセージを確認します。
+
+[source,bash,role=execute]
+----
+virtctl console fedora-imported-vm -n imported-vms
+----
+
+一般的な原因:
+* イメージが破損している - チェックサムを確認
+* マシンの種類が誤っている - VM仕様で `machine.type` を調整
+* ブートローダーがない - イメージに適切なブート設定があるか確認
+
+== クリーンアップ
+
+このチュートリアルで作成したリソースを削除するには以下を実行します。
+
+[source,bash,role=execute]
+----
+# Delete the VM
+oc delete vm fedora-imported-vm -n imported-vms
+
+# Delete the PVC
+oc delete pvc fedora-imported-disk -n imported-vms
+
+# Delete the namespace
+oc delete namespace imported-vms
+----
+
+警告: PVCを削除すると、インポートしたイメージデータは完全に削除されます。必要に応じてバックアップがあることを確認してください。
+
+== まとめ
+
+このチュートリアルでは、以下の方法を学びました。
+
+* OpenShift Virtualizationへインポートするためのqcow2イメージの準備
+* `virtctl image-upload pvc` を使用したqcow2イメージの直接アップロード
+* インポートしたブートボリュームを使用したVMの作成
+* アップロードプロセスの監視
+* その他のインポート方法（HTTP, ContainerDisk, DataVolumeTemplate）の使用
+* イメージインポートとストレージ管理のベストプラクティス
+* 一般的なインポートの問題のトラブルシューティング
+
+既存のqcow2イメージをインポートすることで、他のKVMベースのプラットフォームからOpenShift Virtualizationへのワークロード移行が容易になります。
+
+== 次のステップ
+
+* xref:custom-golden-images.adoc[カスタムゴールデンイメージの作成] - 再利用可能なVMテンプレートの構築
+* xref:networking:static-ip-configuration.adoc[静的IPの設定] - VMの静的IP設定
+* xref:vm-configuration:remote-access-linux-vms.adoc[SSHアクセスの設定] - リモートからVMへ接続
+
+== 参照
+
+* link:https://github.com/kubevirt/containerized-data-importer[Containerized Data Importer (CDI),window=_blank]
+* link:https://kubevirt.io/user-guide/operations/virtctl_client_tool/[virtctl ドキュメント,window=_blank]

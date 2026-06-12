@@ -1,0 +1,582 @@
+= カスタムOSイメージとゴールデンイメージの作成
+:navtitle: カスタムゴールデンイメージ
+
+== 概要
+
+このチュートリアルでは、OpenShift Virtualization用のカスタムゴールデンイメージを作成する方法を説明します。ゴールデンイメージは、一貫したソフトウェア、構成、設定を持つ複数のVMを展開するためのテンプレートとして機能する、事前構成済みのVMディスクイメージです。このアプローチにより、展開が迅速化され、環境全体で一貫性が保たれ、構成のドリフト（乖離）が削減されます。
+
+== ゴールデンイメージとは
+
+ゴールデンイメージとは、以下を含む標準化された事前構成済みのVMイメージです。
+- ベースオペレーティングシステム
+- インストール済みのソフトウェアパッケージ
+- システム構成
+- セキュリティ強化
+- 最適化
+
+ゴールデンイメージを使用するメリット：
+- VM展開の高速化（起動後のソフトウェアインストールが不要）
+- すべてのVM間での一貫性
+- 構成ミスの削減
+- メンテナンスと更新の簡素化
+- VM構成のバージョン管理
+
+== 前提条件
+
+- OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以上
+- CLIツール: `oc`, `virtctl`, `kubectl`
+- ストレージクラスが構成済みであること（本チュートリアルでは `lvms-vg1` を使用）
+- Linuxシステム管理に関する基本的な理解
+- cloud-initに関する基本的な理解
+
+== ゴールデンイメージのワークフロー
+
+プロセスには以下のステップが含まれます。
+. 標準OSイメージからベースVMを展開する
+. VMをカスタマイズする（ソフトウェアのインストール、設定の構成）
+. VMを汎用化する（マシン固有のデータを削除）
+. VMを停止し、そのディスクをキャプチャする
+. ゴールデンイメージ用のDataSourceを作成する
+. ゴールデンイメージから新しいVMを展開する
+
+== ステップ 1: ベースVMの展開
+
+ゴールデンイメージのワークフロー用に名前空間を作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace golden-images
+----
+
+カスタマイズ用のベースFedora VMを作成します。
+
+WARNING: この例で使用しているcloud-initのパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードまたはSSHキー認証を使用してください。
+
+xref:attachment$custom-golden-images/golden-image-base-vm.yaml[golden-image-base-vm.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: base-fedora-vm
+  namespace: golden-images
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: base-fedora-vm-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: base-fedora-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: base-fedora-vm-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+          name: cloudinitdisk
+----
+
+これを `base-fedora-vm.yaml` として保存し、展開します。
+
+[source,bash,role=execute]
+----
+oc apply -f base-fedora-vm.yaml
+----
+
+VMの準備ができるまで待ちます。ソースイメージからDataVolumeがクローンされるため、数分かかる場合があります。
+
+[source,bash,role=execute]
+----
+oc get dv -n golden-images
+----
+
+クローン進捗を示す出力例：
+[source,text]
+----
+NAME                  PHASE             PROGRESS   RESTARTS   AGE
+base-fedora-vm-disk   CloneInProgress   45.2%                 2m
+----
+
+DataVolumeが `Succeeded` になったら、VMステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi -n golden-images
+----
+
+出力：
+[source,text]
+----
+NAME             AGE   PHASE     IP             NODENAME   READY
+base-fedora-vm   4m    Running   10.128.1.151   ocplab01   True
+----
+
+注意: ディスクの初期クローンには、ストレージのパフォーマンスに応じて通常3〜5分かかります。
+
+== ステップ 2: VMのカスタマイズ
+
+VMコンソールにアクセスします。
+
+[source,bash,role=execute]
+----
+virtctl console base-fedora-vm -n golden-images
+----
+
+ユーザー名 `fedora` とパスワード `fedora123` でログインします。
+
+カスタマイズ手順を実行します。
+
+[source,bash]
+----
+# システムパッケージの更新
+sudo dnf update -y
+
+# nginx Webサーバーと一般的なツールのインストール
+sudo dnf install -y nginx vim htop curl wget git
+
+# 起動時にnginxが開始するように有効化
+sudo systemctl enable nginx
+
+# カスタムウェルカムページの作成
+sudo bash -c 'cat > /usr/share/nginx/html/index.html << EOF
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Golden Image VM</title>
+</head>
+<body>
+    <h1>VM from Golden Image</h1>
+    <p>This VM was deployed from a golden image with pre-installed software.</p>
+    <p>Nginx is pre-configured and ready to use.</p>
+</body>
+</html>
+EOF'
+
+# ファイアウォールの構成
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --reload
+----
+
+== ステップ 3: VMの汎用化
+
+イメージをキャプチャする前に、再利用できるようにマシン固有のデータを削除する必要があります。
+
+[source,bash]
+----
+# パッケージキャッシュのクリーンアップ
+sudo dnf clean all
+
+# ログのクリーンアップ
+sudo find /var/log -type f -exec truncate -s 0 {} \;
+
+# マシンIDの削除
+sudo rm -f /etc/machine-id
+sudo touch /etc/machine-id
+
+# cloud-initのクリーンアップ
+sudo cloud-init clean --logs --seed
+
+# bash履歴の消去
+history -c
+cat /dev/null > ~/.bash_history
+
+# 同期して終了
+sync
+exit
+----
+
+`Ctrl+]` を押してコンソールから抜けます。
+
+== ステップ 4: VMの停止
+
+ディスクをキャプチャするためにVMを停止します。
+
+[source,bash,role=execute]
+----
+virtctl stop base-fedora-vm -n golden-images
+----
+
+停止したことを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm -n golden-images
+----
+
+出力：
+[source,text]
+----
+NAME             AGE   STATUS    READY
+base-fedora-vm   15m   Stopped   False
+----
+
+== ステップ 5: ゴールデンイメージDataSourceの作成
+
+次に、ベースVMのディスクを参照するDataSourceを作成します。このDataSourceを使用して、新しいVMを展開します。
+
+DataSourceを作成します。
+
+xref:attachment$custom-golden-images/golden-image-datasource.yaml[golden-image-datasource.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataSource
+metadata:
+  name: fedora-nginx-golden
+  namespace: golden-images
+spec:
+  source:
+    pvc:
+      name: base-fedora-vm-disk
+      namespace: golden-images
+----
+
+`fedora-golden-datasource.yaml` として保存し、適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f fedora-golden-datasource.yaml
+----
+
+DataSourceを確認します。
+
+[source,bash,role=execute]
+----
+oc get datasource -n golden-images
+----
+
+出力：
+[source,text]
+----
+NAME                   AGE
+fedora-nginx-golden    5s
+----
+
+== ステップ 6: ゴールデンイメージからのVM展開
+
+このゴールデンイメージから複数のVMを展開できるようになりました。各VMはゴールデンイメージからクローンされます。
+
+最初のVMを作成します。
+
+xref:attachment$custom-golden-images/webserver-vm-from-golden.yaml[webserver-vm-from-golden.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: webserver-vm-1
+  namespace: golden-images
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: webserver-vm-1-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora-nginx-golden
+          namespace: golden-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: webserver-vm-1
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: webserver-vm-1-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              hostname: webserver-vm-1
+              fqdn: webserver-vm-1.example.com
+          name: cloudinitdisk
+----
+
+2番目のVMを作成します。
+
+xref:attachment$custom-golden-images/webserver-vm-2.yaml[webserver-vm-2.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: webserver-vm-2
+  namespace: golden-images
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: webserver-vm-2-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora-nginx-golden
+          namespace: golden-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: webserver-vm-2
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: webserver-vm-2-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              hostname: webserver-vm-2
+              fqdn: webserver-vm-2.example.com
+          name: cloudinitdisk
+----
+
+両方のVMを展開します。
+
+[source,bash,role=execute]
+----
+oc apply -f webserver-vm-1.yaml
+oc apply -f webserver-vm-2.yaml
+----
+
+クローンプロセスを監視します。
+
+[source,bash,role=execute]
+----
+oc get dv -n golden-images
+----
+
+出力：
+[source,text]
+----
+NAME                  PHASE             PROGRESS   RESTARTS   AGE
+base-fedora-vm-disk   Succeeded         100.0%                15m
+webserver-vm-1-disk   CloneInProgress   72.5%                 3m
+webserver-vm-2-disk   CloneInProgress   71.8%                 3m
+----
+
+DataVolumeはゴールデンイメージからクローンされます。これには通常、VMあたり3〜5分かかります。
+
+== ステップ 7: VMの確認
+
+両方のVMが実行されていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi -n golden-images
+----
+
+出力：
+[source,text]
+----
+NAME             AGE   PHASE     IP             NODENAME   READY
+webserver-vm-1   5m    Running   10.128.1.152   ocplab01   True
+webserver-vm-2   5m    Running   10.128.1.153   ocplab01   True
+----
+
+いずれかのVMにアクセスし、nginxがプリインストールされていることを確認します。
+
+[source,bash,role=execute]
+----
+virtctl console webserver-vm-1 -n golden-images
+----
+
+nginxのステータスを確認します。
+
+[source,bash]
+----
+sudo systemctl status nginx
+----
+
+サービスがアクティブ（実行中）であるはずです。
+
+Webサーバーをテストします。
+
+[source,bash]
+----
+curl localhost
+----
+
+カスタマイズ中に作成したカスタムHTMLページが表示されるはずです。
+
+`Ctrl+]` でコンソールから抜けます。
+
+== バージョン管理
+
+ゴールデンイメージの新しいバージョンを作成するには：
+
+. 現在のゴールデンイメージからVMを展開する
+. 更新または変更を適用する
+. VMを汎用化する
+. 名前にバージョンを含めた新しいDataSourceを作成する（例: `fedora-nginx-golden-v2`）
+. 新しいバージョンを参照するようにVMの展開を更新する
+
+DataSourceの命名例：
+- `fedora-nginx-golden-v1`
+- `fedora-nginx-golden-v2`
+- `fedora-nginx-golden-2025-10`
+
+== ベストプラクティス
+
+=== イメージの作成
+- カスタマイズは最小限かつ目的に絞る
+- インストールされたすべてのソフトウェアと構成をドキュメント化する
+- 本番環境で使用する前にゴールデンイメージを徹底的にテストする
+- ゴールデンイメージのバージョン管理を行う
+- バージョンごとに変更履歴（changelog）を維持する
+
+=== 汎用化
+- 常にログと一時ファイルをクリーンアップする
+- SSHホストキーを削除する
+- マシン固有の識別子を削除する
+- cloud-initデータをクリーンアップする
+- bash履歴を消去する
+
+=== ストレージ
+- ユースケースに適したディスクサイズを使用する
+- 可能であればシンプロビジョニングを検討する
+- ゴールデンイメージのストレージ使用量を監視する
+
+=== セキュリティ
+- ゴールデンイメージを作成する前にセキュリティ更新を適用する
+- 機密データや資格情報を削除する
+- 不要なサービスを無効にする
+- ファイアウォールルールを適切に構成する
+- VM固有のシークレット（SSHキー、パスワード）にはcloud-initを使用する
+
+== トラブルシューティング
+
+このチュートリアルの手順中に問題が発生した場合は、xref:golden-images-troubleshooting.adoc[ゴールデンイメージのトラブルシューティングガイド]を参照して、詳細な確認コマンド、一般的な問題、および解決策を確認してください。
+
+== クリーンアップ
+
+このチュートリアルで作成したリソースをクリーンアップするには：
+
+[source,bash,role=execute]
+----
+# VMの削除
+oc delete vm webserver-vm-1 webserver-vm-2 base-fedora-vm -n golden-images
+
+# DataSourceの削除
+oc delete datasource fedora-nginx-golden -n golden-images
+
+# 名前空間の削除
+oc delete namespace golden-images
+----
+
+== まとめ
+
+このチュートリアルでは、以下の方法を学びました。
+- ベースVMの展開とカスタマイズ
+- ゴールデンイメージとして再利用するためのVMの汎用化
+- ゴールデンイメージ用DataSourceの作成
+- ゴールデンイメージからの複数VMの展開
+- ゴールデンイメージのバージョン管理
+
+ゴールデンイメージにより、OpenShift Virtualization環境におけるVM展開の効率と一貫性が大幅に向上します。
+
+== 参照
+
+* link:https://docs.openshift.com/container-platform/latest/virt/about_virt/about-virt.html[OpenShift Virtualization Documentation,window=_blank]
+* link:https://kubevirt.io/user-guide/operations/clone_api/[KubeVirt DataVolume Documentation,window=_blank]
+* link:https://github.com/kubevirt/containerized-data-importer[Containerized Data Importer,window=_blank]

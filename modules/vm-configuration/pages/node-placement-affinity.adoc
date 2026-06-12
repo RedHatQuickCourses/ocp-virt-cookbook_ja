@@ -1,0 +1,922 @@
+= セレクターおよびアフィニティルールによるVMノードの配置
+:navtitle: ノードの配置とアフィニティ
+
+== 概要
+
+ノードの配置は、どのOpenShiftクラスタノードで仮想マシン（VM）を実行するかを制御します。デフォルトでは、Kubernetesスケジューラが利用可能なノード全体にVMを自動的に配置しますが、特定のハードウェアを持つノードで特定のVMを実行する、ワークロードを分離する、あるいはパフォーマンスや可用性の理由からVM同士を近くに配置したり遠ざけたりするなど、より詳細な制御が必要になることがよくあります。
+
+このチュートリアルでは、OpenShift VirtualizationにおけるVM配置を制御するための、ノードセレクター、ノードアフィニティ、およびポッドアフィニティ／アンチアフィニティルールについて説明します。
+
+=== 学習内容
+
+* 単純なノード配置にノードセレクターを使用する方法
+* ノードアフィニティルール（必須および優先）の設定方法
+* VMの共存を制御するためにポッドアフィニティおよびアンチアフィニティを使用する方法
+* ノードにラベルを付け、配置を確認する方法
+* 一般的な配置パターンとトラブルシューティング
+
+== 前提条件
+
+* OpenShift 4.18以降とOpenShift Virtualizationがインストールされていること
+* ノードにラベルを付けるためのクラスタ管理者権限
+* `oc` および `virtctl` CLIツールがインストールされていること
+* クラスタ内に複数のワーカーノードがあること（意味のある配置を行うため）
+
+== ノード配置オプションの理解
+
+OpenShift Virtualizationには、VMの実行場所を制御するための3つの主要なメカニズムがあります。
+
+[cols="1,2,2",options="header"]
+|===
+|メカニズム |ユースケース |利点
+
+|ノードセレクター
+|特定のラベルを持つノードにVMを配置する
+|シンプルで理解しやすい
+
+|ノードアフィニティ
+|必須/優先ルールを用いた複雑なノード選択
+|柔軟性が高く、複数の条件をサポート
+
+|ポッドアフィニティ/アンチアフィニティ
+|他のVMやポッドに関連付けてVMを配置する
+|VMの共存パターンを制御する
+|===
+
+IMPORTANT: VMの配置ルールは、そのVMを実行する基盤となる `virt-launcher` ポッドに適用されます。Kubernetesスケジューラは、ポッドをノードに配置する際にこれらのルールを評価します。
+
+== ノードへのラベル付け
+
+セレクターやアフィニティルールを使用する前に、ノードにラベルを付けてその特性を識別します。
+
+=== 既存のノードラベルの表示
+
+[source,bash,role=execute]
+----
+oc get nodes --show-labels
+----
+
+出力例:
+[source,text]
+----
+NAME                          STATUS   ROLES                  AGE   VERSION    LABELS
+ip-10-0-8-25.ec2.internal     Ready    control-plane,master   23d   v1.31.14   beta.kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-10-0-8-25.ec2.internal,...
+ip-10-0-24-89.ec2.internal    Ready    worker                 22d   v1.31.14   beta.kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-10-0-24-89.ec2.internal,...
+ip-10-0-43-58.ec2.internal    Ready    worker                 22d   v1.31.14   beta.kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-10-0-43-58.ec2.internal,...
+ip-10-0-82-27.ec2.internal    Ready    worker                 22d   v1.31.14   beta.kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-10-0-82-27.ec2.internal,...
+----
+
+=== ノードへのカスタムラベルの追加
+
+特性（ハードウェア、場所、ワークロードの種類）に基づいてノードにラベルを付けます。
+
+[source,bash,role=execute]
+----
+# Get worker node names
+WORKER1=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[0].metadata.name}')
+WORKER2=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[1].metadata.name}')
+WORKER3=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[2].metadata.name}')
+
+# Label nodes by environment
+oc label node $WORKER1 env=development
+oc label node $WORKER2 env=production
+
+# Label nodes by GPU type
+oc label node $WORKER1 gpu=nvidia-t4
+oc label node $WORKER2 gpu=nvidia-a100
+
+# Label nodes by disk type
+oc label node $WORKER1 storage=ssd
+oc label node $WORKER3 storage=nvme
+
+# Label nodes by workload type
+oc label node $WORKER1 workload=database
+----
+
+ラベルを確認します。
+
+[source,bash,role=execute]
+----
+WORKER1=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[0].metadata.name}')
+oc get node $WORKER1 -o jsonpath='{.metadata.labels}' | jq
+----
+
+出力例:
+[source,json]
+----
+{
+  "beta.kubernetes.io/arch": "amd64",
+  "beta.kubernetes.io/os": "linux",
+  "env": "development",
+  "gpu": "nvidia-t4",
+  "kubernetes.io/arch": "amd64",
+  "kubernetes.io/hostname": "ip-10-0-24-89.ec2.internal",
+  "kubernetes.io/os": "linux",
+  "node-role.kubernetes.io/worker": "",
+  "storage": "ssd",
+  "workload": "database"
+}
+----
+
+=== ラベルの削除
+
+[source,bash,role=execute]
+----
+WORKER1=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[0].metadata.name}')
+oc label node $WORKER1 gpu-
+----
+
+== ノードセレクターの使用
+
+ノードセレクターは、ノードラベルを正確に一致させることでVMの配置を制御する最もシンプルな方法です。
+
+=== チュートリアル用ネームスペースの作成
+
+まず、チュートリアルのリソースを配置するためのネームスペースを作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace vm-placement
+----
+
+=== 基本的なノードセレクターの例
+
+`storage=ssd` というラベルを持つノードでのみ実行されるVMを作成します。
+
+WARNING: この例のcloud-initパスワードはデモ目的のみです。本番環境では常に強力で一意なパスワードやSSH鍵認証を使用してください。
+
+xref:attachment$node-placement-affinity/vm-node-selector.yaml[Download vm-node-selector.yaml]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: database-vm
+  namespace: vm-placement
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      nodeSelector:
+        storage: ssd  # VM will only run on nodes with storage=ssd label
+      domain:
+        cpu:
+          cores: 2
+        memory:
+          guest: 4Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:43
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd: { expire: False }
+----
+
+VMに適用して起動します。
+
+[source,bash,role=execute]
+----
+oc apply -f vm-node-selector.yaml
+virtctl start database-vm -n vm-placement
+----
+
+=== ノード配置の確認
+
+VMがどのノードで実行されているかを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi database-vm -n vm-placement -o wide
+----
+
+出力例:
+[source,text]
+----
+NAME          AGE   PHASE     IP             NODENAME   READY
+database-vm   45s   Running   10.128.0.200   ocplab02   True
+----
+
+ノードに必要なラベルがあることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi database-vm -n vm-placement -o jsonpath='{.status.nodeName}' | xargs oc get node -L storage
+----
+
+出力例:
+[source,text]
+----
+NAME       STATUS   ROLES    AGE   VERSION   STORAGE
+ip-10-0-24-89.ec2.internal   Ready    worker   30d   v1.30.0   ssd
+----
+
+=== 複数のラベル選択
+
+ノードセレクターは複数のラベルをサポートしています（すべて一致する必要があります）。
+
+[source,yaml]
+----
+spec:
+  template:
+    spec:
+      nodeSelector:
+        storage: ssd
+        env: production
+        gpu: nvidia-t4
+----
+
+VMは、指定された値を持つこれら3つすべてのラベルを持つノードでのみ実行されます。
+
+== ノードアフィニティの使用
+
+ノードアフィニティは、必須および優先ルールにより、より柔軟なノード選択を提供します。
+
+=== ノードアフィニティの必須設定
+
+必須アフィニティ（ハード要件）は、一致するノードが存在しない場合にスケジュールを防止します。
+
+xref:attachment$node-placement-affinity/vm-node-affinity-required.yaml[Download vm-node-affinity-required.yaml]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: gpu-workload-vm
+  namespace: vm-placement
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      labels:
+        app: ml-training
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: gpu
+                operator: In
+                values:
+                - nvidia-t4
+                - nvidia-a100
+              - key: env
+                operator: In
+                values:
+                - production
+      domain:
+        cpu:
+          cores: 4
+        memory:
+          guest: 8Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:43
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd: { expire: False }
+----
+
+ポイント:
+
+* **requiredDuringSchedulingIgnoredDuringExecution**: 一致するノードが存在しない場合、VMは起動しません。
+* **matchExpressions**: `In`、`NotIn`、`Exists`、`DoesNotExist`、`Gt`、`Lt` などの演算子をサポートします。
+* **nodeSelectorTerms**: 複数の項は OR 関係（いずれかの項が一致すればよい）になります。
+* 1つの項の中にある複数の **matchExpressions** は AND 関係（すべて一致する必要がある）になります。
+
+=== ノードアフィニティの優先設定
+
+優先アフィニティ（ソフト要件）は、一致するノードへの配置を試みますが、必要に応じて他のノードを使用することも可能です。
+
+xref:attachment$node-placement-affinity/vm-node-affinity-preferred.yaml[Download vm-node-affinity-preferred.yaml]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: web-vm
+  namespace: vm-placement
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      labels:
+        app: webserver
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: storage
+                operator: In
+                values:
+                - nvme
+          - weight: 50
+            preference:
+              matchExpressions:
+              - key: storage
+                operator: In
+                values:
+                - ssd
+      domain:
+        cpu:
+          cores: 2
+        memory:
+          guest: 2Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:43
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd: { expire: False }
+----
+
+ポイント:
+
+* **preferredDuringSchedulingIgnoredDuringExecution**: スケジューラは一致するノードを優先しますが、他へ配置することもできます。
+* **weight**: 1〜100。ウェイトが高いほど優先順位が高くなります。
+* 複数の優先設定は加算的（スコアが結合）です。
+
+=== 必須および優先アフィニティの組み合わせ
+
+[source,yaml]
+----
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: env
+                operator: In
+                values:
+                - production
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: storage
+                operator: In
+                values:
+                - nvme
+----
+
+このVMはプロダクションノードで実行される必要がありますが、NVMeストレージを持つノードが好ましいことを意味します。
+
+== ポッドアフィニティとアンチアフィニティの使用
+
+ポッドアフィニティおよびアンチアフィニティは、他のVMやポッドに関連付けてVMの配置を制御し、共存や分離のパターンを実現します。
+
+=== ポッドアフィニティ: VMを一緒に実行する
+
+ポッドアフィニティを使用して、VMを同じノード上または同じアベイラビリティーゾーン内で実行します。
+
+xref:attachment$node-placement-affinity/vm-pod-affinity.yaml[Download vm-pod-affinity.yaml]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: web-frontend-vm
+  namespace: vm-placement
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      labels:
+        app: web-frontend
+        tier: frontend
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - database
+            topologyKey: kubernetes.io/hostname
+      domain:
+        cpu:
+          cores: 2
+        memory:
+          guest: 2Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:43
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd: { expire: False }
+----
+
+このVMは、`app=database` ラベルを持つポッド/VMと同じノード（`topologyKey: kubernetes.io/hostname`）で実行されます。
+
+一般的なトポロジーキー:
+
+[cols="1,2",options="header"]
+|===
+|トポロジーキー |効果
+
+|`kubernetes.io/hostname`
+|同一物理ノード
+
+|`topology.kubernetes.io/zone`
+|同一アベイラビリティーゾーン
+
+|`topology.kubernetes.io/region`
+|同一リージョン
+|===
+
+=== ポッドアンチアフィニティ: VMを分離する
+
+高可用性を確保するために、ポッドアンチアフィニティを使用してノード間にVMを分散させます。
+
+xref:attachment$node-placement-affinity/vm-pod-anti-affinity.yaml[Download vm-pod-anti-affinity.yaml]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cache-vm-01
+  namespace: vm-placement
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      labels:
+        app: redis-cache
+        role: cache
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - redis-cache
+            topologyKey: kubernetes.io/hostname
+      domain:
+        cpu:
+          cores: 2
+        memory:
+          guest: 4Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:43
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd: { expire: False }
+----
+
+これにより、複数のキャッシュVMが同じノードで実行されることがなくなり、可用性が向上します。
+
+=== 優先ポッドアンチアフィニティ
+
+厳格な制約なしでベストエフォート型の分散を行う場合:
+
+[source,yaml]
+----
+spec:
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - redis-cache
+              topologyKey: kubernetes.io/hostname
+----
+
+=== 複数のアフィニティルールの組み合わせ
+
+[source,yaml]
+----
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: env
+                operator: In
+                values:
+                - production
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: tier
+                  operator: In
+                  values:
+                  - database
+              topologyKey: kubernetes.io/hostname
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - web-frontend
+            topologyKey: kubernetes.io/hostname
+----
+
+このVMは以下のように配置されます:
+
+* プロダクションノードで実行されなければならない
+* データベース階層のVMがあるノードで実行されることが望ましい
+* 他のWebフロントエンドVMがあるノードでは実行してはならない
+
+== 一般的な配置パターン
+
+=== パターン 1: 高可用性データベースクラスタ
+
+データベースVMを複数のノードに分散させる:
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: postgres-vm-01
+  labels:
+    app: postgres-cluster
+    instance: "01"
+spec:
+  template:
+    metadata:
+      labels:
+        app: postgres-cluster
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: postgres-cluster
+            topologyKey: kubernetes.io/hostname
+----
+
+各データベースVMレプリカは異なるノードで実行され、単一ノードの障害がクラスタ全体に影響を与えるのを防ぎます。
+
+=== パターン 2: GPUワークロードの分離
+
+GPUワークロード専用のノードを割り当てる:
+
+[source,yaml]
+----
+spec:
+  template:
+    spec:
+      nodeSelector:
+        gpu: "true"
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+----
+
+ノードセレクターとテイント/容認（Taints/Tolerations）を組み合わせて、GPUノードをGPUワークロード専用として予約します。
+
+=== パターン 3: 低遅延アプリケーションスタック
+
+アプリケーション階層を同じノード上に共存させる:
+
+[source,yaml]
+----
+# Backend VM
+spec:
+  template:
+    metadata:
+      labels:
+        app: trading-platform
+        tier: backend
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: tier
+                operator: In
+                values:
+                - cache
+                - database
+            topologyKey: kubernetes.io/hostname
+----
+
+=== パターン 4: 環境の分離
+
+開発用VMがプロダクションノードで実行されないようにする:
+
+[source,yaml]
+----
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: env
+                operator: In
+                values:
+                - development
+----
+
+== Webコンソールによる配置の確認
+
+. **Virtualization** -> **VirtualMachines** に移動します。
+. VMをクリックして詳細を表示します。
+. **Configuration** タブをクリックします。
+. **Scheduling** サブタブに移動します。
+. 設定されたノードセレクター、アフィニティ、容認が表示されます。
+. **Overview** タブで、VMがどのノードで実行されているかを確認します。
+
+== トラブルシューティング
+
+=== VMが保留（Pending）状態でスタックしている
+
+**問題**: VMが保留状態のまま起動しません。
+
+**診断**:
+
+[source,bash,role=execute]
+----
+# Check VM status
+oc get vm -n vm-placement
+
+# Check VMI events
+oc describe vmi <vm-name> -n vm-placement
+----
+
+次のようなイベントを探します:
+
+[source,text]
+----
+Warning  FailedScheduling  0/3 nodes are available: 3 node(s) didn't match Pod's node affinity/selector
+----
+
+**考えられる原因**:
+
+* ノードセレクターまたは必須アフィニティルールに一致するノードが存在しない。
+* 一致するすべてのノードが満杯（CPU/メモリ不足）。
+* ノード上のテイントによりスケジュールが許可されていない。
+
+**解決策**:
+
+[source,bash,role=execute]
+----
+# Verify node labels exist
+oc get nodes -L storage,env,gpu
+
+# Check if nodes have required labels
+oc get nodes --selector=storage=ssd
+
+# Review VM placement constraints
+oc get vm <vm-name> -n vm-placement -o yaml | grep -A 20 "affinity:"
+----
+
+一致するノードがない場合、以下のいずれかを行います:
+
+* ノードに必要なラベルを追加する。
+* 配置制約を緩和する。
+* 必須アフィニティを優先アフィニティに変更する。
+
+=== VMが意図しないノードで実行されている
+
+**問題**: VMが優先アフィニティと一致しないノードで実行されています。
+
+**説明**: 優先アフィニティはソフト制約です。以下の場合はスケジューラがそれを無視することがあります:
+
+* 優先設定に一致するノードがない。
+* 一致するノードにリソースがない。
+* 他のVMの優先順位の方が高い。
+
+**確認**:
+
+[source,bash,role=execute]
+----
+# Check where VM is running
+oc get vmi <vm-name> -n vm-placement -o jsonpath='{.status.nodeName}'
+
+# Check that node's labels
+oc get node <node-name> --show-labels
+----
+
+**解決策**:
+
+* 配置が重要であれば、優先アフィニティを必須に変更する。
+* 優先ルールのウェイトを増やす。
+* 一致するノードに十分なリソースがあることを確認する。
+
+=== アンチアフィニティが機能しない
+
+**問題**: アンチアフィニティルールを持つ複数のVMが同じノードで実行されています。
+
+**診断**:
+
+[source,bash,role=execute]
+----
+# List all VMs and their nodes
+oc get vmi -n vm-placement -o wide
+
+# Check anti-affinity configuration
+oc get vm <vm-name> -n vm-placement -o yaml | grep -A 15 "podAntiAffinity:"
+----
+
+**一般的な問題**:
+
+* **ラベルの不一致**: アンチアフィニティのラベルセレクターがVMラベルと一致していない。
+* **間違ったトポロジーキー**: ホスト名の代わりにゾーンを使用している。
+* **優先 vs 必須**: 優先を使用している場合、必要に応じて同じノードへの配置が許可される。
+* **ノード不足**: すべてのレプリカのアンチアフィニティを満たすのに十分なノードがない。
+
+**解決策**:
+
+ラベルが一致しているか確認します:
+
+[source,bash,role=execute]
+----
+# Check VM labels
+oc get vm <vm-name> -n vm-placement -o jsonpath='{.spec.template.metadata.labels}' | jq
+
+# Verify anti-affinity selector matches those labels
+oc get vm <vm-name> -n vm-placement -o yaml | grep -A 5 "labelSelector:"
+----
+
+=== ノードセレクターが無視される
+
+**問題**: VMが指定されたラベルを持たないノードで実行されています。
+
+**ノードセレクターが正しく定義されているか確認します**:
+
+[source,bash,role=execute]
+----
+# View VM spec
+oc get vm <vm-name> -n vm-placement -o yaml | grep -A 5 "nodeSelector:"
+
+# Verify it's under spec.template.spec, not just spec
+oc get vm <vm-name> -n vm-placement -o jsonpath='{.spec.template.spec.nodeSelector}' | jq
+----
+
+**よくある間違い**: YAML内の間違ったレベルに `nodeSelector` を記述してしまうこと:
+
+[source,yaml]
+----
+# WRONG - nodeSelector at VM spec level
+spec:
+  nodeSelector:    # This is ignored!
+    storage: ssd
+  template:
+    spec:
+      domain:
+        ...
+
+# CORRECT - nodeSelector at pod spec level
+spec:
+  template:
+    spec:
+      nodeSelector:  # This works!
+        storage: ssd
+      domain:
+        ...
+----
+
+== クリーンアップ
+
+このチュートリアルで作成したリソースを削除します:
+
+[source,bash,role=execute]
+----
+# Delete VMs
+oc delete vm --all -n vm-placement
+
+# Remove custom node labels from all workers
+WORKER1=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[0].metadata.name}')
+WORKER2=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[1].metadata.name}')
+WORKER3=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[2].metadata.name}')
+
+oc label node $WORKER1 storage- env- gpu- workload-
+oc label node $WORKER2 storage- env- gpu-
+oc label node $WORKER3 storage-
+----
+
+クリーンアップを確認します:
+
+[source,bash,role=execute]
+----
+oc get vm -n vm-placement
+oc get nodes --show-labels | grep -E "storage|workload"
+----
+
+== まとめ
+
+このチュートリアルでは以下を学習しました:
+
+* ノードセレクター、ノードアフィニティ、およびポッドアフィニティ/アンチアフィニティの違い
+* 配置制御のためにノードにラベルを付ける方法
+* 単純な配置制約にノードセレクターを使用する方法
+* 必須および優先のノードアフィニティルールの設定方法
+* VMの共存や分離のためにポッドアフィニティ/アンチアフィニティを使用する方法
+* HA、パフォーマンス、分離のための一般的な配置パターン
+* 配置の問題をトラブルシューティングする方法
+
+== 参照
+
+* xref:getting-started:vm-lifecycle-states.adoc[] - VMの状態とライフサイクル管理
+* xref:getting-started:virtctl-basics.adoc[] - VM管理のためのCLIコマンド
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/nodes#virt-node-placement-vms[仮想マシンのノード配置 - Red Hat ドキュメント,window=_blank]
+* link:https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/[ポッドのノードへの割り当て - Kubernetes ドキュメント,window=_blank]
+* link:https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/[テイントと容認 - Kubernetes ドキュメント,window=_blank]

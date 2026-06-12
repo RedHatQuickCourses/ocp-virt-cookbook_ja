@@ -1,14 +1,12 @@
 site:
-  title: FIXME Course Title
-  start_page: REPLACEREPONAME::index.adoc
+  title: OpenShift Virtualization cookbook
+  start_page: ocp-virt-cookbook_ja::index.adoc
 
 content:
   sources:
   - url: ./
 
 asciidoc:
-  extensions:
-  - '@asciidoctor/tabs'
   attributes:
     page-pagination: true
 

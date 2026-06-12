@@ -1,0 +1,549 @@
+= VMスナップショットの作成と管理
+:navtitle: VMスナップショット
+
+== 概要
+
+VMスナップショットは、ディスクや（オプションで）メモリ状態を含む、特定の時点における仮想マシンの状態をキャプチャします。スナップショットを使用すると、アップデート失敗後の迅速なロールバックや、変更の安全なテスト、メンテナンス作業前の復元ポイントの作成が可能になります。
+
+このチュートリアルでは、OpenShift VirtualizationでVMスナップショットを作成、管理、および復元する方法について説明します。
+
+=== 学習内容
+
+* VMスナップショットリソースの仕組みと、オンラインスナップショットおよびオフラインスナップショットの違い
+* WebコンソールおよびCLIを使用したスナップショットの作成、管理、削除方法
+* スナップショットからのVMの復元方法
+* スナップショットに関するストレージの要件と考慮事項
+
+テスト済みバージョン:
+[source,text]
+----
+OpenShift 4.20
+----
+
+== 前提条件
+
+* OpenShift VirtualizationがインストールされたOpenShift 4.18以降
+* スナップショット対象となる実行中または停止中のVM
+* CSIスナップショットをサポートするストレージクラス
+* インストール済みの `oc` および `virtctl` CLIツール
+
+=== スナップショットストレージのサポート確認
+
+スナップショットを作成する前に、ストレージがCSIスナップショットをサポートしていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get volumesnapshotclass
+----
+
+出力例:
+[source,text]
+----
+NAME                     DRIVER                       DELETIONPOLICY   AGE
+csi-hostpath-snapclass   hostpath.csi.k8s.io          Delete           30d
+ocs-storagecluster-rbdplugin-snapclass   openshift-storage.rbd.csi.ceph.com   Delete   30d
+----
+
+VolumeSnapshotClassが存在しない場合は、クラスター管理者に連絡し、ストレージプロバイダー用に設定を依頼してください。
+
+== VMスナップショットの基礎知識
+
+=== スナップショットリソース
+
+OpenShift Virtualizationでは、スナップショット用に主に2つのリソースを使用します。
+
+**VirtualMachineSnapshot**::
+VMのスナップショットを作成するためのリクエストです。ソースVMおよびスナップショット設定への参照が含まれます。
+
+**VirtualMachineSnapshotContent**::
+実際のスナップショットデータであり、VirtualMachineSnapshotが処理されると自動的に作成されます。基盤となるVolumeSnapshotへの参照が含まれます。
+
+=== オンラインスナップショットとオフラインスナップショット
+
+[cols="1,2,2",options="header"]
+|===
+|タイプ |説明 |要件
+
+|オフラインスナップショット
+|VMが停止している間に取得されるスナップショット。一貫した状態が保証される。
+|VMが停止している必要がある。
+
+|オンラインスナップショット
+|VMの実行中に取得されるスナップショット。一貫性のためにファイルシステムの静止（quiescing）が必要。
+|VM内にQEMUゲストエージェントがインストールされ、実行されている必要がある。
+|===
+
+TIP: クリティカルなワークロードの場合は、オフラインスナップショットを使用するか、ファイルシステムの一貫性を保証するためにオンラインスナップショット用のQEMUゲストエージェントがインストールされていることを確認してください。
+
+オンラインスナップショットのデフォルトのタイムアウトは5分です。この期間内にスナップショットが完了しない場合、ステータスは `Failed` に設定され、ファイルシステムは復帰（thaw）し、VMは通常の動作を再開します。この期限は、VirtualMachineSnapshotのspecで `failureDeadline` フィールドを設定することで調整可能です（例: `failureDeadline: 10m`）。
+
+=== スナップショットのインジケーション（兆候）
+
+オンラインスナップショットの完了後、 `status.indications` フィールドでスナップショットがどのように取得されたかが報告されます。
+
+[cols="1,3",options="header"]
+|===
+|インジケーション |意味
+
+|`Online`
+|スナップショット作成時にVMが実行されていた。
+
+|`GuestAgent`
+|QEMUゲストエージェントが正常にファイルシステムを静止させた。アプリケーション整合性のあるスナップショットである。
+
+|`NoGuestAgent`
+|QEMUゲストエージェントがインストールされていないか、準備ができていない。クラッシュ整合性のみのスナップショットである。
+
+|`QuiesceFailed`
+|ゲストエージェントが静止を試みたが失敗した。スナップショットは作成されたが、アプリケーション整合性は保証されない。
+|===
+
+スナップショットのインジケーションを確認します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachinesnapshot <snapshot-name> -n vm-snapshots -o json | jq '.status.indications'
+----
+
+出力例:
+[source,json]
+----
+[
+  "GuestAgent",
+  "Online"
+]
+----
+
+== スナップショットの作成
+
+=== Webコンソールを使用したスナップショットの作成
+
+. **Virtualization** -> **VirtualMachines** に移動します。
+. スナップショットを取得するVMをクリックします。
+. **Snapshots** タブに移動します。
++
+image::vm-snapshots/snapshot-tab-empty.png[スナップショット取得前のSnapshotsタブ]
++
+. **Take snapshot** をクリックします。
++
+image::vm-snapshots/snapshot-take-dialog.png[名前、説明、期限、対象ディスクを表示するスナップショット取得ダイアログ]
++
+. スナップショットの名前と（オプションで）説明を入力します。
+. **Save** をクリックします。
+
+作成が完了すると、Snapshotsタブにスナップショットのステータスが表示されます。
+
+image::vm-snapshots/snapshot-tab-ready.png[ReadyステータスとGuestAgent/Onlineインジケーションを示す完了したスナップショットが表示されたSnapshotsタブ]
+
+=== CLIを使用したスナップショットの作成
+
+VirtualMachineSnapshotリソースを作成します。
+
+xref:attachment$vm-snapshots/vm-snapshot.yaml[vm-snapshot.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: snapshot.kubevirt.io/v1beta1
+kind: VirtualMachineSnapshot
+metadata:
+  name: database-vm-snapshot-01
+  namespace: vm-snapshots
+spec:
+  source:
+    apiGroup: kubevirt.io
+    kind: VirtualMachine
+    name: database-vm
+----
+
+スナップショットを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f vm-snapshot.yaml
+----
+
+=== スナップショット作成の確認
+
+スナップショットのステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachinesnapshot -n vm-snapshots
+----
+
+出力例:
+[source,text]
+----
+NAME                                   SOURCEKIND       SOURCENAME    PHASE       READYTOUSE   CREATIONTIME   ERROR
+database-vm-snapshot-20260304-155755   VirtualMachine   database-vm   Succeeded   true         8m
+----
+
+詳細なステータスを確認する場合:
+
+[source,bash,role=execute]
+----
+oc describe virtualmachinesnapshot <snapshot-name> -n vm-snapshots
+----
+
+出力例:
+[source,text]
+----
+Name:         database-vm-snapshot-20260304-155755
+Namespace:    vm-snapshots
+API Version:  snapshot.kubevirt.io/v1beta1
+Kind:         VirtualMachineSnapshot
+Spec:
+  Failure Deadline:  600s
+  Source:
+    API Group:  kubevirt.io
+    Kind:       VirtualMachine
+    Name:       database-vm
+Status:
+  Conditions:
+    Reason:  Operation complete
+    Status:  False
+    Type:    Progressing
+    Reason:  Ready
+    Status:  True
+    Type:    Ready
+  Indications:
+    GuestAgent
+    Online
+  Phase:         Succeeded
+  Ready To Use:  true
+  Snapshot Volumes:
+    Excluded Volumes:
+      cloudinitdisk
+    Included Volumes:
+      rootdisk
+----
+
+主なステータスフィールド:
+
+* **Phase**: `InProgress`、`Succeeded`、または `Failed`
+* **ReadyToUse**: `true` の場合、復元に利用可能（WebコンソールのStatus列では **Ready** と表示）
+* **Error**: スナップショットが失敗した場合のエラーメッセージ
+
+== スナップショットの管理
+
+=== スナップショットの一覧表示
+
+**名前空間内の全スナップショットを一覧表示:**
+
+[source,bash,role=execute]
+----
+oc get virtualmachinesnapshot -n vm-snapshots
+----
+
+**全名前空間のスナップショットを一覧表示:**
+
+[source,bash,role=execute]
+----
+oc get virtualmachinesnapshot -A
+----
+
+**Webコンソールでスナップショットを表示:**
+
+. VMの詳細ページに移動します。
+. **Snapshots** タブをクリックします。
+. ステータスと作成時刻を含むすべてのスナップショットを表示します。
+
+image::vm-snapshots/snapshot-tab-ready.png[ステータスと作成時刻が記載されたスナップショットリストを示すSnapshotsタブ]
+
+=== スナップショットの詳細表示
+
+[source,bash,role=execute]
+----
+oc describe virtualmachinesnapshot <snapshot-name> -n vm-snapshots
+----
+
+基盤となるVolumeSnapshotを確認する場合:
+
+[source,bash,role=execute]
+----
+oc get virtualmachinesnapshotcontent -n vm-snapshots
+----
+
+出力例:
+[source,text]
+----
+NAME                                                      READYTOUSE   CREATIONTIME   ERROR
+vmsnapshot-content-cd166db8-00be-4aa9-972e-dea669527bfd   true         8m
+----
+
+[source,bash,role=execute]
+----
+oc get volumesnapshot -n vm-snapshots
+----
+
+出力例:
+[source,text]
+----
+NAME                                                              READYTOUSE   SOURCEPVC          RESTORESIZE   SNAPSHOTCLASS   CREATIONTIME   AGE
+vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         database-vm-disk   30Gi          lvms-vg1        8m             8m
+----
+
+== スナップショットからの復元
+
+スナップショットからVMを復元すると、VMのディスクがスナップショット取得時の状態に戻ります。
+
+IMPORTANT: スナップショットから復元する前に、VMを停止する必要があります。VirtualMachineRestoreのspecに `targetReadinessPolicy: StopTarget` を設定することで、このプロセスを自動化できます。他のオプションには `FailImmediate`（デフォルト）、`WaitGracePeriod`（最大5分待機）、`WaitEventually`（無期限待機）があります。詳細については、link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/backup-and-restore[公式ドキュメント,window=_blank]を参照してください。
+
+=== Webコンソールを使用した復元
+
+. VMの詳細ページに移動します。
+. VMが停止していることを確認します（実行中の場合は停止してください）。
+. **Snapshots** タブに移動します。
+. 復元したいスナップショットの横にあるケバブメニュー（3つの点）をクリックします。
+. **Restore VirtualMachineSnapshot** を選択します。
++
+image::vm-snapshots/snapshot-kebab-restore.png[RestoreおよびDeleteオプションが表示されたケバブメニュー]
++
+. 復元操作を確定します。
++
+image::vm-snapshots/snapshot-restore-confirm.png[スナップショット復元の確認ダイアログ]
+
+=== CLIを使用した復元
+
+VirtualMachineRestoreリソースを作成します。
+
+xref:attachment$vm-snapshots/vm-restore.yaml[vm-restore.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: snapshot.kubevirt.io/v1beta1
+kind: VirtualMachineRestore
+metadata:
+  name: database-vm-restore-01
+  namespace: vm-snapshots
+spec:
+  target:
+    apiGroup: kubevirt.io
+    kind: VirtualMachine
+    name: database-vm
+  virtualMachineSnapshotName: database-vm-snapshot-01
+----
+
+復元を適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f vm-restore.yaml
+----
+
+=== 復元の確認
+
+復元ステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachinerestore -n vm-snapshots
+----
+
+出力例:
+[source,text]
+----
+NAME                     TARGETKIND       TARGETNAME    COMPLETE   RESTORETIME   ERROR
+database-vm-restore-01   VirtualMachine   database-vm   true       2m
+----
+
+詳細なステータスを確認する場合:
+
+[source,bash,role=execute]
+----
+oc describe virtualmachinerestore database-vm-restore-01 -n vm-snapshots
+----
+
+復元が完了したら、VMを起動します。
+
+[source,bash,role=execute]
+----
+virtctl start database-vm -n vm-snapshots
+----
+
+VMが復元された状態で実行されていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm database-vm -n vm-snapshots
+----
+
+== スナップショットの削除
+
+=== Webコンソールを使用した削除
+
+. VMの **Snapshots** タブに移動します。
+. スナップショットの横にあるケバブメニューをクリックします。
+. **Delete snapshot** を選択します。
++
+image::vm-snapshots/snapshot-kebab-delete.png[Delete snapshotオプションが表示されたケバブメニュー]
++
+. 削除を確定します。
++
+image::vm-snapshots/snapshot-delete-confirm.png[VirtualMachineSnapshot削除の確認ダイアログ]
+
+=== CLIを使用した削除
+
+[source,bash,role=execute]
+----
+oc delete virtualmachinesnapshot database-vm-snapshot-01 -n vm-snapshots
+----
+
+NOTE: VirtualMachineSnapshotを削除すると、関連するVirtualMachineSnapshotContentおよび基盤となるVolumeSnapshotも削除され、ストレージ領域が解放されます。
+
+== ストレージの考慮事項
+
+=== CSIドライバーの要件
+
+VMスナップショットには、スナップショット機能をサポートするCSI（Container Storage Interface）ドライバーが必要です。一般的なサポート対象ストレージソリューションは以下の通りです。
+
+* Red Hat OpenShift Data Foundation (ODF)
+* AWS EBS CSI
+* Microsoft Azure Disk CSI
+* Google Cloud Persistent Disk CSI
+* LVM Storage (LVMS)（シンプロビジョニングされたプールデバイスクラスを使用する場合）
+* VMware vSphere CSI
+* NetApp Trident
+* Pure Storage
+* Dell CSIドライバー
+
+=== VolumeSnapshotClassの設定
+
+VolumeSnapshotClassは、スナップショットの作成および管理方法を決定します。ストレージクラスに対応するスナップショットクラスがあることを確認してください。
+
+[source,bash,role=execute]
+----
+# ストレージクラスの確認
+oc get storageclass
+
+# 対応するスナップショットクラスの確認
+oc get volumesnapshotclass
+----
+
+スナップショットが失敗する場合は、スナップショットクラスがストレージプロビジョナーと一致しているか確認してください。
+
+=== ストレージ容量
+
+スナップショットはストレージ領域を消費します。以下に注意してください。
+
+* **コピーオンライト**: ほとんどのCSIドライバーはコピーオンライトを使用するため、初期のスナップショットサイズは小さくなります。
+* **経時的な増加**: VMのディスクが変更されるにつれて、スナップショットのストレージは増加します。
+* **複数のスナップショット**: スナップショットの数だけ追加の領域が消費されます。
+* **クリーンアップポリシー**: 定期的に古いスナップショットを削除して領域を解放してください。
+
+[source,bash,role=execute]
+----
+oc get volumesnapshot -n vm-snapshots -o wide
+----
+
+出力例:
+[source,text]
+----
+NAME                                                              READYTOUSE   SOURCEPVC          RESTORESIZE   SNAPSHOTCLASS   CREATIONTIME   AGE
+vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         database-vm-disk   30Gi          lvms-vg1        9m             9m
+----
+
+== トラブルシューティング
+
+=== スナップショットが InProgress のまま停止する
+
+**問題**: VirtualMachineSnapshotが `InProgress` フェーズのまま進まない。
+
+**考えられる原因**:
+
+* オンラインスナップショットがタイムアウトした（デフォルトは5分の `failureDeadline`）
+* QEMUゲストエージェントが応答していない
+* ストレージプロバイダーが低速、または応答していない
+
+**解決策**:
+
+[source,bash,role=execute]
+----
+oc describe virtualmachinesnapshot <snapshot-name> -n <namespace>
+----
+
+`status.conditions` および `status.indications` フィールドを確認します。タイムアウトによりスナップショットが失敗した場合は、スナップショットspecの `failureDeadline` を増やすか、代わりにオフラインスナップショットを取得することを検討してください。
+
+=== スナップショットで NoGuestAgent または QuiesceFailed が表示される
+
+**問題**: スナップショットは完了したが、インジケーションに `NoGuestAgent` または `QuiesceFailed` が表示されており、クラッシュ整合性のみのスナップショットになっている。
+
+**解決策**: VM内でQEMUゲストエージェントをインストールして起動します。
+
+[source,bash]
+----
+# Fedora/RHEL VMの場合
+sudo dnf install -y qemu-guest-agent
+sudo systemctl enable --now qemu-guest-agent
+----
+
+エージェントが実行されていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi database-vm -n vm-snapshots -o jsonpath='{.status.conditions}' | jq '.[] | select(.type=="AgentConnected")'
+----
+
+=== VMが実行中のため復元に失敗する
+
+**問題**: ターゲットのVMが停止していないというエラーでVirtualMachineRestoreが失敗する。
+
+**解決策**: 復元前にVMを停止するか、VirtualMachineRestoreのspecに `targetReadinessPolicy: StopTarget` を設定して、コントローラーに自動的に停止させます。
+
+[source,bash,role=execute]
+----
+virtctl stop database-vm -n vm-snapshots
+oc wait vm database-vm -n vm-snapshots --for=jsonpath='{.status.printableStatus}'=Stopped --timeout=120s
+----
+
+=== VolumeSnapshotClassが見つからずスナップショットが失敗する
+
+**問題**: ストレージプロビジョナーに一致するVolumeSnapshotClassがないため、スナップショット作成が失敗する。
+
+**解決策**: ストレージクラスに対してVolumeSnapshotClassが存在することを確認します。
+
+[source,bash,role=execute]
+----
+oc get storageclass -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.provisioner}{"\n"}{end}'
+oc get volumesnapshotclass -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.driver}{"\n"}{end}'
+----
+
+VolumeSnapshotClass内の `driver` は、StorageClass内の `provisioner` と一致する必要があります。一致するVolumeSnapshotClassが存在しない場合は、新しく作成するか、クラスター管理者に連絡してください。
+
+== クリーンアップ
+
+このチュートリアルで作成したリソースを削除します。
+
+[source,bash,role=execute]
+----
+oc delete virtualmachinerestore --all -n vm-snapshots
+oc delete virtualmachinesnapshot --all -n vm-snapshots
+----
+
+クリーンアップを確認します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachinesnapshot -n vm-snapshots
+oc get volumesnapshot -n vm-snapshots
+----
+
+== まとめ
+
+このチュートリアルでは、以下の内容を学習しました。
+
+* OpenShift VirtualizationにおけるVMスナップショットリソースの仕組み
+* オンラインスナップショットとオフラインスナップショットの違い、およびインジケーションの意味
+* WebコンソールおよびCLIを使用したスナップショットの作成方法
+* スナップショットの管理、一覧表示、削除方法
+* スナップショットからのVMの復元方法
+* スナップショットに関するストレージ要件と考慮事項
+* スナップショット操作に関する一般的なトラブルシューティング手法
+
+== 参照
+
+* xref:getting-started:virtctl-basics.adoc[] - VM管理のためのCLIコマンド
+* xref:custom-golden-images.adoc[] - 再利用可能なVMイメージの作成
+* xref:cloning-vms.adoc[] - VMのクローン作成（スナップショットからのクローン作成を含む）
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/backup-and-restore[VMスナップショットを使用したバックアップと復元 - Red Hatドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/storage/snapshot_restore_api/[Snapshot Restore API - KubeVirtユーザーガイド,window=_blank]

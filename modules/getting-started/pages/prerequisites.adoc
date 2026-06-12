@@ -1,0 +1,119 @@
+= 前提条件とセットアップ
+:navtitle: 前提条件
+
+== 概要
+
+このページでは、本クックブックで説明する OpenShift Virtualization を扱うための前提条件と要件の概要を説明します。
+
+== クラスター要件
+
+=== OpenShift バージョン
+
+* OpenShift 4.18 以降
+* OpenShift Virtualization オペレーターがインストールされ、実行されていること
+
+=== クラスターへのアクセス
+
+実行するタスクに応じて、適切なアクセスレベルが必要です。
+
+* **Cluster Admin**: オペレーターのインストール、ストレージ構成、ネットワーク構成に必要です
+* **Namespace Admin**: 特定のネームスペース内の VM を管理するには十分です
+* **Developer**: 適切な RBAC 権限があれば、VM の作成および管理が可能です
+
+== 必要な CLI ツール
+
+=== OpenShift CLI (oc)
+
+OpenShift コマンドラインインターフェースは、クラスターとの対話に不可欠です。
+
+インストール元: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/cli_tools/openshift-cli-oc#cli-getting-started[OpenShift CLI ドキュメント,window=_blank]
+
+インストールの確認:
+[source,bash,role=execute]
+----
+oc version
+----
+
+=== Kubernetes CLI (kubectl)
+
+`oc` の使用が推奨されますが、多くの操作で `kubectl` を使用することも可能です。
+
+インストール元: link:https://kubernetes.io/docs/tasks/tools/[Kubernetes ドキュメント,window=_blank]
+
+インストールの確認:
+[source,bash,role=execute]
+----
+kubectl version
+----
+
+=== Virtctl
+
+`virtctl` ツールは、KubeVirt/OpenShift Virtualization リソースを管理するために特別に設計されています。
+
+インストール元: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/getting-started#virt-using-the-cli-tools[OpenShift Virtualization ドキュメント,window=_blank]
+
+インストールの確認:
+[source,bash,role=execute]
+----
+virtctl version
+----
+
+== オプションのツール
+
+ワークフローに応じて、以下のツールも役立ちます。
+
+* **kustomize**: Kubernetes 構成の管理用
+* **helm**: パッケージ化されたアプリケーションのデプロイ用
+* **ansible**: 自動化およびオーケストレーション用
+
+== クラスター構成
+
+=== ストレージ
+
+クラスターに以下が設定されていることを確認してください。
+
+* 少なくとも 1 つの StorageClass が構成されていること
+* VM ディスク用に十分なストレージ容量があること
+* 動的プロビジョニングをサポートするストレージプロビジョナーがあること
+
+利用可能なストレージクラスの確認:
+[source,bash,role=execute]
+----
+oc get storageclass
+----
+
+=== ネットワーク
+
+ネットワーク接続を確認してください。
+
+* クラスターのネットワークが機能していること
+* Pod ネットワークにアクセス可能であること
+* VM で必要な場合は、外部ネットワークへのアクセスが可能であること
+
+== 検証
+
+チュートリアルに進む前に、セットアップを確認してください。
+
+[source,bash,role=execute]
+----
+# Check cluster status
+oc get nodes
+
+# Verify OpenShift Virtualization operator
+oc get csv -n openshift-cnv
+
+# Check available VM templates
+oc get datasources -n openshift-virtualization-os-images
+----
+
+== 次のステップ
+
+前提条件が整ったら、次へ進みます。
+
+* xref:virtctl-basics.adoc[virtctl の基本を学ぶ]
+* xref:default-storage-class.adoc[デフォルトストレージの構成]
+
+== 関連項目
+
+* link:https://docs.openshift.com/container-platform/latest/virt/about_virt/about-virt.html[OpenShift Virtualization ドキュメント,window=_blank]
+* link:https://kubevirt.io/[KubeVirt プロジェクト,window=_blank]

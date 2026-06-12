@@ -1,0 +1,66 @@
+= 仮想マシンの設定
+:navtitle:
+
+== 概要
+
+本セクションでは、OpenShift Virtualizationにおける仮想マシンの設定について説明します。これには、DNS名前解決、リモートアクセス手法、ノード配置制御、ホットプラグ、およびVMテンプレートが含まれます。
+
+== 学習目標
+
+OpenShift Virtualizationで仮想マシンを設定およびカスタマイズする方法を学びます。
+
+* VM間およびPod対VM通信のための内部DNS名前解決
+* LinuxおよびWindows VMへのリモートアクセス手法
+* セレクター、アフィニティ、およびアンチアフィニティルールを使用したノード配置
+* 専用ノードへのインフラストラクチャコンポーネントの配置
+* 稼働中のVMに対するボリュームおよびネットワークインターフェースのホットプラグ
+* 反復可能なデプロイメントのためのカスタムVMテンプレートの作成
+
+== 前提条件
+
+VMの設定作業を行う前に、以下の環境が整っていることを確認してください。
+
+* OpenShift 4.18以降およびOpenShift Virtualizationオペレーターがインストール済みであること
+* 仮想マシンおよびネットワークに関する基本的な理解があること
+* YAML構文に慣れていること
+* 次のCLIツールがインストールされていること: `oc`, `virtctl`, `kubectl`
+
+== トピック
+
+xref:internal-dns-for-vms.adoc[]::
+クラスター内のKubernetesサービスを使用した、VM間およびPod対VM通信のための内部DNS名前解決を設定します。
+
+xref:remote-access-linux-vms.adoc[]::
+コンソール、VNC、`virtctl`経由のSSH、NodePortサービス、ポートフォワーディング、および直接ネットワークアクセスなど、Linux仮想マシンにアクセスするための複数の方法。
+
+xref:remote-access-linux-troubleshooting.adoc[]::
+診断コマンドや一般的な問題の解決策を含む、すべてのVMリモートアクセス手法のトラブルシューティングガイド。
+
+xref:remote-access-windows-vms.adoc[]::
+LoadBalancerまたはNodePortサービスを使用した、Windows仮想マシンへの外部リモートデスクトッププロトコル (RDP) アクセスの設定。
+
+xref:infrastructure-node-placement.adoc[]::
+専用のインフラストラクチャノードおよび高可用性を実現するために、HyperConvergedカスタムリソースを使用してOpenShift Virtualizationインフラストラクチャコンポーネント (virt-controller, virt-api, virt-handler, CDI) の配置を制御します。
+
+xref:node-placement-affinity.adoc[]::
+パフォーマンス、可用性、およびワークロード分離のために、ノードセレクター、ノードアフィニティ、およびPodアフィニティ/アンチアフィニティルールを使用して、クラスターノード間でのVMの配置を制御します。
+
+xref:hotplug-volumes-interfaces.adoc[]::
+`virtctl`を使用して、ダウンタイムなしで稼働中のVMに対してストレージボリュームやネットワークインターフェースを動的に追加および削除します。
+
+xref:vm-templates.adoc[]::
+OpenShift Virtualizationコンソールおよびコマンドラインの両方から、迅速で反復可能なデプロイメントを行うためのカスタムVMテンプレートを作成します。
+
+== 関連トピック
+
+* xref:getting-started:index.adoc[はじめに] - 初期設定と前提条件
+* xref:storage:index.adoc[ストレージ設定] - VM用の永続ストレージ
+* xref:networking:index.adoc[ネットワーク設定] - ネットワークインフラストラクチャのセットアップ
+* xref:performance:index.adoc[パフォーマンスチューニング] - CPUピニング、NUMA、Hugepages、リアルタイムVM
+* xref:vm-lifecycle:index.adoc[VMライフサイクル] - ゴールデンイメージ、クローニング、スナップショット、起動設定
+
+== 追加リソース
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/about#about-virt[OpenShift Virtualization ドキュメント,window=_blank]
+* link:https://cloudinit.readthedocs.io/[Cloud-init 公式ドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/[KubeVirt ユーザーガイド,window=_blank]

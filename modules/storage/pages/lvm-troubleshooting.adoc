@@ -1,0 +1,791 @@
+= LVM Storage Operator のトラブルシューティング
+:navtitle: LVM のトラブルシューティング
+
+== 概要
+
+本ガイドでは、OpenShift における LVM Storage Operator のトラブルシューティング手順を説明します。以下のコマンドを使用して、LVM ストレージのプロビジョニング、ボリュームグループ、および永続ボリューム要求 (PVC) に関する一般的な問題を診断・解決してください。
+
+== クイックヘルスチェック
+
+LVM ストレージが正しく動作していることを確認するために、以下のヘルスチェックを実行してください。
+
+[source,bash,role=execute]
+----
+# 1. Check LVMCluster status
+oc get lvmcluster -n openshift-lvm-storage
+
+# 2. Check all pods are running
+oc get pods -n openshift-lvm-storage
+
+# 3. Check StorageClass exists
+oc get storageclass | grep lvms
+
+# 4. Check volume group on node
+oc debug node/<node-name> -- chroot /host vgs
+
+# 5. Check thin pool
+oc debug node/<node-name> -- chroot /host lvs
+----
+
+正常な場合の出力:
+
+* LVMCluster: `STATUS: Ready`
+* Pods: すべて `Running` で再起動なし
+* StorageClass: `lvms-vg1` が存在
+* VG: ボリュームグループが表示され、空き容量がある
+* LV: シンプロビジョニングプールが表示され、データ/メタデータの使用率が低い
+
+== コンポーネント別の検証コマンド
+
+=== LVMCluster ステータス
+
+==== 基本ステータスの確認
+
+[source,bash,role=execute]
+----
+oc get lvmcluster -n openshift-lvm-storage
+----
+
+正常な出力:
+----
+NAME         STATUS
+lvmcluster   Ready
+----
+
+異常を示す指標:
+
+* ステータスが `NotReady`、`Degraded`、または `Error` と表示される
+* リソースが見つからない
+
+==== 詳細ステータスの確認
+
+[source,bash,role=execute]
+----
+oc get lvmcluster lvmcluster -n openshift-lvm-storage -o yaml
+----
+
+確認すべき項目:
+
+[source,yaml]
+----
+status:
+  conditions:
+  - status: "True"
+    type: ResourcesAvailable
+    message: Reconciliation is complete and all the resources are available
+  - status: "True"
+    type: VolumeGroupsReady
+    message: All the VGs are ready
+  deviceClassStatuses:
+  - name: vg1
+    nodeStatus:
+    - devices:
+      - /dev/sda
+      status: Ready
+  ready: true
+  state: Ready
+----
+
+重要なフィールド:
+
+* `status.conditions`: `ResourcesAvailable: True` および `VolumeGroupsReady: True` と表示されるべきです。
+* `deviceClassStatuses[].nodeStatus[].status`: `Ready` であるべきです。
+* `deviceClassStatuses[].nodeStatus[].devices`: 設定したディスクがリストされているべきです。
+* `ready: true` および `state: Ready` であるべきです。
+
+==== デバイスの検出と除外の表示
+
+[source,bash,role=execute]
+----
+oc get lvmcluster lvmcluster -n openshift-lvm-storage -o yaml | grep -A 50 "deviceClassStatuses"
+----
+
+出力例:
+
+[source,yaml]
+----
+deviceClassStatuses:
+- name: vg1
+  nodeStatus:
+  - devices:
+    - /dev/sda
+    excluded:
+    - name: /dev/sdc
+      reasons:
+      - /dev/sdc has children block devices and could not be considered
+      - /dev/sdc is not part of the device selector
+    status: Ready
+----
+
+これにより、どのデバイスが選択され、なぜ他のデバイスが除外されたかがわかります。
+
+=== Pod ステータス
+
+==== すべての Pod の確認
+
+[source,bash,role=execute]
+----
+oc get pods -n openshift-lvm-storage
+----
+
+正常な出力:
+----
+NAME                             READY   STATUS    RESTARTS   AGE
+lvms-operator-864b6975bb-kxt4t   1/1     Running   0          10m
+vg-manager-xxxxx                 1/1     Running   0          5m
+----
+
+期待される Pod:
+
+* **lvms-operator**: 常に存在し、LVM ストレージのライフサイクルを管理します。
+* **vg-manager**: ノードごとに1つ存在し、そのノードのボリュームグループを管理します。
+* **topolvm-controller**: Single Node OpenShift (SNO) では存在しない場合があります。
+
+==== Pod 詳細の確認
+
+[source,bash,role=execute]
+----
+# Get pod details
+oc describe pod -n openshift-lvm-storage <pod-name>
+
+# Check specific pod logs
+oc logs -n openshift-lvm-storage <pod-name>
+
+# Check vg-manager logs (most useful for device issues)
+oc logs -n openshift-lvm-storage daemonset/vg-manager
+----
+
+一般的なログエラー:
+
+* `"device is in use"` - ディスクがすでにマウントされているか、システムによって使用されています。
+* `"cannot wipe device"` - `forceWipeDevicesAndDestroyAllData: true` が必要です。
+* `"device not found"` - 指定されたデバイスパスが誤っています。
+* `"no devices found"` - デバイスセレクターが利用可能なデバイスと一致しません。
+
+==== Operator インストールの確認
+
+[source,bash,role=execute]
+----
+# Check ClusterServiceVersion
+oc get csv -n openshift-lvm-storage
+
+# Check subscription
+oc get subscription -n openshift-lvm-storage
+
+# Check install plan
+oc get installplan -n openshift-lvm-storage
+----
+
+=== ストレージリソース
+
+==== StorageClass の確認
+
+[source,bash,role=execute]
+----
+# List all StorageClasses
+oc get storageclass
+
+# Get specific LVM StorageClass
+oc get storageclass lvms-vg1 -o yaml
+----
+
+正常な出力:
+----
+NAME       PROVISIONER   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+lvms-vg1   topolvm.io    Delete          WaitForFirstConsumer   true                   10m
+----
+
+重要なパラメーター:
+
+* `PROVISIONER: topolvm.io` - 正しいプロビジョナーです。
+* `VOLUMEBINDINGMODE: WaitForFirstConsumer` - 効率的なバインディングです。
+* `ALLOWVOLUMEEXPANSION: true` - ボリューム拡張が有効です。
+
+==== StorageClass がデフォルトかどうかの確認
+
+[source,bash,role=execute]
+----
+oc get storageclass lvms-vg1 -o jsonpath='{.metadata.annotations.storageclass\.kubernetes\.io/is-default-class}'
+----
+
+出力:
+
+* `true` - デフォルトの StorageClass です。
+* 出力なし、または `false` - デフォルトではありません。
+
+==== PersistentVolumes の確認
+
+[source,bash,role=execute]
+----
+# List all PVs
+oc get pv
+
+# Check PVs using LVM storage
+oc get pv | grep topolvm
+----
+
+=== ボリュームグループの検証
+
+==== ボリュームグループステータスの確認
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host vgs
+----
+
+正常な出力:
+----
+VG   #PV #LV #SN Attr   VSize   VFree  
+vg1    1   1   0 wz--n- 558.37g <55.84g
+----
+
+検証項目:
+
+* VG 名が LVMCluster 設定と一致していること (例: `vg1`)
+* `VSize` がディスクの合計サイズを表示していること
+* `VFree` が利用可能な空き容量を表示していること
+* `Attr` に `wz--n-` (書き込み可能、サイズ変更可能、正常) が含まれていること
+
+==== ボリュームグループ詳細の確認
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host vgdisplay vg1
+----
+
+出力例:
+----
+--- Volume group ---
+VG Name               vg1
+System ID             
+Format                lvm2
+Metadata Areas        1
+Metadata Sequence No  2
+VG Access             read/write
+VG Status             resizable
+MAX LV                0
+Cur LV                1
+Open LV               0
+Max PV                0
+Cur PV                1
+Act PV                1
+VG Size               558.37 GiB
+PE Size               4.00 MiB
+Total PE              142942
+Alloc PE / Size       128517 / 502.04 GiB
+Free  PE / Size       14425 / 56.35 GiB
+VG UUID               abc123...
+----
+
+正常性を示す主要指標:
+
+* `VG Status: resizable`
+* `VG Access: read/write`
+* `Free PE / Size` に空き容量が表示されている
+
+=== シンプロビジョニングプールの検証
+
+==== シンプロビジョニングプールステータスの確認
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host lvs
+----
+
+正常な出力:
+----
+LV          VG  Attr       LSize    Pool Origin Data%  Meta%  
+thin-pool-1 vg1 twi-a-tz-- <502.04g             0.00   6.76
+----
+
+属性の内訳 (twi-a-tz--):
+
+* `t` - thin pool
+* `w` - writeable
+* `i` - inherited
+* `a` - active
+* `t` - thin
+* `z` - zero
+
+Data% および Meta% のしきい値:
+
+* **Data%**: シンプロビジョニングプールの使用量
+  ** `< 80%` - 正常
+  ** `80-90%` - 注意深く監視
+  ** `> 90%` - 拡張または整理を検討
+* **Meta%**: メタデータの使用量
+  ** `< 80%` - 正常
+  ** `> 80%` - メタデータの拡張が必要な可能性がある
+
+==== シンプロビジョニングプールの詳細確認
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host lvdisplay vg1/thin-pool-1
+----
+
+=== 物理ボリュームの検証
+
+==== 物理ボリュームの確認
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host pvs
+----
+
+正常な出力:
+----
+PV         VG  Fmt  Attr PSize   PFree  
+/dev/sda   vg1 lvm2 a--  558.37g <55.84g
+----
+
+属性の内訳 (a--):
+
+* `a` - allocatable
+* `-` - not exported
+* `-` - not missing
+
+==== 物理ボリューム詳細の確認
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host pvdisplay /dev/sda
+----
+
+==== デバイスパスの検証
+
+[source,bash,role=execute]
+----
+# Check device exists
+oc debug node/<node-name> -- chroot /host ls -la /dev/sda
+
+# Check device is a block device
+oc debug node/<node-name> -- chroot /host lsblk /dev/sda
+
+# Check device is not mounted
+oc debug node/<node-name> -- chroot /host mount | grep /dev/sda
+----
+
+注記: デバイスがマウントされている場合、LVM ストレージとして使用できません。アンマウントするか、別のデバイスを選択してください。
+
+=== ディスクおよびデバイス情報
+
+==== すべてのブロックデバイスのリスト表示
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT,MODEL
+----
+
+出力例:
+----
+NAME    SIZE TYPE FSTYPE      MOUNTPOINT MODEL
+sda   558.4G disk LVM2_member            PERC H730 Adp
+sdc   558.4G disk                        PERC H730 Adp
+|-sdc1   1M part                        
+|-sdc2 127M part vfat                   
+|-sdc3 384M part ext4        /boot      
+`-sdc4 557.9G part xfs        /sysroot
+----
+
+使用可能なディスクの特定方法:
+
+* MOUNTPOINT なし - ディスクは使用されていません
+* FSTYPE なし、または `LVM2_member` と表示される (ワイプ対象の場合)
+* MOUNTPOINT あり - ディスクはシステムによって使用されています
+* パーティション (子) あり - ワイプが必要な場合があります
+
+==== ディスクシリアル番号の確認
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host lsblk -d -o NAME,SIZE,SERIAL
+----
+
+正しいディスクをターゲットにしていることを確認するために使用します。
+
+==== デバイスの永続パスの確認
+
+[source,bash,role=execute]
+----
+# By path
+oc debug node/<node-name> -- chroot /host ls -la /dev/disk/by-path/ | grep sda
+
+# By ID
+oc debug node/<node-name> -- chroot /host ls -la /dev/disk/by-id/ | grep sda
+----
+
+== 一般的な問題と解決策
+
+=== 問題 1: LVMCluster が "NotReady" と表示される
+
+症状:
+----
+NAME         STATUS
+lvmcluster   NotReady
+----
+
+診断:
+
+[source,bash,role=execute]
+----
+# Check detailed status
+oc get lvmcluster lvmcluster -n openshift-lvm-storage -o yaml | grep -A 20 "conditions"
+
+# Check vg-manager logs
+oc logs -n openshift-lvm-storage daemonset/vg-manager
+----
+
+一般的な原因と解決策:
+
+==== デバイスが見つからない、またはパスが間違っている
+
+[source,bash,role=execute]
+----
+# Verify device exists
+oc debug node/<node-name> -- chroot /host ls -la /dev/sda
+----
+
+解決策: 正しいデバイスパスで LVMCluster を更新してください。
+
+==== デバイスに既存のデータやファイルシステムがある
+
+[source,bash,role=execute]
+----
+# Check for existing filesystem
+oc debug node/<node-name> -- chroot /host lsblk -f /dev/sda
+----
+
+解決策: deviceSelector に `forceWipeDevicesAndDestroyAllData: true` を追加してください。
+
+==== デバイスが使用中
+
+[source,bash,role=execute]
+----
+# Check if mounted
+oc debug node/<node-name> -- chroot /host mount | grep /dev/sda
+----
+
+解決策: デバイスをアンマウントするか、別のディスクを使用してください。
+
+=== 問題 2: ボリュームグループが作成されない
+
+症状:
+
+* LVMCluster は存在するが `vgs` にボリュームグループが表示されない
+* デバイスが deviceClassStatuses に表示されない
+
+診断:
+
+[source,bash,role=execute]
+----
+# Check if disk was wiped
+oc debug node/<node-name> -- chroot /host pvs
+
+# Check vg-manager logs for errors
+oc logs -n openshift-lvm-storage daemonset/vg-manager --tail=100
+
+# Check device visibility
+oc debug node/<node-name> -- chroot /host lsblk -o NAME,SIZE,TYPE,FSTYPE
+----
+
+解決策:
+
+==== デバイスが選択されていない
+
+* deviceSelector パスが実際のデバイスと一致していることを確認する
+* デバイスが除外されていないことを確認する (deviceClassStatuses.excluded を参照)
+
+==== 権限の問題
+
+* vg-manager Pod に必要な権限があることを確認する
+* SELinux がアクセスをブロックしていないか確認する
+
+==== デバイスのワイプ失敗
+
+* `forceWipeDevicesAndDestroyAllData: true` を設定する
+* 手動でデバイスをワイプし、Operator を再起動する
+
+=== 問題 3: PVC が Pending のまま
+
+症状:
+----
+NAME            STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+test-pvc        Pending                                      lvms-vg1       5m
+----
+
+診断:
+
+[source,bash,role=execute]
+----
+# Check PVC events
+oc describe pvc <pvc-name>
+
+# Check if pod using PVC exists
+oc get pods --all-namespaces -o wide | grep <pvc-name>
+
+# Check available space in VG
+oc debug node/<node-name> -- chroot /host vgs
+----
+
+一般的な原因:
+
+==== WaitForFirstConsumer - まだ Pod がスケジュールされていない
+
+* **通常動作**: PVC を使用する Pod がスケジュールされるまで PVC は Pending のままになります。
+* **解決策**: PVC を使用する Pod を作成してください。
+
+==== 空き容量不足
+
+[source,bash,role=execute]
+----
+# Check VG free space
+oc debug node/<node-name> -- chroot /host vgdisplay vg1 | grep "Free"
+----
+
+解決策: 未使用の PV を削除するか、ボリュームグループを拡張してください。
+
+==== シンプロビジョニングプールがいっぱい
+
+[source,bash,role=execute]
+----
+# Check thin pool usage
+oc debug node/<node-name> -- chroot /host lvs | grep thin-pool
+----
+
+解決策: ボリュームを整理するか、シンプロビジョニングプールサイズを増やしてください。
+
+==== ノードセレクターの不一致
+
+[source,bash,role=execute]
+----
+# Check pod node selector vs LVMCluster node selector
+oc get pod <pod-name> -o yaml | grep nodeSelector
+oc get lvmcluster lvmcluster -n openshift-lvm-storage -o yaml | grep -A 5 nodeSelector
+----
+
+=== 問題 4: シンプロビジョニングプールの Data% または Meta% が高い
+
+症状:
+----
+LV          VG  Attr       LSize    Data%  Meta%
+thin-pool-1 vg1 twi-a-tz-- 502.04g  92.00  85.00
+----
+
+診断:
+
+[source,bash,role=execute]
+----
+# Check thin pool details
+oc debug node/<node-name> -- chroot /host lvs -a | grep thin-pool
+
+# List all thin volumes
+oc debug node/<node-name> -- chroot /host lvs -a -o lv_name,lv_size,data_percent,pool_lv | grep thin-pool
+
+# Check which PVs are consuming space
+oc get pv -o custom-columns=NAME:.metadata.name,SIZE:.spec.capacity.storage,STORAGECLASS:.spec.storageClassName | grep lvms
+----
+
+解決策:
+
+==== 未使用の PVC を削除する
+
+[source,bash,role=execute]
+----
+# Find PVCs not in use
+oc get pvc --all-namespaces
+
+# Delete PVC
+oc delete pvc <pvc-name> -n <namespace>
+----
+
+==== シンプロビジョニングプールを拡張する (VG に空きがある場合)
+
+[source,bash,role=execute]
+----
+# Check VG free space
+oc debug node/<node-name> -- chroot /host vgs
+
+# Extend thin pool (if needed manually)
+# Usually handled automatically by LVM operator
+----
+
+==== オーバープロビジョニング比率を調整する
+
+LVMCluster を編集し、`overprovisionRatio` を減らしてください。
+
+=== 問題 5: デバイスのワイプ失敗
+
+症状:
+
+* LVMCluster は作成されたがデバイスが使用されていない
+* ログに "cannot wipe device" または "device busy" と表示される
+
+診断:
+
+[source,bash,role=execute]
+----
+# Check current filesystem/partition
+oc debug node/<node-name> -- chroot /host lsblk -f /dev/sda
+
+# Check for LVM signatures
+oc debug node/<node-name> -- chroot /host pvs | grep /dev/sda
+
+# Check if device is open
+oc debug node/<node-name> -- chroot /host lsof | grep /dev/sda
+----
+
+解決策:
+
+[source,bash,role=execute]
+----
+# Ensure forceWipeDevicesAndDestroyAllData is set
+oc edit lvmcluster lvmcluster -n openshift-lvm-storage
+
+# Add under deviceSelector:
+forceWipeDevicesAndDestroyAllData: true
+----
+
+=== 問題 6: vg-manager Pod が CrashLooping になる
+
+症状:
+----
+NAME             READY   STATUS             RESTARTS   AGE
+vg-manager-xxx   0/1     CrashLoopBackOff   5          3m
+----
+
+診断:
+
+[source,bash,role=execute]
+----
+# Check pod logs
+oc logs -n openshift-lvm-storage <vg-manager-pod> --previous
+
+# Check pod events
+oc describe pod -n openshift-lvm-storage <vg-manager-pod>
+
+# Check node resources
+oc describe node <node-name>
+----
+
+一般的な原因:
+
+==== デバイス権限
+
+* vg-manager がデバイスにアクセスする権限を持っていない可能性があります。
+* ノードログで SELinux の拒否がないか確認してください。
+
+==== デバイス欠損
+
+* 設定内のデバイスパスが存在しません。
+* デバイスが削除されたか、名前が変更されました。
+
+==== リソース制約
+
+* ノードのメモリまたは CPU が不足しています。
+* ノードのキャパシティを確認してください。
+
+=== 問題 7: StorageClass がデフォルトではない
+
+症状:
+
+* storageClassName を明示しない PVC がバインドに失敗する
+* 警告: "no default deviceClass was specified"
+
+診断:
+
+[source,bash,role=execute]
+----
+# Check if any StorageClass is default
+oc get storageclass | grep default
+
+# Check lvms StorageClass annotations
+oc get storageclass lvms-vg1 -o yaml | grep is-default-class
+----
+
+解決策:
+
+==== LVM StorageClass をデフォルトに設定する
+
+[source,bash,role=execute]
+----
+oc patch storageclass lvms-vg1 -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+----
+
+==== または LVMCluster でデフォルトを設定する
+
+[source,bash,role=execute]
+----
+oc edit lvmcluster lvmcluster -n openshift-lvm-storage
+
+# Add under deviceClasses:
+- name: vg1
+  default: true
+----
+
+== 診断スクリプト
+
+LVM ストレージの問題を迅速に診断するために、以下をシェルスクリプトとして保存してください。
+
+[source,bash,role=execute]
+----
+#!/bin/bash
+
+NAMESPACE="openshift-lvm-storage"
+NODE_NAME="<your-node-name>"
+
+echo "=== LVM Storage Diagnostic Report ==="
+echo ""
+
+echo "1. LVMCluster Status:"
+oc get lvmcluster -n $NAMESPACE
+echo ""
+
+echo "2. Pods Status:"
+oc get pods -n $NAMESPACE
+echo ""
+
+echo "3. StorageClass:"
+oc get storageclass | grep lvms
+echo ""
+
+echo "4. PVs:"
+oc get pv | grep topolvm
+echo ""
+
+echo "5. Volume Groups:"
+oc debug node/$NODE_NAME -- chroot /host vgs
+echo ""
+
+echo "6. Logical Volumes:"
+oc debug node/$NODE_NAME -- chroot /host lvs
+echo ""
+
+echo "7. Physical Volumes:"
+oc debug node/$NODE_NAME -- chroot /host pvs
+echo ""
+
+echo "8. Block Devices:"
+oc debug node/$NODE_NAME -- chroot /host lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT
+echo ""
+
+echo "9. Recent vg-manager logs:"
+oc logs -n $NAMESPACE daemonset/vg-manager --tail=20
+echo ""
+
+echo "=== End of Diagnostic Report ==="
+----
+
+== まとめ
+
+本ガイドでは、以下のことを学習しました。
+
+* LVMCluster、Pod、StorageClass、ボリュームグループ、シンプロビジョニングプールを検証するクイックヘルスチェックの実行方法
+* LVMCluster の NotReady、ボリュームグループの欠損、Pending のままの PVC など、一般的な問題の診断方法
+* `vgs`、`lvs`、および `pvs` コマンドを使用して、ボリュームグループ、シンプロビジョニングプール、物理ボリュームの状態を確認する方法
+* デバイスのワイプ失敗、vg-manager の CrashLoopBackOff、StorageClass のデフォルト設定のトラブルシューティング方法
+* 診断スクリプトを使用して、LVM ストレージの健全性情報を迅速に収集する方法
+
+== 参照
+
+* xref:lvm-operator.adoc[LVM Operator ローカルディスクインストールチュートリアル] - 詳細な設定を含むインストールガイド

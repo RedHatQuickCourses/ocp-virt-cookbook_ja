@@ -1,0 +1,102 @@
+= ネットワーク構成
+:navtitle:
+
+== 概要
+
+本モジュールでは、User Defined Networks (UDN)、localnetおよびレイヤー2トポロジー、VLAN、Linuxブリッジなど、OpenShift Virtualizationのネットワーク構成について解説します。仮想マシンを既存のインフラストラクチャに統合し、VMと外部システム間の通信を可能にするには、適切なネットワーク構成が不可欠です。
+
+== 学習内容
+
+このセクションでは、以下の内容を学習します。
+
+* cloud-init、DHCP予約、およびゲストエージェントを使用した静的IPアドレスの構成方法
+* cloud-initのIP構成に関する問題のトラブルシューティング方法
+* User Defined Networks (UDN) を使用したレイヤー2プライマリネットワークの構成方法
+* 外部接続のためのlocalnetセカンダリネットワークのセットアップ方法
+* ネットワーク分離のためのVLANタグ付けの構成方法
+* 物理ネットワークの抽象化のためのレイヤー2セカンダリネットワークの作成および使用方法
+* VMネットワークのためのLinuxブリッジの使用方法
+* PCIパススルーによるハードウェアアクセラレーションを活用したVMネットワーク用のSR-IOVの構成方法
+* OVSブリッジ構成の検証方法
+* ネットワークトポロジーのパターンとユースケース
+
+== ネットワークトポロジーのオプション
+
+OpenShift Virtualizationは、以下のネットワークトポロジーのオプションをサポートしています。
+
+* **User Defined Networks (UDN)**: 名前空間（namespace）分離を備えたカスタムレイヤー2ネットワーク
+* **Localnet**: 物理ネットワークインフラストラクチャへの直接アクセス
+* **Layer 2**: 物理ネットワークから抽象化されたクラスター全体のレイヤー2オーバーレイネットワーク
+* **Linux Bridges**: VM向けの従来のブリッジネットワーク
+* **SR-IOV**: 高パフォーマンスワークロード向けのPCIパススルーによるハードウェアアクセラレーションネットワーク
+* **OVN-Kubernetes Overlay**: Pod接続を備えたクラスターのデフォルトネットワーク
+
+== 前提条件
+
+このセクションのチュートリアルを進める前に、以下が準備されていることを確認してください。
+
+* OpenShift VirtualizationがインストールされたOpenShift 4.19+ クラスター
+* 物理ネットワーク構成用にインストールされたNMStateオペレーター
+* 基本的なネットワーク概念（サブネット、VLAN、ブリッジ）の理解
+* ネットワーク構成を行うためのクラスター管理者アクセス権
+
+== セクション
+
+xref:static-ip-configuration.adoc[]::
+cloud-init、DHCP予約、QEMUゲストエージェント、またはWindows VM用のSysprepを使用して、仮想マシンの静的IPアドレスを構成します。
+
+xref:cloud-init-troubleshooting.adoc[]::
+診断コマンドや一般的な問題の解決策など、cloud-initのIP構成に関する問題のトラブルシューティングガイドです。
+
+xref:udn-primary-networks.adoc[]::
+User Defined Networksを使用して、完全なネットワーク制御を実現するレイヤー2プライマリネットワークを構成します。
+
+xref:localnet-secondary.adoc[]::
+外部接続のために、ClusterUserDefinedNetworkを使用してlocalnetセカンダリネットワークをセットアップします。
+
+xref:localnet-vlan.adoc[]::
+NetworkAttachmentDefinitionを使用して、VLANタグ付けを伴うlocalnetセカンダリネットワークを構成します。
+
+xref:cudn-localnet-vlan.adoc[]::
+名前空間をまたいだ可用性を実現するために、ClusterUserDefinedNetworkを使用してVLANタグ付けを伴うlocalnetセカンダリネットワークを構成します。
+
+xref:layer2-secondary.adoc[]::
+物理ネットワークから抽象化された、クラスター全体でのVM接続用のレイヤー2セカンダリネットワークをセットアップします。
+
+xref:linux-bridges.adoc[]::
+物理ネットワークインフラストラクチャへの直接的なVM接続のために、Linuxブリッジセカンダリネットワークを作成します。
+
+xref:sriov-secondary.adoc[]::
+仮想関数（Virtual Functions）を直接VMにPCIパススルーすることで、ネイティブに近いネットワークパフォーマンスを実現するSR-IOVセカンダリネットワークを構成します。
+
+xref:ovs-bridge-troubleshooting.adoc[]::
+localnetネットワークにおけるOVSブリッジ作成の問題を診断および解決します。
+
+xref:vm-ingress-routes.adoc[]::
+OpenShift Ingressルートを通じて、VMのHTTPおよびHTTPSサービスを公開します。
+
+
+=== プライマリネットワークとセカンダリネットワーク
+
+* **プライマリネットワーク**: Podネットワークを置き換えるもので、完全なネットワーク制御を提供します
+* **セカンダリネットワーク**: Podネットワークを維持しながら、追加のインターフェースを追加します
+
+=== 物理ネットワーク統合
+
+localnetおよびLinuxブリッジトポロジーの場合：
+
+* ワーカーノード上の物理ネットワークインターフェースへのアクセスが必要です
+* 物理スイッチでのVLANトランク設定が必要になる場合があります
+* ブリッジマッピングにより、論理ネットワーク名を物理インターフェースに接続します
+
+== 次のステップ
+
+このモジュールを完了すると、以下のことが可能になります。
+
+* 適切なネットワークトポロジーを用いた本番環境VMのデプロイ
+* ネットワーク接続の問題のトラブルシューティング
+
+== 関連資料
+
+* xref:vm-configuration:internal-dns-for-vms.adoc[Internal DNS for VMs] - VMの内部クラスターDNS解決の構成
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking[OpenShift Virtualization Networking,window=_blank]

@@ -1,0 +1,658 @@
+= Linux仮想マシンへのリモートアクセス
+:navtitle: Linux仮想マシンへのリモートアクセス
+
+== 概要
+
+本チュートリアルでは、OpenShift Virtualizationで実行されているLinux仮想マシン（VM）にアクセスするためのさまざまな手法を解説します。各手法は、迅速なトラブルシューティングから本番環境グレードのアクセスパターンまで、それぞれのユースケースに適しています。
+
+== アクセス手法とユースケース
+
+[cols="1,2,1"]
+|===
+|手法 |ユースケース |SSH鍵の必要性
+
+|コンソール
+|初期設定、トラブルシューティング
+|不要
+
+|VNC
+|GUIアクセス
+|不要
+
+|virtctl SSH
+|迅速な管理者アクセス
+|必要
+
+|NodePortサービス
+|外部アクセス
+|必要
+
+|ポート転送
+|開発、テスト
+|必要
+
+|セカンダリネットワーク
+|従来のインフラストラクチャ
+|必要
+|===
+
+== 前提条件
+
+* OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以降
+* CLIツール: `oc`、`virtctl`、`kubectl`
+* 実行中のLinux VMが少なくとも1台あること（本チュートリアルで作成します）
+* SSHおよびネットワークに関する基本的な知識
+
+== セットアップ: テスト用VMのデプロイ
+
+名前空間を作成し、Fedora VMをデプロイします。
+
+[source,bash,role=execute]
+----
+oc create namespace vm-access-demo
+----
+
+SSHを有効にしてVMを作成します。
+
+WARNING: この例のcloud-initパスワードはデモ目的でのみ使用しています。本番環境では、常に強力で一意のパスワードを使用するか、SSH公開鍵認証を使用してください。
+
+xref:attachment$remote-access-linux-vms/fedora-access-vm.yaml[fedora-access-vm.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-access-vm
+  namespace: vm-access-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: fedora-access-vm-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: fedora-access-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: fedora-access-vm-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+              ssh_authorized_keys:
+                - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC... your-public-key-here
+          name: cloudinitdisk
+----
+
+注: `your-public-key-here` は実際のSSH公開鍵に置き換えるか、テスト用にパスワード認証を使用してください。
+
+VMをデプロイします。
+
+[source,bash,role=execute]
+----
+oc apply -f fedora-access-vm.yaml
+----
+
+VMが準備完了になるまで待機します。
+
+[source,bash,role=execute]
+----
+oc get vmi -n vm-access-demo
+----
+
+== 手法1: virtctlによるコンソールアクセス
+
+最も基本的なアクセス手法であり、VMへの直接的なコンソールアクセスを提供します。
+
+=== コンソールへのアクセス
+
+[source,bash,role=execute]
+----
+virtctl console fedora-access-vm -n vm-access-demo
+----
+
+=== コンソールの終了
+
+`Ctrl+]` を押して終了します。
+
+=== 使用すべきケース
+
+* VMの初期設定および構成
+* ネットワーク接続がない場合のトラブルシューティング
+* VMがSSHに応答しない場合
+* ネットワークが切断された際の緊急アクセス
+
+=== 制限事項
+
+* コピー/ペースト機能がない（限定的）
+* スクロールバック不可
+* テキストベースのインターフェースのみ
+* 一度に1つのセッションのみ
+
+== 手法2: VNCアクセス
+
+グラフィカルデスクトップ環境を持つVM用です。
+
+=== VNCセッションの開始
+
+[source,bash,role=execute]
+----
+virtctl vnc fedora-access-vm -n vm-access-demo
+----
+
+これにより、VMのディスプレイに接続するVNCビューアが起動します。
+
+=== 使用すべきケース
+
+* デスクトップLinux VMへのアクセス
+* GUIアプリケーションの実行
+* GUIを必要とするソフトウェアのインストール
+* 表示関連の問題のトラブルシューティング
+
+=== 前提条件
+
+* ローカルにVNCビューアがインストールされていること
+* デスクトップ環境（GNOME、KDEなど）がインストールされたVM
+
+== 手法3: virtctlによるSSHアクセス
+
+`virtctl` コマンドを使用した迅速なSSHアクセスです。この手法は、内部的にポート転送を使用してVMのSSHポートに接続します。
+
+=== 前提条件
+
+* VMにSSH鍵が構成されていること（cloud-init経由）
+* VMでSSHサービスが実行されていること
+
+=== SSH経由での接続
+
+[source,bash,role=execute]
+----
+virtctl ssh fedora@fedora-access-vm -n vm-access-demo
+----
+
+=== ホスト鍵チェックのスキップ（テスト用）
+
+[source,bash,role=execute]
+----
+virtctl ssh fedora@fedora-access-vm -n vm-access-demo --local-ssh-opts="-o StrictHostKeyChecking=no"
+----
+
+=== 使用すべきケース
+
+* 迅速な管理者アクセス
+* 開発およびテスト
+* 一時的なアクセスのニーズ
+* `oc` や `kubectl` を通じてクラスターへのアクセス権がある場合
+
+=== 制限事項
+
+* クラスターへのアクセスが必要
+* ポート転送を使用するため、わずかなレイテンシが発生する場合がある
+
+== 手法4: NodePortサービスによる直接SSH接続
+
+NodePortサービスを使用してSSHポートを外部に公開します。
+
+=== NodePortサービスの作成
+
+xref:attachment$remote-access-linux-vms/ssh-nodeport-service.yaml[ssh-nodeport-service.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Service
+metadata:
+  name: fedora-ssh-nodeport
+  namespace: vm-access-demo
+spec:
+  type: NodePort
+  selector:
+    kubevirt.io/domain: fedora-access-vm
+  ports:
+    - protocol: TCP
+      port: 22
+      targetPort: 22
+      nodePort: 30022
+----
+
+サービスを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f fedora-ssh-nodeport.yaml
+----
+
+=== サービスの確認
+
+[source,bash,role=execute]
+----
+oc get svc fedora-ssh-nodeport -n vm-access-demo
+----
+
+=== SSH経由での接続
+
+クラスターノードのIPを取得します。
+
+[source,bash,role=execute]
+----
+oc get nodes -o wide
+----
+
+NodePortを使用して接続します。
+
+[source,bash,role=execute]
+----
+ssh fedora@<node-ip> -p 30022
+----
+
+=== 使用すべきケース
+
+* 外部アクセスが必要な場合
+* ロードバランサーがないシンプルなデプロイメント
+* 開発/テストクラスター
+* 迅速な外部アクセス設定
+
+=== セキュリティ上の考慮事項
+
+* すべてのクラスターノードのSSHポートを公開する
+* 強力な認証を使用すること（SSH鍵のみを推奨）
+* ファイアウォールルールを検討すること
+* 本番環境には推奨されない
+* 不正なアクセス試行を監視すること
+
+== 手法5: ポート転送によるSSHアクセス
+
+`kubectl` または `oc port-forward` を使用した一時的なSSHアクセスです。
+
+=== VM Podの検索
+
+[source,bash,role=execute]
+----
+oc get pods -n vm-access-demo
+----
+
+出力:
+
+[source,text]
+----
+NAME                                   READY   STATUS    RESTARTS   AGE
+virt-launcher-fedora-access-vm-xxxxx   2/2     Running   0          10m
+----
+
+=== SSHポートの転送
+
+[source,bash,role=execute]
+----
+oc port-forward -n vm-access-demo virt-launcher-fedora-access-vm-xxxxx 2222:22
+----
+
+=== SSH経由での接続（別のターミナルで）
+
+[source,bash,role=execute]
+----
+ssh fedora@localhost -p 2222
+----
+
+=== 使用すべきケース
+
+* 迅速な一時的アクセス
+* 開発およびテスト
+* 特定のVMのトラブルシューティング
+* NodePortやロードバランサーが利用できない場合
+
+=== 制限事項
+
+* ポート転送を維持し続ける必要がある
+* 一度に1つの接続のみ
+* 本番環境には適さない
+* アクティブなターミナルセッションが必要
+
+== 手法6: セカンダリネットワーク経由の直接ネットワークアクセス
+
+ブリッジネットワークやローカルネットワーク上のVMに対して、IP経由で直接アクセスします。
+
+=== 前提条件
+
+* VMがセカンダリネットワーク（ブリッジ、ローカルネット、VLAN）に接続されていること
+* 現在の場所からネットワークに到達可能であること
+* 固定IPが構成されているか、予約済みアドレスを持つDHCPが利用可能であること
+
+=== セカンダリネットワークを持つVM
+
+xref:attachment$remote-access-linux-vms/fedora-vlan-access-vm.yaml[fedora-vlan-access-vm.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-vlan-vm
+  namespace: vm-access-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: fedora-vlan-vm-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: fedora-vlan-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+            - bridge: {}
+              name: vlan-network
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+        - name: vlan-network
+          multus:
+            networkName: localnet-vlan-100
+      volumes:
+        - dataVolume:
+            name: fedora-vlan-vm-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+              ssh_authorized_keys:
+                - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC... your-public-key-here
+            networkData: |-
+              version: 2
+              ethernets:
+                enp1s0:
+                  dhcp4: true
+                enp2s0:
+                  dhcp4: false
+                  dhcp6: false
+                  addresses:
+                    - 192.168.100.100/24
+          name: cloudinitdisk
+----
+
+=== SSH経由での接続
+
+[source,bash,role=execute]
+----
+ssh fedora@192.168.100.100
+----
+
+=== 使用すべきケース
+
+* 本番環境
+* 従来のインフラストラクチャパターン
+* 持続的で予測可能なアクセスが必要なVM
+* 既存ネットワークとの統合
+* 同じネットワークセグメント上の複数のVM
+
+=== 利点
+
+* ネイティブなネットワークアクセス
+* ポート転送のオーバーヘッドがない
+* 複数の同時接続が可能
+* 標準的なネットワークツールが動作する
+* 従来のアーキテクチャに適合する
+
+== SSH鍵の構成
+
+=== SSH鍵の生成（必要な場合）
+
+[source,bash,role=execute]
+----
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/ocp-virt-key
+----
+
+=== Cloud-initへの鍵の追加
+
+VMの `userData` セクションに含めます。
+
+[source,yaml]
+----
+ssh_authorized_keys:
+  - ssh-rsa AAAAB3NzaC... your-key-here
+----
+
+=== パスワード認証の無効化
+
+本番環境では、パスワード認証とrootログインを無効にします。cloud-init構成の `userData` セクションに以下の設定を追加します。
+
+[source,yaml]
+----
+volumes:
+  - cloudInitNoCloud:
+      userData: |-
+        #cloud-config
+        user: fedora
+        ssh_pwauth: false
+        disable_root: true
+        ssh_authorized_keys:
+          - ssh-rsa AAAAB3NzaC... your-key-here
+    name: cloudinitdisk
+----
+
+この構成の効果:
+
+* `ssh_pwauth: false` - SSHのパスワード認証を無効化
+* `disable_root: true` - SSH経由のrootログインを防止
+* SSH鍵認証のみを必須とする
+
+== 検証コマンド
+
+=== VMステータスの確認
+
+[source,bash,role=execute]
+----
+# VirtualMachine
+oc get vm -n vm-access-demo
+
+# VirtualMachineInstance
+oc get vmi -n vm-access-demo
+
+# VMの詳細情報
+oc describe vmi fedora-access-vm -n vm-access-demo
+----
+
+=== VM内のSSHサービスの確認
+
+コンソール経由:
+
+[source,bash,role=execute]
+----
+virtctl console fedora-access-vm -n vm-access-demo
+----
+
+VM内部にて:
+
+[source,bash]
+----
+# SSHサービスの確認
+sudo systemctl status sshd
+
+# SSHがリッスンしているか確認
+sudo ss -tlnp | grep :22
+
+# ファイアウォールの確認
+sudo firewall-cmd --list-all
+----
+
+=== ネットワーク接続のテスト
+
+[source,bash]
+----
+# VM内部から
+ping -c 3 8.8.8.8
+
+# 外部から（同じネットワーク上にある場合）
+ping -c 3 192.168.100.100
+----
+
+== よくある問題と解決策
+
+すべてのアクセス手法のトラブルシューティングについては、xref:remote-access-linux-troubleshooting.adoc[] を参照してください。
+
+=== 問題: virtctlコンソールにログインプロンプトが表示されない
+
+**原因**: VMが完全に起動していないか、表示の問題。
+
+**解決策**: 少し待機し、VMステータスを確認してVMが実行中であることを検証します。
+
+=== 問題: SSH接続が拒否される
+
+**原因**: SSHサービスが実行されていないか、ファイアウォールでブロックされている。
+
+**解決策**:
+
+* sshdステータスの確認: `sudo systemctl status sshd`
+* 必要に応じて起動: `sudo systemctl start sshd`
+* ファイアウォールの確認: `sudo firewall-cmd --list-services`
+
+=== 問題: virtctl ssh接続が失敗する
+
+**原因**: SSHサービスが実行されていないか、認証失敗。
+
+**解決策**: 
+
+* VM内でSSHサービスが実行されていることを確認
+* SSH鍵が適切に構成されていることを確認
+* VMにネットワーク接続があることを確認
+* ポート転送を使用してクラスター内からSSHをテスト
+
+=== 問題: NodePortにアクセスできない
+
+**原因**: クラスターノードのファイアウォールがポートをブロックしている。
+
+**解決策**: ノードのファイアウォールルールを確認し、NodePort範囲が開放されていることを確認します。
+
+=== 問題: セカンダリネットワークのIPに接続できない
+
+**原因**: ネットワークに到達できないか、ルーティングの問題。
+
+**解決策**: ネットワーク構成を検証し、ルートを確認し、VLAN/ブリッジが適切に構成されていることを確認します。
+
+== セキュリティのベストプラクティス
+
+=== 認証
+
+* SSH鍵のみを使用し、パスワード認証を無効化する
+* 定期的にSSH鍵をローテーションする
+* 環境ごとに異なる鍵を使用する
+* 鍵管理ポリシーを実装する
+
+=== ネットワークセキュリティ
+
+* 可能であれば、NodePortの公開を特定のIPに制限する
+* ネットワークポリシーを使用してVMへのアクセスを制限する
+* VMのファイアウォールを適切に構成する
+* 定期的にアクセスログを監視する
+
+=== アクセス制御
+
+* virtctlアクセスにRBACを実装する
+* 環境ごとに分離した名前空間を使用する
+* 誰がどのVMにアクセスできるかを文書化する
+* 定期的なアクセス監査を実施する
+
+== クリーンアップ
+
+本チュートリアルで作成したすべてのリソースを削除します。
+
+[source,bash,role=execute]
+----
+# VMの削除
+oc delete vm fedora-access-vm fedora-vlan-vm -n vm-access-demo
+
+# サービスの削除
+oc delete svc fedora-ssh-nodeport -n vm-access-demo
+
+# 名前空間の削除
+oc delete namespace vm-access-demo
+----
+
+== まとめ
+
+本チュートリアルでは、以下の内容を学習しました。
+
+* OpenShift VirtualizationでLinux VMにアクセスするための複数の手法
+* 各アクセス手法の使い分け
+* cloud-initを介したSSH鍵の構成方法
+* サービスを使用してVMを外部に公開する方法
+* 一時的なアクセスのためにポート転送を使用する方法
+* セカンダリネットワーク上のVMにアクセスする方法
+* VMアクセスのセキュリティベストプラクティス
+* よくある問題とトラブルシューティング手順
+
+== 参照
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/virtualization/managing-vms[Managing VMs,window=_blank]

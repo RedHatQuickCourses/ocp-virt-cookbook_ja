@@ -1,0 +1,597 @@
+= Golden Images トラブルシューティングガイド
+:navtitle: Golden Images トラブルシューティング
+
+本ガイドでは、OpenShift Virtualization におけるカスタムOSイメージおよびゴールデンイメージの作成と使用に関連する問題についてのトラブルシューティング手順、確認コマンド、および解決策を提供します。
+
+== 目次
+* <<Quick Health Checks>>
+* <<Detailed Verification by Step>>
+* <<Common Issues and Solutions>>
+
+== クイックヘルスチェック
+
+=== 名前空間の確認
+[source,bash,role=execute]
+----
+oc get namespace golden-images
+----
+
+期待される出力:
+[source,text]
+----
+NAME             STATUS   AGE
+golden-images    Active   5m
+----
+
+=== 全リソースの確認
+[source,bash,role=execute]
+----
+oc get all -n golden-images
+----
+
+=== VM および VMI の確認
+[source,bash,role=execute]
+----
+oc get vm,vmi -n golden-images
+----
+
+=== DataVolume および PVC の確認
+[source,bash,role=execute]
+----
+oc get dv,pvc -n golden-images
+----
+
+=== DataSource の確認
+[source,bash,role=execute]
+----
+oc get datasource -n golden-images
+----
+
+== ステップ別詳細確認
+
+=== ステップ 1: ベースVM作成の検証
+
+==== VM ステータスの確認
+[source,bash,role=execute]
+----
+oc get vm base-fedora-vm -n golden-images
+----
+
+期待される出力:
+[source,text]
+----
+NAME             AGE   STATUS    READY
+base-fedora-vm   2m    Running   True
+----
+
+==== VMI 詳細の確認
+[source,bash,role=execute]
+----
+oc get vmi base-fedora-vm -n golden-images -o yaml
+----
+
+以下を確認してください:
+- `status.phase: Running`
+- `status.interfaces[].ipAddress` (VMにIPが割り当てられていること)
+- `status.guestOSInfo.id: fedora` (ゲストエージェントが実行されていること)
+
+例:
+[source,yaml]
+----
+status:
+  guestOSInfo:
+    id: fedora
+    kernelRelease: 6.11.4-301.fc41.x86_64
+    kernelVersion: '#1 SMP PREEMPT_DYNAMIC Thu Oct 10 16:16:06 UTC 2024'
+    name: Fedora Linux
+    prettyName: Fedora Linux 41 (Cloud Edition)
+    version: '41'
+    versionId: '41'
+  interfaces:
+  - infoSource: domain, guest-agent, multus-status
+    interfaceName: eth0
+    ipAddress: 10.128.0.168
+    ipAddresses:
+    - 10.128.0.168
+    - fd02::76
+    mac: 02:92:c2:00:00:06
+    name: default
+    queueCount: 1
+  phase: Running
+----
+
+==== ベースVMの DataVolume 確認
+[source,bash,role=execute]
+----
+oc get dv base-fedora-vm-disk -n golden-images
+----
+
+期待される出力:
+[source,text]
+----
+NAME                  PHASE       PROGRESS   RESTARTS   AGE
+base-fedora-vm-disk   Succeeded   100.0%                5m
+----
+
+==== ベースVM用 PVC の確認
+[source,bash,role=execute]
+----
+oc get pvc base-fedora-vm-disk -n golden-images
+----
+
+期待される出力には `Bound` ステータスと正しいストレージクラスが表示されます:
+[source,text]
+----
+NAME                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+base-fedora-vm-disk   Bound    pvc-abc123...                              30Gi       RWO            lvms-vg1       5m
+----
+
+=== ステップ 2: VM カスタマイズの検証
+
+==== VM コンソールへのアクセス
+[source,bash,role=execute]
+----
+virtctl console base-fedora-vm -n golden-images
+----
+
+==== ソフトウェアがインストールされているか確認
+VM内部にて:
+[source,bash]
+----
+# For nginx
+systemctl status nginx
+nginx -v
+
+# For custom configuration
+cat /etc/nginx/nginx.conf
+ls -la /usr/share/nginx/html/
+----
+
+==== Cloud-init ログの確認 (使用している場合)
+[source,bash]
+----
+cat /var/log/cloud-init.log
+cat /var/log/cloud-init-output.log
+----
+
+=== ステップ 3: VM シャットダウンの検証
+
+==== VM が停止しているか確認
+[source,bash,role=execute]
+----
+oc get vm base-fedora-vm -n golden-images
+----
+
+期待される出力:
+[source,text]
+----
+NAME             AGE   STATUS    READY
+base-fedora-vm   10m   Stopped   False
+----
+
+==== VMI が存在しないことの確認
+[source,bash,role=execute]
+----
+oc get vmi base-fedora-vm -n golden-images 2>&1
+----
+
+期待される出力:
+[source,text]
+----
+Error from server (NotFound): virtualmachineinstances.kubevirt.io "base-fedora-vm" not found
+----
+
+=== ステップ 4: DataSource 作成の検証
+
+==== DataSource の確認
+[source,bash,role=execute]
+----
+oc get datasource fedora-nginx-golden -n golden-images
+----
+
+期待される出力:
+[source,text]
+----
+NAME                   AGE
+fedora-nginx-golden    1m
+----
+
+==== DataSource 詳細の確認
+[source,bash,role=execute]
+----
+oc get datasource fedora-nginx-golden -n golden-images -o yaml
+----
+
+以下を確認してください:
+[source,yaml]
+----
+spec:
+  source:
+    pvc:
+      name: base-fedora-vm-disk
+      namespace: golden-images
+----
+
+=== ステップ 5: ゴールデンイメージからデプロイされた VM の検証
+
+==== デプロイされた VM の確認
+[source,bash,role=execute]
+----
+oc get vm webserver-vm-1 webserver-vm-2 -n golden-images
+----
+
+期待される出力:
+[source,text]
+----
+NAME              AGE   STATUS    READY
+webserver-vm-1    2m    Running   True
+webserver-vm-2    2m    Running   True
+----
+
+==== デプロイされた VM 用 DataVolume の確認
+[source,bash,role=execute]
+----
+oc get dv webserver-vm-1-disk webserver-vm-2-disk -n golden-images
+----
+
+期待される出力:
+[source,text]
+----
+NAME                   PHASE       PROGRESS   RESTARTS   AGE
+webserver-vm-1-disk    Succeeded   100.0%                2m
+webserver-vm-2-disk    Succeeded   100.0%                2m
+----
+
+==== VM がクローンされているか検証
+[source,bash,role=execute]
+----
+oc get dv webserver-vm-1-disk -n golden-images -o jsonpath='{.spec.sourceRef}'
+----
+
+期待される出力には DataSource への参照が表示されます:
+[source,json]
+----
+{"kind":"DataSource","name":"fedora-nginx-golden","namespace":"golden-images"}
+----
+
+==== VM 機能の確認
+VMのIPアドレスを取得します:
+[source,bash,role=execute]
+----
+oc get vmi webserver-vm-1 webserver-vm-2 -n golden-images -o jsonpath='{range .items[*]}{.metadata.name}: {.status.interfaces[0].ipAddress}{"\n"}{end}'
+----
+
+出力例:
+[source,text]
+----
+webserver-vm-1: 10.128.0.169
+webserver-vm-2: 10.128.0.170
+----
+
+別のPodから nginx をテストします:
+[source,bash,role=execute]
+----
+oc run test-curl --image=curlimages/curl:latest --rm -it --restart=Never -- curl http://10.128.0.169
+----
+
+=== ステップ 6: リソース効率の検証
+
+==== PVC 使用状況の確認
+[source,bash,role=execute]
+----
+oc get pvc -n golden-images
+----
+
+効率的なクローニングが実行されているため、すべてベースVMディスクから派生した複数のPVCを確認してください:
+[source,text]
+----
+NAME                   STATUS   VOLUME           CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+base-fedora-vm-disk    Bound    pvc-abc123...    30Gi       RWO            lvms-vg1       15m
+webserver-vm-1-disk    Bound    pvc-def456...    30Gi       RWO            lvms-vg1       5m
+webserver-vm-2-disk    Bound    pvc-ghi789...    30Gi       RWO            lvms-vg1       5m
+----
+
+==== 実際のストレージ使用量の確認 (LVM使用時)
+[source,bash,role=execute]
+----
+# Get the LVM thin pool usage
+oc get lvmvolumegroup -n openshift-storage -o yaml | grep -A 10 status
+----
+
+== 一般的な問題と解決策
+
+=== 問題 1: ベースVMの DataVolume が ImportInProgress で停止している
+
+**症状**:
+[source,bash,role=execute]
+----
+oc get dv base-fedora-vm-disk -n golden-images
+NAME                  PHASE              PROGRESS   AGE
+base-fedora-vm-disk   ImportInProgress   10%        10m
+----
+
+**診断**:
+[source,bash,role=execute]
+----
+# Check CDI importer pod
+oc get pods -n golden-images | grep importer
+
+# Check importer logs
+oc logs -n golden-images <importer-pod-name>
+----
+
+**一般的な原因**:
+- ソース DataSource が利用不可
+- イメージダウンロード時のネットワーク問題
+- ストレージ容量不足
+- ストレージクラスの問題
+
+**解決策**:
+
+. ソース DataSource が存在することを確認します:
++
+[source,bash,role=execute]
+----
+oc get datasource fedora -n openshift-virtualization-os-images
+----
+. CDI オペレーターが正常であることを確認します:
++
+[source,bash,role=execute]
+----
+oc get pods -n openshift-cnv | grep cdi
+----
+. ストレージ容量を確認します:
++
+[source,bash,role=execute]
+----
+oc get pvc -n golden-images
+oc get lvmvolumegroup -n openshift-storage
+----
+
+=== 問題 2: VM が起動しない - DataVolume を待機中
+
+**症状**:
+[source,bash,role=execute]
+----
+oc get vm base-fedora-vm -n golden-images
+NAME             AGE   STATUS                                    READY
+base-fedora-vm   5m    WaitingForVolumeBinding                   False
+----
+
+**診断**:
+[source,bash,role=execute]
+----
+# Check DataVolume status
+oc get dv base-fedora-vm-disk -n golden-images
+
+# Check events
+oc get events -n golden-images --sort-by='.lastTimestamp' | grep -i error
+----
+
+**一般的な原因**:
+- DataVolume が `PendingPopulation` または失敗状態
+- ストレージクラスの問題
+- PVC バインディングの問題
+
+**解決策**:
+
+. `WaitForFirstConsumer` を使用している場合、これは正常です。DVの準備が完了次第、VMは起動します。
+. ストレージクラスが存在し、正しく設定されていることを確認します:
++
+[source,bash,role=execute]
+----
+oc get storageclass
+----
+. 指定されていない場合、デフォルトのストレージクラスを確認します:
++
+[source,bash,role=execute]
+----
+oc get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}'
+----
+
+=== 問題 3: ゲストエージェントが実行されていない
+
+**症状**:
+[source,bash,role=execute]
+----
+oc get vmi base-fedora-vm -n golden-images -o jsonpath='{.status.guestOSInfo}'
+# Returns empty
+----
+
+**診断**:
+[source,bash,role=execute]
+----
+# Access VM console
+virtctl console base-fedora-vm -n golden-images
+
+# Check if qemu-guest-agent is installed
+rpm -qa | grep qemu-guest-agent
+
+# Check service status
+systemctl status qemu-guest-agent
+----
+
+**解決策**:
+
+. ゲストエージェントをインストールします:
++
+[source,bash]
+----
+sudo dnf install -y qemu-guest-agent
+sudo systemctl enable --now qemu-guest-agent
+----
+. クラウドイメージの場合、ゲストエージェントはプリインストールされているはずです。そうでない場合は、イメージが破損している可能性があります。
+
+=== 問題 4: デプロイされた VM にカスタムソフトウェアがない
+
+**症状**:
+ゴールデンイメージからデプロイされた VM に nginx やカスタム設定が含まれていない。
+
+**診断**:
+[source,bash,role=execute]
+----
+# Access the VM
+virtctl console webserver-vm-1 -n golden-images
+
+# Check for nginx
+which nginx
+systemctl status nginx
+----
+
+**一般的な原因**:
+- DataSource 作成前にベースVMがカスタマイズされていなかった
+- DataSource が間違った PVC を参照している
+- VMのクローニングに失敗した
+
+**解決策**:
+
+. ベースVMにカスタマイズが含まれていることを確認します:
++
+[source,bash,role=execute]
+----
+virtctl console base-fedora-vm -n golden-images
+# Check manually for installed software
+----
+. DataSource が正しい PVC を参照していることを確認します:
++
+[source,bash,role=execute]
+----
+oc get datasource fedora-nginx-golden -n golden-images -o jsonpath='{.spec.source}'
+----
++
+PVC `base-fedora-vm-disk` を参照している必要があります。
+. 必要に応じて、正しい PVC 参照で DataSource を再作成します。
+
+=== 問題 5: DataSource が間違った PVC を参照している
+
+**症状**:
+DataSource からデプロイされた VM に、ベースVMからの期待されるカスタマイズが含まれていない。
+
+**診断**:
+[source,bash,role=execute]
+----
+oc get datasource fedora-nginx-golden -n golden-images -o yaml
+----
+
+`spec.source.pvc.name` を確認してください。`base-fedora-vm-disk` を参照している必要があります。
+
+**解決策**:
+
+. 正しい PVC 参照を指定して DataSource を削除および再作成します:
++
+[source,bash,role=execute]
+----
+oc delete datasource fedora-nginx-golden -n golden-images
+oc create -f fedora-golden-datasource.yaml
+----
+
+=== 問題 6: ストレージ容量不足
+
+**症状**:
+[source,text]
+----
+Failed to create PVC: insufficient storage
+----
+
+**診断**:
+[source,bash,role=execute]
+----
+# Check LVM volume group usage
+oc get lvmvolumegroup -n openshift-storage -o yaml
+
+# Check PVC requests vs available
+oc get pvc -n golden-images
+----
+
+**解決策**:
+
+. 不要な PVC をクリーンアップします:
++
+[source,bash,role=execute]
+----
+oc delete pvc <unused-pvc> -n golden-images
+----
+. LVM ボリュームグループを拡張します (追加ディスクを使用している場合)
+. VM/DataVolume 仕様で要求されているストレージサイズを削減します
+
+=== 問題 7: VM クローニングが遅い
+
+**症状**:
+デプロイされた VM の DataVolume が `Succeeded` フェーズに達するまで長時間かかる。
+
+**診断**:
+[source,bash,role=execute]
+----
+# Check DataVolume progress
+oc get dv webserver-vm-1-disk -n golden-images -w
+
+# Check CDI pod logs
+oc logs -n golden-images -l app=containerized-data-importer --tail=100
+----
+
+**一般的な原因**:
+- 大きなディスクサイズ
+- ストレージバックエンドのパフォーマンス
+- 効率的なクローニングを使用していない (例: DataSource を使用していない)
+
+**解決策**:
+
+. 効率的なクローニングのために DataSource を使用していることを確認します:
++
+[source,yaml]
+----
+spec:
+  sourceRef:
+    kind: DataSource
+    name: fedora-nginx-golden
+----
+. 高速クローニングをサポートするストレージクラスを使用します (例: LVM シンプロビジョニングによるスマートクローン)
+. VM に大容量ボリュームが必要ない場合は、ディスクサイズの縮小を検討してください
+
+== 診断コマンドまとめ
+
+=== 全リソースのチェック
+[source,bash,role=execute]
+----
+# Everything in namespace
+oc get all,dv,pvc,datasource -n golden-images
+
+# With more details
+oc get all,dv,pvc,datasource -n golden-images -o wide
+
+# Watch for changes
+oc get vm,vmi,dv -n golden-images -w
+----
+
+=== ログとイベント
+[source,bash,role=execute]
+----
+# Recent events
+oc get events -n golden-images --sort-by='.lastTimestamp' | tail -20
+
+# VM events
+oc describe vm base-fedora-vm -n golden-images | tail -20
+
+# CDI operator logs
+oc logs -n openshift-cnv -l app=cdi-operator --tail=50
+----
+
+=== ストレージの詳細
+[source,bash,role=execute]
+----
+# PVC details
+oc describe pvc <pvc-name> -n golden-images
+
+# Storage class configuration
+oc get storageclass -o yaml
+
+# LVM status (if using LVM)
+oc get lvmvolumegroup,lvmvolumegroupnodestatus -n openshift-storage
+----
+
+== その他のリソース
+
+* link:https://docs.openshift.com/container-platform/latest/virt/about_virt/about-virt.html[OpenShift Virtualization ドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/storage/disks_and_volumes/[KubeVirt ユーザーガイド - DataVolumes,window=_blank]
+* link:https://github.com/kubevirt/containerized-data-importer[Containerized Data Importer (CDI),window=_blank]
+* xref:storage:lvm-troubleshooting.adoc[LVM ストレージのトラブルシューティング]

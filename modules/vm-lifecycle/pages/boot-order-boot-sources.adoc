@@ -1,0 +1,1098 @@
+= VMのブート順序とブートソースの構成
+:navtitle: VMのブート順序とブートソース
+
+== 概要
+
+本チュートリアルでは、OpenShift VirtualizationでVMのブート順序、ブートソース、およびブートオプションを構成する方法を説明します。ブート構成を理解することは、カスタムOSのインストール、レスキューおよびリカバリのシナリオ、マルチブート環境、セキュリティコンプライアンス要件において不可欠です。
+
+ブート構成により、VMがどのデバイスから起動を試みるか、その順序、および使用するファームウェアモード（BIOSまたはUEFI）を制御できます。OpenShift Virtualizationは、永続ボリューム、コンテナイメージ、ネットワークベースのソースなど、さまざまなブートソースをサポートしています。
+
+== 前提条件
+
+* OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以降
+* CLIツール: `oc`, `virtctl`, `kubectl`
+* VMのブートプロセスに関する基本的な理解
+* 永続ボリューム用に構成されたストレージクラス
+* コンテナレジストリの例を使用する場合: コンテナレジストリ（Quay.io、Docker Hub、または内部レジストリ）へのアクセス権
+
+== OpenShift Virtualizationのブートソースタイプ
+
+OpenShift Virtualizationは、複数のブートソースタイプをサポートしています。
+
+[cols="1,2,2",options="header"]
+|===
+|ブートソースタイプ |説明 |ユースケース
+
+|**PersistentVolumeClaim (PVC)**
+|ストレージに裏打ちされた永続ディスクから起動
+|本番環境のVM、ステートフルなワークロード、カスタムOSのインストール
+
+|**ContainerDisk**
+|コンテナにパッケージ化されたディスクイメージから起動
+|エフェメラル（一時的）なVM、テスト、CI/CD、イミュータブルなワークロード
+
+|**DataVolume**
+|Containerized Data Importer (CDI) を介してプロビジョニングされたディスクから起動
+|HTTP、S3、またはレジストリソースからのイメージのインポート
+
+|**CloudInitNoCloud**
+|初期化ディスク（起動不可だが、ブートディスクと併用されるのが一般的）
+|VMの構成と初期化
+|===
+
+== ブートファームウェアモード
+
+OpenShift Virtualizationは、2つのファームウェアモードをサポートしています。
+
+=== BIOS (レガシーモード)
+
+* 従来のPC BIOSファームウェア
+* 古いオペレーティングシステムとの互換性あり
+* ブートデバイスのサイズ制限（MBRで2TBまで）
+* 起動時間が短い
+* ほとんどのLinuxディストリビューションのデフォルト
+
+=== UEFI (Unified Extensible Firmware Interface)
+
+* モダンなファームウェアインターフェイス
+* セキュアブートに必須
+* GPTパーティションテーブルと大容量ディスク（2TB超）をサポート
+* Windows 11および最新のWindows Serverバージョンで必須
+* より優れたセキュリティ機能
+
+== ブートデバイス順序の理解
+
+ブートデバイスの順序は、VMファームウェアがブート可能なコンテンツをチェックするデバイスと、そのシーケンスを決定します。KubeVirtでは、ディスクとインターフェイスの `bootOrder` フィールドを使用してブート順序を制御します。
+
+**重要な概念:**
+
+* `bootOrder` の数値が小さいほど優先度が高くなります（1は2より先に起動）
+* ディスクとインターフェイスのみにブート順序を指定可能
+* `bootOrder` が指定されていない場合、ファームウェアが決定します
+* 通常、プライマリブートディスクには `bootOrder: 1` を割り当てます
+
+== シナリオ1: PersistentVolumeClaim (PVC) からの起動（最も一般的）
+
+これは、永続ストレージを使用する本番VMの標準構成です。
+
+テスト用の名前空間を作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace boot-demo
+----
+
+WARNING: この例のcloud-initパスワードはデモ目的専用です。本番環境では、常に強力でユニークなパスワードまたはSSHキー認証を使用してください。
+
+xref:attachment$boot-order-boot-sources/vm-boot-from-pvc.yaml[vm-boot-from-pvc.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-pvc
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-pvc-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-pvc
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-pvc-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk
+----
+
+重要ポイント:
+
+* rootdisk の `bootOrder: 1` により、最初に起動することが保証されます
+* DataVolumeが自動的にPVCをプロビジョニングしてデータを格納します
+* Cloud-initディスクは構成を提供しますが、ブート可能ではありません
+* ディスクへの変更は、VMの再起動後も保持されます
+
+デプロイと検証:
+
+[source,bash,role=execute]
+----
+oc apply -f vm-boot-from-pvc.yaml
+oc get vm vm-boot-pvc -n boot-demo
+oc get vmi vm-boot-pvc -n boot-demo
+----
+
+使用する場合:
+
+* 永続ストレージを必要とする本番ワークロード
+* 再起動後もデータを保持する必要があるVM
+* 従来のサーバーデプロイメント
+* 状態の永続性が必要な開発環境
+
+== シナリオ2: ContainerDiskからの起動（エフェメラル）
+
+ContainerDiskは、OCIコンテナ形式でディスクイメージをパッケージ化します。イミュータブル（不変）でステートレスなワークロードに最適です。
+
+xref:attachment$boot-order-boot-sources/vm-boot-from-containerdisk.yaml[vm-boot-from-containerdisk.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-containerdisk
+  namespace: boot-demo
+spec:
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-containerdisk
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: containerdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk
+----
+
+重要な注意点:
+
+* ContainerDiskはエフェメラルです。VMの停止時にすべての変更が失われます
+* レジストリからイメージがプルされるため、デプロイが高速です
+* テストやCI/CDパイプラインに最適
+* quay.io/containerdisks のパブリックイメージを使用するか、自作も可能です
+
+デプロイ:
+
+[source,bash,role=execute]
+----
+oc apply -f vm-boot-from-containerdisk.yaml
+----
+
+使用する場合:
+
+* テストおよび開発
+* CI/CDパイプライン
+* イミュータブルなインフラストラクチャパターン
+* 永続性が不要なシナリオ
+* ストレージのオーバーヘッドなしで素早くVMをプロビジョニングしたい場合
+
+== シナリオ3: HTTPソースのDataVolumeからの起動
+
+DataVolumeを使用してHTTP/HTTPSソースからブートイメージをインポートします。中央管理されたイメージからVMプロビジョニングを自動化するのに役立ちます。
+
+xref:attachment$boot-order-boot-sources/vm-boot-from-http.yaml[vm-boot-from-http.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-http
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-http-disk
+        annotations:
+          cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+      spec:
+        source:
+          http:
+            url: "https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2"
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-http
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-http-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk
+----
+
+主な機能:
+
+* CDIが自動的にイメージをダウンロードおよび変換します
+* イメージは一度だけインポートされ、その後はPVCに格納されます
+* 次回以降の起動はPVC（永続的）を使用します
+* 一部のストレージクラスでは、アノテーション `cdi.kubevirt.io/storage.bind.immediate.requested: "true"` が必要です
+
+インポートの進捗状況を監視:
+
+[source,bash,role=execute]
+----
+oc apply -f vm-boot-from-http.yaml
+oc get dv vm-boot-http-disk -n boot-demo --watch
+----
+
+使用する場合:
+
+* 自動化されたデプロイパイプライン
+* 中央レポジトリからのゴールデンイメージのインポート
+* 標準化されたVMプロビジョニング
+* Webサーバーやオブジェクトストレージでイメージがホストされている場合
+
+== シナリオ4: ブート順序を指定した複数のブートデバイス
+
+複数のブート可能デバイスを明示的な順序で構成します。レスキューシナリオやマルチブート構成に役立ちます。
+
+xref:attachment$boot-order-boot-sources/vm-multiple-boot-devices.yaml[vm-multiple-boot-devices.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-multi-boot
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-multi-boot-primary
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-multi-boot-secondary
+      spec:
+        source:
+          blank: {}
+        storage:
+          resources:
+            requests:
+              storage: 20Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-multi-boot
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: primarydisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: secondarydisk
+              bootOrder: 2
+            - cdrom:
+                bus: sata
+              name: installcdrom
+              bootOrder: 3
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-multi-boot-primary
+          name: primarydisk
+        - dataVolume:
+            name: vm-multi-boot-secondary
+          name: secondarydisk
+        - name: installcdrom
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk
+----
+
+ブートシーケンスの説明:
+
+1. `bootOrder: 1` - プライマリディスク（最初に起動を試みる）
+2. `bootOrder: 2` - セカンダリディスク（プライマリが失敗した場合のフォールバック）
+3. `bootOrder: 3` - CD-ROM（インストールメディア、最後の手段）
+
+デプロイ:
+
+[source,bash,role=execute]
+----
+oc apply -f vm-multiple-boot-devices.yaml
+----
+
+使用する場合:
+
+* 災害復旧（DR）シナリオ
+* カスタムOSのインストール
+* さまざまなOS構成のテスト
+* フォールバックブートオプションを必要とする環境
+
+== シナリオ5: UEFIブートモード
+
+従来のBIOSではなくUEFIファームウェアを使用するようにVMを構成します。セキュアブートや最新のWindowsバージョンに必要です。
+
+xref:attachment$boot-order-boot-sources/vm-boot-uefi.yaml[vm-boot-uefi.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-uefi
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-uefi-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-uefi
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-uefi-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk
+----
+
+主な構成:
+
+* `firmware.bootloader.efi` がUEFIモードを有効にします
+* `secureBoot: false` - セキュアブートは無効です（サポートされているOSでは有効化可能）
+* マシンタイプ `pc-q35-rhel9.4.0` はUEFIと互換性があります
+
+デプロイ:
+
+[source,bash,role=execute]
+----
+oc apply -f vm-boot-uefi.yaml
+----
+
+使用する場合:
+
+* Windows 11または最新のWindows Server VM
+* セキュアブートを必要とするシステム
+* 大容量ディスク（2TB超）のサポート
+* 強化されたセキュリティ要件
+* UEFIを推奨するモダンなLinuxディストリビューション
+
+== シナリオ6: セキュアブート付きUEFI（上級者向け）
+
+セキュアブートは、ブートプロセス中に未承認のコードが実行されるのを防ぎます。これにはUEFIファームウェアと互換性のあるオペレーティングシステムが必要です。
+
+xref:attachment$boot-order-boot-sources/vm-boot-uefi-secureboot.yaml[vm-boot-uefi-secureboot.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-secureboot
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-secureboot-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-secureboot
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: true
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+        features:
+          smm:
+            enabled: true
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-secureboot-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk
+----
+
+重要な要件:
+
+* `secureBoot: true` がセキュアブートを有効にします
+* `features.smm.enabled: true` がセキュアブート（System Management Mode）に必要です
+* オペレーティングシステムがセキュアブートをサポートしている必要があります（ほとんどのモダンなLinuxおよびWindows）
+* ブートローダーとカーネルが信頼されたキーで署名されている必要があります
+
+デプロイ:
+
+[source,bash,role=execute]
+----
+oc apply -f vm-boot-uefi-secureboot.yaml
+----
+
+使用する場合:
+
+* セキュリティコンプライアンス要件
+* Windows 11（セキュアブートが必要）
+* 厳格なブート整合性要件がある環境
+* ルートキットやブートレベルのマルウェアに対する防御
+
+WARNING: すべてのオペレーティングシステムがセキュアブートをサポートしているわけではありません。VMが起動しない場合は、セキュアブートを無効にして、標準のUEFIを使用してください。
+
+== シナリオ7: ネットワークブート (PXE)
+
+PXE (Preboot Execution Environment) を使用してネットワークから起動するようにVMを構成します。OSの自動インストールやディスクレスワークステーションに役立ちます。
+
+xref:attachment$boot-order-boot-sources/vm-boot-pxe.yaml[vm-boot-pxe.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-pxe
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-pxe-disk
+      spec:
+        source:
+          blank: {}
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-pxe
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 2
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+            - bridge: {}
+              name: pxe-net
+              bootOrder: 1
+          rng: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+        - name: pxe-net
+          multus:
+            networkName: pxe-network
+      volumes:
+        - dataVolume:
+            name: vm-boot-pxe-disk
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk
+----
+
+主な構成:
+
+* セカンダリネットワークインターフェイス (`pxe-net`) に `bootOrder: 1` を設定（ディスクより先に起動）
+* ディスクに `bootOrder: 2` を設定（ネットワークブート試行後のフォールバック）
+* Multusを介して構成されたセカンダリネットワーク（例: `pxe-network`）が必要
+* 直接的なネットワークアクセスにブリッジインターフェイスバインディングを使用
+* プライマリポッドネットワーク (`default`) は一般的な接続用として維持
+
+PXEブートの前提条件:
+
+* セカンダリネットワークが構成されておりアクセス可能であること（ネットワークチュートリアルを参照）
+* セカンダリネットワーク上でPXEサーバーが構成されていること
+* DHCPサーバーがブート情報を提供していること
+* TFTPサーバーがブートファイルを提供していること
+* VMとPXEインフラストラクチャ間のネットワーク接続
+
+使用する場合:
+
+* 自動化されたOSインストール
+* ディスクレスワークステーション環境
+* ネットワークベースのリカバリシステム
+* 大規模な自動化デプロイ
+
+== ブートメニューの構成
+
+VM起動時にブートデバイスを選択できる対話型ブートメニューを有効にできます。
+
+xref:attachment$boot-order-boot-sources/vm-boot-menu.yaml[vm-boot-menu.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-boot-menu
+  namespace: boot-demo
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: vm-boot-menu-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-boot-menu
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+              bootOrder: 1
+            - cdrom:
+                bus: sata
+              name: installcdrom
+              bootOrder: 2
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+          rng: {}
+        firmware:
+          bootloader:
+            bios:
+              useSerial: true
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - dataVolume:
+            name: vm-boot-menu-disk
+          name: rootdisk
+        - name: installcdrom
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+          name: cloudinitdisk
+----
+
+ブートメニューへのアクセス:
+
+[source,bash,role=execute]
+----
+oc apply -f vm-boot-menu.yaml
+
+# VNC経由でアクセスしてブートメニューを表示
+virtctl vnc vm-boot-menu -n boot-demo
+
+# またはコンソール経由
+virtctl console vm-boot-menu -n boot-demo
+----
+
+* 起動中に ESC または F12 を押してブートメニューにアクセス
+* 利用可能なオプションからブートデバイスを選択
+* `useSerial: true` により、シリアルコンソール経由でブートメニューにアクセス可能になります
+
+== 検証コマンド
+
+ブート構成をデプロイした後、次のコマンドを使用して検証します。
+
+=== VMステータスの確認
+
+[source,bash,role=execute]
+----
+# VMの一覧表示
+oc get vm -n boot-demo
+
+# VMが実行中か確認
+oc get vmi -n boot-demo
+----
+
+[source,bash,role=execute]
+----
+# 詳細なVM情報（vm-boot-pvcを自分のVM名に置き換え）
+oc describe vm vm-boot-pvc -n boot-demo
+----
+
+=== ブート構成の表示
+
+[source,bash,role=execute]
+----
+# ブート順序を表示するVM仕様を取得（vm-boot-pvcを自分のVM名に置き換え）
+oc get vm vm-boot-pvc -n boot-demo -o yaml | grep -A 5 bootOrder
+
+# ファームウェア構成の確認（vm-boot-uefiを自分のVM名に置き換え）
+oc get vm vm-boot-uefi -n boot-demo -o yaml | grep -A 10 firmware
+----
+
+=== VMコンソールへのアクセス
+
+[source,bash,role=execute]
+----
+# シリアルコンソールアクセス（vm-boot-pvcを自分のVM名に置き換え）
+virtctl console vm-boot-pvc -n boot-demo
+
+# VNCグラフィカルコンソール（vm-boot-menuを自分のVM名に置き換え）
+virtctl vnc vm-boot-menu -n boot-demo
+----
+
+=== ブートログの確認
+
+VM内部で実行:
+
+[source,bash]
+----
+# ブートメッセージの表示
+dmesg | head -50
+
+# システム起動時間の確認
+systemd-analyze
+
+# ブートログの一覧
+journalctl -b
+
+# UEFIまたはBIOSモードの確認
+[ -d /sys/firmware/efi ] && echo "UEFI" || echo "BIOS"
+----
+
+== 一般的な問題と解決策
+
+=== 問題: 指定されたデバイスからVMが起動しない
+
+**現象**: VMが `bootOrder: 1` を持つデバイスから起動しない。
+
+**解決策**:
+
+* デバイスが実際にブート可能（ブートローダーがある）か確認
+* デバイスがVMに正しく接続されているか確認
+* VMイベントを確認:
+
+[source,bash,role=execute]
+----
+oc describe vmi vm-boot-pvc -n boot-demo
+----
+
+* コンソールにアクセスしてエラーメッセージを確認:
+
+[source,bash,role=execute]
+----
+virtctl console vm-boot-pvc -n boot-demo
+----
+
+=== 問題: セキュアブートによりVMが起動しない
+
+**現象**: `secureBoot: true` を設定したVMが起動しない、またはブートエラーを表示する。
+
+**解決策**:
+
+* OSがセキュアブートをサポートしていることを確認
+* フィーチャーで `smm.enabled: true` が設定されているか確認
+* 問題を切り分けるためにセキュアブートを一時的に無効にしてみる
+* ブートローダーとカーネルが適切に署名されているか確認
+
+[source,bash,role=execute]
+----
+# VMを編集してセキュアブートを無効化
+oc edit vm vm-boot-secureboot -n boot-demo
+# secureBoot: true を secureBoot: false に変更
+----
+
+=== 問題: PXEブートが機能しない
+
+**現象**: PXEブート用に構成されたVMがブート情報を受信しない。
+
+**解決策**:
+
+* PXEサーバーがネットワークからアクセス可能か確認
+* DHCPがPXEブートオプションを提供するように構成されているか確認
+* VMネットワークインターフェイスがブリッジバインディングを使用していることを確認
+* ファイアウォールルールがPXEトラフィック（DHCP、TFTP）を許可しているか確認
+* ネットワークインターフェイスに `bootOrder` が設定されていることを確認
+
+=== 問題: ContainerDiskイメージのプルに失敗する
+
+**現象**: ContainerDiskを使用するVMがイメージプルエラーで失敗する。
+
+**解決策**:
+
+* コンテナイメージが存在し、アクセス可能であることを確認
+* プライベートレジストリを使用している場合は、イメージプルシークレットを確認
+* イメージが正しい形式（コンテナ内の /disk/ パスにあるディスク）であることを確認
+
+[source,bash,role=execute]
+----
+# ポッドイベントの確認
+oc get events -n boot-demo
+----
+
+[source,bash,role=execute]
+----
+# virt-launcherポッドログの確認（最初に実際のポッド名を確認）
+oc get pods -n boot-demo
+oc logs -n boot-demo virt-launcher-vm-boot-containerdisk-xxxxx
+----
+
+=== 問題: HTTP DataVolumeインポートが失敗する
+
+**現象**: HTTPソースを持つDataVolumeが ImportInProgress でスタックするか失敗する。
+
+**解決策**:
+
+* URLがクラスターからアクセス可能であることを確認
+* 十分なストレージクォータがあることを確認
+* ストレージクラスが動的プロビジョニングをサポートしていることを確認
+* 必要に応じて即時バインディング用のアノテーションを追加
+
+[source,bash,role=execute]
+----
+# DataVolumeステータスの確認
+oc get dv -n boot-demo
+oc describe dv vm-boot-http-disk -n boot-demo
+
+# インポーターポッドログの確認（最初に実際のポッド名を確認）
+oc get pods -n boot-demo
+oc logs -n boot-demo importer-vm-boot-http-disk-xxxxx
+
+# 必要に応じてCDIコントローラーログを確認
+oc get pods -n openshift-cnv | grep cdi-deployment
+oc logs -n openshift-cnv cdi-deployment-xxxxx
+----
+
+== ベストプラクティス
+
+=== ブート順序の構成
+
+* プライマリブートデバイスには必ず `bootOrder` を明示的に設定する
+* 1、2、3のように順番に番号を振る（番号を飛ばさない）
+* VMアノテーションまたはラベルにブートシーケンスをドキュメント化する
+* コンソール経由でBIOS/UEFIセットアップにアクセスしてブート順序をテストする
+
+=== ファームウェアの選択
+
+* 新規デプロイメントにはUEFIを使用する（優れたセキュリティ、モダンな機能）
+* BIOSは古いオペレーティングシステムとの互換性のためにのみ使用する
+* セキュアブートは、必要であり、OSがサポートしている場合のみ有効にする
+* セキュアブートを使用する場合は、常にSMMを有効にする
+
+=== ブートソースの選択
+
+* 永続性を必要とする本番ワークロードにはPVCを使用する
+* エフェメラルでイミュータブルなワークロードにはContainerDiskを使用する
+* 中央レポジトリからの自動デプロイにはHTTP DataVolumeを使用する
+* カスタムイメージはバージョン管理のためにContainerDiskとしてパッケージ化する
+
+=== セキュリティ
+
+* Windows 11やセキュリティに敏感なワークロードにはセキュアブートを有効にする
+* 強化されたセキュリティ機能のためにはBIOSではなくUEFIを使用する
+* セキュリティパッチを含めるためにブートイメージを定期的に更新する
+* デプロイ前にコンテナイメージの脆弱性をスキャンする
+
+=== パフォーマンス
+
+* ディスクパフォーマンス向上のためにvirtioバスを使用する
+* パフォーマンスチューニングにはディスクキャッシングモードを検討する
+* 適切なストレージクラスを使用する（ブートディスクにはSSD）
+* VM起動を高速化するためにPVCを事前プロビジョニングする
+
+== クリーンアップ
+
+本チュートリアルで作成されたすべてのリソースを削除するには:
+
+[source,bash,role=execute]
+----
+# すべてのVMを削除
+oc delete vm --all -n boot-demo
+
+# 名前空間を削除
+oc delete namespace boot-demo
+----
+
+WARNING: VMを削除すると、関連付けられたDataVolumeとPVCも削除され、データが損失します。
+
+== まとめ
+
+本チュートリアルでは、以下について学びました。
+
+* さまざまなブートソースタイプ（PVC、ContainerDisk、HTTP DataVolume）
+* ブートデバイス順序の構成方法
+* BIOSとUEFIファームウェアモードの違い
+* セキュアブートの有効化と構成方法
+* PXEを使用したネットワークブート構成
+* ブートメニューの構成
+* ブート構成に関するベストプラクティス
+* 一般的な問題とトラブルシューティング
+
+ブート構成を理解することは、適切なVMライフサイクル管理、セキュリティコンプライアンス、および多様なオペレーティングシステム要件への対応に不可欠です。
+
+== 参照先
+
+* link:https://kubevirt.io/user-guide/user_workloads/boot_from_external_source/[KubeVirt Booting From External Source,window=_blank]
+* link:https://kubevirt.io/user-guide/virtual_machines/disks_and_volumes/[KubeVirt Disks and Volumes,window=_blank]
+* link:https://docs.openshift.com/container-platform/latest/virt/about_virt/about-virt.html[OpenShift Virtualization Documentation,window=_blank]
+* link:https://kubevirt.io/user-guide/virtual_machines/virtual_hardware/[KubeVirt Virtual Hardware,window=_blank]
+* link:https://uefi.org/specifications[UEFI Specifications,window=_blank]

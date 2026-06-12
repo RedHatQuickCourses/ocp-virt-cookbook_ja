@@ -1,0 +1,295 @@
+= デフォルトストレージクラスの設定
+:navtitle: ストレージ設定
+
+== 概要
+
+このチュートリアルでは、OpenShift Virtualization用のデフォルトストレージクラスを設定する方法を学習します。組み込みのDataSourceイメージ（Fedora、RHEL、CentOS Stream、Windows）からブートソースを自動的にプロビジョニングするには、デフォルトストレージクラスが必要です。これがない場合、DataSourceは保留状態のままとなり、仮想マシン（VM）を作成できません。デフォルトストレージクラスを設定すると、明示的な指定がない場合でも、仮想マシンやデータボリュームが指定したストレージを自動的に使用するようになるため、デプロイメントと管理が簡素化されます。
+
+テスト済みのバージョン:
+----
+OpenShift 4.19, 4.20
+----
+
+== 前提条件
+
+開始するには、以下のものが必要です。
+
+* **OpenShiftクラスター**: OpenShift VirtualizationがインストールされたOpenShiftクラスター
+* **クラスター管理者のアクセス権**: cluster-admin権限を持つクラスターへのアクセス権
+* **ストレージクラス**: クラスター内に設定済みのストレージクラスが少なくとも1つあること
+* **ストレージプロビジョナー**: 動的プロビジョニングをサポートするストレージプロビジョナー
+
+== ステップ 1: 利用可能なストレージクラスの確認
+
+まず、クラスター内で利用可能なストレージクラスを確認し、既にデフォルトとして設定されているストレージクラスがあるかどうかを特定します。
+
+[source,bash,role=execute]
+----
+oc get sc
+----
+
+このコマンドを実行すると、すべてのストレージクラスが名前とプロビジョナーとともに一覧表示されます。名前の横に `(default)` と表示されているストレージクラスがあれば、それが現在デフォルトとして設定されています。
+
+デフォルトストレージクラスが存在しない場合の出力例:
+----
+NAME                    PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+ceph-rbd-sc             rbd.csi.ceph.com                        Delete          Immediate              true                   2d
+hostpath-provisioner    kubevirt.io/hostpath-provisioner        Delete          WaitForFirstConsumer   false                  1d
+local-storage           kubernetes.io/no-provisioner            Delete          WaitForFirstConsumer   false                  1d
+----
+
+既存のデフォルトストレージクラスが存在する場合の出力例:
+----
+NAME                    PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+ceph-rbd-sc (default)   rbd.csi.ceph.com                        Delete          Immediate              true                   2d
+hostpath-provisioner    kubevirt.io/hostpath-provisioner        Delete          WaitForFirstConsumer   false                  1d
+local-storage           kubernetes.io/no-provisioner            Delete          WaitForFirstConsumer   false                  1d
+----
+
+以下の点を確認してください。
+
+. デフォルトとして設定したいストレージクラスの名前
+. 既にデフォルトストレージクラスが設定されているかどうか
+
+== ステップ 2: 既存のデフォルトの削除（必要な場合）
+
+別のストレージクラスが既にデフォルトとして設定されている場合は、新しいデフォルトを設定する前にそのアノテーションを削除する必要があります。1つのクラスターには、デフォルトストレージクラスを1つしか設定できません。
+
+ストレージクラスからデフォルトのアノテーションを削除するには、以下を実行します。
+
+[source,bash,role=execute]
+----
+oc annotate sc <the-old-default-storage-class-name> storageclass.kubernetes.io/is-default-class-
+----
+
+注意: アノテーションキーの末尾にあるハイフンが、アノテーションを削除する役割を果たします。
+
+== ステップ 3: ストレージクラスへのアノテーション追加
+
+選択したストレージクラスにアノテーションを追加します。このアノテーションにより、そのストレージクラスをデフォルトとして使用するようOpenShiftに指示します。
+
+アノテーションは以下の通りです: `storageclass.kubernetes.io/is-default-class: "true"`
+
+[source,bash,role=execute]
+----
+oc annotate sc <your-storage-class-name> storageclass.kubernetes.io/is-default-class="true"
+----
+
+例えば、ストレージクラス名が `ceph-rbd-sc` の場合:
+
+[source,bash,role=execute]
+----
+oc annotate sc ceph-rbd-sc storageclass.kubernetes.io/is-default-class="true"
+----
+
+== ステップ 4: デフォルトストレージクラスの確認
+
+アノテーションを適用した後、変更が反映されたことを確認します。
+
+[source,bash,role=execute]
+----
+oc get sc
+----
+
+デフォルト設定後の出力例:
+----
+NAME                    PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+ceph-rbd-sc (default)   rbd.csi.ceph.com                        Delete          Immediate              true                   2d
+hostpath-provisioner    kubevirt.io/hostpath-provisioner        Delete          WaitForFirstConsumer   false                  1d
+local-storage           kubernetes.io/no-provisioner            Delete          WaitForFirstConsumer   false                  1d
+----
+
+選択したストレージクラス名の横に `(default)` と表示されていることを確認してください。
+
+== ステップ 5: デフォルトストレージクラスのテスト
+
+デフォルトストレージクラスが正しく機能しているかを確認するためのテストを行います。ストレージクラスを指定せずにPVCを作成します。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-default-storage
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+EOF
+----
+
+次に、PVCが正しいストレージクラスで作成されたことを確認します。
+
+[source,bash,role=execute]
+----
+oc get pvc test-default-storage -n default
+----
+
+出力例:
+
+----
+NAME                   STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+test-default-storage   Pending                                      lvms-vg1       0s
+----
+
+PVCのステータスが `Pending` になっていますが、デフォルトストレージクラス（この例では `lvms-vg1`）が自動的に割り当てられています。
+
+=== ボリュームバインディングモードの理解
+
+PVCが `Pending` ステータスのままになるのは、ほとんどのストレージクラスで `WaitForFirstConsumer` ボリュームバインディングモードが使用されているためであり、これは想定された動作です。
+
+[cols="1,2,2"]
+|===
+|バインディングモード |動作 |使用ケース
+
+|`WaitForFirstConsumer`
+|PVCを使用するPodがスケジュールされた時点でPVがプロビジョニングされる
+|Podと同じノード上にストレージを作成するため、トポロジー対応ストレージ（LVM、ローカルストレージ）に適している
+
+|`Immediate`
+|PVCが作成されるとすぐにPVがプロビジョニングされる
+|どのノードからでもアクセス可能なネットワーク接続ストレージ（NFS、Ceph、クラウドストレージ）に適している
+|===
+
+ストレージクラスのバインディングモードを確認するには、以下を実行します。
+
+[source,bash,role=execute]
+----
+oc get sc <storage-class-name> -o jsonpath='{.volumeBindingMode}'
+----
+
+== ステップ 6: デフォルトストレージを使用したVMのデプロイ
+
+これで、デフォルトストレージクラスをデータボリュームに使用する仮想マシンをデプロイできるようになりました。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: test-vm-default-storage
+  namespace: default
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+  - metadata:
+      name: test-vm-disk
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+      sourceRef:
+        kind: DataSource
+        name: fedora
+        namespace: openshift-virtualization-os-images
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: test-vm-default-storage
+    spec:
+      domain:
+        devices:
+          disks:
+          - name: datavolumedisk
+            disk:
+              bus: virtio
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 1
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: datavolumedisk
+        dataVolume:
+          name: test-vm-disk
+EOF
+----
+
+== トラブルシューティング
+
+=== 一般的な問題
+
+==== 複数のデフォルトストレージクラス
+
+複数のストレージクラスがデフォルトとしてマークされている場合は、1つを除いてすべてのアノテーションを削除してください。
+
+[source,bash,role=execute]
+----
+oc get sc -o custom-columns=NAME:.metadata.name,DEFAULT:.metadata.annotations.storageclass\.kubernetes\.io/is-default-class
+----
+
+==== ストレージクラスが見つからない
+
+ストレージクラスにアノテーションを付ける前に、それが存在することを確認してください。
+
+[source,bash,role=execute]
+----
+oc get sc <storage-class-name>
+----
+
+==== 権限拒否 (Permission Denied)
+
+cluster-admin権限を持っていることを確認してください。
+
+[source,bash,role=execute]
+----
+oc auth can-i create storageclass --all-namespaces
+----
+
+=== 確認コマンド
+
+すべてのストレージクラスとデフォルトステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc get sc -o wide
+----
+
+特定のストレージクラスの詳細情報を表示します。
+
+[source,bash,role=execute]
+----
+oc describe sc <storage-class-name>
+----
+
+PVCの一覧とそのストレージクラスを表示します。
+
+[source,bash,role=execute]
+----
+oc get pvc --all-namespaces -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,STORAGECLASS:.spec.storageClassName
+----
+
+== ベストプラクティス
+
+. **適切なストレージの選択**: 仮想マシンに必要なパフォーマンスと機能（高速なI/O、スナップショット、暗号化など）を提供するストレージクラスを選択してください。
+
+. **ワークロード要件の検討**: ワークロードによって必要なストレージ特性が異なる場合があります。デフォルトに頼るだけでなく、重要なワークロードに対しては特定のストレージクラスを使用することを検討してください。
+
+. **ストレージ使用量の監視**: デフォルトストレージクラスがニーズを満たしていることを確認するため、ストレージの使用量とパフォーマンスを定期的に監視してください。
+
+. **選択の文書化**: 今後の参考およびトラブルシューティングのために、なぜそのストレージクラスをデフォルトとして選択したのかを文書化してください。
+
+== まとめ
+
+このチュートリアルでは、以下の内容を学習しました。
+
+* 利用可能なストレージクラスを表示し、既存のデフォルトを特定する方法
+* 既存のデフォルトストレージクラスのアノテーションを削除する方法
+* `storageclass.kubernetes.io/is-default-class` を使用してストレージクラスをデフォルトとしてアノテーションする方法
+* テストPVCの作成とVMのデプロイによるデフォルトストレージクラスの検証方法
+* OpenShift Virtualizationにおけるデフォルトストレージクラスの選択と管理に関するベストプラクティス
+
+== 関連資料
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage/understanding-persistent-storage#persistent-storage-overview_storage-classes[OpenShift - Persistent Storage,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/storage[OpenShift Virtualization - Storage,window=_blank]

@@ -1,0 +1,639 @@
+= カスタム仮想マシンテンプレートの作成
+:navtitle: 仮想マシンテンプレート
+
+== 概要
+
+データソースとして準備されたディスクイメージから新しい `VirtualMachines` を作成するために使用される「ゴールデンイメージ」の概念と同様に、テンプレートは `VirtualMachine` マニフェストをテンプレート化することで、これをさらに一歩進めたものです。これにより、仮想ハードウェアやその他の設定を以下のように指定できます。
+
+* インスタンスタイプ (vCPU 数と RAM サイズを推論)
+* マシン設定 (CPU トポロジーとファームウェアタイプ)
+* ネットワークとインターフェース
+* ディスクとボリューム
+* 定義済みのラベルとアノテーション
+
+これにより、OpenShift Virtualization コンソールとコマンドラインの両方から、マシン仕様全体を迅速かつ反復的にデプロイできるようになります。
+
+`VirtualMachine` は、OpenShift Virtualization コンソールから「テンプレートから作成」オプションを選択し、`rhel9-server-large`、`fedora-desktop-medium` などの VM テンプレートを選択するだけで簡単に作成できます。
+
+要約すると、このガイドでは `VirtualMachine` テンプレートを選択、デプロイ、カスタマイズする方法を説明します。
+
+テスト済みのバージョン:
+
+----
+OpenShift 4.21
+----
+
+== 学習内容
+
+このガイドでは、以下の順序で各トピックをステップバイステップで説明します。
+
+* <<prerequisites,前提条件>>
+* <<step_1_selecting_template,ステップ 1: テンプレートの表示と選択>>
+* <<step_2_deploying_template,ステップ 2: テンプレートからの仮想マシンのデプロイ>>
+* <<step_3_customizing_template,ステップ 3: テンプレートのカスタマイズ>>
+* <<step_4_testing_cleanup,ステップ 4: 最終テストとクリーンアップ>>
+* <<summary,まとめ>>
+* <<see_also,参照>>
+
+== 前提条件 [[prerequisites]]
+
+このガイドを完了するには、以下が必要です。
+
+* bash または互換性のあるシェル環境 (zsh でもテスト済み)。
+* OpenShift クライアントツール `oc`。
+* OpenShift Virtualization がインストールされた OpenShift クラスター。
+* テキスト（またはコード）エディターまたは IDE アプリケーション。
+
+== ステップ 1: テンプレートの表示と選択 [[step_1_selecting_template]]
+
+このステップでは、デフォルトで用意されているテンプレートを簡単に確認し、その中から 1 つを選択して、後続のセクションで仮想的なニーズに合わせて変更できるようにします。
+
+まず、`openshift` プロジェクトで利用可能な `templates` のリストを取得します。
+
+[source,bash,role=execute]
+----
+oc get templates -n openshift
+----
+
+多くの既存テンプレートが表示されます。その中には OpenShift 開発者コンソールを有効にするためのクイックスタート例もあれば、OpenShift Virtualization に特化したもの（OS や T シャツサイズが指定されていることで判別可能）もあります。
+
+`rhel` セクションのテンプレートまでスクロールします（以下の出力はコンテキストを示すために切り抜かれています）。
+
+----
+...
+rhel8-desktop-tiny                            Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-highperformance-large                   Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-highperformance-medium                  Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-highperformance-small                   Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-highperformance-tiny                    Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-server-large                            Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-server-medium                           Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-server-small                            Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel8-server-tiny                             Template for Red Hat Enterprise Linux 8 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-desktop-large                           Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-desktop-medium                          Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-desktop-small                           Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-desktop-tiny                            Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-highperformance-large                   Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-highperformance-medium                  Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-highperformance-small                   Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-highperformance-tiny                    Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-server-large                            Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-server-medium                           Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-server-small                            Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+rhel9-server-tiny                             Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the RHEL disk...   4 (2 generated)   1
+...
+----
+
+`openshift` プロジェクトから `rhel9-server-medium` テンプレートのソースを取得します（出力形式として `-o yaml` を使用）。
+
+[source,bash,role=execute]
+----
+oc get template rhel9-server-medium -n openshift -o yaml > rhel9-server.template.yaml
+----
+
+以下は `rhel9-server.template.yaml` ファイルの内容です（`creationTimestamp`、`uid`、`resourceVersion` フィールドは除外しています）。
+
+[source,yaml]
+----
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    defaults.template.kubevirt.io/disk: rootdisk
+    description: Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the
+      RHEL disk image must be available.
+    iconClass: icon-rhel
+    name.os.template.kubevirt.io/rhel9.0: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.1: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.2: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.3: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.4: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.5: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.6: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.7: Red Hat Enterprise Linux 9.0 or higher
+    openshift.io/display-name: Red Hat Enterprise Linux 9 VM
+    openshift.io/documentation-url: https://github.com/kubevirt/common-templates
+    openshift.io/provider-display-name: Red Hat
+    openshift.io/support-url: https://github.com/kubevirt/common-templates/issues
+    openshift.kubevirt.io/pronounceable-suffix-for-name-expression: "true"
+    operator-sdk/primary-resource: openshift-cnv/ssp-kubevirt-hyperconverged
+    operator-sdk/primary-resource-type: SSP.ssp.kubevirt.io
+    tags: hidden,kubevirt,virtualmachine,linux,rhel
+    template.kubevirt.io/containerdisks: |
+      registry.redhat.io/rhel9/rhel-guest-image
+    template.kubevirt.io/editable: |
+      /objects[0].spec.template.spec.domain.cpu.sockets
+      /objects[0].spec.template.spec.domain.cpu.cores
+      /objects[0].spec.template.spec.domain.cpu.threads
+      /objects[0].spec.template.spec.domain.memory.guest
+      /objects[0].spec.template.spec.domain.devices.disks
+      /objects[0].spec.template.spec.volumes
+      /objects[0].spec.template.spec.networks
+    template.kubevirt.io/images: |
+      https://access.redhat.com/downloads/content/479/ver=/rhel---9/9.0/x86_64/product-software
+    template.kubevirt.io/provider: Red Hat
+    template.kubevirt.io/provider-support-level: Full
+    template.kubevirt.io/provider-url: https://www.redhat.com
+    template.kubevirt.io/version: v1alpha1
+    template.openshift.io/bindable: "false"
+  labels:
+    app.kubernetes.io/component: templating
+    app.kubernetes.io/managed-by: ssp-operator
+    app.kubernetes.io/name: common-templates
+    app.kubernetes.io/part-of: hyperconverged-cluster
+    app.kubernetes.io/version: 4.21.1
+    flavor.template.kubevirt.io/medium: "true"
+    os.template.kubevirt.io/rhel9.0: "true"
+    os.template.kubevirt.io/rhel9.1: "true"
+    os.template.kubevirt.io/rhel9.2: "true"
+    os.template.kubevirt.io/rhel9.3: "true"
+    os.template.kubevirt.io/rhel9.4: "true"
+    os.template.kubevirt.io/rhel9.5: "true"
+    os.template.kubevirt.io/rhel9.6: "true"
+    os.template.kubevirt.io/rhel9.7: "true"
+    template.kubevirt.io/architecture: amd64
+    template.kubevirt.io/type: base
+    template.kubevirt.io/version: v0.34.1
+    workload.template.kubevirt.io/server: "true"
+  name: rhel9-server-medium
+  namespace: openshift
+objects:
+- apiVersion: kubevirt.io/v1
+  kind: VirtualMachine
+  metadata:
+    annotations:
+      vm.kubevirt.io/validations: |
+        [
+          {
+            "name": "minimal-required-memory",
+            "path": "jsonpath::.spec.domain.memory.guest",
+            "rule": "integer",
+            "message": "This VM requires more memory.",
+            "min": 1610612736
+          }
+        ]
+    labels:
+      app: ${NAME}
+      kubevirt.io/dynamic-credentials-support: "true"
+      vm.kubevirt.io/template: rhel9-server-medium
+      vm.kubevirt.io/template.revision: "1"
+      vm.kubevirt.io/template.version: v0.34.1
+    name: ${NAME}
+  spec:
+    dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: ${NAME}
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: ${DATA_SOURCE_NAME}
+          namespace: ${DATA_SOURCE_NAMESPACE}
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    runStrategy: Halted
+    template:
+      metadata:
+        annotations:
+          vm.kubevirt.io/flavor: medium
+          vm.kubevirt.io/os: rhel9
+          vm.kubevirt.io/workload: server
+        labels:
+          kubevirt.io/domain: ${NAME}
+          kubevirt.io/size: medium
+      spec:
+        architecture: amd64
+        domain:
+          cpu:
+            cores: 1
+            sockets: 1
+            threads: 1
+          devices:
+            disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+            rng: {}
+          features:
+            smm:
+              enabled: true
+          firmware:
+            bootloader:
+              efi: {}
+          memory:
+            guest: 4Gi
+        networks:
+        - name: default
+          pod: {}
+        terminationGracePeriodSeconds: 180
+        volumes:
+        - dataVolume:
+            name: ${NAME}
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: cloud-user
+              password: ${CLOUD_USER_PASSWORD}
+              chpasswd: { expire: False }
+          name: cloudinitdisk
+parameters:
+- description: VM name
+  from: rhel9-[a-z0-9]{16}
+  generate: expression
+  name: NAME
+- description: Name of the DataSource to clone
+  name: DATA_SOURCE_NAME
+  value: rhel9
+- description: Namespace of the DataSource
+  name: DATA_SOURCE_NAMESPACE
+  value: openshift-virtualization-os-images
+- description: Randomized password for the cloud-init user cloud-user
+  from: '[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}'
+  generate: expression
+  name: CLOUD_USER_PASSWORD
+----
+
+上記の例を確認し、末尾の `parameters` セクションまでスクロールしてください。そこにはテンプレートのパラメーター名、フィールド値、および説明のリストがあります。
+
+各パラメーターの詳細を以下に示します。
+
+* **`NAME`** - テンプレートから作成された VM に一意の名前を生成する場所です。文字クラス（`[a-z0-9]` はシェルや正規表現スタイルと一致）と、VM 名の後半部分を構成するために使用されるカウント（`{16}`）に注目してください。
+* **`DATA_SOURCE_NAME`** - VM をクローンする際の `DataSource`（ゴールデンイメージ）の名前。
+* **`DATA_SOURCE_NAMESPACE`** - `DataSource` が存在する名前空間。すべてのデフォルトイメージは `openshift-virtualization-os-images` プロジェクトに存在します。
+* **`CLOUD_USER_PASSWORD`** - デフォルトの cloud-user のパスワードが生成される場所。`NAME` パラメーターと同様に、文字クラスとカウント（4 つの英数字のランダムな文字で構成される 3 つのグループ、ダッシュ区切り）に注目してください。
+
+[NOTE]
+====
+* パラメーターは、各パラメーターの名前を参照することでテンプレートマニフェスト内で使用されます。
+* これは、bash シェルの変数名および参照のスタイルと構文を反映しています。
+====
+
+`rhel9-server.template.yaml` ファイルをローカルに保存したら、`oc process` コマンドを使用してテンプレートがどのようにレンダリングされるかを確認できます。
+
+[source,bash,role=execute]
+----
+oc process -f rhel9-server.template.yaml -o yaml
+----
+
+レンダリングされたテンプレートの yaml 出力が表示されます。生成された出力は `List` オブジェクトであり、そのリスト項目としてレンダリングされた `VirtualMachine` テンプレートが埋め込まれています。
+
+[NOTE]
+====
+* OpenShift テンプレートでは、1 つのテンプレート内に複数の Kubernetes オブジェクトを表現できます。
+* OpenShift Virtualization では、テンプレートを作成するために必要なのは単一の `VirtualMachine` オブジェクトだけです。
+====
+
+<<step_2_deploying_template,ステップ 2>> に進みます。
+
+== ステップ 2: テンプレートからの VirtualMachine のデプロイ [[step_2_deploying_template]]
+
+このセクションでは、CLI を使用してテンプレートから `VirtualMachine` をデプロイする方法を説明します。これは、`oc process` コマンドの出力を `oc create` (または `oc apply`) にパイプすることで実行できます。
+
+まず、RHEL 9 `VirtualMachine` を格納するためのプロジェクト（名前空間）を作成します。
+
+[source,bash,role=execute]
+----
+oc new-project template-example
+----
+
+次に、`rhel9-server.template.yaml` ファイルを処理し、出力を `oc apply` にパイプします（新しい `VirtualMachine` オブジェクトであるため `oc create` でも機能します）。
+
+[source,bash,role=execute]
+----
+oc process -f rhel9-server.template.yaml | oc create -n template-example -f -
+----
+
+RHEL 9 テンプレートによって作成された現在の名前空間のリソースを簡単に確認します。
+
+[source,bash,role=execute]
+----
+oc get all -n template-example
+----
+
+`DataVolume` は `PendingPopulation` として表示され、`VirtualMachine` は `Stopped` 状態であるはずです。
+
+作成された `rhel9-server` VM の名前を含むシェル変数を作成します。
+
+[source,bash,role=execute]
+----
+export RHEL9_SERVER_VM=$(oc get vm -o custom-columns=:metadata.name --no-headers -n template-example)
+----
+
+変数を確認して VM 名が正しいこと、および変数が空でないことを確認します。`rhel9-abcdef0987654321` のような値が表示されるはずです。
+
+[source,bash,role=execute]
+----
+echo $RHEL9_SERVER_VM
+----
+
+`virtctl` を使用して VM に対して開始コマンドを発行できます（以下の VM 名を置き換えてください）。
+
+[source,bash,role=execute]
+----
+virtctl start $RHEL9_SERVER_VM
+----
+
+`oc get vm` を数回（または `-w` フラグを指定して一度）実行し、VM の実行状態が `Stopped` から `Provisioning`、そして最終的に `Running` に変化するのを観察します。
+
+VM に接続するには、CLI からのコンソールアクセスについて説明する <<step_4_testing_cleanup,ステップ 4>> に進んでください。
+
+== ステップ 3: テンプレートのカスタマイズ [[step_3_customizing_template]]
+
+このセクションでは、カスタマイズのために前の `rhel9` テンプレートのコピーを作成し、カスタムテンプレートにいくつかの変更を加えます。
+
+<<step_2_deploying_template,ステップ 2>> で作成したプロジェクト/名前空間内で作業を継続します。
+
+[source,bash,role=execute]
+----
+oc project template-example
+----
+
+`rhel9-server.template.yaml` ファイルのコピーを `rhel9-custom.template.yaml` という名前で作成します。
+
+[source,bash,role=execute]
+----
+cp rhel9-{server,custom}.template.yaml
+----
+
+以下は、`rhel9-custom.template.yaml` ファイルの既存の内容を上書きして貼り付けることができる完全な例です。
+
+[source,yaml]
+----
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    defaults.template.kubevirt.io/disk: rootdisk
+    description: Template for Red Hat Enterprise Linux 9 VM or newer. A PVC with the
+      RHEL disk image must be available.
+    iconClass: icon-rhel
+    name.os.template.kubevirt.io/rhel9.0: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.1: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.2: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.3: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.4: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.5: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.6: Red Hat Enterprise Linux 9.0 or higher
+    name.os.template.kubevirt.io/rhel9.7: Red Hat Enterprise Linux 9.0 or higher
+    openshift.io/display-name: Red Hat Enterprise Linux 9 VM
+    openshift.io/documentation-url: https://github.com/kubevirt/common-templates
+    openshift.io/provider-display-name: Red Hat
+    openshift.io/support-url: https://github.com/kubevirt/common-templates/issues
+    openshift.kubevirt.io/pronounceable-suffix-for-name-expression: "true"
+    operator-sdk/primary-resource: openshift-cnv/ssp-kubevirt-hyperconverged
+    operator-sdk/primary-resource-type: SSP.ssp.kubevirt.io
+    tags: hidden,kubevirt,virtualmachine,linux,rhel
+    template.kubevirt.io/containerdisks: |
+      registry.redhat.io/rhel9/rhel-guest-image
+    template.kubevirt.io/editable: |
+      /objects[0].spec.template.spec.domain.cpu.sockets
+      /objects[0].spec.template.spec.domain.cpu.cores
+      /objects[0].spec.template.spec.domain.cpu.threads
+      /objects[0].spec.template.spec.domain.memory.guest
+      /objects[0].spec.template.spec.domain.devices.disks
+      /objects[0].spec.template.spec.volumes
+      /objects[0].spec.template.spec.networks
+    template.kubevirt.io/images: |
+      https://access.redhat.com/downloads/content/479/ver=/rhel---9/9.0/x86_64/product-software
+    template.kubevirt.io/provider: Red Hat
+    template.kubevirt.io/provider-support-level: Full
+    template.kubevirt.io/provider-url: https://www.redhat.com
+    template.kubevirt.io/version: v1alpha1
+    template.openshift.io/bindable: "false"
+  labels:
+    app.kubernetes.io/component: templating
+    app.kubernetes.io/managed-by: ssp-operator
+    app.kubernetes.io/name: common-templates
+    app.kubernetes.io/part-of: hyperconverged-cluster
+    app.kubernetes.io/version: 4.21.1
+    flavor.template.kubevirt.io/medium: "true"
+    os.template.kubevirt.io/rhel9.0: "true"
+    os.template.kubevirt.io/rhel9.1: "true"
+    os.template.kubevirt.io/rhel9.2: "true"
+    os.template.kubevirt.io/rhel9.3: "true"
+    os.template.kubevirt.io/rhel9.4: "true"
+    os.template.kubevirt.io/rhel9.5: "true"
+    os.template.kubevirt.io/rhel9.6: "true"
+    os.template.kubevirt.io/rhel9.7: "true"
+    template.kubevirt.io/architecture: amd64
+    template.kubevirt.io/type: base
+    template.kubevirt.io/version: v0.34.1
+    workload.template.kubevirt.io/server: "true"
+  name: rhel9-custom
+  namespace: openshift
+objects:
+- apiVersion: kubevirt.io/v1
+  kind: VirtualMachine
+  metadata:
+    annotations:
+      vm.kubevirt.io/validations: |
+        [
+          {
+            "name": "minimal-required-memory",
+            "path": "jsonpath::.spec.domain.memory.guest",
+            "rule": "integer",
+            "message": "This VM requires more memory.",
+            "min": 1610612736
+          }
+        ]
+    labels:
+      app: ${NAME}
+      kubevirt.io/dynamic-credentials-support: "true"
+      vm.kubevirt.io/template: rhel9-server-medium
+      vm.kubevirt.io/template.revision: "1"
+      vm.kubevirt.io/template.version: v0.34.1
+    name: ${NAME}
+  spec:
+    dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: ${NAME}
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: ${DATA_SOURCE_NAME}
+          namespace: ${DATA_SOURCE_NAMESPACE}
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    runStrategy: Always
+    template:
+      metadata:
+        annotations:
+          vm.kubevirt.io/flavor: medium
+          vm.kubevirt.io/os: rhel9
+          vm.kubevirt.io/workload: server
+        labels:
+          kubevirt.io/domain: ${NAME}
+          kubevirt.io/size: medium
+      spec:
+        architecture: amd64
+        domain:
+          cpu:
+            cores: 1
+            sockets: 1
+            threads: 1
+          devices:
+            disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+            rng: {}
+          features:
+            smm:
+              enabled: true
+          firmware:
+            bootloader:
+              efi: {}
+          memory:
+            guest: 4Gi
+        networks:
+        - name: default
+          pod: {}
+        terminationGracePeriodSeconds: 180
+        volumes:
+        - dataVolume:
+            name: ${NAME}
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: ${CLOUD_INIT_USERNAME}
+              password: ${CLOUD_INIT_PASSWORD}
+              chpasswd: { expire: False }
+          name: cloudinitdisk
+parameters:
+- description: VM name
+  from: rhel9-custom-[a-z0-9]{6}
+  generate: expression
+  name: NAME
+- description: Name of the DataSource to clone
+  name: DATA_SOURCE_NAME
+  value: rhel9
+- description: Namespace of the DataSource
+  name: DATA_SOURCE_NAMESPACE
+  value: openshift-virtualization-os-images
+- description: Name of the user account created by cloud-init
+  name: CLOUD_INIT_USERNAME
+  value: shadowman
+- description: Randomized password for the cloud-init user cloud-user
+  from: '[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}'
+  generate: expression
+  name: CLOUD_INIT_PASSWORD
+----
+
+以下は、オリジナルの `rhel9-server-medium` テンプレートからの変更点リストです。
+
+* **`metadata.name`** - テンプレートの名前が `rhel9-custom` に変更されました。
+* **`objects[0].spec.runStrategy`** - マシン作成後すぐに開始されるように `Halted` から `Always` に変更されました。
+* **`NAME`** - `NAME` パラメーターはプレフィックス `rhel9-custom-` が付きましたが、自動生成される文字数は少なくなりました。
+* **`CLOUD_INIT_USERNAME`** - 以前は `cloud-user` とハードコードされていた cloud-init ユーザーアカウント名をテンプレート化するための新しいパラメーターです。
+* **`CLOUD_INIT_PASSWORD`** - `cloud-user` アカウントが存在しなくなったため、明確にするためにこのパラメーターの名前が調整されました。
+
+重要: 進める前に、上記で提供された yaml データで `rhel9-custom.template.yaml` ファイルを更新する必要があります。
+
+カスタムテンプレートが完成したら、`oc process` を使用して正しくレンダリングされることをテストします。
+
+[source,bash,role=execute]
+----
+oc process -f rhel9-custom.template.yaml -o yaml
+----
+
+カスタムテンプレートが正しくレンダリングされたら、<<step_4_testing_cleanup,ステップ 4>> に進みます。
+
+== ステップ 4: 最終テストとクリーンアップ [[step_4_testing_cleanup]]
+
+このセクションでは、<<step_2_deploying_template,ステップ 2>> と同様にカスタムテンプレートをデプロイし、このチュートリアルに従って作成されたリソースをクリーンアップします。
+
+`rhel9-custom` テンプレートを新しい `VirtualMachine` として起動します。
+
+[source,bash,role=execute]
+----
+oc process -f rhel9-custom.template.yaml | oc apply -n template-example -f -
+----
+
+ソースボリュームのクローン作成が完了すると、`rhel9-custom` VM が実行状態になるはずです。`oc get vm` を実行してステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm -n template-example
+----
+
+以下のコマンドを使用して `rhel9-custom` VM のシェル変数を作成します。
+
+[source,bash,role=execute]
+----
+export RHEL9_CUSTOM_VM=$(oc get vm -o custom-columns=:metadata.name --no-headers -n template-example | grep custom)
+----
+
+注: 作成したオリジナルの `rhel9` VM に接続する場合は、以下の例で `$RHEL9_CUSTOM_VM` を `RHEL9_SERVER_VM` に置き換えてください。
+
+VM の yaml 出力を表示して、cloud-init パスワードを取得し、記録またはコピーします。
+
+[source,bash,role=execute]
+----
+oc describe vm $RHEL9_CUSTOM_VM | grep password
+----
+
+以前に取得したパスワードを使用して `virtctl` でコンソールにログインします（VM の `username` は、VM に応じて `shadowman` または `cloud-user` のいずれかです）。
+
+[source,bash,role=execute]
+----
+virtctl console $RHEL9_CUSTOM_VM
+----
+
+`ENTER` キーを押してログインプロンプトを表示します。`CTRL+]` を押してコンソール表示を終了します。
+
+[NOTE]
+====
+* OpenShift Virtualization コンソールからクラスター全体でテンプレートを利用できるようにするには、クラスター管理者として `openshift` プロジェクトにテンプレートを作成してください。
+====
+
+クリーンアップ後の混乱を避けるため、現在の kube コンテキストを別の名前空間（ここでは `default` を使用していますが、他の OpenShift プロジェクトや名前空間でも構いません）に切り替えます。
+
+[source,bash,role=execute]
+----
+oc project default
+----
+
+最後に、クリーンアップは名前空間を削除するだけで完了です。
+
+[source,bash,role=execute]
+----
+oc delete namespace template-example
+----
+
+== まとめ [[summary]]
+
+このチュートリアルでは、以下の内容を学習しました。
+
+* テンプレートとは何か、またその目的。
+* OpenShift Virtualization でデフォルトで利用可能な `VirtualMachine` テンプレートを表示する方法。
+* デプロイやカスタマイズのために既存のテンプレートを選択してダウンロードする方法。
+* デフォルトのテンプレートから `VirtualMachine` をデプロイする方法。
+* 特化した `VirtualMachine` デプロイのためにカスタムテンプレートを作成する方法。
+
+== 参照 [[see_also]]
+
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/virtualization/creating-a-virtual-machine#virt-creating-vms-from-templates[テンプレートからの仮想マシンの作成,window=_blank]

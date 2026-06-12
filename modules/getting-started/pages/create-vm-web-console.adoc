@@ -1,0 +1,287 @@
+= Webコンソールを使用したテンプレートからのVM作成
+:navtitle: WebコンソールからVMを作成
+
+== 概要
+
+このチュートリアルでは、OpenShift Webコンソールと事前構築済みテンプレートを使用して仮想マシン（VM）を作成する方法を説明します。Webコンソールは、VM管理のための直感的なグラフィカルインターフェースを提供するため、新規ユーザーにとって理想的な出発点となります。
+
+== 前提条件
+
+* OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以降（link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing[OpenShift Virtualizationのインストール,window=_blank]を参照）
+* VMを作成する権限を持つOpenShift Webコンソールへのアクセス
+* VMディスクプロビジョニング用に構成されたデフォルトのStorageClass
+* クラスター内で利用可能なブートソースイメージ（DataSource）
+
+ブートソースが利用可能であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get datasources -n openshift-virtualization-os-images
+----
+
+== ステップ 1: 仮想化セクションへのアクセス
+
+. OpenShift Webコンソールにログインします。
+. 左側のナビゲーションメニューで、**Virtualization** をクリックします。
+. **VirtualMachines** をクリックして、VM管理インターフェースを表示します。
+
+image::virtualization-menu.png[VirtualMachinesが選択された状態の仮想化メニュー]
+
+VirtualMachinesページには、選択したプロジェクト内のすべてのVMと、そのステータスおよび基本情報が表示されます。
+
+== ステップ 2: 利用可能なテンプレートの参照
+
+OpenShift Virtualizationには、一般的なオペレーティングシステム用の事前構成済みテンプレートが含まれています。
+
+. VirtualMachinesページから、**Create** -> **From template** をクリックします。
+. オペレーティングシステムごとに整理された利用可能なテンプレートを参照します。
+** **Red Hat Enterprise Linux** - さまざまなRHELバージョン
+** **Fedora** - 最新のFedoraリリース
+** **CentOS Stream** - CentOS Streamバージョン
+** **Microsoft Windows** - Windows Serverおよびデスクトップバージョン
+
+image::vm-templates-catalog.png[OSオプションが表示されたテンプレートカタログ]
+
+TIP: **Source available** と表示されているテンプレートには、すぐに使用できる事前構成済みのブートソースがあります。これには、クラスター内で xref:default-storage-class.adoc[デフォルトのStorageClass] が構成されている必要があります。
+
+各テンプレートには以下が含まれています。
+
+* 事前構成済みのCPUおよびメモリ設定
+* OSに適したディスクサイズ
+* ブートソース参照（DataSource）
+* Cloud-initまたはsysprep構成（該当する場合）
+
+== ステップ 3: テンプレートからのVM作成
+
+この例では、Fedora VMを作成します。他のオペレーティングシステムの場合も手順は同様です。
+
+=== テンプレートの選択
+
+. **Fedora** テンプレートタイルをクリックします。
+. サイドパネルに表示されるテンプレートの詳細を確認します。
+. **Customize VirtualMachine** をクリックします。
+
+image::fedora-template-details.png[Fedoraテンプレート詳細パネル]
+
+=== VM詳細の構成
+
+**Customize VirtualMachine** ページで、**Overview** タブのVM設定を構成します。
+
+. **Name**: VMの名前を入力します（例: `fedora-test-vm`）。
+. **Project**: VMを作成するプロジェクト（ネームスペース）を選択します。
+. **Boot source**: デフォルトでFedoraのDataSourceが表示されているはずです。
+. **CPU**: CPUコア数を調整します（通常、デフォルトは1）。
+. **Memory**: RAM割り当てを調整します（デフォルト値はテンプレートによって異なります）。
+
+image::vm-customize-overview.png[VMカスタマイズのOverviewタブ]
+
+=== ストレージのカスタマイズ（オプション）
+
+**Disks** タブをクリックしてストレージを変更します。
+
+. ルートディスクの構成を確認します。
+. 必要に応じてディスクサイズを調整したり、追加のディスクを追加したりします。
+. StorageClassがニーズに適していることを確認します。
+
+image::vm-customize-disks.png[VMカスタマイズのDisksタブ]
+
+=== 確認と作成
+
+. タブ全体の設定を確認します。
+. **Create VirtualMachine** をクリックします。
+. 必要に応じて、**Start this VirtualMachine after creation** にチェックを入れて、作成後にすぐに起動します。
+
+image::vm-create-button.png[Create VirtualMachineボタン]
+
+== ステップ 4: VM作成の監視
+
+作成をクリックすると、VM詳細ページにリダイレクトされます。
+
+=== プロビジョニングの進捗確認
+
+VMは作成中にいくつかのフェーズを通過します。
+
+. **Provisioning** - ブートソースからディスクがクローンされています。
+. **Starting** - VMが起動しています（起動が選択されている場合）。
+. **Running** - VMが完全に動作しています。
+
+image::vm-provisioning-status.png[VMプロビジョニングのステータス]
+
+**Events** タブを監視して、詳細なプロビジョニング手順を確認します。
+
+[source,bash,role=execute]
+----
+# Alternatively, watch events from CLI
+oc get events -n <your-namespace> --field-selector involvedObject.name=<vm-name> -w
+----
+
+=== VMが実行中であることの確認
+
+プロビジョニングが完了すると、ステータスが **Running** に変わります。
+
+image::vm-running-status.png[VM実行中のステータス]
+
+== ステップ 5: VMコンソールへのアクセス
+
+Webコンソールは、VMのグラフィカルコンソールへの直接アクセスを提供します。
+
+=== コンソールの起動
+
+. VM詳細ページで、**Console** タブをクリックします。
+. ブラウザ内で直接VNCコンソールが読み込まれます。
+
+image::vm-console-tab.png[上部に資格情報が表示されたVMコンソール]
+
+=== コンソールのオプション
+
+コンソールツールバーでは、以下のオプションが提供されます。
+
+* **Send key** - 特殊なキーの組み合わせを送信（Ctrl+Alt+Delなど）
+* **Disconnect** - コンソール接続を閉じる
+* **Guest credentials** - テンプレートが提供するユーザー名とパスワード
+
+
+TIP: パフォーマンスを向上させるには、日常的な作業ではWebコンソールではなく、xref:vm-configuration:remote-access-linux-vms.adoc[Linux VMへのSSHアクセス] または xref:vm-configuration:remote-access-windows-vms.adoc[Windows VMへのRDP] を使用することを検討してください。
+
+=== ゲストへのログイン
+
+Fedoraやその他のクラウドイメージの場合、デフォルトの資格情報はcloud-init構成に依存します。
+
+* cloud-initユーザーデータが提供されていない場合は、ユーザーのセットアップが必要になることがあります。
+* デフォルトの資格情報については、テンプレートのドキュメントを確認してください。
+* 自動化されたユーザーセットアップを行うために、テンプレート内のcloud-initをカスタマイズすることを検討してください。
+
+== ステップ 6: 基本的なVM操作
+
+Webコンソールは、一般的なVM操作への容易なアクセスを提供します。
+
+=== VMアクションメニュー
+
+VM詳細ページまたはVirtualMachinesリストから、アクションメニューにアクセスします。
+
+image::vm-actions-menu.png[VMアクションのドロップダウンメニュー]
+
+=== VMの停止
+
+. **Actions** -> **Stop** をクリックします。
+. メッセージが表示されたら、アクションを確定します。
+. VMが正常にシャットダウンされます。
+
+[source,bash,role=execute]
+----
+# CLI equivalent
+virtctl stop <vm-name>
+----
+
+=== VMの再起動
+
+. **Actions** -> **Restart** をクリックします。
+. VMが正常に再起動します。
+
+[source,bash,role=execute]
+----
+# CLI equivalent
+virtctl restart <vm-name>
+----
+
+=== 一時停止と一時停止の解除
+
+VMを一時停止すると、シャットダウンせずにその状態が凍結されます。
+
+. **Actions** -> **Pause** をクリックします。
+. VMの状態がメモリ内に保持されます。
+. **Actions** -> **Unpause** をクリックして再開します。
+
+NOTE: 一時停止中のVMは、ノード上のメモリリソースを引き続き消費します。
+
+=== VMの削除
+
+. **Actions** -> **Delete** をクリックします。
+. 関連付けられたディスク（PVC）を削除するかどうかを選択します。
+. 削除を確定します。
+
+image::vm-delete-confirmation.png[VM削除の確認ダイアログ]
+
+TIP: 削除後もVMディスク（DataVolume）を保持するには、確認ダイアログに表示される **Delete disk** オプションのチェックを外します。これにより、後で新しいVMでそのディスクを再利用できます。
+
+WARNING: ディスクを含めてVMを削除すると、元に戻すことはできません。必要に応じてバックアップがあることを確認してください。
+
+== ステップ 7: VMの詳細とメトリクスの表示
+
+VM詳細ページでは、監視および構成に関する情報を提供します。
+
+=== Overviewタブ
+
+一目で主要な情報を確認できます。
+
+* VMのステータスと状態
+* IPアドレス（ゲストエージェントがインストールされている場合）
+* CPUおよびメモリの使用率
+* ブート順序とデバイス
+
+image::vm-overview-tab.png[詳細が表示されたVMのOverviewタブ]
+
+=== Metricsタブ
+
+リアルタイムのパフォーマンスメトリクスを表示します。
+
+* 時間経過に伴うCPU使用率
+* メモリ使用率
+* ネットワークスループット
+* ストレージI/O
+
+image::vm-metrics-tab.png[グラフが表示されたVMのMetricsタブ]
+
+NOTE: 完全なメトリクスを表示するには、VM内にQEMUゲストエージェントがインストールされている必要があります。
+
+=== YAMLタブ
+
+VM定義を直接表示および編集します。
+
+. **YAML** タブをクリックします。
+. VirtualMachineマニフェストを確認または変更します。
+. **Save** をクリックして変更を適用します。
+
+image::vm-yaml-tab.png[マニフェストエディタが表示されたVMのYAMLタブ]
+
+TIP: **Download** ボタンをクリックして、YAMLファイルをダウンロードすることもできます。
+
+== クイック作成を使用したVMの作成
+
+デフォルト設定を使用してより迅速にVMを作成するには、クイック作成オプションを使用します。
+
+. VirtualMachinesページから、**Create** -> **From template** をクリックします。
+. テンプレートを選択します。
+. **Customize VirtualMachine** ではなく、**Quick create VirtualMachine** をクリックします。
+. VMがデフォルト設定ですぐに作成されます。
+
+image::vm-quick-create.png[Quick create VirtualMachineオプション]
+
+これは以下の場合に便利です。
+
+* テスト環境や開発環境
+* デフォルトのテンプレート設定で問題ない場合
+* ラピッドプロトタイピング
+
+== まとめ
+
+以下の方法を学習しました。
+
+* Webコンソールの仮想化セクションへの移動
+* VMテンプレートの参照と選択
+* カスタマイズされた設定でのVM作成
+* VMプロビジョニングの進捗状況の監視
+* Webブラウザを通じたVMコンソールへのアクセス
+* 基本的なVM操作（停止、起動、再起動、削除）の実行
+* VMの詳細とメトリクスの表示
+
+== 次のステップ
+
+* xref:virtctl-basics.adoc[virtctl CLIの学習] - コマンドラインによるVM管理
+* xref:networking:static-ip-configuration.adoc[静的IPの構成] - VM用の静的IP構成
+* xref:vm-configuration:remote-access-linux-vms.adoc[SSHアクセスのセットアップ] - SSH経由でのLinux VMへの接続
+
+== 関連項目
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/creating-a-virtual-machine[仮想マシンの作成 - 公式ドキュメント,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/managing-vms[仮想マシンの管理 - 公式ドキュメント,window=_blank]

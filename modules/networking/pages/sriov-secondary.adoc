@@ -1,0 +1,589 @@
+= 仮想マシン向け SR-IOV セカンダリネットワークの構成
+:navtitle: SR-IOV セカンダリネットワーク
+
+検証済みバージョン:
+----
+OpenShift 4.21
+----
+
+SR-IOV (Single Root I/O Virtualization) を使用すると、単一の物理ネットワークアダプターが複数の仮想機能 (VF) を提供できるようになり、それらを直接仮想マシン (VM) にパススルーできます。
+ソフトウェアベースのネットワーキング (OVN オーバーレイや Linux ブリッジ) とは異なり、SR-IOV はホストのネットワークスタックを完全にバイパスするため、VM はネイティブに近いネットワークパフォーマンスを得ることができます。
+このため、SR-IOV はネットワーク機能 (NFV)、リアルタイムデータ処理、大規模データ転送など、高スループットや低レイテンシ、あるいはその両方が求められるワークロードにとって最適な選択肢となります。
+
+本番環境では、SR-IOV の物理ポートは通常、単一のケーブルで複数の VLAN を伝送する VLAN トランクとして構成されます。
+各 SR-IOV VF は特定の VLAN に割り当てられるため、単一の VM が分離されたネットワークセグメント上で複数の高性能なインターフェースを持つことが可能です。
+このパターンは、ユーザープレーン機能 (UPF) のようなネットワーク機能において、それぞれが個別の VLAN 上にデータプレーンおよび管理プレーンのインターフェースを必要とする通信事業者 (Telco) 環境で標準的に使用されます。
+
+本チュートリアルでは、SR-IOV Network Operator の確認、SR-IOV 対応ハードウェアの検出、仮想機能の作成、異なる VLAN 上の 2 つの SR-IOV ネットワークの定義、そしてデュアル SR-IOV パススルーインターフェースを備えた VM のデプロイまで、一連のプロセスを順を追って説明します。
+
+== 前提条件
+
+* OpenShift Virtualization オペレーターがインストールされた OpenShift 4.18+ クラスター (4.21 で検証済み)
+* クラスターに SR-IOV Network Operator がインストールされていること
+* ワーカーノードに SR-IOV 対応ネットワークアダプターが少なくとも 1 つ搭載されていること (Intel X710、XXV710、E810、または Mellanox ConnectX-4/5/6 ファミリー)
+* BIOS/UEFI で IOMMU (Intel VT-d または AMD-Vi) が有効になっていること
+* 物理スイッチポートが、VLAN 100 および 200 (または選択した VLAN ID) を伝送する VLAN トランクとして構成されていること
+* クラスター管理者権限
+* `oc` CLI がインストールされていること
+
+警告: SR-IOV の設定を変更すると、物理 NIC 上の仮想機能の数が変更されます。
+アダプターやドライバーによっては、Machine Config Operator を介して SR-IOV Network Operator が管理するノードの再起動が必要になる場合があります。
+本番環境のノードに対しては、計画的に実施してください。
+
+== ステップ 1: SR-IOV Operator の準備状況の確認
+
+OperatorHub から SR-IOV Network Operator をインストールした後、その ClusterServiceVersion が `Succeeded` と報告され、すべてのオペレーター Pod が実行中であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get csv -n openshift-sriov-network-operator
+----
+
+期待される出力 (バージョンは異なる場合があります):
+
+----
+NAME                                          DISPLAY                   VERSION               PHASE
+sriov-network-operator.v4.21.0-202605200241   SR-IOV Network Operator   4.21.0-202605200241   Succeeded
+----
+
+オペレーター Pod が実行中であることを確認します:
+
+[source,bash,role=execute]
+----
+oc get pods -n openshift-sriov-network-operator
+----
+
+オペレーター、webhook、および injector Pod が `Running` 状態になっているはずです。
+SR-IOV 対応ハードウェアを持つ各ワーカーノード上には、`sriov-network-config-daemon` Pod も表示されるはずです。
+
+== ステップ 2: SR-IOV 対応デバイスの検出
+
+SR-IOV Network Operator は、各ノードの SR-IOV 対応デバイスを自動的にスキャンし、それらを `SriovNetworkNodeState` カスタムリソースに記録します。
+
+[source,bash,role=execute]
+----
+oc get sriovnetworknodestates -n openshift-sriov-network-operator
+----
+
+ノードの状態を検査して、検出されたデバイスを確認します:
+
+[source,bash,role=execute]
+----
+oc get sriovnetworknodestates -n openshift-sriov-network-operator -o yaml
+----
+
+`.status.interfaces` セクションで、`totalvfs` が 0 より大きいエントリを探します。
+各エントリには、PCI アドレス、ベンダーおよびデバイス ID、ドライバー、リンク速度、およびアダプターがサポートする最大 VF 数が表示されます。
+
+たとえば、Mellanox ConnectX-4 Lx のエントリは次のようになります:
+
+----
+- deviceID: "1015"
+  driver: mlx5_core
+  linkSpeed: 25000 Mb/s
+  linkType: ETH
+  name: enp11s0f0np0
+  pciAddress: "0000:0b:00.0"
+  totalvfs: 6
+  vendor: "15b3"
+----
+
+注記: インターフェースが表示されない場合は、IOMMU が有効になっているかを確認してください。
+最も迅速な確認方法は、ノード上に IOMMU グループが存在するかを確認することです:
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host ls /sys/kernel/iommu_groups/ | wc -l
+----
+
+0 以外のカウント (通常は数十から数百) であれば、IOMMU がアクティブであることが確認できます。
+カウントが 0 の場合は、BIOS/UEFI で IOMMU を有効にし、MachineConfig を介してカーネルコマンドラインに `intel_iommu=on iommu=pt` (Intel) または `amd_iommu=on iommu=pt` (AMD) を追加してください。
+
+== ステップ 3: SriovNetworkNodePolicy の作成
+
+`SriovNetworkNodePolicy` は、特定の物理機能 (PF) 上に作成する VF の数と、使用するデバイスタイプをオペレーターに指示します。
+OpenShift Virtualization の VM の場合、`deviceType: vfio-pci` を設定して、VF を VFIO フレームワーク経由で公開し、ゲストへの直接 PCI パススルーを実現します。
+
+このポリシーは、物理機能上に 4 つの VF を作成します。
+この段階では VF 自体は VLAN を意識しておらず、VLAN の割り当ては後の `SriovNetwork` リソースで行われます。
+つまり、VF の単一プールが複数の VLAN にサービスを提供できます。
+
+xref:attachment$sriov-secondary/sriov-network-node-policy.yaml[sriov-network-node-policy.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetworkNodePolicy
+metadata:
+  name: mlx-sriov-policy
+  namespace: openshift-sriov-network-operator
+spec:
+  resourceName: mlxsriovnic
+  nodeSelector:
+    kubernetes.io/hostname: <node-name>
+  numVfs: 4
+  nicSelector:
+    vendor: "15b3"
+    deviceID: "1015"
+    pfNames:
+    - enp11s0f0np0
+  deviceType: vfio-pci
+  isRdma: false
+EOF
+----
+
+`<node-name>` を、SR-IOV NIC を持つノードのホスト名 (例: `ocplab01`) に置き換えてください。
+
+主要なフィールド:
+
+* `resourceName` -- VF が登録される Kubernetes の拡張リソース名 (例: `openshift.io/mlxsriovnic`)。
+* `numVfs` -- 作成する VF の数 (ノード状態報告の `totalvfs` を超えてはなりません)。この VM は 2 つの VF (VLAN ごとに 1 つ) を使用し、残りの 2 つを追加の VM 用に残します。
+* `nicSelector.vendor` / `deviceID` -- 特定の NIC モデルをターゲットにします。Mellanox ConnectX-4 Lx の場合は `15b3` / `1015` を、Intel NIC の場合は適切なデバイス ID を使用してください。
+* `nicSelector.pfNames` -- インターフェース名によって、VF 作成を特定の物理機能に限定します。
+* `deviceType: vfio-pci` -- VM パススルーに必須です。Pod ワークロードの場合は代わりに `netdevice` を使用してください。
+
+重要: このポリシーを適用すると、SR-IOV 設定デーモンがトリガーされ、ノード上の VF が構成されます。
+ドライバーによっては、ノードのドレイン (drain) および再起動が必要になる場合があります。
+オペレーターが Machine Config Operator を介してこれを自動的に処理しますが、ノードは一時的に利用できなくなります。
+
+ポリシーの適用状況を監視します:
+
+[source,bash,role=execute]
+----
+oc get sriovnetworknodestates -n openshift-sriov-network-operator -o jsonpath='{.items[0].status.syncStatus}'
+----
+
+同期ステータスが `Succeeded` と報告されるまで待ちます。
+
+== ステップ 4: 仮想機能の確認
+
+ポリシーが適用され、ノードの設定 (および必要な再起動) が完了したら、VF が作成されたことを確認します。
+
+[source,bash,role=execute]
+----
+oc get sriovnetworknodestates -n openshift-sriov-network-operator -o yaml
+----
+
+`.status.interfaces` セクションで、PF エントリに `numVfs: 4` とその下に VF PCI アドレスのリストが表示されているはずです。
+
+ノード上で直接確認することもできます:
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host cat /sys/class/net/enp11s0f0np0/device/sriov_numvfs
+----
+
+出力はポリシーで設定した `numVfs` 値 (例: `4`) と一致するはずです。
+
+VF リソースがノードの割当可能容量に含まれているかを確認します:
+
+[source,bash,role=execute]
+----
+oc get node <node-name> -o jsonpath='{.status.allocatable.openshift\.io/mlxsriovnic}'
+----
+
+期待される出力:
+
+----
+4
+----
+
+== ステップ 5: 各 VLAN 用の SR-IOV ネットワークの作成
+
+トランク構成では、物理スイッチポートは同じケーブルで複数の VLAN を伝送します。
+各 `SriovNetwork` リソースは個別の VLAN を定義します。オペレーターはそれぞれに対して個別の `NetworkAttachmentDefinition` (NAD) を生成します。
+これらの NAD を通じて VF が VM に割り当てられると、自動的に指定された VLAN ID で送信トラフィックにタグ付けされ、受信時にタグが削除されるため、ゲスト OS はタグなしのフレームを認識することになります。
+
+まず、VM 用のネームスペースを作成します:
+
+xref:attachment$sriov-secondary/sriov-demo-namespace.yaml[sriov-demo-namespace.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sriov-demo
+EOF
+----
+
+VLAN 100 上にデータプレーンネットワークを作成します:
+
+xref:attachment$sriov-secondary/sriov-net-data.yaml[sriov-net-data.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetwork
+metadata:
+  name: sriov-net-data
+  namespace: openshift-sriov-network-operator
+spec:
+  networkNamespace: sriov-demo
+  resourceName: mlxsriovnic
+  vlan: 100
+  spoofChk: "off"
+  trust: "on"
+EOF
+----
+
+VLAN 200 上に管理ネットワークを作成します:
+
+xref:attachment$sriov-secondary/sriov-net-mgmt.yaml[sriov-net-mgmt.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetwork
+metadata:
+  name: sriov-net-mgmt
+  namespace: openshift-sriov-network-operator
+spec:
+  networkNamespace: sriov-demo
+  resourceName: mlxsriovnic
+  vlan: 200
+  spoofChk: "off"
+  trust: "on"
+EOF
+----
+
+主要なフィールド:
+
+* `vlan` -- このネットワークを使用する VF に割り当てられる 802.1Q VLAN ID。NIC がハードウェアレベルでタグの付与・削除を処理するため、ゲスト OS はインターフェース上でタグなしのトラフィックのみを認識します。
+* `networkNamespace` -- NAD が作成されるネームスペース。このネームスペース内の VM が参照できます。
+* `resourceName` -- `SriovNetworkNodePolicy` の `resourceName` と一致する必要があります。両方のネットワークが同じ VF プールを共有します。
+* `spoofChk: "off"` および `trust: "on"` -- ゲスト OS が独自の MAC アドレスと IP アドレスを管理する VM ワークロードに推奨されます。
+
+両方の NAD が作成されたことを確認します:
+
+[source,bash,role=execute]
+----
+oc get net-attach-def -n sriov-demo
+----
+
+期待される出力:
+
+----
+NAME             AGE
+sriov-net-data   10s
+sriov-net-mgmt   5s
+----
+
+== ステップ 6: デュアル SR-IOV インターフェースを備えた VM のデプロイ
+
+クラスター接続用の Pod ネットワーク、VLAN 100 上のデータプレーン SR-IOV インターフェース、VLAN 200 上の管理プレーン SR-IOV インターフェースという 3 つのネットワークインターフェースを持つ VM を作成します。
+これは、ネットワーク機能が異なるトラフィックタイプに対して分離されたプレーンを必要とする、本番環境のパターンを模倣したものです。
+
+警告: この例の cloud-init パスワードはデモ目的専用です。
+本番環境では、常に SSH キー認証または強力なパスワードを使用してください。
+
+xref:attachment$sriov-secondary/fedora-sriov-vm.yaml[fedora-sriov-vm.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-sriov-vm
+  namespace: sriov-demo
+  labels:
+    app: fedora-sriov-vm
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+  - metadata:
+      name: fedora-sriov-volume
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 33Gi
+      sourceRef:
+        kind: DataSource
+        name: fedora
+        namespace: openshift-virtualization-os-images
+  template:
+    metadata:
+      labels:
+        app: fedora-sriov-vm
+    spec:
+      domain:
+        devices:
+          disks:
+          - name: datavolumedisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+          - name: data-plane
+            sriov: {}
+          - name: mgmt-plane
+            sriov: {}
+        resources:
+          requests:
+            memory: 4Gi
+            cpu: 2
+      networks:
+      - name: default
+        pod: {}
+      - name: data-plane
+        multus:
+          networkName: sriov-net-data
+      - name: mgmt-plane
+        multus:
+          networkName: sriov-net-mgmt
+      volumes:
+      - name: datavolumedisk
+        dataVolume:
+          name: fedora-sriov-volume
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd: { expire: False }
+EOF
+----
+
+VM 設定には 3 つのネットワークインターフェースがあります:
+
+* `default` (masquerade: {}) -- 自動 IP 割り当てによるクラスター (Pod) ネットワーク接続を提供します。
+* `data-plane` (sriov: {}) -- 高スループットなデータトラフィック用に VLAN 100 上の VF をアタッチします。
+* `mgmt-plane` (sriov: {}) -- 管理・制御トラフィック用に VLAN 200 上の VF をアタッチします。
+
+各 SR-IOV インターフェースは、プールから 1 つの VF を消費します。この VM は 4 つの利用可能な VF のうち 2 つを使用し、追加の VM 用の容量を残しています。
+
+VM が起動し、データボリュームのインポートが完了するのを待ちます:
+
+[source,bash,role=execute]
+----
+oc get vm -n sriov-demo
+----
+
+[source,bash,role=execute]
+----
+oc get vmi -n sriov-demo
+----
+
+VMI が `Running` フェーズになり、`READY: True` と表示されるまで待ちます。
+
+== ステップ 7: VLAN 分離と SR-IOV パススルーの確認
+
+このステップでは、両方の SR-IOV VF がゲスト内の PCI デバイスとして表示され、各インターフェースが割り当てられた VLAN 上で動作していることを確認します。
+
+=== PCI パススルーの確認
+
+VM コンソールにアクセスします:
+
+[source,bash,role=execute]
+----
+virtctl console -n sriov-demo fedora-sriov-vm
+----
+
+`fedora` / `fedora` でログインし、VF が PCI デバイスとして表示されることを確認します:
+
+[source,bash]
+----
+lspci | grep -i ethernet
+----
+
+Pod ネットワークで使用されている virtio NIC に加えて、2 つの Mellanox (または Intel) イーサネット VF エントリが表示されるはずです。
+これは VFIO パススルーがアクティブであることを確認するもので、VF はエミュレートされたものではなく、ゲストに直接公開された実際の PCI デバイスです。
+
+=== ネットワークインターフェースの確認
+
+すべてのネットワークインターフェースをリストします:
+
+[source,bash]
+----
+ip link show
+----
+
+期待されるインターフェース:
+
+* `enp1s0` -- Pod ネットワークインターフェース (virtio デバイス)
+* `enp7s0` -- 最初の SR-IOV VF (データプレーン、VLAN 100)
+* `enp8s0` -- 2 番目の SR-IOV VF (管理プレーン、VLAN 200)
+
+注記: ゲスト内のインターフェース名は、PCI バス/スロットの順序に基づいて `udev` によって割り当てられるため、環境によって異なる場合があります。
+`ip link show` を使用して、どれが SR-IOV VF であるかを識別してください (virtio インターフェースとは異なる Mellanox または Intel のハードウェアアドレスが表示されます)。
+
+=== IP アドレスの割り当てと接続テスト
+
+SR-IOV インターフェースに IP を割り当てます。
+アドレスを VLAN サブネットに適した値に置き換えてください。
+
+データプレーンインターフェース (VLAN 100) を構成します:
+
+[source,bash]
+----
+sudo ip addr add 10.100.0.10/24 dev enp7s0
+----
+
+[source,bash]
+----
+sudo ip link set enp7s0 up
+----
+
+管理インターフェース (VLAN 200) を構成します:
+
+[source,bash]
+----
+sudo ip addr add 10.200.0.10/24 dev enp8s0
+----
+
+[source,bash]
+----
+sudo ip link set enp8s0 up
+----
+
+両方のインターフェースが割り当てられたアドレスでアップ状態であることを確認します:
+
+[source,bash]
+----
+ip -br addr show
+----
+
+期待される出力:
+
+----
+lo               UNKNOWN        127.0.0.1/8 ::1/128
+enp1s0           UP             10.0.2.2/24
+enp7s0           UP             10.100.0.10/24
+enp8s0           UP             10.200.0.10/24
+----
+
+ヒント: ここでは明快にするために手動で `ip addr add` を使用していますが、このように割り当てられたアドレスはリンクフラップや再起動で失われます。
+本番環境では、以下のいずれかの永続的な代替手段を使用してください:
+
+* **DHCP** -- 各 VLAN に DHCP サーバーをデプロイし、NetworkManager を介してゲストに自動的にアドレスを取得させます。
+* **Cloud-init** -- VM の cloud-init ボリュームに `networkData` セクションを追加して、初回起動時に固定 IP を設定します。詳細は xref:static-ip-configuration.adoc[] を参照してください。
+* **NetworkManager 接続ファイル** -- cloud-init の `write_files` を使用して、起動時に NetworkManager がアクティブにする `.nmconnection` ファイルを作成します。
+
+=== VLAN 分離のテスト
+
+各インターフェースが正しい VLAN にあることを確認するため、各 VLAN 上の既知のホストに ping を送信します。
+
+データプレーン VLAN (100) をテストします:
+
+[source,bash]
+----
+ping -c 3 -I enp7s0 10.100.0.1
+----
+
+管理 VLAN (200) をテストします:
+
+[source,bash]
+----
+ping -c 3 -I enp8s0 10.200.0.1
+----
+
+両方の ping が成功すれば、VLAN トランクは正しく動作しています。各 VF が割り当てられた VLAN で送受信を行っています。
+
+さらに分離を確実にするため、データプレーンインターフェースからのトラフィックが VLAN 200 上のホストに到達できないこと (およびその逆) を確認します。
+
+コンソールを終了するには、`Ctrl+]` を押します。
+
+== トラブルシューティング
+
+=== ポリシー適用後に VF が作成されない
+
+* `SriovNetworkNodeState` の同期ステータスを確認します。`Failed` ステータスは通常、ドライバーの問題やサポートされていない NIC を示します。
+* BIOS/UEFI で IOMMU が有効になっていること、およびカーネルログで確認できることを検証します。
+* ポリシー内の `nicSelector` がハードウェアと一致していること (正しいベンダー、デバイス ID、PF 名) を確認します。
+
+=== VM がスケジューリングでスタックする
+
+* VF リソースが利用可能か確認します: `oc get node <node-name> -o jsonpath='{.status.allocatable}'`。
+* リソース数が 0 の場合、VF が作成されていないか、デバイスプラグインが実行されていません。
+* ポリシーで `deviceType: vfio-pci` が設定されているか確認します。VM には VFIO パススルーが必要です。
+* `Insufficient openshift.io/mlxsriovnic` イベントが表示される場合、VM が利用可能な数以上の VF を要求しています。VM あたりの SR-IOV インターフェース数を減らすか、ポリシー内の `numVfs` を増やしてください。
+
+=== VM 内で SR-IOV インターフェースが表示されない
+
+* `SriovNetwork` の `resourceName` が `SriovNetworkNodePolicy` の `resourceName` と一致しているか確認します。
+* 両方の NAD が正しいネームスペースに存在することを確認します: `oc get net-attach-def -n sriov-demo`。
+* virt-launcher Pod のリソース割り当てを調査します: `oc describe pod -n sriov-demo -l app=fedora-sriov-vm`。
+
+=== SR-IOV インターフェースのリンクがアップしない
+
+* 物理 NIC ポートがケーブル接続されており、ホスト上でリンクアップしていることを確認します: `oc debug node/<node-name> -- chroot /host ip link show <pf-name>`。
+* スイッチポートが VLAN 100 と 200 を伝送するトランクとして構成されていることを確認します。
+* Mellanox NIC の場合、ファームウェアが最新であることを確認します。
+
+=== VLAN トラフィックが VM に到達しない
+
+* `SriovNetwork` の `vlan` フィールドが物理スイッチの VLAN 設定と一致していることを確認します。
+* スイッチポートがトランクモードであり (アクセスモードではない)、指定された VLAN ID を許可していることを確認します。
+* 一部のスイッチは信頼されていない VF からのフレームを拒否するため、`SriovNetwork` で `spoofChk` が `"off"`、`trust` が `"on"` に設定されていることを確認してください。
+
+== クリーンアップ
+
+このチュートリアルで作成したすべてのリソースを削除します:
+
+[source,bash,role=execute]
+----
+oc delete vm fedora-sriov-vm -n sriov-demo
+----
+
+[source,bash,role=execute]
+----
+oc delete sriovnetwork sriov-net-data -n openshift-sriov-network-operator
+----
+
+[source,bash,role=execute]
+----
+oc delete sriovnetwork sriov-net-mgmt -n openshift-sriov-network-operator
+----
+
+[source,bash,role=execute]
+----
+oc delete sriovnetworknodepolicy mlx-sriov-policy -n openshift-sriov-network-operator
+----
+
+SR-IOV 設定デーモンがノードを再構成するまで待ちます (VF を削除するために再起動がトリガーされる場合があります):
+
+[source,bash,role=execute]
+----
+oc get sriovnetworknodestates -n openshift-sriov-network-operator -o jsonpath='{.items[0].status.syncStatus}'
+----
+
+同期が完了したら、ネームスペースを削除します:
+
+[source,bash,role=execute]
+----
+oc delete namespace sriov-demo
+----
+
+== まとめ
+
+このチュートリアルでは、以下について学びました:
+
+* SR-IOV が PCI パススルーを介して VF を直接 VM に渡すことで、どのようにネイティブに近いネットワークパフォーマンスを提供するのか
+* `SriovNetworkNodeState` を使用して SR-IOV 対応デバイスを検出する方法
+* VM ワークロード向けに `deviceType: vfio-pci` を指定した `SriovNetworkNodePolicy` を作成する方法
+* SR-IOV で VLAN トランキングがどのように機能するか (1 つの物理ポートが複数の VLAN を伝送し、各 `SriovNetwork` がハードウェアレベルで VF に VLAN を割り当てる仕組み)
+* データプレーン (VLAN 100) および管理プレーン (VLAN 200) トラフィック用に個別の `SriovNetwork` リソースを作成する方法
+* 分離された VLAN 上にデュアル SR-IOV パススルーインターフェースを持つ VM をデプロイする方法
+* ゲスト内で PCI パススルー、VLAN 割り当て、ネットワーク分離を確認する方法
+
+== 参照
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/networking/hardware-networks[OpenShift ハードウェアネットワーク,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/virtualization/networking#virt-attaching-vm-to-sriov-network[VM を SR-IOV ネットワークに接続する,window=_blank]
+* link:https://kubevirt.io/user-guide/network/interfaces_and_networks/#sriov[KubeVirt SR-IOV インターフェースバインディング,window=_blank]
+* xref:localnet-secondary.adoc[Localnet セカンダリネットワーク] -- ソフトウェア定義ネットワーキングを使用した代替のセカンダリネットワークアプローチ
+* xref:localnet-vlan.adoc[Localnet VLAN 設定] -- localnet トポロジでの VLAN タギング (ソフトウェアベースの代替案)
+* xref:linux-bridges.adoc[Linux ブリッジ] -- より単純なハードウェア要件向けの別のセカンダリネットワークオプション

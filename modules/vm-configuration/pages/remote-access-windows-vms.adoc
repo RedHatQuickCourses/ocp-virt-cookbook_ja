@@ -1,0 +1,228 @@
+= Red Hat OpenShift 上の Windows 11 VM にリモートデスクトップでアクセスする方法
+:navtitle: RDP を使用した Windows VM へのリモートアクセス
+
+== 概要
+
+このチュートリアルでは、OpenShift 上で実行されている Windows 11 仮想マシンに対して、外部からリモートデスクトッププロトコル (RDP) でアクセスするための設定方法を説明します。このガイドを完了すると、Windows リモートデスクトップを使用して VM に直接接続できるようになります。これにより、VNC コンソールよりもシームレスで高機能なエクスペリエンスが得られます。
+
+== このチュートリアルで解決する課題
+
+Red Hat OpenShift Virtualization 上でホストされている Windows VM に、Microsoft リモートデスクトップを使用してアクセスする必要があるユーザー向けです。
+
+== ネットワークトポロジー
+
+=== ネットワークアーキテクチャの理解
+
+表示される IP アドレスの差異は予期される動作です。
+
+* **10.0.2.2**: Windows OS 内の VM の内部ネットワークインターフェース IP
+* **10.128.1.132**: OpenShift クラスター内の内部 Pod IP
+* **いずれも外部から直接ルーティング不可** - サービスによる公開が必要
+
+== 前提条件
+
+* OpenShift 上で Windows 11 VM が正常にデプロイされていること
+* OpenShift Web コンソールまたは `oc` CLI へのアクセス権
+* VNC コンソール経由で VM にアクセス可能であること
+* Windows 11 VM への管理者アクセス権
+* リモートデスクトップ接続クライアントがインストールされたローカルの Windows マシン
+
+== チュートリアルの手順
+
+=== ステップバイステップの設定
+
+==== ステップ 1: Windows 11 でリモートデスクトップを有効にする
+
+. **VM コンソールにアクセス**
++
+OpenShift VNC コンソールを使用して Windows 11 VM にログインします。
+. **システム設定を開く**
++
+**スタートメニュー**を右クリックします。
++
+**システム**を選択します。
+. **リモートデスクトップを設定する**
++
+左側のメニューから**リモートデスクトップ**に移動します。
++
+**リモートデスクトップ**のトグルを**オン**にします。
++
+プロンプトが表示されたら**確認**をクリックします。
++
+後で使用するため、表示された**PC 名**をメモしておきます。
+
+==== ステップ 2: 外部ネットワークに対して VM を公開する
+
+RDP ポート 3389 を公開するサービスを作成する必要があります。推奨される方法を選択してください。
+
+===== オプション A: OpenShift Web コンソール (推奨)
+
+. **サービスへ移動**
++
+[source,text]
+----
+OpenShift Console → Your Project → Networking → Services
+----
+. **新しいサービスを作成**
++
+**サービスの作成**をクリックします。
++
+以下のように設定します。
++
+|===
+| フィールド | 値 | 説明
+
+| **サービスタイプ**
+| `LoadBalancer`
+| 専用の外部 IP を提供
+
+| **サービス名**
+| `win11-rdp-service`
+| 分かりやすいサービス名
+
+| **セレクター**
+| `vm.kubevirt.io/name: <your-vm-name>`
+| **重要**: 実際の VM 名に置き換えてください
+
+| **ポート**
+| `3389`
+| サービスで公開するポート
+
+| **ターゲットポート**
+| `3389`
+| Windows VM の RDP ポート
+
+| **プロトコル**
+| `TCP`
+| RDP に必須
+|===
++
+NOTE: LoadBalancer が利用できない場合は、`NodePort` を使用してください (ポート 30000～32767 が割り当てられます)。
+. **サービスを作成**
++
+**作成**をクリックします。
++
+NodePort を使用する場合は、割り当てられたポートを記録してください。
+
+===== オプション B: コマンドラインインターフェース (CLI)
+
+. **サービス定義を作成**
++
+`rdp-service.yaml` を作成します。
++
+[source,yaml]
+----
+apiVersion: v1
+kind: Service
+metadata:
+  name: win11-rdp-service
+spec:
+  selector:
+    vm.kubevirt.io/name: your-vm-name  # REPLACE with your VM's actual name
+  ports:
+    - protocol: TCP
+      port: 3389
+      targetPort: 3389
+  type: LoadBalancer  # or NodePort
+----
+. **設定を適用**
++
+[source,bash,role=execute]
+----
+oc apply -f rdp-service.yaml
+----
+
+==== ステップ 3: 接続情報の取得
+
+===== LoadBalancer サービスの場合:
+
+. **ネットワーキング → サービス** に移動します。
+. `win11-rdp-service` を見つけます。
+. **外部 IP** アドレスを記録します。
+
+===== NodePort サービスの場合:
+
+. サービスを見つけて、割り当てられた **NodePort** (例: `31234`) をメモします。
+. ワーカーノードの外部 IP を取得します。
++
+[source,bash,role=execute]
+----
+oc get nodes -o wide
+----
++
+**EXTERNAL-IP** カラムを確認します。
+
+==== ステップ 4: リモートデスクトップ経由で接続する
+
+. **リモートデスクトップ接続を開く**
++
+ローカルの Windows マシンで「リモートデスクトップ接続」を検索します。
+. **接続情報を入力する**
++
+|===
+| サービスタイプ | コンピューターフィールドの形式 | 例
+
+| **LoadBalancer**
+| `<External-IP>`
+| `203.0.113.5`
+
+| **NodePort**
+| `<Node-External-IP>:<NodePort>`
+| `203.0.113.10:31234`
+|===
+. **接続を開始する**
++
+**接続**をクリックします。
++
+プロンプトが表示されたら、Windows 11 VM の資格情報を入力します。
+
+== セキュリティ上の考慮事項
+
+NOTE: RDP をインターネットに公開するとセキュリティ上のリスクが生じます。本番環境では VPN や踏み台ホストの使用を検討してください。可能であれば、Windows でネットワークレベル認証 (NLA) を有効にしてください。強力なパスワードを使用し、証明書ベースの認証も検討してください。アクセスログを定期的に監視してください。
+
+== 検証とトラブルシューティング
+
+=== 接続成功の指標
+
+* リモートデスクトップクライアントがタイムアウトせずに接続できる
+* Windows 11 デスクトップがフル機能で表示される
+* マウスおよびキーボード入力に応答する
+* オーディオ/クリップボードのリダイレクトが機能する (設定されている場合)
+
+=== 一般的な問題と解決策
+
+|===
+| 問題 | 考えられる原因 | 解決策
+
+| **接続タイムアウト**
+| サービスが正しく作成されていない
+| サービスが存在し、外部 IP を持っているか確認する
+
+| **接続拒否**
+| Windows で RDP が有効になっていない
+| Windows の設定でリモートデスクトップを再有効化する
+
+| **資格情報の間違い**
+| VM のログイン詳細が誤っている
+| VNC コンソール経由でユーザー名/パスワードを確認する
+
+| **サービスに外部 IP がない**
+| LoadBalancer が利用できない
+| NodePort サービスタイプに切り替える
+|===
+
+== まとめ
+
+このチュートリアルでは、以下の内容を学習しました。
+
+* OpenShift Virtualization で実行されている Windows 11 VM でリモートデスクトッププロトコル (RDP) を有効にする方法
+* LoadBalancer または NodePort サービスを使用して VM の RDP ポート (3389) を公開する方法
+* リモートデスクトップアクセスのための接続詳細 (外部 IP または NodePort を含むノード IP) を取得する方法
+* リモートデスクトップ接続クライアントを使用して Windows VM に接続する方法
+* RDP アクセスを公開する際のセキュリティ上の考慮事項および一般的なトラブルシューティング手順
+
+== 参照
+
+* link:https://docs.openshift.com/container-platform/latest/virt/about-virt.html[OpenShift Virtualization Documentation,window=_blank]
+* link:https://kubevirt.io/user-guide/[KubeVirt User Guide,window=_blank]
+* link:https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/[Windows Remote Desktop Best Practices,window=_blank]

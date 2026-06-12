@@ -1,0 +1,568 @@
+= LVM Storage Operatorのインストール
+:navtitle: LVM Operatorのインストール
+
+== 概要
+
+本チュートリアルでは、OpenShiftノード上の未使用のローカルディスクを使用するために、LVM Storage Operatorをインストールおよび設定する方法を解説します。LVM Operatorは、Logical Volume Manager（LVM）を使用した動的なストレージプロビジョニングを提供し、シングルノードOpenShift（SNO）やローカルストレージを使用するベアメタルクラスターに最適です。
+
+== 前提条件
+
+* **OpenShift 4.18以上**
+* **利用可能なローカルディスク**: クラスターノード上に少なくとも1台の未使用ディスクが必要です
+* **クラスター管理者権限**: Operatorのインストールおよびストレージクラスの作成に必要です
+* **ディスク内の既存データ**: Operatorは `forceWipeDevicesAndDestroyAllData` パラメータを使用してディスクを強制的に初期化できます
+
+検証済みバージョン:
+----
+OpenShift 4.19, 4.20
+----
+
+== 重要な警告
+
+NOTE: `forceWipeDevicesAndDestroyAllData: true` パラメータを使用すると、指定したディスク上のすべてのデータが完全に破棄されます。進める前に、必ずバックアップを取得し、正しいディスクデバイスパスであることを確認してください。
+
+== ステップ 1: 利用可能なディスクの特定
+
+LVM Operatorを設定する前に、ストレージに使用するディスクを特定します。
+
+[source,bash,role=execute]
+----
+# Get your node name
+oc get nodes
+
+# List all block devices on the node
+oc debug node/<node-name> -- chroot /host lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT,MODEL
+----
+
+出力例:
+----
+NAME    SIZE TYPE FSTYPE      MOUNTPOINT MODEL
+sda   558.4G disk LVM2_member            PERC H730 Adp
+sdc   558.4G disk                        PERC H730 Adp
+|-sdc1   1M part                        
+|-sdc2 127M part vfat                   
+|-sdc3 384M part ext4        /boot      
+`-sdc4 557.9G part xfs        /sysroot
+----
+
+この例では以下のようになっています。
+
+* `sda` - 既存のLVMデータがある空きディスク（これがターゲットになります）
+* `sdc` - OSパーティションがあるシステムディスク（使用しないでください）
+
+既存のLVM使用状況を確認します。
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host pvs
+----
+
+出力例:
+----
+PV         VG  Fmt  Attr PSize   PFree  
+/dev/sda   vg1 lvm2 a--  558.37g <55.84g
+----
+
+これは、`/dev/sda` に既存のLVM設定があり、`forceWipeDevicesAndDestroyAllData: true` を使用すると消去されることを示しています。
+
+永続的な識別のためにディスクデバイスパスを取得します。
+
+[source,bash,role=execute]
+----
+oc debug node/<node-name> -- chroot /host ls -la /dev/disk/by-path/ | grep -E "pci.*scsi"
+----
+
+出力例:
+----
+lrwxrwxrwx. 1 root root 9 Oct 6 13:30 pci-0000:03:00.0-scsi-0:2:1:0 -> ../../sda
+----
+
+永続パス `/dev/disk/by-path/pci-0000:03:00.0-scsi-0:2:1:0` は `/dev/sda` を指しています。
+
+== ステップ 2: LVM Storage Operatorのインストール
+
+名前空間を作成し、LVM Storage Operatorをインストールします。
+
+LVM Operator用の名前空間を作成します。
+
+xref:attachment$lvm-operator/lvm-namespace.yaml[lvm-namespace.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-lvm-storage
+EOF
+----
+
+OperatorGroup を作成します。
+
+xref:attachment$lvm-operator/lvm-operatorgroup.yaml[lvm-operatorgroup.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-lvm-storage-operatorgroup
+  namespace: openshift-lvm-storage
+spec:
+  targetNamespaces:
+  - openshift-lvm-storage
+EOF
+----
+
+OperatorをインストールするためのSubscriptionを作成します。
+
+xref:attachment$lvm-operator/lvm-subscription.yaml[lvm-subscription.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: lvms-operator
+  namespace: openshift-lvm-storage
+spec:
+  channel: stable-4.20
+  name: lvms-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+EOF
+----
+
+Operatorのインストールを確認します。
+
+[source,bash,role=execute]
+----
+# Wait for the operator to be installed (may take 2-3 minutes)
+oc get csv -n openshift-lvm-storage
+
+# Check operator pod is running
+oc get pods -n openshift-lvm-storage
+----
+
+期待される出力（Operatorインストール後、LVMCluster作成前）:
+----
+NAME                             READY   STATUS    RESTARTS   AGE
+lvms-operator-864b6975bb-kxt4t   1/1     Running   0          2m
+----
+
+NOTE: この段階では `lvms-operator` Podのみが表示されるはずです。`vg-manager` Podは、ステップ3でLVMClusterリソースを作成した後に自動的に作成されます。
+
+期待される出力（ステップ3でLVMClusterを作成した後）:
+----
+NAME                                  READY   STATUS    RESTARTS   AGE
+lvms-operator-864b6975bb-kxt4t        1/1     Running   0          5m
+vg-manager-xxxxx                      1/1     Running   0          1m
+----
+
+== ステップ 3: LVMCluster設定の作成
+
+LVMストレージバックエンドを設定するためにLVMClusterリソースを作成します。ここで、どのディスクを使用するか、既存データを強制的に消去するかどうかを指定します。
+
+=== 既存データがあるディスクの設定
+
+ディスクに既存のデータやパーティションがある場合（例の `sda` のように）、`forceWipeDevicesAndDestroyAllData: true` を使用します。
+
+NOTE: `forceWipeDevicesAndDestroyAllData: true` を使用すると、指定したディスク上のすべてのデータが完全に破棄されます。進める前に、必ずバックアップを取得し、正しいディスクデバイスパスであることを確認してください。
+
+xref:attachment$lvm-operator/lvmcluster-with-wipe.yaml[lvmcluster-with-wipe.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: lvm.topolvm.io/v1alpha1
+kind: LVMCluster
+metadata:
+  name: lvmcluster
+  namespace: openshift-lvm-storage
+spec:
+  storage:
+    deviceClasses:
+    - name: vg1
+      default: true
+      thinPoolConfig:
+        name: thin-pool-1
+        sizePercent: 90
+        overprovisionRatio: 10
+      nodeSelector:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/worker
+            operator: In
+            values:
+            - ""
+      deviceSelector:
+        paths:
+        - /dev/sda
+        forceWipeDevicesAndDestroyAllData: true
+EOF
+----
+
+=== クリーンなディスク（新規ディスク）の設定
+
+ディスクがクリーンで、既存のデータやパーティションがない場合:
+
+xref:attachment$lvm-operator/lvmcluster-clean-disk.yaml[lvmcluster-clean-disk.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: lvm.topolvm.io/v1alpha1
+kind: LVMCluster
+metadata:
+  name: lvmcluster
+  namespace: openshift-lvm-storage
+spec:
+  storage:
+    deviceClasses:
+    - name: vg1
+      default: true
+      thinPoolConfig:
+        name: thin-pool-1
+        sizePercent: 90
+        overprovisionRatio: 10
+      nodeSelector:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/worker
+            operator: In
+            values:
+            - ""
+      deviceSelector:
+        paths:
+        - /dev/sda
+EOF
+----
+
+=== 設定パラメータの解説
+
+* **`name: vg1`**: ボリュームグループ名（ディスク上に作成されます）
+* **`default: true`**: この deviceClass をクラスターのデフォルトにします
+  ** **目的**: デフォルトの deviceClass がないという警告を防ぎます
+  ** **効果**: PVCで明示的に指定しなくても、生成されたストレージクラスが利用可能になります
+  ** **注意**: 複数の deviceClass を持つ場合、デフォルトに設定できるのは1つだけです
+* **`thinPoolConfig`**: 効率的なストレージ使用のためのシンプロビジョニングを設定します
+  ** `sizePercent: 90`: シンプールにディスク領域の90%を使用します
+  ** `overprovisionRatio: 10`: 10倍のオーバープロビジョニングを許可します（物理的に利用可能な容量以上のストレージをプロビジョニングします）
+* **`nodeSelector`**: 設定するノード（この例ではワーカーノード）
+* **`deviceSelector.paths`**: 使用する特定のディスクデバイスパス
+  ** `/dev/sda`、`/dev/disk/by-path/...`、`/dev/disk/by-id/...` などが使用可能です
+* **`forceWipeDevicesAndDestroyAllData: true`**: 重要なパラメータ
+  ** **目的**: ディスク上のすべての既存データとパーティションを消去します
+  ** **使用条件**: ディスクに既存のファイルシステム、パーティション、またはLVM設定がある場合
+  ** **効果**: 完全なデータ破棄 - 回復は不可能です
+  ** **省略する場合**: ディスクがすでにクリーン/空である場合
+
+== ステップ 4: LVMClusterステータスの確認
+
+LVMClusterの準備ができているか、簡単なヘルスチェックを実行します。
+
+[source,bash,role=execute]
+----
+# Check LVMCluster status
+oc get lvmcluster -n openshift-lvm-storage
+
+# Verify volume group was created
+oc debug node/<node-name> -- chroot /host vgs
+
+# Verify thin pool was created
+oc debug node/<node-name> -- chroot /host lvs
+----
+
+健全な状態の出力例:
+
+* LVMCluster が `STATUS: Ready` と表示される
+* VG `vg1` が適切なサイズで表示される
+* シンプール `thin-pool-1` がアクティブであり、データ/メタデータの使用量が少ない
+
+詳細な確認手順、期待される出力、トラブルシューティングについては、xref:lvm-troubleshooting.adoc[LVM Storage トラブルシューティングガイド]を参照してください。
+
+[[_step_5_set_default_storageclass]]
+== ステップ 5: デフォルトストレージクラスの設定
+
+LVM Operatorは `lvms-vg1` という名前のストレージクラスを自動的に作成しますが、これをデフォルトには設定しません。OpenShift VirtualizationがVMディスクおよびDataVolume用のストレージを自動的にプロビジョニングするためには、これをデフォルトのストレージクラスに設定することが不可欠です。
+
+=== ストレージクラスが存在することの確認
+
+[source,bash,role=execute]
+----
+oc get storageclass
+----
+
+期待される出力:
+----
+NAME       PROVISIONER   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+lvms-vg1   topolvm.io    Delete          WaitForFirstConsumer   true                   5m
+----
+
+NOTE: `(default)` アノテーションが表示されていません。このストレージクラスはまだデフォルトではありません。
+
+=== デフォルトストレージクラスとしての設定
+
+LVMストレージクラスをクラスターのデフォルトに設定します。
+
+[source,bash,role=execute]
+----
+oc patch storageclass lvms-vg1 -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+----
+
+=== デフォルトステータスの確認
+
+[source,bash,role=execute]
+----
+oc describe sc | grep IsDefaultClass
+----
+
+デフォルト設定後の期待される出力:
+----
+NAME                 PROVISIONER   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+lvms-vg1 (default)   topolvm.io    Delete          WaitForFirstConsumer   true                   6m
+----
+
+`(default)` アノテーションにより、これがデフォルトのストレージクラスであることが確認できます。
+
+=== OpenShift Virtualizationにとって重要な理由
+
+デフォルトストレージクラスの設定は、OpenShift Virtualizationにとって非常に重要です。
+
+==== DataSource OSイメージはデフォルトストレージを必要とする
+
+OpenShift VirtualizationのDataSource OSイメージ（Fedora、RHEL、CentOS Stream、Windows）は、ブートソースボリュームを自動的に作成するためにデフォルトストレージクラスを必要とします。
+
+[source,bash,role=execute]
+----
+# Check available OS images
+oc get datasources -n openshift-virtualization-os-images
+----
+
+デフォルトストレージクラスがない場合、これらのDataSourceは保留状態のままとなり、VM作成に使用できません。
+
+==== VM用の自動PVC作成
+
+`dataVolumeTemplates` を使用してVMを作成する際、`storageClassName` が指定されていない場合は、デフォルトのストレージクラスが使用されます。
+
+[source,yaml]
+----
+dataVolumeTemplates:
+- metadata:
+    name: fedora-volume
+  spec:
+    pvc:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 30Gi
+    sourceRef:
+      kind: DataSource
+      name: fedora
+      namespace: openshift-virtualization-os-images
+----
+
+これにより、明示的に指定しなくても、デフォルトのストレージクラス（`lvms-vg1`）が自動的に使用されます。
+
+==== VM作成の簡素化
+
+デフォルトストレージクラスがあれば、以下のメリットがあります。
+
+* VMテンプレートがそのまま動作する
+* DataSourceのクローンが自動的に行われる
+* すべてのPVCに `storageClassName` を指定する必要がない
+* クラスター全体で一貫したストレージプロビジョニングが可能
+
+==== ブートソースの準備
+
+デフォルトストレージクラスが利用可能な場合、OpenShift Virtualization Operatorは一般的なOSイメージのブートソースを自動的に準備できます。
+
+[source,bash,role=execute]
+----
+# Check boot source preparation status
+oc get DataImportCron -n openshift-virtualization-os-images
+----
+
+=== 代替手段：VM内でのストレージクラスの明示的指定
+
+デフォルトストレージクラスを設定しない場合は、すべてのVM定義で明示的に指定する必要があります。
+
+[source,yaml]
+----
+dataVolumeTemplates:
+- metadata:
+    name: fedora-volume
+  spec:
+    pvc:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 30Gi
+      storageClassName: lvms-vg1  # Must be explicit
+    sourceRef:
+      kind: DataSource
+      name: fedora
+      namespace: openshift-virtualization-os-images
+----
+
+NOTE: 運用を簡素化し、ブートソースの自動プロビジョニングを有効にするため、OpenShift Virtualizationクラスターには必ずデフォルトストレージクラスを設定してください。
+
+== ステップ 6: ストレージプロビジョニングのテスト
+
+ストレージプロビジョニングが機能することを確認するために、テスト用のPVCを作成します。
+
+xref:attachment$lvm-operator/test-pvc.yaml[test-pvc.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lvms-test-pvc
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: lvms-vg1
+EOF
+----
+
+PVCを使用するためのテスト用Podを作成します。
+
+xref:attachment$lvm-operator/test-pod.yaml[test-pod.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: lvms-test-pod
+  namespace: default
+spec:
+  containers:
+  - name: test
+    image: registry.access.redhat.com/ubi9/ubi:latest
+    command: ["sleep", "3600"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: lvms-test-pvc
+EOF
+----
+
+PVCがバインドされていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get pvc lvms-test-pvc
+
+# Should show STATUS as "Bound"
+----
+
+Podが実行中で、ストレージに書き込めることを確認します。
+
+[source,bash,role=execute]
+----
+# Wait for pod to start
+oc wait --for=condition=Ready pod/lvms-test-pod --timeout=120s
+
+# Test writing to the volume
+oc exec lvms-test-pod -- sh -c "echo 'LVM Storage Test' > /data/test.txt && cat /data/test.txt"
+
+# Expected output: LVM Storage Test
+----
+
+テストリソースをクリーンアップします。
+
+[source,bash,role=execute]
+----
+oc delete pod lvms-test-pod
+oc delete pvc lvms-test-pvc
+----
+
+== トラブルシューティング
+
+LVMストレージのインストールや運用中に問題が発生した場合は、xref:lvm-troubleshooting.adoc[LVM Storage トラブルシューティングガイド]を参照してください。
+
+トラブルシューティングガイドでは以下を扱っています。
+
+* 期待される出力を含む完全な確認コマンド
+* 一般的な問題とその解決策
+* デバイスの検出と消去の問題
+* PVCプロビジョニングの問題
+* シンプールの管理
+* 診断手順
+
+== forceWipeDevicesAndDestroyAllData の理解
+
+=== 何をするものか
+
+`forceWipeDevicesAndDestroyAllData: true` パラメータは以下の動作を行います。
+
+. **パーティションテーブルの削除**: GPT、MBR、およびすべてのパーティション情報を消去します
+. **ファイルシステムの破壊**: ext4、xfs、btrfs、およびその他のファイルシステムの署名を削除します
+. **LVMメタデータの消去**: 既存の物理ボリューム、ボリュームグループ、論理ボリュームを削除します
+. **ディスク先頭のゼロ埋め**: ディスクの最初の数メガバイトをゼロで埋め、クリーンな状態を確保します
+. **再利用の強制**: LVM Operatorがディスクの所有権を取得できるようにします
+
+=== いつ使用すべきか
+
+`forceWipeDevicesAndDestroyAllData: true` は以下の場合に使用してください。
+
+* ディスクに既存のパーティションやファイルシステムがある場合
+* ディスクが以前LVMに使用されていた場合（PV/VG/LVが存在する）
+* 破棄したいデータがディスクにある場合
+* 他の用途で使用されていたディスクを再利用する場合
+
+以下の場合には使用しないでください。
+
+* ディスクが新品でフォーマットされていない場合
+* 使用すべきディスクが不明な場合（事前に確認してください！）
+* ディスクに保持する必要があるデータが含まれている場合
+
+=== 使用前の安全確認
+
+このパラメータを有効にする前に、必ずディスクデバイスパスを確認してください。
+
+[source,bash,role=execute]
+----
+# 1. Verify the disk path
+oc debug node/<node-name> -- chroot /host lsblk -o NAME,SIZE,TYPE,MOUNTPOINT
+
+# 2. Ensure disk is NOT mounted
+oc debug node/<node-name> -- chroot /host mount | grep /dev/sda
+
+# 3. Double-check you're not using the system disk
+oc debug node/<node-name> -- chroot /host df -h | grep sda
+
+# 4. Review disk serial number
+oc debug node/<node-name> -- chroot /host lsblk -d -o NAME,SERIAL /dev/sda
+----
+
+== まとめ
+
+このチュートリアルでは、以下について学びました。
+
+* LVMストレージのためにクラスターノード上の未使用の空きディスクを特定する方法
+* 名前空間、OperatorGroup、Subscriptionを作成してLVM Storage Operatorをインストールする方法
+* 既存データがあるディスク向けの `forceWipeDevicesAndDestroyAllData` パラメータを含め、LVMClusterリソースを作成および設定する方法
+* 自動生成された `lvms-vg1` ストレージクラスをOpenShift Virtualizationのデフォルトとして設定する方法
+* PVCとPodを使用してストレージプロビジョニングをテストし、LVMClusterの健全性を確認する方法
+
+== 参照
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage/persistent-storage-using-local-storage#persistent-storage-using-lvms[LVMストレージを使用した永続ストレージ,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage/understanding-persistent-storage#storage-classes_understanding-persistent-storage[永続ストレージの理解,window=_blank]
