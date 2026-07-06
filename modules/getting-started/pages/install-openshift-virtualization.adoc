@@ -1,9 +1,9 @@
-= OpenShift Virtualization Operatorのインストールと設定
-:navtitle: OpenShift Virtualizationのインストール
+= OpenShift Virtualization Operator のインストールと設定
+:navtitle: OpenShift Virtualization のインストール
 
 == 概要
 
-このチュートリアルでは、OpenShiftクラスター上でコンテナワークロードと並行して仮想マシンを実行できるようにする、OpenShift Virtualizationオペレーターのインストールおよび設定方法を説明します。OpenShift Virtualizationは、アップストリームのKubeVirtプロジェクトをベースにしており、エンタープライズグレードの仮想化機能を提供します。
+このチュートリアルでは、OpenShift クラスター上でコンテナワークロードと並行して仮想マシンを実行できるようにする、OpenShift Virtualization Opertator のインストールおよび設定方法を説明します。OpenShift Virtualization は、アップストリームの KubeVirt プロジェクトをベースにしており、エンタープライズグレードの仮想化機能を提供します。
 
 * <<Installing via Web Console>>
 * <<Installing via Command Line>>
@@ -11,7 +11,7 @@
 == 前提条件
 
 * **OpenShift 4.18+**: サポートされているプラットフォーム上でインストールおよび実行されていること
-* **クラスター管理者権限**: オペレーターのインストールおよびクラスターリソースの設定に必要です
+* **クラスター管理者権限**: Opertator のインストールおよびクラスターリソースの設定に必要
 
 検証済みバージョン:
 ----
@@ -20,19 +20,19 @@ OpenShift 4.18, 4.19, 4.20, 4.21
 
 == ハードウェアおよびソフトウェアの要件
 
-OpenShift Virtualizationをインストールする前に、クラスターがハードウェア、オペレーティングシステム、ストレージ、およびネットワークの要件を満たしていることを確認してください。
+OpenShift Virtualization をインストールする前に、クラスターがハードウェア、オペレーティングシステム、ストレージ、ネットワークの要件を満たしていることを確認してください。
 
 CPU仕様、サポート対象プラットフォーム、ストレージに関する考慮事項、リソースオーバーヘッドなどの詳細な要件については、link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing#virt-preparing-cluster-for-virt_preparing-cluster-for-virt[OpenShift Virtualization用のクラスターの準備,window=_blank]を参照してください。
 
-TIP: ストレージ設定については、オペレーターのインストール完了後に xref:default-storage-class.adoc[] を参照してください。
+TIP: ストレージ設定については、Opertator のインストール完了後に xref:default-storage-class.adoc[] を参照してください。
 
 == Webコンソールを使用したインストール
 
-Webコンソールを使用すると、OpenShift Virtualizationのインストールをガイド付きで実行できます。
+Web コンソールを使用すると、OpenShift Virtualization のインストールをガイド付きで実行できます。
 
-=== ステップ 1: OperatorHubへのアクセス
+=== ステップ 1: OperatorHub へのアクセス
 
-. `cluster-admin` 権限を持つユーザーとしてOpenShift Webコンソールにログインします。
+. `cluster-admin` 権限を持つユーザーとしてOpenShift Web コンソールにログインします。
 . **Operators** -> **OperatorHub** に移動します。
 +
 image::install-1-software-catalog.png[OpenShift WebコンソールのOperatorHub]
@@ -41,53 +41,53 @@ image::install-1-software-catalog.png[OpenShift WebコンソールのOperatorHub
 +
 image::install-2-find-openshift-virtualization.png[OperatorHubでOpenShift Virtualizationをフィルタリング]
 
-=== ステップ 2: オペレーターのインストール
+=== ステップ 2: Opertator のインストール
 
 . **Red Hat** ソースラベルが付いた **OpenShift Virtualization** タイルを選択します。
-. オペレーター情報を確認し、**Install** をクリックします。
+. Opertator 情報を確認し、**Install** をクリックします。
 +
-image::install-3-click-install.png[インストールボタンが表示されたOpenShift Virtualizationオペレーターの詳細]
+image::install-3-click-install.png[インストールボタンが表示された OpenShift Virtualization Opertator の詳細]
 
-. Install Operatorページで、デフォルト設定のまま **Install** をクリックします。
+. Install Operator ページで、デフォルト設定のまま **Install** をクリックします。
 +
-image::install-4-let-default-click-install.png[デフォルト設定のInstall Operatorページ]
+image::install-4-let-default-click-install.png[デフォルト設定の Install Operator ページ]
 
-IMPORTANT: 手動承認（Manual approval）も利用可能ですが、サポートされていないバージョンの組み合わせを実行するリスクがあるため、推奨されません。影響を完全に理解している場合にのみ、Manualを選択してください。
+IMPORTANT: 手動承認 (Manual approval) も利用可能ですが、サポートされていないバージョンの組み合わせを実行するリスクがあるため推奨されません。影響を完全に理解している場合にのみ、Manual を選択してください。
 
 [start=4]
-. オペレーターのインストールが完了するまで待ちます。
+. Opertator のインストールが完了するまで待ちます。
 +
-image::install-5-wait-for-install-ready.png[オペレーターのインストール進行状況]
+image::install-5-wait-for-install-ready.png[Opertator のインストール進行状況]
 
-=== ステップ 3: HyperConvergedリソースの作成
+=== ステップ 3: HyperConverged リソースの作成
 
-. オペレーターのインストールが完了したら、**Create HyperConverged** をクリックします。
+. Opertator のインストールが完了したら、**Create HyperConverged** をクリックします。
 +
-image::install-6-create-hyperconverged.png[オペレーターインストール後のCreate HyperConvergedボタン]
+image::install-6-create-hyperconverged.png[Opertator インストール後の Create HyperConverged ボタン]
 
 . デフォルト設定のまま、一番下までスクロールします。
 +
-image::install-7-let-default-roll-to-the-bottom.png[デフォルト設定のHyperConverged設定]
+image::install-7-let-default-roll-to-the-bottom.png[デフォルト設定の HyperConverged 設定]
 
-. **Create** をクリックして、OpenShift Virtualizationをデプロイします。
+. **Create** をクリックして、OpenShift Virtualization をデプロイします。
 +
-image::install-8-click-create.png[HyperConvergedリソースの作成ボタン]
+image::install-8-click-create.png[HyperConverged リソースの作成ボタン]
 
 === ステップ 4: インストールの確認
 
-すべての条件が成功と報告されるまで待ちます。HyperConvergedリソースのステータスでデプロイの進行状況を確認できます。
+すべての条件が成功と報告されるまで待ちます。HyperConverged リソースのステータスでデプロイの進行状況を確認できます。
 
-image::install-9-wait-for-conditions.png[デプロイ成功を示すHyperConverged条件]
+image::install-9-wait-for-conditions.png[デプロイ成功を示す　HyperConverged　条件]
 
-完了すると、Operatorsリストにオペレーターがインストール済みとして表示されます。
+完了すると、Operators リストにインストール済みとして表示されます。
 
-image::install-10-installed-operator.png[インストール済みのOpenShift Virtualizationオペレーター]
+image::install-10-installed-operator.png[インストール済みの OpenShift Virtualization Opertator]
 
 == コマンドラインを使用したインストール
 
-自動デプロイやWebコンソールにアクセスできない環境では、CLIによるインストール方法を使用します。
+自動デプロイやWebコンソールにアクセスできない環境では、CLI によるインストール方法を使用します。
 
-=== ステップ 1: Namespace、OperatorGroup、およびSubscriptionの作成
+=== ステップ 1: Namespace、OperatorGroup、Subscription の作成
 
 必要なすべてのリソースを含む単一のマニフェストファイルを作成します。
 
@@ -122,9 +122,9 @@ spec:
 EOF
 ----
 
-=== ステップ 2: オペレーターインストールの確認
+=== ステップ 2: Opertator インストールの確認
 
-オペレーターがインストールされるのを待ち、ステータスを確認します。
+Opertator がインストールされるのを待ち、ステータスを確認します。
 
 [source,bash,role=execute]
 ----
@@ -132,7 +132,7 @@ EOF
 oc get csv -n openshift-cnv -w
 ----
 
-インストール完了時の期待される出力:
+インストール完了時に期待される出力:
 
 ----
 NAME                                       DISPLAY                    VERSION   REPLACES                                   PHASE
@@ -141,9 +141,9 @@ kubevirt-hyperconverged-operator.v4.20.3   OpenShift Virtualization   4.20.3    
 
 `Succeeded` と表示されたら `Ctrl+C` を押して監視を停止します。
 
-=== ステップ 3: HyperConvergedリソースの作成
+=== ステップ 3: HyperConverged リソースの作成
 
-HyperConvergedカスタムリソースをデプロイして、インストールを完了します。
+HyperConverged カスタムリソースをデプロイして、インストールを完了します。
 
 [source,bash,role=execute]
 ----
@@ -157,18 +157,18 @@ spec:
 EOF
 ----
 
-NOTE: 上記の最小限のHyperConvergedスペックは、すべてのデフォルト設定を使用します。高度な設定オプションについては、https://docs.openshift.com/container-platform/latest/virt/install/installing-virt.html#virt-customizing-storage-profile_installing-virt[公式ドキュメント,window=_blank]を参照してください。
+NOTE: 上記の最小限の HyperConverged スペックは、すべてのデフォルト設定を使用します。高度な設定オプションについては、https://docs.openshift.com/container-platform/latest/virt/install/installing-virt.html#virt-customizing-storage-profile_installing-virt[公式ドキュメント,window=_blank] を参照してください。
 
 === ステップ 4: インストール完了の待機
 
-HyperConvergedリソースが使用可能になるまで待ちます。
+HyperConverged リソースが使用可能になるまで待ちます。
 
 [source,bash,role=execute]
 ----
 oc wait hyperconverged kubevirt-hyperconverged -n openshift-cnv --for=condition=Available --timeout=15m
 ----
 
-インストールには通常5〜10分かかります。
+インストールには通常 5〜10 分かかります。
 
 === ステップ 5: インストールの確認
 
@@ -189,15 +189,15 @@ Degraded: False
 Upgradeable: True
 ----
 
-== OpenShift Virtualizationのアンインストール
+== OpenShift Virtualization のアンインストール
 
-OpenShift Virtualizationをクラスターから削除する必要がある場合は、以下の手順を順番に実行してください。アンインストールプロセスでは、すべての仮想化コンポーネントが安全に停止されるため、数分かかります。
+OpenShift Virtualization をクラスターから削除する必要がある場合は、以下の手順を順番に実行してください。アンインストールプロセスでは、すべての仮想化コンポーネントが安全に停止されるため数分かかります。
 
-IMPORTANT: オペレーターのサブスクリプションを削除するだけでは、デプロイされたリソースは削除されません。すべてのコンポーネントを適切にクリーンアップするには、まずHyperConvergedリソースを削除する必要があります。
+IMPORTANT: Opertator のサブスクリプションを削除するだけでは、デプロイされたリソースは削除されません。すべてのコンポーネントを適切にクリーンアップするには、まず HyperConverged リソースを削除する必要があります。
 
 === ステップ 1: すべての仮想マシンの削除
 
-アンインストール前に、すべてのVMが停止および削除されていることを確認してください。
+アンインストール前に、すべての VM が停止および削除されていることを確認してください。
 
 [source,bash,role=execute]
 ----
@@ -208,11 +208,11 @@ oc get vm -A
 oc delete vm --all -n <namespace>
 ----
 
-WARNING: 実行中のVMは、アンインストール中に強制終了されます。
+WARNING: 実行中の VM は、アンインストール中に強制終了されます。
 
-=== ステップ 2: HyperConvergedリソースの削除
+=== ステップ 2: HyperConverged リソースの削除
 
-このステップで、すべてのOpenShift Virtualizationコンポーネントが削除されます。
+このステップで、すべての OpenShift Virtualization コンポーネントが削除されます。
 
 [source,bash,role=execute]
 ----
@@ -227,9 +227,9 @@ oc delete hyperconverged kubevirt-hyperconverged -n openshift-cnv
 oc get pods -n openshift-cnv -w
 ----
 
-すべてのPodが終了するまで待機してから次に進みます。
+すべての Pod が終了するまで待機してから次に進みます。
 
-=== ステップ 3: オペレーターのサブスクリプションとCSVの削除
+=== ステップ 3: Opertator のサブスクリプションと CSV の削除
 
 [source,bash,role=execute]
 ----
@@ -240,9 +240,9 @@ oc delete subscription hco-operatorhub -n openshift-cnv
 oc delete csv -n openshift-cnv -l operators.coreos.com/kubevirt-hyperconverged.openshift-cnv
 ----
 
-=== ステップ 4: Namespaceの削除 (オプション)
+=== ステップ 4: Namespace の削除 (オプション)
 
-完全にクリーンアップするために、Namespaceを削除します。
+完全にクリーンアップするために、Namespace を削除します。
 
 [source,bash,role=execute]
 ----
@@ -262,18 +262,18 @@ oc get csv -n openshift-cnv
 
 == まとめ
 
-OpenShift Virtualizationのインストールと設定が完了しました。これで、クラスター上でコンテナワークロードと並行して仮想マシンを実行できるようになりました。
+OpenShift Virtualization のインストールと設定が完了しました。これで、クラスター上でコンテナワークロードと並行して仮想マシンを実行できるようになりました。
 
 == 次のステップ
 
-* xref:virtctl-basics.adoc[virtctlの基本を学習する] - VM管理用のコマンドラインツール
-* xref:default-storage-class.adoc[デフォルトストレージの設定] - VM用ストレージのセットアップ
-* xref:networking:static-ip-configuration.adoc[VM用の静的IP設定] - cloud-init、DHCP予約、ゲストエージェント、およびSysprepを使用した静的IP設定
+* xref:virtctl-basics.adoc[virtctl を使用した VM 管理] - VM 管理用のコマンドラインツール
+* xref:default-storage-class.adoc[デフォルトストレージの設定] - VM 用ストレージのセットアップ
+* xref:networking:static-ip-configuration.adoc[VM への静的 IP の設定] - cloud-init、DHCP 予約、ゲストエージェント、Sysprep を使用した静的 IP 設定
 
 == 関連情報
 
-トラブルシューティング、高度な設定オプション、およびSingle Node OpenShift（SNO）に関する考慮事項については、公式ドキュメントを参照してください。
+トラブルシューティング、高度な設定オプション、Single Node OpenShift（SNO）に関する考慮事項については、公式ドキュメントを参照してください。
 
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing[OpenShift Virtualizationインストールドキュメント,window=_blank]
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/getting-started[OpenShift Virtualization入門,window=_blank]
-* link:https://kubevirt.io/[KubeVirtプロジェクト,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing[OpenShift Virtualization インストールドキュメント,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/getting-started[OpenShift Virtualization 入門,window=_blank]
+* link:https://kubevirt.io/[KubeVirt プロジェクト,window=_blank]

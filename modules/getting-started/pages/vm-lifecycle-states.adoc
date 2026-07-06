@@ -1,9 +1,9 @@
-= VMライフサイクル状態と基本操作の理解
+= VMライフサイクルの状態と基本操作の理解
 :navtitle: VMライフサイクル状態
 
 == 概要
 
-OpenShift Virtualizationにおける仮想マシンのライフサイクルを理解することは、効果的なVM管理、トラブルシューティング、および自動化に不可欠です。本ガイドでは、VirtualMachineリソースとVirtualMachineInstanceリソースの関係、VMが取り得るさまざまな状態、およびライフサイクル全体を通じてVMを管理する方法について説明します。
+OpenShift Virtualizationにおける仮想マシンのライフサイクルを理解することは、効果的なVM管理、トラブルシューティング、および自動化に不可欠です。本ガイドでは、VirtualMachineリソースとVirtualMachineInstanceリソースの関係、VMのさまざまな状態、ライフサイクル全体を通じてVMを管理する方法について説明します。
 
 テスト済みバージョン:
 ----
@@ -22,7 +22,7 @@ OpenShift Virtualizationでは、仮想マシンを管理するために主に2�
 
 === VirtualMachine (VM)
 
-`VirtualMachine` リソースは、VMの永続的な定義です。これは、以下を定義するテンプレートまたは仕様と考えてください。
+`VirtualMachine` リソースは、VMの永続的な定義です。これは、以下を定義するテンプレートまたは仕様書と考えてください。
 
 * VMの名前と名前空間
 * CPUとメモリの構成
@@ -51,7 +51,7 @@ fedora-app-vm   14m   Running   True
 
 * ランタイム情報 (IPアドレス、ノード配置)
 * 現在のフェーズ/状態
-* ゲストエージェント情報 (インストールされている場合)
+* guest agent 情報 (インストールされている場合)
 
 [source,bash,role=execute]
 ----
@@ -68,7 +68,7 @@ fedora-app-vm   78s   Running   10.128.0.184   ocplab01   True
 
 NOTE: 停止中のVMにはVirtualMachineリソースは存在しますが、VirtualMachineInstanceは存在しません。VMを起動するとVMIが作成されます。VMを停止するとVMIは削除されますが、VMリソースは残ります。
 
-== VMライフサイクル状態
+== VMライフサイクルの状態
 
 VMは、そのライフサイクルを通じていくつかの状態に遷移します。これらの状態を理解することで、監視やトラブルシューティングが容易になります。
 
@@ -85,7 +85,7 @@ VMは、そのライフサイクルを通じていくつかの状態に遷移し
 
 |2
 |Pending (保留中)
-|VMIが作成され、前提条件 (ストレージ、ネットワーク) が整うのを待機しています。
+|VMIが作成され、前提条件 (ストレージ、ネットワーク) が揃うのを待っています。
 |はい
 
 |3
@@ -100,7 +100,7 @@ VMは、そのライフサイクルを通じていくつかの状態に遷移し
 
 |5
 |Running (実行中)
-|VMは完全に動作しており、接続を受け入れています。
+|VMは完全に動作しており、接続が可能です。
 |はい
 
 |6
@@ -130,7 +130,7 @@ VMは、そのライフサイクルを通じていくつかの状態に遷移し
 . **Virtualization** -> **VirtualMachines** に移動します。
 . リストから対象のVMを見つけます。
 . VM名をクリックして詳細を開き、**Actions** -> **Start** をクリックします。
-. または、ケバブメニュー (3つの点) をクリックして **Start** を選択します。
+. または、ケバブメニュー (縦に並ぶ3つの点) をクリックして **Start** を選択します。
 +
 image::vm-lifecycle-states/vm-stopped-start-action.png[VM詳細ページ。ActionsメニューのStartオプションを表示]
 
@@ -215,9 +215,9 @@ Error from server (NotFound): virtualmachineinstances.kubevirt.io "fedora-app-vm
 
 一時停止 (Pause) は、VMの状態をメモリ内に保持したまま実行を凍結します。これは以下の場合に役立ちます。
 
-* CPUリソースを一時的に解放する
-* 一貫性のあるスナップショットを取得する
-* デバッグや調査を行う
+* CPUリソースを一時的に解放
+* 一貫性のあるスナップショットを取得
+* デバッグや調査
 
 IMPORTANT: 一時停止中のVMもノード上のメモリを消費します。CPU実行のみが中断されます。
 
@@ -302,7 +302,7 @@ image::vm-lifecycle-states/vm-delete-confirmation-dialog.png[Delete VirtualMachi
 oc delete vm fedora-app-vm -n my-vms
 ----
 
-デフォルトでは、VMが所有するDataVolumeは削除されます。これらを保持するには、最初にオーナー参照を削除するか、Webコンソールのオプションを使用してください。
+デフォルトでは、VMが所有するDataVolumeは削除されます。これらを保持するには、最初に所有参照を削除するか、Webコンソールのオプションを使用してください。
 
 **削除の確認:**
 
@@ -327,7 +327,7 @@ WARNING: VMの削除は永続的な操作です。削除する前に、重要な
 
 == VMの状態監視
 
-=== VMおよびVMIの状態確認
+=== VM および VMI の状態確認
 
 **詳細なVM情報:**
 
@@ -361,8 +361,8 @@ Status:
 
 確認すべき主要セクション:
 
-* **Status.Conditions** - 現在の状態と問題があれば表示されます
-* **Status.PrintableStatus** - 人間が読みやすい形式のステータス
+* **Status.Conditions** - 現在の状態と問題が表示
+* **Status.PrintableStatus** - 人間が理解しやすいステータス
 * **Status.Ready** - VMが使用可能な状態かどうか
 
 **詳細なVMI情報:**
@@ -404,7 +404,7 @@ Status:
 * **Status.Phase** - 現在のライフサイクルフェーズ
 * **Status.Interfaces** - IPアドレスを含むネットワーク情報
 * **Status.NodeName** - VMが実行されているノード
-* **Status.GuestOSInfo** - ゲストOSの詳細 (ゲストエージェントが必要)
+* **Status.GuestOSInfo** - ゲストOSの詳細 (guest agent が必要)
 
 === 条件 (Conditions) の理解
 
@@ -456,10 +456,10 @@ oc get vm fedora-app-vm -n my-vms -o jsonpath='{.status.conditions}' | jq
 |VMの実行が一時停止中
 
 |AgentConnected
-|QEMUゲストエージェントが通信中
+|QEMU guest agent が通信中
 
 |Synchronized
-|VMの仕様がVMIと同期済み
+|VMの設定がVMIと同期済み
 |===
 
 === VMイベント
@@ -509,7 +509,7 @@ oc get events -n my-vms -w
 |強制停止を開始
 
 |FailedScheduling
-|適切なノードが見つかりませんでした
+|適切なノードの未発見
 
 |FailedCreate
 |VMIの作成に失敗 (詳細を確認)
@@ -517,7 +517,7 @@ oc get events -n my-vms -w
 
 == 実行戦略 (Run Strategies)
 
-実行戦略は、ライフサイクル全体を通じてVMが自動的にどのように動作するかを定義します。戦略はVM仕様内で設定され、VMが自動的に起動するか、停止後に再起動するか、または停止状態を維持するかを決定します。
+実行戦略は、ライフサイクル全体を通じてVMが自動的にどのように動作するかを定義します。実行戦略はVMリソース内で設定され、VMが自動的に起動するか、停止後に再起動するか、停止状態を維持するかを決定します。
 
 === 利用可能な実行戦略
 
@@ -531,7 +531,7 @@ oc get events -n my-vms -w
 
 |`RerunOnFailure`
 |VMは自動的に起動し、障害時のみ再起動します。ゲストによるシャットダウンの場合はVMは停止状態を維持します。
-|クラッシュからは復旧しつつ、意図的なシャットダウンは尊重すべきサービス。
+|クラッシュからは復旧しつつ、意図的なシャットダウンには従うことが必要なワークロード。
 
 |`Manual`
 |`virtctl` またはWebコンソールから明示的に要求された場合のみ起動または停止します。

@@ -9,10 +9,10 @@
 
 == 前提条件
 
-* **OpenShift 4.18以上**（OpenShift Virtualizationオペレーターがインストール済みであること）
+* **OpenShift 4.18以上**（OpenShift Virtualization Operatorがインストール済みであること）
 * **クラスター管理者アクセス** (`system:admin` または同等の権限)
 * **`oc` CLI** および **`virtctl` CLI** がインストール済みであること
-* **デフォルトのStorageClass** が構成済みであること (例: `lvms-vg1`)
+* **デフォルト StorageClass** が構成済みであること (例: `lvms-vg1`)
 
 テスト済みバージョン:
 ----
@@ -168,7 +168,7 @@ EOF
 === 構成の重要な詳細
 
 * rootdisk上の **`bootOrder: 1`** は、VMがOSディスクから起動することを保証します。
-* rootdisk上の **`source.registry`** は、Fedoraのコンテナディスクイメージをプルします。
+* rootdisk上の **`source.registry`** は、FedoraのコンテナディスクイメージをPullします。
 * datadisk上の **`source.blank: {}`** は、空のフォーマットされていないボリュームを作成します。
 * 各 `dataVolumeTemplates` エントリで、異なる `storageClassName` を指定できます。
 * `devices.disks` 内のディスク名は `volumes` 内のボリューム名と一致し、それがさらに `dataVolumeTemplates` のメタデータ名と一致している必要があります。

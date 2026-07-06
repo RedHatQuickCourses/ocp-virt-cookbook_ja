@@ -46,7 +46,7 @@ sudo mv virtctl /usr/local/bin/
 virtctl version
 ----
 +
-Windows の場合は、実行ファイルを展開し、その場所をシステム PATH に追加してください。
+Windows の場合は、実行ファイルを展開し、展開したファイルの場所をシステム PATH に追加してください。
 
 == 基本的なコマンド
 
@@ -262,9 +262,9 @@ oc get vmi fedora-app-vm -n myapp
 
 **VM 情報の確認が必要な場面:**
 
-* `virtctl guestosinfo` - 更新前に OS バージョンを確認する
-* `virtctl fslist` - ソフトウェアインストール前にディスク空き容量を確認する
-* `virtctl userlist` - 現在誰がログインしているか確認する
+* `virtctl guestosinfo` - 更新前に OS バージョンを確認
+* `virtctl fslist` - ソフトウェアインストール前にディスク空き容量を確認
+* `virtctl userlist` - 現在誰がログインしているか確認
 
 == よくある問題
 
@@ -278,7 +278,7 @@ oc whoami
 oc get nodes
 ----
 
-**問題: ゲストエージェントコマンドがデータを返さない**
+**問題: guest agent コマンドがデータを返さない**
 
 解決策: VM に QEMU guest agent をインストールしてください。インストール手順については、link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/managing-vms#virt-installing-qemu-guest-agent[Installing the QEMU guest agent,window=_blank] を参照してください。
 
@@ -297,7 +297,7 @@ systemctl status sshd
 
 **問題: コンソールがフリーズまたは反応しない**
 
-解決策: `Ctrl+]` で終了し、VM ステータスを確認してください:
+解決策: `Ctrl+]` で終了し、VM ステータスを確認します:
 
 [source,bash,role=execute]
 ----
@@ -308,12 +308,12 @@ oc get vmi fedora-app-vm -n myapp
 
 * 混乱を避けるため、`-n` で**常に名前空間を指定する**
 * **最初のセットアップにはコンソールを使用**し、定期的なアクセスには SSH を使用する
-* すべての VM にフル機能を利用するための**ゲストエージェントをインストールする**
+* すべての VM にフル機能を利用するための **guest agent をインストールする**
 * VM ステータスには `oc` を、VM 操作には `virtctl` を使用する
 * セッションのフリーズを防ぐため、`Ctrl+]` で**コンソールを適切に終了する**
 * 外部アクセスを設定する前に、`virtctl ssh` でテストを行う
 
-== 追加リソース
+== 追加のリソース
 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/getting-started#virt-using-the-cli-tools[virtctl Commands Reference,window=_blank]
 

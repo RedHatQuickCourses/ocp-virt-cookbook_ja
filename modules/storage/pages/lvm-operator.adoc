@@ -3,13 +3,13 @@
 
 == 概要
 
-本チュートリアルでは、OpenShiftノード上の未使用のローカルディスクを使用するために、LVM Storage Operatorをインストールおよび設定する方法を解説します。LVM Operatorは、Logical Volume Manager（LVM）を使用した動的なストレージプロビジョニングを提供し、シングルノードOpenShift（SNO）やローカルストレージを使用するベアメタルクラスターに最適です。
+本チュートリアルでは、OpenShiftノード上の未使用のローカルディスクを使用するために、LVM Storage Operatorをインストールおよび設定する方法を解説します。LVM Operatorは、Logical Volume Manager（LVM）を使用した動的なストレージプロビジョニングを提供し、Single Node OpenShift（SNO）やローカルストレージを使用するベアメタルクラスターに最適です。
 
 == 前提条件
 
 * **OpenShift 4.18以上**
 * **利用可能なローカルディスク**: クラスターノード上に少なくとも1台の未使用ディスクが必要です
-* **クラスター管理者権限**: Operatorのインストールおよびストレージクラスの作成に必要です
+* **クラスター管理者権限**: OperatorのインストールおよびStorageClassの作成に必要です
 * **ディスク内の既存データ**: Operatorは `forceWipeDevicesAndDestroyAllData` パラメータを使用してディスクを強制的に初期化できます
 
 検証済みバージョン:
@@ -35,6 +35,7 @@ oc debug node/<node-name> -- chroot /host lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPO
 ----
 
 出力例:
+[source,text]
 ----
 NAME    SIZE TYPE FSTYPE      MOUNTPOINT MODEL
 sda   558.4G disk LVM2_member            PERC H730 Adp
@@ -58,6 +59,7 @@ oc debug node/<node-name> -- chroot /host pvs
 ----
 
 出力例:
+[source,text]
 ----
 PV         VG  Fmt  Attr PSize   PFree  
 /dev/sda   vg1 lvm2 a--  558.37g <55.84g
@@ -73,6 +75,7 @@ oc debug node/<node-name> -- chroot /host ls -la /dev/disk/by-path/ | grep -E "p
 ----
 
 出力例:
+[source,text]
 ----
 lrwxrwxrwx. 1 root root 9 Oct 6 13:30 pci-0000:03:00.0-scsi-0:2:1:0 -> ../../sda
 ----
@@ -81,9 +84,9 @@ lrwxrwxrwx. 1 root root 9 Oct 6 13:30 pci-0000:03:00.0-scsi-0:2:1:0 -> ../../sda
 
 == ステップ 2: LVM Storage Operatorのインストール
 
-名前空間を作成し、LVM Storage Operatorをインストールします。
+namespaceを作成し、LVM Storage Operatorをインストールします。
 
-LVM Operator用の名前空間を作成します。
+LVM Operator用のnamespaceを作成します。
 
 xref:attachment$lvm-operator/lvm-namespace.yaml[lvm-namespace.yaml をダウンロード]
 
@@ -148,6 +151,7 @@ oc get pods -n openshift-lvm-storage
 ----
 
 期待される出力（Operatorインストール後、LVMCluster作成前）:
+[source,text]
 ----
 NAME                             READY   STATUS    RESTARTS   AGE
 lvms-operator-864b6975bb-kxt4t   1/1     Running   0          2m
@@ -156,6 +160,7 @@ lvms-operator-864b6975bb-kxt4t   1/1     Running   0          2m
 NOTE: この段階では `lvms-operator` Podのみが表示されるはずです。`vg-manager` Podは、ステップ3でLVMClusterリソースを作成した後に自動的に作成されます。
 
 期待される出力（ステップ3でLVMClusterを作成した後）:
+[source,text]
 ----
 NAME                                  READY   STATUS    RESTARTS   AGE
 lvms-operator-864b6975bb-kxt4t        1/1     Running   0          5m
@@ -244,21 +249,21 @@ EOF
 === 設定パラメータの解説
 
 * **`name: vg1`**: ボリュームグループ名（ディスク上に作成されます）
-* **`default: true`**: この deviceClass をクラスターのデフォルトにします
-  ** **目的**: デフォルトの deviceClass がないという警告を防ぎます
-  ** **効果**: PVCで明示的に指定しなくても、生成されたストレージクラスが利用可能になります
-  ** **注意**: 複数の deviceClass を持つ場合、デフォルトに設定できるのは1つだけです
-* **`thinPoolConfig`**: 効率的なストレージ使用のためのシンプロビジョニングを設定します
-  ** `sizePercent: 90`: シンプールにディスク領域の90%を使用します
-  ** `overprovisionRatio: 10`: 10倍のオーバープロビジョニングを許可します（物理的に利用可能な容量以上のストレージをプロビジョニングします）
+* **`default: true`**: deviceClass をクラスターのデフォルトに設定
+  ** **目的**: デフォルトの deviceClass がないという警告を防止
+  ** **効果**: PVCで明示的に指定しなくても、生成されたStorage Classを利用可能に設定
+  ** **注意**: 複数の deviceClass を持つ場合、デフォルトに設定できるのは1つのみ
+* **`thinPoolConfig`**: 効率的なストレージ使用のためのシンプロビジョニングを設定
+  ** `sizePercent: 90`: thin pool にディスク領域の90%を使用
+  ** `overprovisionRatio: 10`: 10倍のオーバープロビジョニングを許可（物理的に利用可能な容量以上のストレージをプロビジョニング）
 * **`nodeSelector`**: 設定するノード（この例ではワーカーノード）
 * **`deviceSelector.paths`**: 使用する特定のディスクデバイスパス
-  ** `/dev/sda`、`/dev/disk/by-path/...`、`/dev/disk/by-id/...` などが使用可能です
+  ** `/dev/sda`、`/dev/disk/by-path/...`、`/dev/disk/by-id/...` などが使用可能
 * **`forceWipeDevicesAndDestroyAllData: true`**: 重要なパラメータ
-  ** **目的**: ディスク上のすべての既存データとパーティションを消去します
-  ** **使用条件**: ディスクに既存のファイルシステム、パーティション、またはLVM設定がある場合
-  ** **効果**: 完全なデータ破棄 - 回復は不可能です
-  ** **省略する場合**: ディスクがすでにクリーン/空である場合
+  ** **目的**: ディスク上のすべての既存データとパーティションを消去
+  ** **使用条件**: ディスクに既存のファイルシステム、パーティション、LVM設定がある場合
+  ** **効果**: 完全なデータ破棄 - 回復は不可
+  ** **省略する場合**: ディスクが既に clean/empty である場合
 
 == ステップ 4: LVMClusterステータスの確認
 
@@ -285,11 +290,11 @@ oc debug node/<node-name> -- chroot /host lvs
 詳細な確認手順、期待される出力、トラブルシューティングについては、xref:lvm-troubleshooting.adoc[LVM Storage トラブルシューティングガイド]を参照してください。
 
 [[_step_5_set_default_storageclass]]
-== ステップ 5: デフォルトストレージクラスの設定
+== ステップ 5: デフォルトStorage Classの設定
 
-LVM Operatorは `lvms-vg1` という名前のストレージクラスを自動的に作成しますが、これをデフォルトには設定しません。OpenShift VirtualizationがVMディスクおよびDataVolume用のストレージを自動的にプロビジョニングするためには、これをデフォルトのストレージクラスに設定することが不可欠です。
+LVM Operatorは `lvms-vg1` という名前のStorage Classを自動的に作成しますが、デフォルトには設定しません。OpenShift VirtualizationがVMディスクおよびDataVolume用のストレージを自動的にプロビジョニングするためには、`lvms-vg1` をデフォルトのStorageClassに設定することが不可欠です。
 
-=== ストレージクラスが存在することの確認
+=== Storage Classが存在することの確認
 
 [source,bash,role=execute]
 ----
@@ -297,16 +302,17 @@ oc get storageclass
 ----
 
 期待される出力:
+[source,text]
 ----
 NAME       PROVISIONER   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 lvms-vg1   topolvm.io    Delete          WaitForFirstConsumer   true                   5m
 ----
 
-NOTE: `(default)` アノテーションが表示されていません。このストレージクラスはまだデフォルトではありません。
+NOTE: `(default)` アノテーションが表示されていません。このStorage Classはまだデフォルトではありません。
 
-=== デフォルトストレージクラスとしての設定
+=== デフォルトStorage Classとしての設定
 
-LVMストレージクラスをクラスターのデフォルトに設定します。
+LVM Storage Classをクラスターのデフォルトに設定します。
 
 [source,bash,role=execute]
 ----
@@ -321,20 +327,21 @@ oc describe sc | grep IsDefaultClass
 ----
 
 デフォルト設定後の期待される出力:
+[source,text]
 ----
 NAME                 PROVISIONER   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 lvms-vg1 (default)   topolvm.io    Delete          WaitForFirstConsumer   true                   6m
 ----
 
-`(default)` アノテーションにより、これがデフォルトのストレージクラスであることが確認できます。
+`(default)` アノテーションにより、これがデフォルトStorage Classであることが確認できます。
 
 === OpenShift Virtualizationにとって重要な理由
 
-デフォルトストレージクラスの設定は、OpenShift Virtualizationにとって非常に重要です。
+デフォルトStorage Classの設定は、OpenShift Virtualizationにとって非常に重要です。
 
 ==== DataSource OSイメージはデフォルトストレージを必要とする
 
-OpenShift VirtualizationのDataSource OSイメージ（Fedora、RHEL、CentOS Stream、Windows）は、ブートソースボリュームを自動的に作成するためにデフォルトストレージクラスを必要とします。
+OpenShift VirtualizationのDataSource OSイメージ（Fedora、RHEL、CentOS Stream、Windows）は、ブートソースボリュームを自動的に作成するためにデフォルトStorage Classを必要とします。
 
 [source,bash,role=execute]
 ----
@@ -342,11 +349,11 @@ OpenShift VirtualizationのDataSource OSイメージ（Fedora、RHEL、CentOS St
 oc get datasources -n openshift-virtualization-os-images
 ----
 
-デフォルトストレージクラスがない場合、これらのDataSourceは保留状態のままとなり、VM作成に使用できません。
+デフォルトStorage Classがない場合、これらのDataSourceは保留状態のままとなり、VM作成に使用できません。
 
 ==== VM用の自動PVC作成
 
-`dataVolumeTemplates` を使用してVMを作成する際、`storageClassName` が指定されていない場合は、デフォルトのストレージクラスが使用されます。
+`dataVolumeTemplates` を使用してVMを作成する際、`storageClassName` が指定されていない場合は、デフォルトStorage Classが使用されます。
 
 [source,yaml]
 ----
@@ -366,11 +373,11 @@ dataVolumeTemplates:
       namespace: openshift-virtualization-os-images
 ----
 
-これにより、明示的に指定しなくても、デフォルトのストレージクラス（`lvms-vg1`）が自動的に使用されます。
+これにより、明示的に指定しなくても、デフォルトStorage Class（`lvms-vg1`）が自動的に使用されます。
 
 ==== VM作成の簡素化
 
-デフォルトストレージクラスがあれば、以下のメリットがあります。
+デフォルトStorage Classがあれば、以下のメリットがあります。
 
 * VMテンプレートがそのまま動作する
 * DataSourceのクローンが自動的に行われる
@@ -379,7 +386,7 @@ dataVolumeTemplates:
 
 ==== ブートソースの準備
 
-デフォルトストレージクラスが利用可能な場合、OpenShift Virtualization Operatorは一般的なOSイメージのブートソースを自動的に準備できます。
+デフォルトStorage Classが利用可能な場合、OpenShift Virtualization Operatorは一般的なOSイメージのブートソースを自動的に準備できます。
 
 [source,bash,role=execute]
 ----
@@ -387,9 +394,9 @@ dataVolumeTemplates:
 oc get DataImportCron -n openshift-virtualization-os-images
 ----
 
-=== 代替手段：VM内でのストレージクラスの明示的指定
+=== 代替手段：VM内でのStorage Classの明示的指定
 
-デフォルトストレージクラスを設定しない場合は、すべてのVM定義で明示的に指定する必要があります。
+デフォルトStorage Classを設定しない場合は、すべてのVM定義で明示的に指定する必要があります。
 
 [source,yaml]
 ----
@@ -410,7 +417,7 @@ dataVolumeTemplates:
       namespace: openshift-virtualization-os-images
 ----
 
-NOTE: 運用を簡素化し、ブートソースの自動プロビジョニングを有効にするため、OpenShift Virtualizationクラスターには必ずデフォルトストレージクラスを設定してください。
+NOTE: 運用を簡素化し、ブートソースの自動プロビジョニングを有効にするため、OpenShift Virtualizationクラスターには必ずデフォルトStorage Classを設定してください。
 
 == ステップ 6: ストレージプロビジョニングのテスト
 
@@ -503,12 +510,12 @@ LVMストレージのインストールや運用中に問題が発生した場�
 * 一般的な問題とその解決策
 * デバイスの検出と消去の問題
 * PVCプロビジョニングの問題
-* シンプールの管理
+* thin poolの管理
 * 診断手順
 
 == forceWipeDevicesAndDestroyAllData の理解
 
-=== 何をするものか
+=== 概要
 
 `forceWipeDevicesAndDestroyAllData: true` パラメータは以下の動作を行います。
 
@@ -557,9 +564,9 @@ oc debug node/<node-name> -- chroot /host lsblk -d -o NAME,SERIAL /dev/sda
 このチュートリアルでは、以下について学びました。
 
 * LVMストレージのためにクラスターノード上の未使用の空きディスクを特定する方法
-* 名前空間、OperatorGroup、Subscriptionを作成してLVM Storage Operatorをインストールする方法
+* namespace、OperatorGroup、Subscriptionを作成してLVM Storage Operatorをインストールする方法
 * 既存データがあるディスク向けの `forceWipeDevicesAndDestroyAllData` パラメータを含め、LVMClusterリソースを作成および設定する方法
-* 自動生成された `lvms-vg1` ストレージクラスをOpenShift Virtualizationのデフォルトとして設定する方法
+* 自動生成された `lvms-vg1` Storage ClassをOpenShift Virtualizationのデフォルトとして設定する方法
 * PVCとPodを使用してストレージプロビジョニングをテストし、LVMClusterの健全性を確認する方法
 
 == 参照

@@ -3,7 +3,7 @@
 
 == 概要
 
-本モジュールでは、OpenShift Virtualizationのストレージ設定について学習します。これには、LVM Storage Operator、HostPath Provisioner、およびストレージの問題のトラブルシューティングが含まれます。
+本モジュールでは、OpenShift Virtualizationのストレージ設定について学習します。これには、LVM Storage Operator、HostPath Provisioner、ストレージの問題のトラブルシューティングが含まれます。
 
 仮想マシン（VM）はディスクやデータ用に永続ストレージを必要とするため、適切なストレージ設定はVMのデプロイにおいて不可欠です。
 
@@ -13,7 +13,7 @@
 
 * ローカルディスクストレージ向けのLVM Storage Operatorのインストールおよび設定方法
 * シンプルなローカルストレージ向けのHostPath Provisionerの設定方法
-* 自動プロビジョニングのためのデフォルトストレージクラスの設定方法
+* 自動プロビジョニングのためのデフォルトStorage Classの設定方法
 * 一般的なストレージの問題のトラブルシューティング方法
 * OpenShift Virtualizationにおけるストレージ設定のベストプラクティス
 
@@ -47,7 +47,7 @@ xref:lvm-troubleshooting.adoc[]::
 LVMストレージの問題を診断および解決するためのトラブルシューティングガイドです。
 
 xref:hostpath-provisioner.adoc[]::
-開発、テスト、およびシングルノードクラスターのシナリオ向けに、HostPath Provisionerを使用してローカルストレージを設定します。
+開発、テスト、シングルノードクラスターのシナリオ向けに、HostPath Provisionerを使用してローカルストレージを設定します。
 xref:multi-disk-configuration.adoc[]::
 ストレージの階層化のために、異なるStorageClassを使用して複数のディスクを持つVMを設定します。
 
@@ -66,7 +66,7 @@ xref:multi-disk-configuration.adoc[]::
 
 このモジュールを完了すると、以下の準備が整います。
 
-* xref:networking:index.adoc[ネットワークの設定]（VM用）
+* VMの xref:networking:index.adoc[ネットワークの設定]
 * 仮想マシンの作成と設定
 
 == 関連情報

@@ -3,9 +3,9 @@
 
 == はじめに
 
-OpenShift Virtualization でのワークロード開始およびデプロイに関する実践的なフィールドガイドです。
+このクックブックは、OpenShift Virtualization でのワークロードを開始、およびデプロイするための実践的なフィールドガイドです。
 
-このクックブックでは、OpenShift を使い始めたばかりの方に向けて、すぐに役立つレシピ、マニフェストの例、およびトラブルシューティングのメモを提供します。本書は、理論的な学習に代わるものではなく、実際の導入を促進するための、link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html-single/virtualization/index[公式ドキュメント,window=_blank] および link:https://www.redhat.com/en/services/training/do316-managing-virtual-machines-red-hat-openshift-virtualization[トレーニングコース,window=_blank] を補完する __実践的なガイド__ として設計されています。
+OpenShift を使い始めたばかりの方に向けて、すぐに役立つレシピ、マニフェストの例、トラブルシューティングに関するメモを提供します。本書は、体系的な学習に代わるものではなく、実際の導入を促進するための、link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html-single/virtualization/index[公式ドキュメント,window=_blank] および link:https://www.redhat.com/en/services/training/do316-managing-virtual-machines-red-hat-openshift-virtualization[トレーニングコース,window=_blank] を補完する __実践的なガイド__ として設計されています。
 
 (__最終更新日: {build-date}__)
 
@@ -13,8 +13,8 @@ OpenShift Virtualization でのワークロード開始およびデプロイに�
 
 このクックブックを効果的に活用するには、以下が必要です。
 
-* **クラスター**: OpenShift Virtualization オペレーターがインストールされた OpenShift 4.18 以降。
-* **ツール**: `oc`、`kubectl`、および `virtctl`。（オプション: `kustomize`、`helm`、`ansible`）。
+* **クラスター**: OpenShift Virtualization Operator がインストールされた OpenShift 4.18 以降。
+* **ツール**: `oc`、`kubectl`、`virtctl`。（オプション: `kustomize`、`helm`、`ansible`）。
 * **知識**: YAML および CLI ワークフローの習熟（必須ではありませんが、強く推奨します）。Kubernetes/OpenShift の概念に関する基本的な理解。
 
 環境を準備または検証するために、特にこの技術が初めての場合は、**xref:getting-started:index.adoc[]** の全モジュールを一通り確認してください。
@@ -23,14 +23,14 @@ OpenShift Virtualization でのワークロード開始およびデプロイに�
 
 左側のメニューからモジュールを 1 つ選択して開始してください。
 
-* **xref:getting-started:index.adoc[]** - 必須ツールのセットアップと環境検証。
-* **xref:storage:index.adoc[]** - 仮想マシンのストレージ設定。
-* **xref:networking:index.adoc[]** - ネットワークおよび IP 設定ガイド。
-* **xref:vm-configuration:index.adoc[]** - VM アクセス、DNS、ノード配置、およびテンプレート。
-* **xref:performance:index.adoc[]** - CPU ピニング、NUMA、Hugepages、およびリアルタイム VM。
-* **xref:vm-lifecycle:index.adoc[]** - ゴールデンイメージ、クローニング、スナップショット、およびブート設定。
-* **xref:manifests:index.adoc[]** - すぐにデプロイ可能なマニフェスト例のライブラリ。
-* **xref:api:index.adoc[]** - クローニング、エクスポート、マシン・トポロジーなどの API コンポーネントのアーキテクチャと機能。
+* **xref:getting-started:index.adoc[]** - 必須ツールのセットアップと環境検証
+* **xref:storage:index.adoc[]** - 仮想マシンのストレージ設定
+* **xref:networking:index.adoc[]** - ネットワーク、IP 設定ガイド
+* **xref:vm-configuration:index.adoc[]** - VM アクセス、DNS、ノード配置、テンプレート
+* **xref:performance:index.adoc[]** - CPU ピニング、NUMA、Hugepages、リアルタイム VM
+* **xref:vm-lifecycle:index.adoc[]** - ゴールデンイメージ、クローン作成、スナップショット、ブート設定
+* **xref:manifests:index.adoc[]** - すぐにデプロイ可能なマニフェストの例を集めたライブラリ
+* **xref:api:index.adoc[]** - クローン作成、エクスポート、マシン・トポロジーなどの API コンポーネントのアーキテクチャと機能
 
 == 追加リソース
 

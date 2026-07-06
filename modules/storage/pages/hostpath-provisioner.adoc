@@ -174,6 +174,7 @@ oc debug node/<worker-node-name> -- chroot /host ls -laZ /var/hpvolumes
 ----
 
 出力例:
+[source,text]
 ----
 total 0
 drwxr-xr-x. 2 root root system_u:object_r:container_file_t:s0 6 Mar 19 10:00 .
@@ -208,11 +209,11 @@ EOF
 
 === 設定パラメーター
 
-* **`storagePools`**: 1 つ以上のストレージプールを定義します（それぞれに固有の名前とパスを指定）。
+* **`storagePools`**: 1 つ以上のストレージプールを定義（それぞれに固有の名前とパスを指定）
 ** `name`: StorageClass でこのプールを参照するために使用する識別子
 ** `path`: ボリュームが作成されるホストノード上のディレクトリ
-* **`workload.nodeSelector`**: HPP CSI ポッドを実行するノードを制御します。
-* **`imagePullPolicy`**: コンテナイメージのプルポリシー。
+* **`workload.nodeSelector`**: HPP CSI Podを実行するノードを制御
+* **`imagePullPolicy`**: コンテナイメージのプルポリシー
 
 === HostPathProvisioner の確認
 
@@ -224,19 +225,21 @@ oc get hostpathprovisioner hostpath-provisioner
 ----
 
 出力例:
+[source,text]
 ----
 NAME                   AGE
 hostpath-provisioner   30s
 ----
 
-CSI ポッドがワーカーノードで実行されていることを確認します。
+CSI Podがワーカーノードで実行されていることを確認します。
 
 [source,bash,role=execute]
 ----
 oc get pods -n openshift-cnv -l k8s-app=hostpath-provisioner
 ----
 
-出力例（ワーカーノードごとに 1 つのポッド）:
+出力例（ワーカーノードごとに 1 つのPod）:
+[source,text]
 ----
 NAME                                           READY   STATUS    RESTARTS   AGE
 hostpath-provisioner-csi-xxxxx                 4/4     Running   0          2m
@@ -269,7 +272,7 @@ EOF
 
 * **`provisioner`**: `kubevirt.io.hostpath-provisioner` である必要があります。
 * **`reclaimPolicy`**: `Delete` に設定すると、PVC が削除されたときに PV データも削除されます。データを保持するには `Retain` を使用します。
-* **`volumeBindingMode`**: `WaitForFirstConsumer` は、ポッドが PVC を使用するまで PV の作成を遅延させ、正しいノード上にボリュームが作成されるようにします。
+* **`volumeBindingMode`**: `WaitForFirstConsumer` は、Podが PVC を使用するまで PV の作成を遅延させ、正しいノード上にボリュームが作成されるようにします。
 * **`parameters.storagePool`**: HostPathProvisioner で定義されたストレージプール名を参照します。
 
 === StorageClass の確認
@@ -280,6 +283,7 @@ oc get storageclass hostpath-csi
 ----
 
 出力例:
+[source,text]
 ----
 NAME           PROVISIONER                        RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 hostpath-csi   kubevirt.io.hostpath-provisioner   Delete          WaitForFirstConsumer   false                  10s
@@ -333,13 +337,13 @@ PVC のステータスを確認します。
 oc get pvc hpp-test-pvc
 ----
 
-`WaitForFirstConsumer` の場合、PVC はポッドが使用するまで `Pending` 状態のままです。
+`WaitForFirstConsumer` の場合、PVC はPodが使用するまで `Pending` 状態のままです。
 ----
 NAME           STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
 hpp-test-pvc   Pending                                      hostpath-csi   <unset>                 5s
 ----
 
-ボリュームのバインディングをトリガーするためにテストポッドを作成します。
+ボリュームのバインディングをトリガーするためにテストPodを作成します。
 
 [source,bash,role=execute]
 ----
@@ -372,6 +376,7 @@ oc get pvc hpp-test-pvc
 ----
 
 出力例:
+[source,text]
 ----
 NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
 hpp-test-pvc   Bound    pvc-abc12345-6789-def0-1234-567890abcdef   5Gi        RWO            hostpath-csi   <unset>                 30s
@@ -387,6 +392,7 @@ oc exec hpp-test-pod -- sh -c "echo 'HPP Storage Test' > /data/test.txt && cat /
 ----
 
 出力例:
+[source,text]
 ----
 HPP Storage Test
 ----
@@ -480,6 +486,7 @@ oc get dv -n default hpp-test-vm-rootdisk -w
 ----
 
 進行状況の例:
+[source,text]
 ----
 NAME                    PHASE              PROGRESS   RESTARTS   AGE
 hpp-test-vm-rootdisk    ImportScheduled    N/A                   5s
@@ -497,6 +504,7 @@ oc get vmi hpp-test-vm
 ----
 
 出力例:
+[source,text]
 ----
 NAME          AGE   STATUS    READY
 hpp-test-vm   2m    Running   True
@@ -523,14 +531,14 @@ oc delete vm hpp-test-vm
 
 === PVC が Pending のままになる
 
-ポッド作成後も PVC が Pending の場合:
+Pod作成後も PVC が Pending の場合:
 
 [source,bash,role=execute]
 ----
 # PVC イベントを確認
 oc describe pvc <pvc-name>
 
-# HPP ポッドのログを確認
+# HPP Podのログを確認
 oc logs -n openshift-cnv -l k8s-app=hostpath-provisioner -c hostpath-provisioner
 ----
 
@@ -538,7 +546,7 @@ oc logs -n openshift-cnv -l k8s-app=hostpath-provisioner -c hostpath-provisioner
 
 * **ディレクトリが存在しない**: 対象ノード上で `/var/hpvolumes` が存在することを確認してください。
 * **SELinux コンテキストが不適切**: `chcon -Rt container_file_t /var/hpvolumes` が適用されたか確認してください。
-* **HPP ポッドが実行されていない**: HPP CSI ポッドがすべてのワーカーノードで実行されていることを確認してください。
+* **HPP Podが実行されていない**: HPP CSI Podがすべてのワーカーノードで実行されていることを確認してください。
 
 === 権限拒否 (Permission Denied) エラー
 
@@ -553,7 +561,7 @@ oc debug node/<worker-node-name> -- chroot /host ls -laZ /var/hpvolumes
 oc debug node/<worker-node-name> -- chroot /host chcon -Rt container_file_t /var/hpvolumes
 ----
 
-=== HPP ポッドが起動しない
+=== HPP Podが起動しない
 
 HostPathProvisioner のステータスとイベントを確認してください。
 
@@ -561,17 +569,17 @@ HostPathProvisioner のステータスとイベントを確認してください
 ----
 oc describe hostpathprovisioner hostpath-provisioner
 
-# openshift-cnv 名前空間の問題を確認
+# openshift-cnv namespaceの問題を確認
 oc get events -n openshift-cnv --sort-by='.lastTimestamp' | tail -20
 ----
 
 === ボリュームが期待したノードに作成されない
 
-`WaitForFirstConsumer` の場合、ボリュームはポッドがスケジュールされたノード上に作成されます。ノードの配置を制御したい場合:
+`WaitForFirstConsumer` の場合、ボリュームはPodがスケジュールされたノード上に作成されます。ノードの配置を制御したい場合:
 
 [source,yaml]
 ----
-# ポッドスペックに nodeSelector を追加
+# Podスペックに nodeSelector を追加
 spec:
   nodeSelector:
     kubernetes.io/hostname: <worker-node-name>
@@ -610,5 +618,5 @@ HPP は、開発およびテストに最適な、シンプルで軽量なスト�
 == 参照
 
 * xref:lvm-operator.adoc[LVM Storage Operator] - シンプロビジョニングとスナップショットを備えた本番環境対応のローカルストレージ
-* xref:lvm-troubleshooting.adoc[LVM Storage Troubleshooting] - ストレージの問題診断
+* xref:lvm-troubleshooting.adoc[LVM Storage のトラブルシューティング] - ストレージの問題診断
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/virtualization/storage#virt-configuring-local-storage-with-hpp[OpenShift Virtualization: Configuring Local Storage with HPP,window=_blank]

@@ -1,18 +1,18 @@
-= OpenShift Virtualization VMのためのCloud-init基礎
+= OpenShift Virtualization VM のための Cloud-init 基礎
 
-:navtitle: Cloud-init基礎
+:navtitle: Cloud-init 基礎
 
 == 概要
 
 Cloud-initは、仮想マシンの初回起動時の初期化を自動化するための業界標準ツールです。
-OpenShift Virtualizationでは、ほぼすべてのVMがCloud-initを使用して、ユーザー設定、パスワード設定、SSHキーの注入、パッケージのインストール、およびネットワークアドレスの割り当てを行います。
-本チュートリアルでは、Cloud-initの動作原理、KubeVirtによるVMへのデータ配信方法、そしてVirtualMachineマニフェストへのCloud-init設定の埋め込み方法について解説します。
+OpenShift Virtualizationでは、ほぼすべてのVMがCloud-initを使用して、ユーザー設定、パスワード設定、SSHキーの注入、パッケージのインストール、ネットワークアドレスの割り当てを行います。
+本チュートリアルでは、Cloud-initの動作原理、KubeVirtによるVMへのCloud-initデータの配信方法、VirtualMachineマニフェストへのCloud-init設定の埋め込み方法について解説します。
 
 === 学習内容
 
 * Cloud-initとは何か、なぜVMの自動化に重要なのか
 * 3つのCloud-initデータタイプ：userData、networkData、metadata
-* KubeVirtがNoCloudデータソースを介してどのようにCloud-initデータをVMに配信するか
+* KubeVirtがNoCloudデータソースを介したCloud-initデータのVMへの配信
 * ユーザー作成、パッケージインストール、スクリプト実行のための一般的なcloud-configモジュール
 * VirtualMachineマニフェストにCloud-initを埋め込む2つのパターン（インライン記述とSecret参照）
 * Cloud-initが正常に実行されたことを確認する方法
@@ -70,7 +70,7 @@ spec:
                 lock_passwd: false
                 plain_text_passwd: changeme
 ----
-<1> `cloudInitNoCloud` ボリュームタイプを指定することで、KubeVirtにNoCloudデータソースディスクを作成するよう指示します。
+<1> `cloudInitNoCloud` ボリュームタイプを指定することで、KubeVirtにNoCloudデータソースディスクを作成するよう指示。
 
 == Cloud-initのデータタイプ
 
@@ -78,7 +78,7 @@ Cloud-initは3種類の構成データを受け入れます。KubeVirtでは、�
 
 === userData (cloud-config)
 
-主要な構成チャネルです。userDataには *cloud-config* ドキュメントが含まれます。これは `#cloud-config` ヘッダーで始まるYAMLファイルです。ここでユーザー、パッケージ、スクリプト、ファイル、およびVMのほとんどのカスタマイズを定義します。
+主要な構成チャネルです。userDataには *cloud-config* ドキュメントが含まれます。これは `#cloud-config` ヘッダーで始まるYAMLファイルです。ここでユーザー、パッケージ、スクリプト、ファイル、VMのほとんどのカスタマイズを定義します。
 
 [source,yaml]
 ----
@@ -101,7 +101,7 @@ cloudInitNoCloud:
 
 === networkData (network-config v2)
 
-VMインターフェース用のネットワーク設定です。Netplan互換の *network-config version 2* 形式を使用します。静的IP、カスタムDNS、またはマルチインターフェース設定が必要な場合に使用します。
+VMインターフェース用のネットワーク設定です。Netplan互換の *network-config version 2* 形式を使用します。静的IP、カスタムDNS、マルチインターフェース設定が必要な場合に使用します。
 
 シンプルなDHCP設定の例：
 
@@ -136,10 +136,10 @@ cloudInitNoCloud:
           - to: 10.0.0.0/8
             via: 192.168.1.254           # <4>
 ----
-<1> CIDR表記でのサブネットマスク付きの静的IPアドレス。
-<2> DNSリゾルバのアドレス。
-<3> ルートとして定義されたデフォルトゲートウェイ（`gateway4` は非推奨）。
-<4> 特定のゲートウェイ経由で `10.0.0.0/8` ネットワークに到達するための追加ルート。
+<1> CIDR表記でのサブネットマスク付きの静的IPアドレス
+<2> DNSリゾルバのアドレス
+<3> ルートとして定義されたデフォルトゲートウェイ（`gateway4` は非推奨）
+<4> 特定のゲートウェイ経由で `10.0.0.0/8` ネットワークに到達するための追加ルート
 
 インターフェース名が予測できない場合に備え、名前の代わりにMACアドレスでインターフェースを指定することも可能です。
 
@@ -159,7 +159,7 @@ cloudInitNoCloud:
             via: 192.168.1.1
 ----
 
-注意: KubeVirt VMでは、最初のインターフェースは通常 `enp1s0`、2番目は `enp2s0` となります。これらの名前はNetworkAttachmentDefinitionの順序ではなく、VirtualMachineスペックでインターフェースが定義された順序に対応します。
+NOTE: KubeVirt VMでは、最初のインターフェースは通常 `enp1s0`、2番目は `enp2s0` となります。これらの名前はNetworkAttachmentDefinitionの順序ではなく、VirtualMachine Spec でインターフェースが定義された順序に対応します。
 
 マルチインターフェース設定やVLAN、高度なシナリオについては、xref:networking:static-ip-configuration.adoc[静的IP設定]を参照してください。
 
@@ -175,7 +175,7 @@ cloudInitNoCloud:
     local-hostname: my-vm
 ----
 
-ヒント: ホスト名のみを設定したい場合は、カスタムメタデータを提供するのではなく、userData内の `hostname` モジュールを使用してください。
+TIP: ホスト名のみを設定したい場合は、カスタムメタデータを提供するのではなく、userData内の `hostname` モジュールを使用してください。
 
 == Cloud-initの実行ステージ
 
@@ -256,7 +256,7 @@ packages:
   - python3
 ----
 
-注意: パッケージのインストールは *final* ステージで実行されます。VMはパッケージのインストール完了前であっても、コンソールからアクセス可能です。
+NOTE: パッケージのインストールは *final* ステージで実行されます。VMはパッケージのインストール完了前であっても、コンソールからアクセス可能です。
 
 === コマンドの実行
 
@@ -289,7 +289,7 @@ write_files:
     permissions: '0600'
 ----
 
-ヒント: `write_files` によって書き込まれたファイルは *config* ステージ中に作成されるため、`runcmd` が実行される前に存在します。これにより、設定ファイルを安全に書き込んでから、それに依存するサービスを `runcmd` で開始できます。
+TIP: `write_files` によって書き込まれたファイルは *config* ステージ中に作成されるため、`runcmd` が実行される前に存在します。これにより、設定ファイルを安全に書き込んでから、それに依存するサービスを `runcmd` で開始できます。
 
 == VirtualMachineマニフェストへのCloud-init埋め込み
 
@@ -379,7 +379,7 @@ spec:
 
 === Secret参照
 
-複雑な設定や、パスワードやトークンなどの機密値がCloud-initに含まれる場合は、Kubernetes Secretにデータを格納し、VirtualMachineからそれを参照します。
+複雑な設定や、パスワードやトークンなどの機密値がCloud-initに含まれる場合は、Kubernetes Secretにデータを格納し、VirtualMachineからSecretを参照します。
 
 xref:attachment$cloud-init-secret-vm.yaml[cloud-init-secret-vm.yaml をダウンロード]
 
@@ -439,7 +439,7 @@ Cloud-initの状態を確認します。
 cloud-init status --long
 ----
 
-成功した場合の期待される出力：
+成功した場合に期待される出力：
 
 [source,text]
 ----
@@ -473,10 +473,10 @@ Cloud-configはYAMLです。インデントの不整合（タブとスペース�
 *再起動時にCloud-initが再実行されるという期待*::
 Cloud-initは初回起動時に一度だけ実行されます。再実行させるには、`cloud-init clean` を実行してから再起動する必要があります。
 
-*Secretキー名の間違い*::
+*Secret キー名の間違い*::
 `secretRef` を使用する場合、Secretは `userdata` という名前のキー（すべて小文字）を持つ必要があります。`userData` や `user-data` という名前のキーは検出されません。
 
-== Windows VMの場合：Sysprep
+== Windows VM の場合：Sysprep
 
 Cloud-initはLinux専用のツールです。Windows VMの場合、OpenShift Virtualizationは *Sysprep* をサポートしています。これはMicrosoft System Preparationツールのことで、初回起動時の同様のカスタマイズ（ホスト名、管理者パスワード、ドメイン参加、無人セットアップ）を実行します。
 
