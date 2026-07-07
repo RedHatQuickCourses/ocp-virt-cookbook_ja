@@ -1,9 +1,9 @@
-= UDN を使用したレイヤー 2 プライマリネットワークの構成
+= UDN を使用したLayer2 プライマリネットワークの構成
 :navtitle: UDN プライマリネットワーク
 
 == 概要
 
-このチュートリアルでは、OpenShift Virtualization で User Defined Networks (UDN) を使用したレイヤー 2 トポロジーのプライマリネットワークを作成する方法を説明します。クラスターのデフォルトネットワークを使用する代わりに、UDN を使用するとカスタム IP 範囲を定義し、特定の名前空間内のアプリケーションに対して完全なネットワーク分離を提供できます。このアプローチは、アプリケーションが IP アドレッシングを直接制御する必要がある場合や、独自のネットワーク要件がある場合に最適です。ネットワーク接続定義 (Network Attachment Definition) を追加することなく、5 つの簡単なステップでセットアップ全体が完了します。
+このチュートリアルでは、OpenShift Virtualization で User Defined Networks (UDN) を使用した Layer2 トポロジーのプライマリネットワークを作成する方法を説明します。クラスターのデフォルトネットワークを使用する代わりに、UDN を使用するとカスタム IP 範囲を定義し、特定のnamespace内のアプリケーションに対して完全なネットワーク分離を提供できます。このアプローチは、アプリケーションが IP アドレス割り当てを直接制御する必要がある場合や、独自のネットワーク要件がある場合に最適です。ネットワーク接続定義 (Network Attachment Definition) を追加することなく、5 つの簡単なステップでセットアップ全体が完了します。
 
 検証済みバージョン:
 ----
@@ -14,14 +14,14 @@ OpenShift 4.19, 4.20, 4.21
 
 * OpenShift Virtualization オペレーターがインストールされた OpenShift 4.19 以降のクラスター
 * OVN-Kubernetes ネットワークプラグイン (OpenShift のデフォルト)
-* 名前空間および UserDefinedNetwork リソースを作成するためのクラスター管理者権限
+* namespaceおよび UserDefinedNetwork リソースを作成するためのクラスター管理者権限
 * インストール済みの CLI ツール: `oc`、`virtctl`
 
-== ステップ 1: UDN を有効にした名前空間の作成
+== ステップ 1: UDN を有効にしたnamespaceの作成
 
-UDN プライマリネットワークラベルが付いた名前空間を作成し、User Defined Network 機能を有効にします。特殊なラベル `k8s.ovn.org/primary-user-defined-network` を付与することで、OpenShift に対してこの名前空間がクラスターのデフォルトではなくカスタムプライマリネットワークを使用することを伝えます。
+UDN プライマリネットワークラベルが付いたnamespaceを作成し、User Defined Network 機能を有効にします。特殊なラベル `k8s.ovn.org/primary-user-defined-network` を付与することで、OpenShift に対してこのnamespaceがクラスターのデフォルトではなくカスタムプライマリネットワークを使用することを伝えます。
 
-注記: 名前空間は、ワークロードをデプロイする前に作成およびラベル付けを行う必要があり、作成後の変更はできません。
+注記: namespaceは、ワークロードをデプロイする前に作成およびラベル付けを行う必要があり、作成後の変更はできません。
 
 xref:attachment$udn-primary-networks/udn-primary-namespace.yaml[udn-primary-namespace.yaml をダウンロード]
 
@@ -39,7 +39,7 @@ EOF
 
 == ステップ 2: UserDefinedNetwork リソースの構成
 
-レイヤー 2 トポロジーとカスタムサブネット構成を使用して、プライマリ UDN を定義します。このリソースは、IP 範囲、IPAM ライフサイクル、およびデフォルトのクラスターネットワークを名前空間内の Pod に対してオーバーライドするためのプライマリロール指定を含む、ネットワークの特性を指定します。
+Layer2 トポロジーとカスタムサブネット構成を使用して、プライマリ UDN を定義します。このリソースは、IP範囲、IPAMライフサイクル、プライマリロールの指定といったネットワーク特性を定義し、該当する namespace 内のPodに対するデフォルトのクラスタネットワーク設定を上書きします。
 
 xref:attachment$udn-primary-networks/udn-primary.yaml[udn-primary.yaml をダウンロード]
 
@@ -66,7 +66,7 @@ EOF
 
 プライマリ UDN 構成を利用し、接続テスト用に単純な Python HTTP サーバーを実行する仮想マシンを作成します。ワークロードは、UDN の IPAM を介して 192.168.100.0/24 サブネットから自動的に IP アドレスを受け取り、UDN をそのプライマリネットワークインターフェイスとして使用します。
 
-警告: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、必ず強力で一意なパスワードまたは SSH 鍵認証を使用してください。
+CAUTION: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、必ず強力で一意なパスワードまたは SSH 鍵認証を使用してください。
 
 xref:attachment$udn-primary-networks/fedora-vm-with-udn.yaml[fedora-vm-with-udn.yaml をダウンロード]
 
@@ -187,6 +187,7 @@ oc get svc
 ----
 
 出力例:
+[source,text]
 ----
 NAME                    TYPE           CLUSTER-IP      EXTERNAL-IP                                                                  PORT(S)        AGE
 fedora-vm-web-service   LoadBalancer   172.30.72.140   aa32981df19ad4959ae9a82fb9990db9-1996929606.ca-central-1.elb.amazonaws.com   80:32291/TCP   45m
@@ -200,6 +201,7 @@ curl aa32981df19ad4959ae9a82fb9990db9-1996929606.ca-central-1.elb.amazonaws.com
 ----
 
 期待される出力:
+[source,text]
 ----
 <h1>Welcome to OpenShift Virtualization !!!</h1>
 ----
@@ -208,11 +210,11 @@ curl aa32981df19ad4959ae9a82fb9990db9-1996929606.ca-central-1.elb.amazonaws.com
 
 このチュートリアルでは、以下の内容を学習しました:
 
-* `k8s.ovn.org/primary-user-defined-network` ラベルを使用して UDN が有効な名前空間を作成する方法
-* レイヤー 2 トポロジーとカスタムサブネット構成で `UserDefinedNetwork` リソースを定義する方法
+* `k8s.ovn.org/primary-user-defined-network` ラベルを使用して UDN が有効な namespace を作成する方法
+* Layer2 トポロジーとカスタムサブネット構成で `UserDefinedNetwork` リソースを定義する方法
 * 永続的な IPAM を備えた、UDN をプライマリネットワークとして使用する VM をデプロイする方法
 * UDN プライマリネットワーク上で実行されている VM を LoadBalancer サービス経由で公開する方法
-* UDN プライマリネットワークがカスタム IP アドレッシングによってどのように完全なネットワーク分離を提供するのか
+* UDN プライマリネットワークがカスタム IP アドレス割り当てによって完全なネットワーク分離を提供する方法
 
 == 関連情報
 

@@ -10,7 +10,7 @@
 * **Cloud-init `networkData`** -- 初回起動時にネットワークを設定（Linux VM）
 * **固定IPを持つUDNプライマリネットワーク** -- OVN-Kubernetesによるクラスター管理のIP割り当て
 * **DHCP予約** -- 外部DHCPサーバーでMACアドレスに固定IPを紐付け
-* **`nmcli` を使用したQEMUゲストエージェント** -- ゲストエージェント経由で起動後に静的IPを適用
+* **`nmcli` を使用したQEMU guest agent** -- guest agent経由で起動後に静的IPを適用
 * **Sysprep（Windows VM）** -- `unattend.xml` を通じてネットワークを設定
 
 それぞれの方法には、自動化、柔軟性、運用負荷の面で異なるトレードオフがあります。環境に最適なものを選択してください。
@@ -21,7 +21,7 @@
 * Cloud-init `networkData` を使用して初回起動時に静的IPを設定する方法
 * 固定IPを持つUDNプライマリネットワークを使用してクラスター管理のアドレス指定を行う方法
 * 固定MACアドレスを使用してDHCP予約を行う方法
-* QEMUゲストエージェントと `nmcli` を使用して起動後に静的IPを適用する方法
+* QEMU guest agentと `nmcli` を使用して起動後に静的IPを適用する方法
 * Sysprepを使用してWindows VMの静的IPを設定する方法
 * 環境に応じた適切な手法の選択
 
@@ -32,7 +32,7 @@
 クラスター管理のネットワーク機能の喪失::
 セカンダリネットワークに静的IPを割り当てると、VMはデフォルトのPodネットワークに依存するOpenShiftの `Services` や `Routes` へのアクセスを失う可能性があります。クラスター接続性を維持するために、プライマリインターフェース（Podネットワークに接続）はDHCPで割り当てられたアドレスを保持するようにしてください。
 
-割り当て済みアドレスのクラスター認識の欠如::
+割り当て済みアドレスに対するOpenShiftクラスター上での認識の欠如::
 静的IPはOVN-Kubernetes IPAMをバイパスします。クラスターはこれらのアドレスを追跡しないため、外部で適切に管理されていないとIP競合が発生する可能性があります。IPアドレスのインベントリを維持するか、外部のIPAMソリューションを使用してください。
 
 運用上のオーバーヘッド::
@@ -72,7 +72,7 @@ Cloud-initは、VM起動時に実行される業界標準の初期化ツール�
 
 === 設定形式
 
-Cloud-initのネットワーク設定はバージョン2（Netplan）形式を使用します。バージョン2形式は、デバイスタイプとして `ethernets`、`bonds`、`bridges`、`vlans` をサポートしています。各デバイスには `addresses`、`dhcp4`/`dhcp6`、`routes`、`nameservers`（`addresses` および `search` を含む）、`mtu`、および `match`（`macaddress`、`name`、または `driver` による）オプションを含めることができます。
+Cloud-initのネットワーク設定はバージョン2（Netplan）形式を使用します。バージョン2形式は、デバイスタイプとして `ethernets`、`bonds`、`bridges`、`vlans` をサポートしています。各デバイスには `addresses`、`dhcp4`/`dhcp6`、`routes`、`nameservers`（`addresses` および `search` を含む）、`mtu`、`match`（`macaddress`、`name`、`driver`）オプションを含めることができます。
 
 基本的な形式は以下の通りです。
 
@@ -134,7 +134,7 @@ KubeVirtは、ゲストVM内部で予測可能なネットワークインター�
 * `enp2s0` -- 2番目のインターフェース（最初のセカンダリネットワーク）
 * `enp3s0` -- 3番目のインターフェース（2番目のセカンダリネットワーク）
 
-重要: `eth0` のようなレガシーな名前は使用しないでください。VM仕様で定義されたインターフェースの順序と一致する、予測可能な名前（`enpXs0`）を使用してください。
+重要: `eth0` のようなレガシーな名前は使用しないでください。VM specで定義されたインターフェースの順序と一致する、予測可能な名前（`enpXs0`）を使用してください。
 
 === 重要なフォーマット規則
 
@@ -161,7 +161,7 @@ Secret参照よりもインラインの `networkData` を優先::
 
 前提条件: セカンダリネットワークが設定されていることを確認してください（例: localnet VLAN 100のNetworkAttachmentDefinition (NAD)）。設定手順については xref:networking:localnet-vlan.adoc[Localnet VLAN チュートリアル] を参照してください。
 
-本チュートリアル用のネームスペースを作成します。
+本チュートリアル用のnamespaceを作成します。
 
 [source,bash,role=execute]
 ----
@@ -311,7 +311,7 @@ default via 10.0.2.1 dev enp1s0 proto dhcp src 10.0.2.2 metric 100
 
 === Cloud-initの検証
 
-Cloud-initを使用してVMをデプロイした後、VirtualMachineInstanceステータスを使用してVM外からIP設定を検証できます。QEMUゲストエージェントはインターフェースの詳細をクラスターに報告します。
+Cloud-initを使用してVMをデプロイした後、VirtualMachineInstanceステータスを使用してVM外からIP設定を検証できます。QEMU guest agentはインターフェースの詳細をクラスターに報告します。
 
 [source,bash,role=execute]
 ----
@@ -346,7 +346,7 @@ oc get vmi fedora-multi-vm -n static-ip-demo -o jsonpath='{.status.interfaces}' 
 ]
 ----
 
-この出力は、`networkData` で設定した通り、`enp2s0` が静的IP `192.168.100.50` を持っていることを確認します。出力が空の場合、ゲストエージェントがまだ起動していない可能性があります。
+この出力は、`networkData` で設定した通り、`enp2s0` が静的IP `192.168.100.50` を持っていることを確認します。出力が空の場合、guest agentがまだ起動していない可能性があります。
 
 VM内部から検証するには、コンソールに接続します。
 
@@ -393,24 +393,24 @@ sudo cat /var/log/cloud-init.log
 
 == 手法2: 固定IPを持つUDNプライマリネットワーク
 
-レイヤー2トポロジーを持つユーザー定義ネットワーク（UDN）は、安定したIPアドレッシングのためのクラスター管理された代替案を提供します。UDNが `ipam.lifecycle: Persistent` を持つネームスペースのプライマリネットワークとして設定されている場合、OVN-Kubernetesは定義されたサブネットからIPを割り当て、`IPAMClaim` カスタムリソースを使用してVMの再起動、停止/開始サイクル、ライブマイグレーションを通じてIPを維持します。
+Layer2トポロジーを持つユーザー定義ネットワーク（UDN）は、安定したIPアドレス割り当てのためのクラスターで管理された手段を提供します。UDNが `ipam.lifecycle: Persistent` を持つnamespaceのプライマリネットワークとして設定されている場合、OVN-Kubernetesは定義されたサブネットからIPを割り当て、`IPAMClaim` カスタムリソースを使用してVMの再起動、停止/開始サイクル、ライブマイグレーションを通じてIPを維持します。
 
 このアプローチにより、手動の静的IP設定や外部DHCPサーバーが不要になります。クラスターがIP割り当てを処理し、各VMが割り当てられたアドレスを保持することを保証します。
 
 === 仕組み
 
-. `k8s.ovn.org/primary-user-defined-network` ラベルを持つネームスペースを作成します。
-. レイヤー2トポロジー、サブネット、および `ipam.lifecycle: Persistent` を持つ `UserDefinedNetwork` リソースを定義します。
-. そのネームスペースにデプロイされたVMは、Cloud-initの `networkData` やDHCP予約を必要とせず、サブネットから自動的に固定IPを受け取ります。
+. `k8s.ovn.org/primary-user-defined-network` ラベルを持つnamespaceを作成します。
+. Layer2トポロジー、サブネット、`ipam.lifecycle: Persistent` を持つ `UserDefinedNetwork` リソースを定義します。
+. そのnamespaceにデプロイされたVMは、Cloud-initの `networkData` やDHCP予約を必要とせず、サブネットから自動的に固定IPを受け取ります。
 
-=== この手法の使用場面
+=== 本手法の使用場面
 
 * 手動設定なしでクラスター管理のIP割り当てを行いたい場合
 * VMが再起動やライブマイグレーションを通じて同じIPを保持する必要がある場合
 * 外部DHCPサーバーの維持やマニフェストへのIP埋め込みを避けたい場合
-* カスタムサブネットを用いたネームスペース範囲のネットワーク分離が必要な場合
+* カスタムサブネットを用いたnamespace範囲のネットワーク分離が必要な場合
 
-ネームスペースの設定、UDNの作成、VMのデプロイ、接続性検証を含む完全なウォークスルーについては、xref:networking:udn-primary-networks.adoc[UDNを使用したレイヤー2プライマリネットワークの設定] を参照してください。
+namespaceの設定、UDNの作成、VMのデプロイ、接続性検証を含む完全なウォークスルーについては、xref:networking:udn-primary-networks.adoc[UDNを使用したLayer2プライマリネットワークの設定] を参照してください。
 
 == 手法3: DHCP予約
 
@@ -418,11 +418,11 @@ DHCP予約（静的DHCPまたは固定アドレスDHCPとも呼ばれます）�
 
 === 仕組み
 
-. VM仕様でVMのネットワークインターフェースに固定MACアドレスを割り当てます。
+. VM specでVMのネットワークインターフェースに固定MACアドレスを割り当てます。
 . 外部DHCPサーバー上で、そのMACアドレスを特定のIPにマッピングする予約を作成します。
 . VMが起動し、DHCP要求を送信すると、予約されたアドレスを受け取ります。
 
-=== この手法の使用場面
+=== 本手法の使用場面
 
 * 既存のDHCPインフラストラクチャがあり、中央集権的なIP管理を行いたい場合
 * ネットワーク設定をVMマニフェストに埋め込みたくない場合
@@ -568,28 +568,28 @@ DHCPサーバーが応答しない場合、インターフェースはリンク�
 
 静的IPを持つVMを他のノードにライブマイグレーションする場合、動作はネットワークタイプに依存します。
 
-* **ブリッジベースのセカンダリネットワーク（localnet、Linuxブリッジ）**: VMはマイグレーション中もMACアドレスとIPを保持します。ネットワークファブリックがMACモビリティをサポートしている必要があります（例: スイッチがMACアドレステーブルを更新する必要がある）。Cloud-init、DHCP予約、または `nmcli` を通じて割り当てられた静的IPは、マイグレーション後も保持されます。
+* **ブリッジベースのセカンダリネットワーク（localnet、Linux Bridge）**: VMはマイグレーション中もMACアドレスとIPを保持します。ネットワークファブリックがMACモビリティをサポートしている必要があります（例: スイッチがMACアドレステーブルを更新する必要がある）。Cloud-init、DHCP予約、または `nmcli` を通じて割り当てられた静的IPは、マイグレーション後も保持されます。
 * **SR-IOVネットワーク**: SR-IOVでのライブマイグレーションには追加の設定が必要であり、同じネットワークパスが保持されない場合があります。詳細については link:https://docs.openshift.com/container-platform/latest/virt/live_migration/virt-about-live-migration.html[OpenShift Virtualization ライブマイグレーションのドキュメント,window=_blank] を参照してください。
 
 プライマリPodネットワークインターフェースは、マイグレーション後に新しいPod IPを受け取りますが、マスカレードモードを使用する場合、これはゲストOSに対して透過的です。
 
-== 手法4: nmcli を使用したQEMUゲストエージェント
+== 手法4: nmcli を使用したQEMU guest agent
 
-QEMUゲストエージェントを使用すると、ホスト（KubeVirt）は実行中のVMと通信できます。このチャネルを使用して、ゲスト内部の標準ツールである `nmcli` を使用し、VM起動後にネットワークを設定できます。
+QEMU guest agentを使用すると、ホスト（KubeVirt）は実行中のVMと通信できます。このチャネルを使用して、ゲスト内部の標準ツールである `nmcli` を使用し、VM起動後にネットワークを設定できます。
 
-この手法は、既に実行中のVMでネットワーク設定を変更する必要がある場合や、Cloud-initが使用できない、または実用的でない場合に便利です。
+本手法は、既に実行中のVMでネットワーク設定を変更する必要がある場合や、Cloud-initが使用できない、または実用的でない場合に便利です。
 
 === 仕組み
 
 . VMが対象インターフェース上でDHCPを使用するか、IPなしで起動します。
-. VM内でQEMUゲストエージェントが開始されます。
+. VM内でQEMU guest agentが開始されます。
 . VMコンソール（またはSSH）に接続し、`nmcli` を使用して静的IPを適用します。
 . NetworkManagerが設定を保存するため、設定は再起動後も保持されます。
 
 === 前提条件
 
 * VMイメージに `qemu-guest-agent` パッケージが含まれている必要があります（ほとんどのRed HatおよびFedoraイメージにはデフォルトで含まれています）。
-* ゲストエージェントがVM内で実行されている必要があります。
+* guest agentがVM内で実行されている必要があります。
 
 === 静的IPの適用
 
@@ -602,14 +602,14 @@ VMに接続します（例: 手法2でデプロイしたDHCP予約済みVM）。
 virtctl console fedora-dhcp-reserved-vm -n static-ip-demo
 ----
 
-ゲストエージェントが実行されていることを確認します。
+guest agentが実行されていることを確認します。
 
 [source,bash]
 ----
 systemctl status qemu-guest-agent
 ----
 
-ゲストエージェントが実行されていない場合は、起動して有効にします。
+guest agentが実行されていない場合は、起動して有効にします。
 
 [source,bash]
 ----
@@ -658,24 +658,24 @@ oc get vmi fedora-dhcp-reserved-vm -n static-ip-demo -o jsonpath='{.status.inter
 
 設定はNetworkManagerによって保存され、VMの再起動後も保持されます。
 
-=== この手法の使用場面
+=== 本手法の使用場面
 
 * 実行中のVMに対するデプロイ後のネットワーク変更
 * Cloud-initが使用されていなかった他のプラットフォームからマイグレーションされたVM
 * 一時的または動的なネットワーク再構成
 * Cloud-init設定を上書きする必要があるトラブルシューティングのシナリオ
 
-注意: VMがもともとCloud-initの `networkData` で設定されていた場合、再起動時にCloud-initが `nmcli` の変更を上書きする可能性があります（Cloud-initの設定に依存します）。これを防ぐには、VM仕様から `networkData` を削除するか、対象インターフェースを管理しないようにCloud-initを設定してください。
+CAUTION: VMがもともとCloud-initの `networkData` で設定されていた場合、再起動時にCloud-initが `nmcli` の変更を上書きする可能性があります（Cloud-initの設定に依存します）。これを防ぐには、VM specから `networkData` を削除するか、対象インターフェースを管理しないようにCloud-initを設定してください。
 
 == 手法5: Windows VM向けSysprep
 
-Windows仮想マシンでは、`unattend.xml` 回答ファイルを使用したMicrosoft Sysprepにより、Windowsの初期セットアップ（OOBE）またはspecializeパス中に静的IP設定を提供できます。
+Windows仮想マシンでは、`unattend.xml` 応答ファイルを使用したMicrosoft Sysprepにより、Windowsの初期セットアップ（OOBE）またはspecializeパス中に静的IP設定を提供できます。
 
 === 仕組み
 
 . ネットワーク設定を含む `unattend.xml` ファイルを作成します。
 . そのファイルが `sysprep` ボリュームを通じてVMに注入されます。
-. Windowsはセットアップ中に回答ファイルを読み取り、ネットワーク設定を適用します。
+. Windowsはセットアップ中に応答ファイルを読み取り、ネットワーク設定を適用します。
 
 === unattend.xml のネットワークセクションの例
 
@@ -730,18 +730,18 @@ Windows仮想マシンでは、`unattend.xml` 回答ファイルを使用したM
 </unattend>
 ----
 
-=== 回答ファイルの注入
+=== 応答ファイルの注入
 
-`unattend.xml` をConfigMapに保存し、VM仕様で `sysprep` ボリュームとして参照します。Sysprepを使用したWindows VMデプロイの完全なウォークスルーについては、link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/virtualization/creating-a-virtual-machine[Sysprepを使用したWindows VM作成に関するOpenShiftドキュメント,window=_blank] を参照してください。
+`unattend.xml` をConfigMapに保存し、VM specで `sysprep` ボリュームとして参照します。Sysprepを使用したWindows VMデプロイの完全なウォークスルーについては、link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/virtualization/creating-a-virtual-machine[Sysprepを使用したWindows VM作成に関するOpenShiftドキュメント,window=_blank] を参照してください。
 
-回答ファイルを含むConfigMapを作成します。
+応答ファイルを含むConfigMapを作成します。
 
 [source,bash,role=execute]
 ----
 oc create configmap windows-sysprep --from-file=unattend.xml -n static-ip-demo
 ----
 
-VM仕様で参照します。
+VM specで参照します。
 
 [source,yaml]
 ----
@@ -763,10 +763,10 @@ devices:
       name: sysprep
 ----
 
-=== この手法の使用場面
+=== 本手法の使用場面
 
 * 静的IPを必要とするWindows Server VM
-* 回答ファイルを使用した自動化されたWindowsデプロイメント
+* 応答ファイルを使用した自動化されたWindowsデプロイメント
 * VMwareやHyper-VからWindowsワークロードを移行する環境
 
 注: SysprepはWindowsの初期セットアップ中にのみ実行されます。Windows VMのデプロイ後のIP変更については、PowerShellリモートアクセスまたはRDPを使用して手動でネットワークを設定してください。
@@ -781,7 +781,7 @@ devices:
 | Cloud-init networkData
 | UDN 固定IP
 | DHCP予約
-| ゲストエージェント / nmcli
+| guest agent / nmcli
 | Sysprep
 
 | ゲストOS
@@ -853,7 +853,7 @@ devices:
 
 **問題**: `networkData` で `enp1s0` ではなく `eth0` を使用した。
 
-**解決策**: ゲストOS内部で表示される予測可能なインターフェース名を使用してください。最新のLinuxディストリビューション（RHEL 8+、Fedora、Ubuntu 16.04+）は `enp1s0`、`enp2s0` などを使用します。順序はVM仕様内のインターフェース順序と一致します。
+**解決策**: ゲストOS内部で表示される予測可能なインターフェース名を使用してください。最新のLinuxディストリビューション（RHEL 8+、Fedora、Ubuntu 16.04+）は `enp1s0`、`enp2s0` などを使用します。順序はVM spec内のインターフェース順序と一致します。
 
 === セカンダリインターフェースで接続できない
 
@@ -889,7 +889,7 @@ devices:
 
 **問題**: DHCP予約があるにもかかわらず、VMが起動のたびに異なるIPを受け取る。
 
-**解決策**: VMインターフェース仕様で `macAddress` フィールドが設定されていることを確認してください。固定MACがないと、KubeVirtは起動するたびにランダムなMACを割り当てます。また、DHCPサーバーの予約がMACアドレスと正確に一致していることを確認してください。
+**解決策**: VM interface specで `macAddress` フィールドが設定されていることを確認してください。固定MACがないと、KubeVirtは起動するたびにランダムなMACを割り当てます。また、DHCPサーバーの予約がMACアドレスと正確に一致していることを確認してください。
 
 詳細なCloud-initトラブルシューティングについては、xref:cloud-init-troubleshooting.adoc[Cloud-init トラブルシューティングガイド] を参照してください。
 
@@ -907,7 +907,7 @@ oc delete vm fedora-multi-vm -n static-ip-demo --ignore-not-found
 oc delete vm fedora-dhcp-reserved-vm -n static-ip-demo --ignore-not-found
 ----
 
-次に、ネームスペースを削除します。
+次に、namespaceを削除します。
 
 [source,bash,role=execute]
 ----
@@ -920,9 +920,9 @@ oc delete namespace static-ip-demo
 
 * OpenShift Virtualizationで静的IPを使用する場合のトレードオフ
 * Linux VM向けにCloud-init `networkData` で静的IPを設定する方法
-* クラスター管理されたアドレッシングのために固定IPを持つUDNプライマリネットワークを使用する方法
-* 予測可能なアドレッシングのために固定MACアドレスを使用してDHCP予約を行う方法
-* QEMUゲストエージェントと `nmcli` を使用して起動後に静的IPを適用する方法
+* クラスター管理されたIPアドレス割り当てのために固定IPを持つUDNプライマリネットワークを使用する方法
+* 予測可能なIPアドレス割り当てのために固定MACアドレスを使用してDHCP予約を行う方法
+* QEMU guest agent と `nmcli` を使用して起動後に静的IPを適用する方法
 * Sysprepと `unattend.xml` を使用してWindows VMの静的IPを設定する方法
 * 環境や要件に基づいて適切な手法を選択する方法
 * 一般的な問題とその解決策
@@ -934,11 +934,11 @@ oc delete namespace static-ip-demo
 * link:https://cloudinit.readthedocs.io/en/latest/reference/datasources/nocloud.html[Cloud-init NoCloud データソース,window=_blank]
 * link:https://kubevirt.io/user-guide/user_workloads/startup_scripts/[KubeVirt スタートアップスクリプト (Cloud-init),window=_blank]
 * link:https://kubevirt.io/user-guide/network/interfaces_and_networks/[KubeVirt ネットワークインターフェースとネットワーク,window=_blank]
-* link:https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-connecting-vm-to-default-pod-network.html[VMをデフォルトのPodネットワークに接続する,window=_blank]
+* link:https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-connecting-vm-to-default-pod-network.html[VMをデフォルトPodネットワークに接続する,window=_blank]
 * link:https://docs.openshift.com/container-platform/latest/virt/about_virt/about-virt.html[OpenShift Virtualization ドキュメント,window=_blank]
 * link:https://docs.openshift.com/container-platform/latest/virt/live_migration/virt-about-live-migration.html[OpenShift Virtualization ライブマイグレーション,window=_blank]
 * link:https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/automate-windows-setup[Microsoft Sysprep および Unattend リファレンス,window=_blank]
 * link:https://netplan.readthedocs.io/en/stable/netplan-yaml/[Netplan YAML 設定リファレンス,window=_blank]
 * xref:cloud-init-troubleshooting.adoc[Cloud-init トラブルシューティングガイド]
 * xref:networking:localnet-vlan.adoc[Localnet VLAN チュートリアル]
-* xref:networking:udn-primary-networks.adoc[UDNを使用したレイヤー2プライマリネットワークの設定]
+* xref:networking:udn-primary-networks.adoc[UDNを使用したLayer2プライマリネットワークの設定]

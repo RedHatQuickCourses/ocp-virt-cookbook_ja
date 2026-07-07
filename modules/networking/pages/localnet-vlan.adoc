@@ -1,14 +1,14 @@
-= OpenShift VirtualizationにおけるNetworkAttachmentDefinitionを使用したVLAN付きlocalnetセカンダリネットワークの構成
-:navtitle: NADを使用したVLAN付きlocalnetセカンダリネットワーク
+= OpenShift VirtualizationにおけるNetworkAttachmentDefinitionを使用したVLAN対応localnetセカンダリネットワークの構成
+:navtitle: NADを使用したVLAN対応localnetセカンダリネットワーク
 
-本チュートリアルでは、OpenShift Virtualizationにおいて、NetworkAttachmentDefinition (NAD) を使用してVLANタグ付けを行うlocalnetセカンダリネットワークを構成する方法を解説します。このアプローチでは、VLANセグメンテーションを伴う物理ネットワークインフラストラクチャへの直接アクセスが提供され、Podネットワークの接続性を維持したまま、仮想マシン（VM）が特定のVLANタグ付きネットワークと通信できるようになります。これは、既存のVLANベースのネットワークインフラストラクチャと統合する場合や、ネットワークセグメンテーションが必要な場合に最適です。
+本チュートリアルでは、OpenShift Virtualizationにおいて、NetworkAttachmentDefinition (NAD) を使用してVLANタグ付けを行うlocalnetセカンダリネットワークを構成する方法を解説します。このアプローチでは、VLANセグメンテーションを伴う物理ネットワークインフラへの直接アクセスが提供され、Podネットワークの接続性を維持したまま、仮想マシン (VM) が特定のVLANタグ付きネットワークと通信できるようになります。これは、既存のVLANベースのネットワークと統合する場合や、ネットワークセグメンテーションが必要な場合に最適です。
 
 == 前提条件
 
 * **NMState Operator**: クラスター内にインストールされ、実行中であること
 * **NMState CR**: Operatorが実行された後にnmstateインスタンスが作成されていること
-* **ワーカーノード**: ブリッジマッピングがワーカーノードに適用されること
-* **VLANインフラストラクチャ**: 物理ネットワークインフラストラクチャがVLANタグ付けをサポートしていること
+* **ワーカーノード**: bridge mappingがワーカーノードに適用されること
+* **VLANインフラストラクチャ**: 物理ネットワークインフラがVLANタグ付けをサポートしていること
 * **スイッチ設定**: OpenShiftワーカーノードに接続されている物理スイッチポートが、複数のVLANタグ付きトラフィックストリームを処理するために**トランクモード**で構成されていること
 
 検証済みバージョン:
@@ -26,9 +26,9 @@ OpenShiftワーカーノードに接続されている物理スイッチポー�
 * **VLANタグ付け**: 各VLANは一意のVLAN ID（例: 100, 200, 300）によって識別されます
 * **複数のネットワーク**: 複数のVLANベースのセカンダリネットワークをサポートするために不可欠です
 
-== 手順 1: VMの名前空間の作成
+== 手順 1: VMのnamespaceの作成
 
-VLAN構成付きのlocalnetセカンダリネットワークを使用するVM用の名前空間を作成します。
+VLAN構成対応のlocalnetセカンダリネットワークを使用するVM用のnamespaceを作成します。
 
 xref:attachment$localnet-vlan/localnet-vlan-namespace.yaml[localnet-vlan-namespace.yaml をダウンロード]
 
@@ -42,9 +42,9 @@ metadata:
 EOF
 ----
 
-== 手順 2: ブリッジマッピングの構成
+== 手順 2: bridge mappingの構成
 
-論理ネットワークインターフェース名 `localnet-vlan` をワーカーノード上の `br-ex` ブリッジインターフェースに接続するブリッジマッピングを構成します。このマッピングにより、OVN-Kubernetesに対してどの物理ブリッジインターフェースがVLANサポート付きのlocalnetトラフィックを処理するかを通知し、基盤となる物理ネットワークインフラストラクチャ経由でVMがVLANタグ付き外部ネットワークにアクセスできるようにします。
+論理ネットワークインターフェース名 `localnet-vlan` をワーカーノード上の `br-ex` ブリッジインターフェースに接続するbridge mappingを構成します。このマッピングにより、OVN-Kubernetesに対してどの物理ブリッジインターフェースがVLANサポート付きのlocalnetトラフィックを処理するかを通知し、基盤となる物理ネットワークインフラ経由でVMがVLANタグ付き外部ネットワークにアクセスできるようにします。
 
 xref:attachment$localnet-vlan/localnet-vlan-bridge-mapping-nncp.yaml[localnet-vlan-bridge-mapping-nncp.yaml をダウンロード]
 
@@ -67,7 +67,7 @@ spec:
 EOF
 ----
 
-== 手順 3: VLAN付きNetworkAttachmentDefinitionの作成
+== 手順 3: VLAN対応NetworkAttachmentDefinitionの作成
 
 セカンダリネットワーク接続用に、VLANタグ付けを伴うlocalnetトポロジーを構成するNetworkAttachmentDefinitionを作成します。
 
@@ -98,7 +98,7 @@ EOF
 
 **構成の詳細**:
 
-* `physicalNetworkName: "localnet-vlan"`: このNetworkAttachmentDefinition (NAD) をNNCPで構成されたブリッジマッピングにリンクします（bridge-mappings内の `localnet` 名と一致させる必要があります）
+* `physicalNetworkName: "localnet-vlan"`: このNetworkAttachmentDefinition (NAD) をNNCPで構成されたbridge mappingにリンクします（bridge-mappings内の `localnet` 名と一致させる必要があります）
 * `vlanID: 100`: ネットワークセグメンテーション用にVLANタグ100を指定します
 * `subnets`: OVN-Kubernetes IPAM用のIPサブネット範囲を定義します
 * `excludeSubnets`: ゲートウェイIPが割り当てられないように除外します（通常はルーター/ゲートウェイ用に予約されます）
@@ -241,8 +241,8 @@ sudo tcpdump -i enp2s0 -nn vlan 100
 
 . **VMまでVLANトラフィックが到達しない**:
    * 物理スイッチ構成がVLANタグ付けをサポートしているか確認する
-   * ワーカーノードのブリッジマッピング構成を確認する
-   * VLAN IDがネットワークインフラストラクチャと一致していることを確認する
+   * ワーカーノードのbridge mapping構成を確認する
+   * VLAN IDがネットワークインフラと一致していることを確認する
 
 . **IPアドレスの割り当て問題**:
    * VLANネットワーク上でDHCPサーバーが利用可能であることを確認する
@@ -272,7 +272,7 @@ oc logs -n openshift-ovn-kubernetes -l app=ovnkube-node
 
 本チュートリアルでは、以下の内容を学習しました:
 
-* ワーカーノード上で `NodeNetworkConfigurationPolicy` を使用して、VLANサポートを備えたブリッジマッピングを構成する方法
+* ワーカーノード上で `NodeNetworkConfigurationPolicy` を使用して、VLANサポートを備えたbridge mappingを構成する方法
 * localnetトポロジー、VLANタグ付け、およびOVN-Kubernetes IPAMを備えた `NetworkAttachmentDefinition` を作成する方法
 * VLANタグ付きトラフィックをサポートするために物理スイッチポートをトランクモードで構成する必要がある理由
 * PodネットワークとVLANタグ付きlocalnetを組み合わせたデュアルネットワーク接続を備えたVMをデプロイする方法

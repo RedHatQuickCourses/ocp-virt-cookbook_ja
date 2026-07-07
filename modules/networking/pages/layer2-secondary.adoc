@@ -7,12 +7,12 @@
 
 これを行うことで、`VirtualMachines` はデフォルトの Pod ネットワークをプライマリネットワークとして継続的に使用できます。これは、以下の条件が当てはまる場合に有効です。
 
-* 同じ名前空間内の（ノードが異なる場合でも）VM 間に単純な接続性が必要な場合。
-* 名前空間内の VM 間でネットワークの分離が不要な場合。
-* VM 間のネットワーク接続を複数の名前空間にまたがって拡張する必要がない場合。
-* クラスター内のノードの物理ネットワークインターフェイスへのアクセスが不要な場合。
-* インターネットからセカンダリネットワークへのイングレス接続をルーティングする必要がない場合。
-* 最後に、セカンダリネットワークから外部ネットワークへのアクセスが不要な場合。
+* 同じnamespace内の (ノードが異なる場合でも) VM 間に単純な接続性が必要な場合
+* namespace内の VM 間でネットワークの分離が不要な場合
+* VM 間のネットワーク接続を複数のnamespaceにまたがって拡張する必要がない場合
+* クラスター内のノードの物理ネットワークインターフェイスへのアクセスが不要な場合
+* インターネットからセカンダリネットワークへのイングレス接続をルーティングする必要がない場合
+* 最後に、セカンダリネットワークから外部ネットワークへのアクセスが不要な場合
 
 検証済みバージョン:
 
@@ -22,7 +22,7 @@ OpenShift 4.20,4.21
 
 == 前提条件
 
-* OpenShift Virtualization オペレーターがインストールされた OpenShift 4.20 以降のクラスター
+* OpenShift Virtualization Operator がインストールされた OpenShift 4.20 以降のクラスター
 * `NetworkAttachmentDefinition` リソースを作成するためのクラスター管理者権限
 * CLI ツールのインストール: `oc`, `virtctl`
 * Kubernetes ネットワークの概念に関する基本的な理解
@@ -31,7 +31,7 @@ OpenShift 4.20,4.21
 
 プロセスは以下の3つのステップで構成されます。
 
-* <<creating_a_namespace,名前空間の作成>>
+* <<creating_a_namespace,namespaceの作成>>
 * <<creating_a_nad,NetworkAttachmentDefinition の作成>>
 * <<attaching_vms,VirtualMachines のネットワークへの接続>>
 ** <<creating_first_vm,最初の VirtualMachine の作成>>
@@ -39,29 +39,29 @@ OpenShift 4.20,4.21
 * <<testing_secondary_network,セカンダリネットワークのテスト>>
 
 
-== 名前空間の作成 [[creating_a_namespace]]
+== namespaceの作成 [[creating_a_namespace]]
 
-最初のステップとして、まだ作成していない場合は、ネットワークを定義する `NetworkAttachmentDefinition` と、ネットワークに接続したい `VirtualMachines` を格納するための名前空間を作成します。この場合、特別なラベルは必要ありません。
+最初のステップとして、ネットワークを定義する `NetworkAttachmentDefinition` と、ネットワークに接続したい `VirtualMachines` を格納するためのnamespaceを作成します (まだ未設定の場合)。この場合、特別なラベルは必要ありません。
 
-YAML を定義することなく、`oc` バイナリを使用して簡単に新しい名前空間を作成できます。
+YAML を定義することなく、`oc` バイナリを使用して簡単に新しいnamespaceを作成できます。
 
 [source,bash,role=execute]
 ----
 oc create namespace example-l2-secondary
 ----
 
-新しい名前空間が作成されたので、現在の kube コンテキスト（現在作業中のクラスターと名前空間）を新しい名前空間（OpenShift 用語ではプロジェクト）に切り替えるのが最適です。
+新しいnamespaceが作成されたので、現在の kube context (現在作業中のクラスターとnamespace) を新しいnamespace (OpenShift 用語ではproject) に切り替えるのが最適です。
 
 [source,bash,role=execute]
 ----
 oc project example-l2-secondary
 ----
 
-名前空間が作成され、現在のコンテキストが設定されたら、<<creating_a_nad,NetworkAttachmentDefinition の作成>> に進みます。
+namespaceが作成され、現在の context が設定されたら、<<creating_a_nad,NetworkAttachmentDefinition の作成>> に進みます。
 
 == NetworkAttachmentDefinition の作成 [[creating_a_nad]]
 
-2番目のステップは、名前空間内に `layer2` ネットワークを定義する `NetworkAttachmentDefinition` を作成することです。
+2番目のステップは、namespace内に `layer2` ネットワークを定義する `NetworkAttachmentDefinition` を作成することです。
 
 `l2-network.nad.yaml` という名前の新しいファイルを作成し、以下の YAML 定義をファイルの内容としてコピー＆ペーストしてから、エディターを保存して閉じます。
 
@@ -84,14 +84,14 @@ spec:
     }
 ----
 
-`oc apply` を使用して、OpenShift クラスター上の定義済みの名前空間 `example-l2-secondary` に `NetworkAttachmentDefinition` を適用します。
+`oc apply` を使用して、OpenShift クラスター上の定義済みのnamespace `example-l2-secondary` に `NetworkAttachmentDefinition` を適用します。
 
 [source,bash,role=execute]
 ----
 oc apply -f l2-network.nad.yaml
 ----
 
-`NetworkAttachmentDefinition` が正常に作成されたことを確認します。次に進む前に、`l2-network` が `example-l2-secondary` 名前空間に存在している必要があります。
+`NetworkAttachmentDefinition` が正常に作成されたことを確認します。次に進む前に、`l2-network` が `example-l2-secondary` namespaceに存在している必要があります。
 
 [source,bash,role=execute]
 ----
@@ -104,7 +104,7 @@ oc get net-attach-def l2-network -n example-l2-secondary
 == VirtualMachines の接続 [[attaching_vms]]
 
 次のステップは、`VirtualMachines` を作成し、作成したばかりの `layer2` ネットワークに接続することです。
-これは、一般的な OpenShift (Kubernetes) の流儀に従い、`VirtualMachine` API オブジェクトを作成してクラスターに適用することで行います。
+これは、一般的な OpenShift (Kubernetes) のやり方に従い、`VirtualMachine` API オブジェクトを作成してクラスターに適用することで行います。
 
 このセクションでは、どちらもセカンダリの `l2-network` に接続される2つの新しい VM を作成します。
 
@@ -200,14 +200,14 @@ spec:
 **volumes** - `fedora-l2-secondary-root` ディスクと、ユーザー資格情報やネットワークアドレスなどの VM 設定データを渡すために使用される `cloudinitdisk` の2つのボリュームが定義されています。
 ====
 
-`oc create` を使用して、OpenShift クラスター上の現在の名前空間 (`example-l2-secondary`) に新しい VirtualMachine を作成できます。
+`oc create` を使用して、OpenShift クラスター上の現在のnamespace (`example-l2-secondary`) に新しい VirtualMachine を作成できます。
 
 [source,bash,role=execute]
 ----
 oc create -f fedora-l2-secondary.vm.yaml
 ----
 
-次に進む前に、`fedora-l2-secondary` VM が `example-l2-secondary` 名前空間で実行中であることを確認してください。`Provisioning` 状態の間は、コマンドを数回実行する必要がある場合があります。
+次に進む前に、`fedora-l2-secondary` VM が `example-l2-secondary` namespaceで実行中であることを確認してください。`Provisioning` 状態の間は、コマンドを数回実行する必要がある場合があります。
 
 [source,bash,role=execute]
 ----
@@ -219,9 +219,9 @@ oc get vm fedora-l2-secondary -n example-l2-secondary
 .トラブルシューティング
 `VirtualMachine` が `Pending` 状態で停止しているように見える場合、VM のスケジューリングを妨げている要因があります。考えられる要因は以下の通りです。
 
-* クラスター上の基盤となる `DataVolume` のプロビジョニングに問題がある（ディスク容量不足など）。
+* クラスター上の基盤となる `DataVolume` のプロビジョニングに問題がある (ディスク容量不足など)。
 * `l2-network` の `NetworkAttachmentDefinition` が存在しない。
-* OpenShift クラスターにリソース制限がある。メモリ不足や vCPU 不足により、VM がスケジューリングできていない可能性があります。
+* OpenShift クラスターにリソース制限がある。メモリ不足や vCPU 不足により、VM がスケジューリングできていない可能性。
 
 問題の原因を特定するには、下位レベルのリソース（`vmi`、`datavolume`、`pvc` など）に対して `oc describe` または `oc get -o yaml` を使用してください。
 エラーメッセージは、該当するリソースの Events (`oc describe`) または Status (`oc get -o yaml`) に記載されているはずです。
@@ -301,14 +301,14 @@ spec:
                 - 192.168.20.20/24
 ----
 
-OpenShift クラスター上の現在の名前空間に `VirtualMachine` を適用します。
+OpenShift クラスター上の現在のnamespaceに `VirtualMachine` を適用します。
 
 [source,bash,role=execute]
 ----
 oc apply -f fedora-l2-secondary2.vm.yaml
 ----
 
-`fedora-l2-secondary2` という名前の2つ目の VM が `example-l2-secondary` 名前空間で実行中であることを確認してください。<<testing_secondary_network,テスト>> を行う前に、両方の `VirtualMachines` が実行されている必要があります。
+`fedora-l2-secondary2` という名前の2つ目の VM が `example-l2-secondary` namespaceで実行中であることを確認してください。<<testing_secondary_network,テスト>> を行う前に、両方の `VirtualMachines` が実行されている必要があります。
 
 [source,bash,role=execute]
 ----
@@ -318,9 +318,9 @@ oc get vm fedora-l2-secondary2 -n example-l2-secondary
 
 == セカンダリネットワークのテスト [[testing_secondary_network]]
 
-セカンダリネットワークは `layer2` 専用であり、クラスターと名前空間内の仮想ネットワークとしてのみ存在するため、ある VM から別の VM への接続性をテストする必要があります。
+セカンダリネットワークは `layer2` 専用であり、クラスターとnamespace内の仮想ネットワークとしてのみ存在するため、ある VM から別の VM への接続性をテストする必要があります。
 
-テストを進めるには、`example-l2-secondary` 名前空間に以下のリソースが存在している必要があります。
+テストを進めるには、`example-l2-secondary` namespaceに以下のリソースが存在している必要があります。
 
 * `NetworkAttachmentDefinition`: `l2-network`
 * `VirtualMachine`: `fedora-l2-secondary` (セカンダリ NIC IP アドレス: 192.168.20.10)
@@ -328,7 +328,7 @@ oc get vm fedora-l2-secondary2 -n example-l2-secondary
 
 最も簡単なテスト方法は、一方の VM（または両方の VM）のコンソールに接続し、もう一方の VM に ping を送信することです。
 
-`virtctl` コマンドを使用して最初の `VirtualMachine` のコンソールにアクセスし、**ユーザー名**:`fedora`、**パスワード**:`fedora` でログインします（ログインプロンプトが表示されない場合は `ENTER` を押してください）。
+`virtctl` コマンドを使用して最初の `VirtualMachine` のコンソールにアクセスし、**ユーザー名**:`fedora`、**パスワード**:`fedora` でログインします (ログインプロンプトが表示されない場合は `ENTER` を押してください)。
 
 [source,bash,role=execute]
 ----
@@ -342,7 +342,7 @@ virtctl console fedora-l2-secondary
 ip addr show
 ----
 
-最初の VM のコンソールから `fedora-l2-secondary2` (IP アドレス: `192.168.20.20`) VM に ping を送信します。応答があれば、セカンダリネットワークは機能しています（`CTRL+C` を押すと ping がキャンセルされます）。
+最初の VM のコンソールから `fedora-l2-secondary2` (IP アドレス: `192.168.20.20`) VM に ping を送信します。応答があれば、セカンダリネットワークは機能しています (`CTRL+C` を押すと ping がキャンセルされます)。
 
 [source,bash]
 ----
@@ -351,7 +351,7 @@ ping 192.168.20.20
 
 VM コンソールを終了するには、`CTRL+]` を押します。
 
-この演習で作成したすべてリソースを削除するには、別の名前空間に切り替えて `example-l2-secondary` 名前空間を削除するだけです。
+このチュートリアルで作成したすべてリソースを削除するには、別のnamespaceに切り替えて `example-l2-secondary` namespaceを削除するだけです。
 
 [source,bash,role=execute]
 ----
@@ -367,7 +367,7 @@ oc delete namespace example-l2-secondary
 * プライマリ masquerade インターフェイスとセカンダリ bridge インターフェイスの両方を持つ VirtualMachines を設定する方法
 * cloud-init `networkData` を使用してセカンダリネットワークに静的 IP アドレスを割り当てる方法
 * 同じ OVN 管理の論理スイッチ上の VM 間の Layer 2 接続を確認する方法
-* Linux ブリッジや localnet などの他のネットワークオプションと比較して、いつ Layer 2 セカンダリネットワークを使用するか
+* Linux bridge や localnet などの他のネットワークオプションと比較して、いつ Layer 2 セカンダリネットワークを使用すべきか判断する方法
 
 == 関連リソース
 

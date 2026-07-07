@@ -6,22 +6,22 @@
 OpenShift 4.20
 ----
 
-本チュートリアルでは、OpenShift VirtualizationにおいてClusterUserDefinedNetwork (CUDN) を使用してlocalnetセカンダリネットワークを構成する方法を解説します。Localnetトポロジーは物理ネットワークインフラストラクチャへの直接アクセスを提供し、Podネットワークの接続性を維持しながらVMが外部ネットワークと通信できるようにします。このアプローチは、既存のインフラストラクチャとの統合や、レイヤー2接続を必要とするレガシーシステムの利用に適しています。
+本チュートリアルでは、OpenShift VirtualizationにおいてClusterUserDefinedNetwork (CUDN) を使用してlocalnetセカンダリネットワークを構成する方法を解説します。Localnetトポロジーは物理ネットワークインフラへの直接アクセスを提供し、Podネットワークの接続性を維持しながらVMが外部ネットワークと通信できるようにします。このアプローチは、既存のインフラストラクチャとの統合や、L2接続を必要とするレガシーシステムの利用に適しています。
 
 == 前提条件
 
 * **NMState Operator**: クラスター内でインストールおよび実行されていること
 * **NMState CR**: Operatorが実行された後にnmstateインスタンスが作成されていること
-* **ワーカーノード**: ブリッジマッピングがワーカーノードに適用されること
+* **ワーカーノード**: bridge mappingがワーカーノードに適用されること
 
 検証済みバージョン:
 ----
 OpenShift 4.19
 ----
 
-== ステップ 1: VMの名前空間を作成する
+== ステップ 1: VMのnamespaceを作成する
 
-localnetセカンダリネットワークを使用するVM用の名前空間を作成します。
+localnetセカンダリネットワークを使用するVM用のnamespaceを作成します。
 
 xref:attachment$localnet-secondary/localnet-secondary-namespace.yaml[localnet-secondary-namespace.yaml をダウンロード]
 
@@ -35,9 +35,9 @@ metadata:
 EOF
 ----
 
-== ステップ 2: ブリッジマッピングを構成する
+== ステップ 2: bridge mappingを構成する
 
-論理的なphysnet名を `br-ex` ブリッジインターフェースに接続するブリッジマッピングを構成します。これにより、どの物理インターフェースがlocalnetトラフィックを処理するかをOVN-Kubernetesに通知します。
+論理的なphysnet名を `br-ex` ブリッジインターフェースに接続するbridge mappingを構成します。これにより、どの物理インターフェースがlocalnetトラフィックを処理するかをOVN-Kubernetesに通知します。
 
 xref:attachment$localnet-secondary/localnet-bridge-mapping-nncp.yaml[localnet-bridge-mapping-nncp.yaml をダウンロード]
 
@@ -219,11 +219,11 @@ curl <localnet-ip>:8080
 
 本チュートリアルでは、以下の内容を学びました。
 
-* `NodeNetworkConfigurationPolicy` を使用して、OVN-Kubernetesを `br-ex` ブリッジに接続するブリッジマッピングを構成する方法
+* `NodeNetworkConfigurationPolicy` を使用し、OVN-Kubernetes を、`br-ex` ブリッジに接続するための bridge mapping を設定する方法
 * セカンダリネットワーク接続用に、localnetトポロジーを持つ `ClusterUserDefinedNetwork` を作成する方法
 * Podネットワークとlocalnetアクセスの両方を提供する、デュアルネットワークインターフェースを持つVMをデプロイする方法
 * IPアドレス設定、ルーティング、外部到達可能性を含むデュアルネットワーク接続の検証方法
-* CUDNがどのようにlocalnetセカンダリネットワークのクラスター単位での集中管理を実現するか
+* CUDNが、localnetセカンダリネットワークのクラスター単位での集中管理を実現する方法
 
 == 参照
 

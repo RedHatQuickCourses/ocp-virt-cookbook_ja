@@ -1,7 +1,7 @@
 = Cloud-init IP 設定トラブルシューティングガイド
 :navtitle: Cloud-init トラブルシューティング
 
-本ガイドでは、OpenShift Virtualization における cloud-init を使用した IP アドレス設定に関する問題のトラブルシューティング手順、検証コマンド、および解決策を提供します。
+本ガイドでは、OpenShift Virtualization における cloud-init を使用した IP アドレス設定に関する問題のトラブルシューティング手順、検証コマンド、解決策を提供します。
 
 == 目次
 
@@ -128,7 +128,7 @@ curl http://<vm-ip>
 
 ==== 問題: DHCP 経由で VM が IP を取得できない
 
-**症状**:
+**事象**:
 
 [source,bash]
 ----
@@ -136,7 +136,7 @@ $ oc get vmi fedora-dhcp-vm -n vms -o jsonpath='{.status.interfaces[0].ipAddress
 # 空を返す、または IP が表示されない
 ----
 
-**診断**:
+**調査**:
 
 [source,bash,role=execute]
 ----
@@ -185,10 +185,10 @@ sudo journalctl -u NetworkManager --since "5 minutes ago"
 
 ==== 問題: cloud-init 内のインターフェース名が間違っている
 
-**症状**:
+**事象**:
 ネットワーク設定が適用されず、ログに「device eth0 not found」と表示される。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -221,10 +221,10 @@ networkData: |
 
 ==== 問題: 静的 IP が適用されない
 
-**症状**:
+**事象**:
 設定した静的 IP ではなく、VM が DHCP IP を取得してしまう。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -285,7 +285,7 @@ sudo nmcli connection up "Wired connection 1"
 
 ==== 問題: 静的 IP は適用されたが接続できない
 
-**症状**:
+**事象**:
 
 [source,bash]
 ----
@@ -297,7 +297,7 @@ ping 192.168.1.1
 # Network unreachable
 ----
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -326,10 +326,10 @@ ping -c 1 192.168.1.1
 
 ==== 問題: セカンダリインターフェースが設定されない
 
-**症状**:
+**事象**:
 プライマリインターフェースのみ IP を取得し、セカンダリインターフェースがダウンしているか未設定の状態。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -386,10 +386,10 @@ oc describe network-attachment-definition <nad-name> -n <namespace>
 
 ==== 問題: デフォルトルートの競合
 
-**症状**:
+**事象**:
 両方のインターフェースにデフォルトルートがあり、ルーティングの問題が発生している。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -442,10 +442,10 @@ enp2s0:
 
 ==== 問題: VLAN インターフェースが作成されない
 
-**症状**:
+**事象**:
 VLAN インターフェース (例: `enp2s0.100`) が存在しない。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -493,10 +493,10 @@ sudo nmcli connection add type vlan \
 
 ==== 問題: VLAN インターフェースに接続性がない
 
-**症状**:
+**事象**:
 VLAN インターフェースは存在するがネットワークに到達できない。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -536,10 +536,10 @@ oc get nncp -A
 
 ==== 問題: IPv6 アドレスが適用されない
 
-**症状**:
+**事象**:
 IPv4 のみ設定され、IPv6 アドレスがない。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -580,7 +580,7 @@ cat /proc/sys/net/ipv6/conf/all/disable_ipv6
 
 ==== 問題: DNS が機能しない
 
-**症状**:
+**事象**:
 
 [source,bash]
 ----
@@ -592,7 +592,7 @@ ping google.com
 # Unknown host
 ----
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -635,7 +635,7 @@ networkData: |
 echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
 ----
 
-== 診断コマンド
+== 調査コマンド
 
 === ネットワークステータスの全確認
 
