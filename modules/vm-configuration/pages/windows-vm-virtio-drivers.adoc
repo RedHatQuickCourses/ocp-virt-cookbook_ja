@@ -1,15 +1,15 @@
 = VirtIOドライバーを使用したWindows VMのデプロイ
-:navtitle: VirtIOドライバーを使用したWindows VM
+:navtitle: VirtIOドライバーを使用したWindows VM のデプロイ
 
 == 概要
 
-このチュートリアルでは、最適なパフォーマンスを得るために、VirtIOドライバーを使用してOpenShift Virtualization上にWindows仮想マシン（VM）をデプロイする方法を説明します。VirtIOドライバーは、ネットワーク、ストレージ、およびその他の重要なVMコンポーネントに対して準仮想化I/O操作を有効にすることで、エミュレートされたハードウェアと比較して大幅なパフォーマンス向上を実現します。
+このチュートリアルでは、最適なパフォーマンスを得るために、VirtIOドライバーを使用してOpenShift Virtualization上にWindows仮想マシン (VM) をデプロイする方法を説明します。VirtIOドライバーは、ネットワーク、ストレージ、およびその他の重要なVMコンポーネントに対して準仮想化I/O操作を有効にすることで、エミュレートされたハードウェアと比較して大幅なパフォーマンス向上を実現します。
 
 Windows VMを作成し、Windowsのインストールプロセス中にVirtIOドライバーをインストールして、OpenShift Virtualizationとの統合を強化するためにゲストエージェントを構成します。
 
 == 前提条件
 
-* **OpenShift 4.18+**（OpenShift Virtualizationオペレーターがインストール済みであること）
+* **OpenShift 4.18+** (OpenShift Virtualization Operator がインストール済みであること) 
 * **CLIツール**: `oc` および `virtctl` がインストールされていること
 * **WindowsインストールISO** (Windows 10/11 または Server 2019/2022)
 * **VirtIOドライバーISO** (Red HatカスタマーポータルまたはFedoraプロジェクトから入手)
@@ -89,7 +89,7 @@ spec:
 EOF
 ----
 
-WindowsインストールISOをアップロードします（`windows.iso` は実際のISOファイル名に置き換えてください）。
+WindowsインストールISOをアップロードします (`windows.iso` は実際のISOファイル名に置き換えてください) 。
 
 [source,bash,role=execute]
 ----
@@ -236,13 +236,13 @@ VMが起動すると、最初に「No bootable device found」というメッセ
 +
 * UEFIメニューが表示されるのを待つか、プロンプトが表示されたら何かキーを押して「boot from other media or DVD」を実行します。
 * ブートメニューに移動し、「Boot from DVD/CD」を選択します。
-* 利用可能な最初のオプション（通常はWindows ISO）を選択します。
+* 利用可能な最初のオプション (通常はWindows ISO) を選択します。
 * Windowsのインストールが開始されます。初期セットアップ画面を進めてください。
 
 . **VirtIOストレージドライバーの読み込み**: 「Windowsのインストール場所を選択してください」画面に到達したら、以下を実行します。
 +
 * **ドライバーの読み込み**をクリックします。
-* VirtIOドライバーCD（通常は D: または E: ドライブ）を参照します。
+* VirtIOドライバーCD (通常は D: または E: ドライブ) を参照します。
 * `viostor\{windows-version}\amd64\` フォルダーに移動します。
 * Windows Server 2022の場合: `viostor\2k22\amd64\`
 * Windows 11の場合: `viostor\w11\amd64\`
@@ -271,7 +271,7 @@ Windowsのインストールが完了し、デスクトップに到達したら�
 * **シリアルドライバー**: 「PCIシンプル通信コントローラー」を更新 → `vioserial\{windows-version}\amd64\`
 * **入力ドライバー**: 「PCI入力デバイス」を更新 → `vioinput\{windows-version}\amd64\`
 
-. **QEMUゲストエージェントのインストール**:
+. **QEMU guest agent のインストール**:
 +
 VirtIOドライバーCDから `guest-agent\qemu-ga-x86_64.msi` を実行し、インストールウィザードに従います。
 
@@ -368,7 +368,7 @@ oc delete dv windows-installation-iso virtio-drivers-iso
 * DataVolumeを使用してVirtIOドライバーとWindowsインストールISOをアップロードする
 * VirtIOデバイスと適切なハードウェア構成を備えたWindows VMを作成する
 * 最適なパフォーマンスを得るために、Windowsインストール中にVirtIOストレージドライバーをインストールする
-* インストール後に残りのVirtIOドライバーとQEMUゲストエージェントを構成する
+* インストール後に残りのVirtIOドライバーとQEMU guest agentを構成する
 * ドライバーの適切なインストールと、OpenShift VirtualizationとのVM統合を確認する
 * 一般的なインストール問題のトラブルシューティングを行う
 

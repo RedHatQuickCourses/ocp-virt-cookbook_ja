@@ -3,7 +3,7 @@
 
 == 概要
 
-このチュートリアルでは、OpenShift 上で実行されている Windows 11 仮想マシンに対して、外部からリモートデスクトッププロトコル (RDP) でアクセスするための設定方法を説明します。このガイドを完了すると、Windows リモートデスクトップを使用して VM に直接接続できるようになります。これにより、VNC コンソールよりもシームレスで高機能なエクスペリエンスが得られます。
+このチュートリアルでは、OpenShift 上で実行されている Windows 11 仮想マシンに対して、外部からリモートデスクトッププロトコル (RDP) でアクセスするための設定方法を説明します。このガイドを完了すると、Windows リモートデスクトップを使用して VM に直接接続できるようになります。これにより、VNC コンソールよりもシームレスで高機能な体験が得られます。
 
 == このチュートリアルで解決する課題
 
@@ -29,7 +29,7 @@ Red Hat OpenShift Virtualization 上でホストされている Windows VM に�
 
 == チュートリアルの手順
 
-=== ステップバイステップの設定
+=== 設定
 
 ==== ステップ 1: Windows 11 でリモートデスクトップを有効にする
 
@@ -72,15 +72,15 @@ OpenShift Console → Your Project → Networking → Services
 |===
 | フィールド | 値 | 説明
 
-| **サービスタイプ**
+| **Service タイプ**
 | `LoadBalancer`
 | 専用の外部 IP を提供
 
-| **サービス名**
+| **Service 名**
 | `win11-rdp-service`
 | 分かりやすいサービス名
 
-| **セレクター**
+| **Selector**
 | `vm.kubevirt.io/name: <your-vm-name>`
 | **重要**: 実際の VM 名に置き換えてください
 
@@ -98,7 +98,7 @@ OpenShift Console → Your Project → Networking → Services
 |===
 +
 NOTE: LoadBalancer が利用できない場合は、`NodePort` を使用してください (ポート 30000～32767 が割り当てられます)。
-. **サービスを作成**
+. **Service を作成**
 +
 **作成**をクリックします。
 +
@@ -106,7 +106,7 @@ NodePort を使用する場合は、割り当てられたポートを記録し�
 
 ===== オプション B: コマンドラインインターフェース (CLI)
 
-. **サービス定義を作成**
+. **Service 定義を作成**
 +
 `rdp-service.yaml` を作成します。
 +
@@ -136,13 +136,13 @@ oc apply -f rdp-service.yaml
 
 ===== LoadBalancer サービスの場合:
 
-. **ネットワーキング → サービス** に移動します。
+. **Networking → service** に移動します。
 . `win11-rdp-service` を見つけます。
 . **外部 IP** アドレスを記録します。
 
 ===== NodePort サービスの場合:
 
-. サービスを見つけて、割り当てられた **NodePort** (例: `31234`) をメモします。
+. Serviceを見つけて、割り当てられた **NodePort** (例: `31234`) をメモします。
 . ワーカーノードの外部 IP を取得します。
 +
 [source,bash,role=execute]

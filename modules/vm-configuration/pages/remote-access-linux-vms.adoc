@@ -3,7 +3,7 @@
 
 == 概要
 
-本チュートリアルでは、OpenShift Virtualizationで実行されているLinux仮想マシン（VM）にアクセスするためのさまざまな手法を解説します。各手法は、迅速なトラブルシューティングから本番環境グレードのアクセスパターンまで、それぞれのユースケースに適しています。
+本チュートリアルでは、OpenShift Virtualizationで実行されているLinux仮想マシンにアクセスするためのさまざまな手法を解説します。各手法は、迅速なトラブルシューティングから本番環境グレードのアクセスパターンまで、それぞれのユースケースに適しています。
 
 == アクセス手法とユースケース
 
@@ -23,7 +23,7 @@
 |迅速な管理者アクセス
 |必要
 
-|NodePortサービス
+|NodePort Service
 |外部アクセス
 |必要
 
@@ -38,9 +38,9 @@
 
 == 前提条件
 
-* OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以降
+* OpenShift Virtualization Operator がインストールされたOpenShift 4.18以降
 * CLIツール: `oc`、`virtctl`、`kubectl`
-* 実行中のLinux VMが少なくとも1台あること（本チュートリアルで作成します）
+* 実行中のLinux VMが少なくとも1台あること (本チュートリアルで作成します) 
 * SSHおよびネットワークに関する基本的な知識
 
 == セットアップ: テスト用VMのデプロイ
@@ -164,7 +164,7 @@ virtctl console fedora-access-vm -n vm-access-demo
 
 === 制限事項
 
-* コピー/ペースト機能がない（限定的）
+* コピー/ペースト機能がない (限定的) 
 * スクロールバック不可
 * テキストベースのインターフェースのみ
 * 一度に1つのセッションのみ
@@ -192,7 +192,7 @@ virtctl vnc fedora-access-vm -n vm-access-demo
 === 前提条件
 
 * ローカルにVNCビューアがインストールされていること
-* デスクトップ環境（GNOME、KDEなど）がインストールされたVM
+* デスクトップ環境 (GNOME、KDEなど) がインストールされたVM
 
 == 手法3: virtctlによるSSHアクセス
 
@@ -200,7 +200,7 @@ virtctl vnc fedora-access-vm -n vm-access-demo
 
 === 前提条件
 
-* VMにSSH鍵が構成されていること（cloud-init経由）
+* VMにSSH鍵が構成されていること (cloud-init経由) 
 * VMでSSHサービスが実行されていること
 
 === SSH経由での接続
@@ -210,7 +210,7 @@ virtctl vnc fedora-access-vm -n vm-access-demo
 virtctl ssh fedora@fedora-access-vm -n vm-access-demo
 ----
 
-=== ホスト鍵チェックのスキップ（テスト用）
+=== ホスト鍵チェックのスキップ (テスト用) 
 
 [source,bash,role=execute]
 ----
@@ -229,11 +229,11 @@ virtctl ssh fedora@fedora-access-vm -n vm-access-demo --local-ssh-opts="-o Stric
 * クラスターへのアクセスが必要
 * ポート転送を使用するため、わずかなレイテンシが発生する場合がある
 
-== 手法4: NodePortサービスによる直接SSH接続
+== 手法4: NodePort Serviceによる直接SSH接続
 
-NodePortサービスを使用してSSHポートを外部に公開します。
+NodePort Serviceを使用してSSHポートを外部に公開します。
 
-=== NodePortサービスの作成
+=== NodePort Serviceの作成
 
 xref:attachment$remote-access-linux-vms/ssh-nodeport-service.yaml[ssh-nodeport-service.yaml をダウンロード]
 
@@ -255,14 +255,14 @@ spec:
       nodePort: 30022
 ----
 
-サービスを適用します。
+Service を適用します。
 
 [source,bash,role=execute]
 ----
 oc apply -f fedora-ssh-nodeport.yaml
 ----
 
-=== サービスの確認
+=== Service の確認
 
 [source,bash,role=execute]
 ----
@@ -278,7 +278,7 @@ oc get svc fedora-ssh-nodeport -n vm-access-demo
 oc get nodes -o wide
 ----
 
-NodePortを使用して接続します。
+NodePort を使用して接続します。
 
 [source,bash,role=execute]
 ----
@@ -295,7 +295,7 @@ ssh fedora@<node-ip> -p 30022
 === セキュリティ上の考慮事項
 
 * すべてのクラスターノードのSSHポートを公開する
-* 強力な認証を使用すること（SSH鍵のみを推奨）
+* 強力な認証を使用すること (SSH鍵のみを推奨) 
 * ファイアウォールルールを検討すること
 * 本番環境には推奨されない
 * 不正なアクセス試行を監視すること
@@ -326,7 +326,7 @@ virt-launcher-fedora-access-vm-xxxxx   2/2     Running   0          10m
 oc port-forward -n vm-access-demo virt-launcher-fedora-access-vm-xxxxx 2222:22
 ----
 
-=== SSH経由での接続（別のターミナルで）
+=== SSH経由での接続 (別のターミナルで) 
 
 [source,bash,role=execute]
 ----
@@ -349,11 +349,11 @@ ssh fedora@localhost -p 2222
 
 == 手法6: セカンダリネットワーク経由の直接ネットワークアクセス
 
-ブリッジネットワークやローカルネットワーク上のVMに対して、IP経由で直接アクセスします。
+bridge ネットワークや localnet ネットワーク上のVMに対して、IP経由で直接アクセスします。
 
 === 前提条件
 
-* VMがセカンダリネットワーク（ブリッジ、ローカルネット、VLAN）に接続されていること
+* VMがセカンダリネットワーク (bridge、localnet、VLAN) に接続されていること
 * 現在の場所からネットワークに到達可能であること
 * 固定IPが構成されているか、予約済みアドレスを持つDHCPが利用可能であること
 
@@ -467,7 +467,7 @@ ssh fedora@192.168.100.100
 
 == SSH鍵の構成
 
-=== SSH鍵の生成（必要な場合）
+=== SSH鍵の生成 (必要な場合) 
 
 [source,bash,role=execute]
 ----
@@ -554,7 +554,7 @@ sudo firewall-cmd --list-all
 # VM内部から
 ping -c 3 8.8.8.8
 
-# 外部から（同じネットワーク上にある場合）
+# 外部から (同じネットワーク上にある場合) 
 ping -c 3 192.168.100.100
 ----
 
@@ -613,7 +613,7 @@ ping -c 3 192.168.100.100
 === ネットワークセキュリティ
 
 * 可能であれば、NodePortの公開を特定のIPに制限する
-* ネットワークポリシーを使用してVMへのアクセスを制限する
+* NetworkPolicyを使用してVMへのアクセスを制限する
 * VMのファイアウォールを適切に構成する
 * 定期的にアクセスログを監視する
 

@@ -3,25 +3,25 @@
 
 == 概要
 
-このチュートリアルでは、仮想マシン（VM）を再起動することなく、ストレージボリュームを動的に追加および削除する方法を説明します。ホットプラグ機能により、ダウンタイムなしでのストレージ拡張、柔軟なリソース割り当て、およびメンテナンス時間の短縮が可能になります。
+このチュートリアルでは、仮想マシンを再起動することなく、ストレージボリュームを動的に追加および削除する方法を説明します。ホットプラグ機能により、ダウンタイムなしでのストレージ拡張、柔軟なリソース割り当て、メンテナンス時間の短縮が可能になります。
 
 `virtctl addvolume` を使用して新しいPVCを実行中のVMにアタッチし、ゲストOS内部で新しいブロックデバイスとして認識されることを確認した後、`virtctl removevolume` を使用して削除します。また、ネットワークインターフェースのホットプラグに関する概念と要件についても解説します。
 
 == 前提条件
 
-* **OpenShift 4.18以上**（OpenShift Virtualizationオペレーターがインストール済みであること）
+* **OpenShift 4.18以上** (OpenShift Virtualization Operator がインストール済みであること) 
 * **クラスター管理者権限** (`system:admin` または同等の権限)
 * **`oc` CLI** および **`virtctl` CLI** がインストール済みであること
-* **デフォルトのStorageClass** が設定済みであること
+* **デフォルト StorageClass** が設定済みであること
 
 テスト済みのバージョン:
 ----
 OpenShift 4.20, 4.21
 ----
 
-== 手順 1: 名前空間とベースVMの作成
+== 手順 1: namespaceとベースVMの作成
 
-名前空間を作成し、ホットプラグのターゲットとなるVMをデプロイします。
+namespaceを作成し、ホットプラグのターゲットとなるVMをデプロイします。
 
 [source,bash,role=execute]
 ----
@@ -128,7 +128,7 @@ EOF
 
 IMPORTANT: ホットプラグするボリュームは `volumeMode: Block` である必要があります。FilesystemモードのPVCは事前に作成された `disk.img` ファイルを必要とし、空のボリュームの直接的なホットプラグには適していません。
 
-PVCがプロビジョニングされるのを待ちます。`WaitForFirstConsumer` バインディングモードの場合、アタッチされるまで `Pending` のままになることがあります。
+PVCがプロビジョニングされるのを待ちます。`WaitForFirstConsumer` binding mode の場合、アタッチされるまで `Pending` のままになることがあります。
 
 [source,bash,role=execute]
 ----
@@ -196,9 +196,9 @@ virtctl console hotplug-vm -n hotplug-demo
 lsblk
 ----
 
-PVCのサイズと一致する新しいディスクデバイス（例: `sda`）が表示されるはずです。`Ctrl+]` を押して終了します。
+PVCのサイズと一致する新しいディスクデバイス (例: `sda`) が表示されるはずです。`Ctrl+]` を押して終了します。
 
-== 手順 5: ホットプラグしたディスクのフォーマットと使用（ゲスト内部）
+== 手順 5: ホットプラグしたディスクのフォーマットと使用 (ゲスト内部) 
 
 VMコンソール内で、新しいディスクをフォーマットします。
 
@@ -255,7 +255,7 @@ virtctl removevolume hotplug-vm --volume-name=hotplug-disk --namespace=hotplug-d
 Successfully submitted removevolume request to VM hotplug-vm for volume hotplug-disk
 ----
 
-IMPORTANT: データ破損を防ぐため、ホットプラグしたボリュームを削除する前には、必ずゲスト内部でファイルシステムをアンマウントしてください。
+IMPORTANT: データ破損を防ぐため、ホットプラグしたボリュームを削除する前に、必ずゲスト内部でファイルシステムをアンマウントしてください。
 
 ボリュームが削除されたことを確認します。
 
@@ -277,7 +277,7 @@ cloudinitdisk: vdb
 oc get pvc hotplug-disk -n hotplug-demo
 ----
 
-== ホットプラグボリュームのリファレンス
+== ホットプラグボリュームの参考情報
 
 === --persist フラグ
 
@@ -290,7 +290,7 @@ oc get pvc hotplug-disk -n hotplug-demo
 | ボリュームがVM specに追加され、再起動後も維持されます
 
 | (フラグなし)
-| 現在のVMIにのみアタッチされます（再起動時に失われます）
+| 現在のVMIにのみアタッチされます (再起動時に失われます) 
 |===
 
 永続的に接続する必要があるデータディスクには `--persist` を使用してください。データ移行や一度限りのインポートなどの一時的な操作には、フラグを省略します。
@@ -310,25 +310,25 @@ oc get pvc hotplug-disk -n hotplug-demo
 
 === ディスクバスタイプ
 
-ホットプラグされたボリュームはデフォルトでSCSIバスを使用します（`sda`、`sdb` などとして表示されます）。これは、virtioディスクは起動後にPCIバスへホットプラグできないためです。SCSIはホットアド機能を提供します。
+ホットプラグされたボリュームはデフォルトでSCSIバスを使用します (`sda`、`sdb` などとして表示されます) 。これは、virtioディスクは起動後にPCIバスへホットプラグできないためです。SCSIはホットアド機能を提供します。
 
-== ネットワークインターフェースのホットプラグ（リファレンス）
+== ネットワークインターフェースのホットプラグ (リファレンス) 
 
-OpenShift Virtualizationはネットワークインターフェースのホットプラグもサポートしています。これには、すべてのクラスターで利用可能とは限らない追加のインフラストラクチャが必要です。
+OpenShift Virtualization はネットワークインターフェースのホットプラグもサポートしています。これには、すべてのクラスターで利用可能とは限らない追加のインフラストラクチャが必要です。
 
 === 要件
 
 * **Multus CNI thick plugin**: 標準のMultusデプロイメントがthick pluginとして実行されている必要があります。
 * **Multus Dynamic Networks Controller**: アノテーションの変更を監視し、Multusに新しいアタッチメントの設定をトリガーするデーモン。
-* **マルチノードクラスター**: シングルノードクラスターでは、移行ベースのホットプラグは利用できません。
+* **Multi-node cluster**: Single Node Cluster では、マイグレーションベースのホットプラグは利用できません。
 
 === 動作の仕組み
 
-ボリュームのホットプラグ（`virtctl addvolume` を使用）とは異なり、ネットワークインターフェースのホットプラグはVM specを編集することで行われます。
+ボリュームのホットプラグ (`virtctl addvolume` を使用) とは異なり、ネットワークインターフェースのホットプラグは VM spec を編集することで行われます。
 
 . セカンダリネットワーク用のNetworkAttachmentDefinition (NAD) を作成します。
 . VM specを編集して、新しいインターフェースとネットワークの定義を追加します。
-. インターフェースは、実行中のVMに（thick Multusが利用可能な場合）アタッチされるか、ライブマイグレーション後にアタッチされます。
+. インターフェースは、実行中のVMに (thick Multusが利用可能な場合) アタッチされるか、ライブマイグレーション後にアタッチされます。
 
 === インターフェースの削除
 
@@ -342,7 +342,7 @@ interfaces:
   bridge: {}
 ----
 
-NOTE: ホットアンプラグは、ブリッジバインディングのインターフェースでのみサポートされています。SR-IOVインターフェースはホットアンプラグできません。
+NOTE: ホットアンプラグは、bridge バインディングのインターフェースでのみサポートされています。SR-IOVインターフェースはホットアンプラグできません。
 
 ネットワークホットプラグの詳細手順については、link:https://kubevirt.io/user-guide/network/hotplug_interfaces/[KubeVirt Hotplug Network Interfaces documentation,window=_blank]を参照してください。
 

@@ -3,7 +3,7 @@
 
 == 概要
 
-本セクションでは、OpenShift Virtualizationにおける仮想マシンの設定について説明します。これには、DNS名前解決、リモートアクセス手法、ノード配置制御、ホットプラグ、およびVMテンプレートが含まれます。
+本セクションでは、OpenShift Virtualization における仮想マシンの設定について説明します。これには、DNS名前解決、リモートアクセス手法、ノードへの配置制御、ホットプラグ、VMテンプレートが含まれます。
 
 == 学習目標
 
@@ -11,16 +11,16 @@ OpenShift Virtualizationで仮想マシンを設定およびカスタマイズ�
 
 * VM間およびPod対VM通信のための内部DNS名前解決
 * LinuxおよびWindows VMへのリモートアクセス手法
-* セレクター、アフィニティ、およびアンチアフィニティルールを使用したノード配置
+* Selector、Affinity、Anti-affinityを使用したノード配置
 * 専用ノードへのインフラストラクチャコンポーネントの配置
 * 稼働中のVMに対するボリュームおよびネットワークインターフェースのホットプラグ
-* 反復可能なデプロイメントのためのカスタムVMテンプレートの作成
+* 繰り返しのデプロイのためのカスタムVMテンプレートの作成
 
 == 前提条件
 
 VMの設定作業を行う前に、以下の環境が整っていることを確認してください。
 
-* OpenShift 4.18以降およびOpenShift Virtualizationオペレーターがインストール済みであること
+* OpenShift 4.18以降およびOpenShift Virtualization Operator がインストール済みであること
 * 仮想マシンおよびネットワークに関する基本的な理解があること
 * YAML構文に慣れていること
 * 次のCLIツールがインストールされていること: `oc`, `virtctl`, `kubectl`
@@ -28,36 +28,36 @@ VMの設定作業を行う前に、以下の環境が整っていることを確
 == トピック
 
 xref:internal-dns-for-vms.adoc[]::
-クラスター内のKubernetesサービスを使用した、VM間およびPod対VM通信のための内部DNS名前解決を設定します。
+クラスター内のKubernetesサービスを使用した、VM間およびPod対VM通信のための内部DNS名前解決の設定
 
 xref:remote-access-linux-vms.adoc[]::
-コンソール、VNC、`virtctl`経由のSSH、NodePortサービス、ポートフォワーディング、および直接ネットワークアクセスなど、Linux仮想マシンにアクセスするための複数の方法。
+コンソール、VNC、`virtctl`経由のSSH、NodePortサービス、ポートフォワーディング、および直接ネットワークアクセスなど、Linux仮想マシンにアクセスするための複数の方法
 
 xref:remote-access-linux-troubleshooting.adoc[]::
-診断コマンドや一般的な問題の解決策を含む、すべてのVMリモートアクセス手法のトラブルシューティングガイド。
+診断コマンドや一般的な問題の解決策を含む、すべてのVMリモートアクセス手法のトラブルシューティングガイド
 
 xref:remote-access-windows-vms.adoc[]::
-LoadBalancerまたはNodePortサービスを使用した、Windows仮想マシンへの外部リモートデスクトッププロトコル (RDP) アクセスの設定。
+LoadBalancerまたはNodePortサービスを使用した、Windows仮想マシンへの外部リモートデスクトッププロトコル (RDP) アクセスの設定
 
 xref:infrastructure-node-placement.adoc[]::
-専用のインフラストラクチャノードおよび高可用性を実現するために、HyperConvergedカスタムリソースを使用してOpenShift Virtualizationインフラストラクチャコンポーネント (virt-controller, virt-api, virt-handler, CDI) の配置を制御します。
+専用のインフラストラクチャノードおよび高可用性を実現するために、HyperConvergedカスタムリソースを使用してOpenShift Virtualizationインフラストラクチャコンポーネント (virt-controller, virt-api, virt-handler, CDI) の配置の制御
 
 xref:node-placement-affinity.adoc[]::
-パフォーマンス、可用性、およびワークロード分離のために、ノードセレクター、ノードアフィニティ、およびPodアフィニティ/アンチアフィニティルールを使用して、クラスターノード間でのVMの配置を制御します。
+パフォーマンス、可用性、ワークロード分離のために、NodeSelector、NodeAffinity、Pod Affinity/Anti-Affinity ruleを使用して、クラスターノード間でのVMの配置を制御
 
 xref:hotplug-volumes-interfaces.adoc[]::
-`virtctl`を使用して、ダウンタイムなしで稼働中のVMに対してストレージボリュームやネットワークインターフェースを動的に追加および削除します。
+`virtctl`を使用して、ダウンタイムなしで稼働中のVMに対してストレージボリュームやネットワークインターフェースを動的に追加および削除
 
 xref:vm-templates.adoc[]::
-OpenShift Virtualizationコンソールおよびコマンドラインの両方から、迅速で反復可能なデプロイメントを行うためのカスタムVMテンプレートを作成します。
+OpenShift Virtualizationコンソールおよびコマンドラインの両方から、迅速で繰り返し可能なデプロイを行うためのカスタムVMテンプレートを作成
 
 == 関連トピック
 
 * xref:getting-started:index.adoc[はじめに] - 初期設定と前提条件
 * xref:storage:index.adoc[ストレージ設定] - VM用の永続ストレージ
-* xref:networking:index.adoc[ネットワーク設定] - ネットワークインフラストラクチャのセットアップ
+* xref:networking:index.adoc[ネットワーク設定] - ネットワークインフラのセットアップ
 * xref:performance:index.adoc[パフォーマンスチューニング] - CPUピニング、NUMA、Hugepages、リアルタイムVM
-* xref:vm-lifecycle:index.adoc[VMライフサイクル] - ゴールデンイメージ、クローニング、スナップショット、起動設定
+* xref:vm-lifecycle:index.adoc[VMライフサイクル] - ゴールデンイメージ、クローン、スナップショット、起動設定
 
 == 追加リソース
 
