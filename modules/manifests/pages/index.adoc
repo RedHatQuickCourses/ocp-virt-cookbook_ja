@@ -15,7 +15,7 @@
 
 |<<Networking>>
 |8
-|Localnet、UDN、ブリッジマッピングの設定
+|Localnet、UDN、Bridge mapping の設定
 
 |<<Virtual Machines>>
 |14
@@ -36,13 +36,13 @@ LVM Storage Operatorのインストールおよび設定用マニフェストで
 
 |lvm-namespace
 |Namespace
-|openshift-lvm-storage名前空間の作成
+|openshift-lvm-storage namespace の作成
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvm-namespace.yaml[YAML]
 
 |lvm-operatorgroup
 |OperatorGroup
-|LVM Operatorのネームスペーススコープの定義
+|LVM Operatorの namespace スコープの定義
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvm-operatorgroup.yaml[YAML]
 
@@ -54,13 +54,13 @@ LVM Storage Operatorのインストールおよび設定用マニフェストで
 
 |lvmcluster-with-wipe
 |LVMCluster
-|既存データを含むディスクに対してforceWipeを使用したLVMストレージの設定
+|既存データを含むディスクに対するforceWipeを使用したLVMストレージの設定
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvmcluster-with-wipe.yaml[YAML]
 
 |lvmcluster-clean-disk
 |LVMCluster
-|クリーンな（新規）ディスクに対するLVMストレージの設定
+|クリーンな (新規) ディスクに対するLVMストレージの設定
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvmcluster-clean-disk.yaml[YAML]
 
@@ -79,7 +79,7 @@ LVM Storage Operatorのインストールおよび設定用マニフェストで
 
 == Networking
 
-localnet、UDN、およびブリッジマッピング用のネットワーク設定です。
+localnet、UDN、Bridge mapping 用のネットワーク設定です。
 
 [cols="2,1,3,2,1"]
 |===
@@ -87,13 +87,13 @@ localnet、UDN、およびブリッジマッピング用のネットワーク設
 
 |localnet-secondary-namespace
 |Namespace
-|localnetセカンダリネットワークVM用名前空間
+|localnetセカンダリネットワークVM用 namespace
 |xref:networking:localnet-secondary.adoc[]
 |xref:networking:attachment$localnet-secondary/localnet-secondary-namespace.yaml[YAML]
 
 |localnet-bridge-mapping-nncp
 |NNCP
-|localnetトポロジー向けにlocalnet1をbr-exブリッジにマッピング
+|localnetトポロジー向け localnet1 の br-ex bridge へのマッピング
 |xref:networking:localnet-secondary.adoc[]
 |xref:networking:attachment$localnet-secondary/localnet-bridge-mapping-nncp.yaml[YAML]
 
@@ -105,13 +105,13 @@ localnet、UDN、およびブリッジマッピング用のネットワーク設
 
 |localnet-vlan-namespace
 |Namespace
-|VLAN localnet VM用名前空間
+|VLAN localnet VM用 namespace
 |xref:networking:localnet-vlan.adoc[]
 |xref:networking:attachment$localnet-vlan/localnet-vlan-namespace.yaml[YAML]
 
 |localnet-vlan-bridge-mapping-nncp
 |NNCP
-|VLANトラフィック向けにlocalnet-vlanをbr-exブリッジにマッピング
+|VLANトラフィック向け localnet-vlan の br-ex bridge へのマッピング
 |xref:networking:localnet-vlan.adoc[]
 |xref:networking:attachment$localnet-vlan/localnet-vlan-bridge-mapping-nncp.yaml[YAML]
 
@@ -123,13 +123,13 @@ localnet、UDN、およびブリッジマッピング用のネットワーク設
 
 |udn-primary-namespace
 |Namespace
-|UDNプライマリネットワークラベル付き名前空間
+|UDNプライマリネットワークラベル付き namespace
 |xref:networking:udn-primary-networks.adoc[]
 |xref:networking:attachment$udn-primary-networks/udn-primary-namespace.yaml[YAML]
 
 |udn-primary
 |UDN
-|VMプライマリネットワーク用のレイヤー2 UserDefinedNetwork
+|VMプライマリネットワーク用の Layer 2 UserDefinedNetwork
 |xref:networking:udn-primary-networks.adoc[]
 |xref:networking:attachment$udn-primary-networks/udn-primary.yaml[YAML]
 |===

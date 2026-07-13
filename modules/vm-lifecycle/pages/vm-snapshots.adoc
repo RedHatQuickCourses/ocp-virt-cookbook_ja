@@ -3,13 +3,13 @@
 
 == 概要
 
-VMスナップショットは、ディスクや（オプションで）メモリ状態を含む、特定の時点における仮想マシンの状態をキャプチャします。スナップショットを使用すると、アップデート失敗後の迅速なロールバックや、変更の安全なテスト、メンテナンス作業前の復元ポイントの作成が可能になります。
+VMスナップショットは、ディスクや (オプションで) メモリ状態を含む、特定の時点における仮想マシンの状態をキャプチャします。スナップショットを使用すると、アップデート失敗後の迅速なロールバックや、変更の安全なテスト、メンテナンス作業前の復元ポイントの作成が可能になります。
 
 このチュートリアルでは、OpenShift VirtualizationでVMスナップショットを作成、管理、および復元する方法について説明します。
 
 === 学習内容
 
-* VMスナップショットリソースの仕組みと、オンラインスナップショットおよびオフラインスナップショットの違い
+* VMスナップショットリソースの仕組みと、オンラインスナップショット、オフラインスナップショットの違い
 * WebコンソールおよびCLIを使用したスナップショットの作成、管理、削除方法
 * スナップショットからのVMの復元方法
 * スナップショットに関するストレージの要件と考慮事項
@@ -69,36 +69,36 @@ VMのスナップショットを作成するためのリクエストです。ソ
 |VMが停止している必要がある。
 
 |オンラインスナップショット
-|VMの実行中に取得されるスナップショット。一貫性のためにファイルシステムの静止（quiescing）が必要。
-|VM内にQEMUゲストエージェントがインストールされ、実行されている必要がある。
+|VMの実行中に取得されるスナップショット。一貫性のためにファイルシステムの静止 (quiescing) が必要。
+|VM内にQEMU guest agentがインストールされ、実行されている必要がある。
 |===
 
-TIP: クリティカルなワークロードの場合は、オフラインスナップショットを使用するか、ファイルシステムの一貫性を保証するためにオンラインスナップショット用のQEMUゲストエージェントがインストールされていることを確認してください。
+TIP: クリティカルなワークロードの場合は、オフラインスナップショットを使用するか、ファイルシステムの一貫性を保証するためにオンラインスナップショット用のQEMU guest agentがインストールされていることを確認してください。
 
-オンラインスナップショットのデフォルトのタイムアウトは5分です。この期間内にスナップショットが完了しない場合、ステータスは `Failed` に設定され、ファイルシステムは復帰（thaw）し、VMは通常の動作を再開します。この期限は、VirtualMachineSnapshotのspecで `failureDeadline` フィールドを設定することで調整可能です（例: `failureDeadline: 10m`）。
+オンラインスナップショットのデフォルトのタイムアウトは5分です。この期間内にスナップショットが完了しない場合、ステータスは `Failed` に設定され、ファイルシステムは復帰 (thaw) し、VMは通常の動作を再開します。この期限は、VirtualMachineSnapshotのspecで `failureDeadline` フィールドを設定することで調整可能です (例: `failureDeadline: 10m`) 。
 
-=== スナップショットのインジケーション（兆候）
+=== スナップショットの表示 (Indication) 
 
 オンラインスナップショットの完了後、 `status.indications` フィールドでスナップショットがどのように取得されたかが報告されます。
 
 [cols="1,3",options="header"]
 |===
-|インジケーション |意味
+|表示 |意味
 
 |`Online`
 |スナップショット作成時にVMが実行されていた。
 
 |`GuestAgent`
-|QEMUゲストエージェントが正常にファイルシステムを静止させた。アプリケーション整合性のあるスナップショットである。
+|QEMU guest agentが正常にファイルシステムを静止させた。アプリケーション整合性のあるスナップショットである。
 
 |`NoGuestAgent`
-|QEMUゲストエージェントがインストールされていないか、準備ができていない。クラッシュ整合性のみのスナップショットである。
+|QEMU guest agentがインストールされていないか、準備ができていない。クラッシュ整合性のみのスナップショットである。
 
 |`QuiesceFailed`
-|ゲストエージェントが静止を試みたが失敗した。スナップショットは作成されたが、アプリケーション整合性は保証されない。
+|guest agentが静止を試みたが失敗した。スナップショットは作成されたが、アプリケーション整合性は保証されない。
 |===
 
-スナップショットのインジケーションを確認します。
+スナップショットのIndicationを確認します。
 
 [source,bash,role=execute]
 ----
@@ -128,12 +128,12 @@ image::vm-snapshots/snapshot-tab-empty.png[スナップショット取得前のS
 +
 image::vm-snapshots/snapshot-take-dialog.png[名前、説明、期限、対象ディスクを表示するスナップショット取得ダイアログ]
 +
-. スナップショットの名前と（オプションで）説明を入力します。
+. スナップショットの名前と (オプションで) 説明を入力します。
 . **Save** をクリックします。
 
 作成が完了すると、Snapshotsタブにスナップショットのステータスが表示されます。
 
-image::vm-snapshots/snapshot-tab-ready.png[ReadyステータスとGuestAgent/Onlineインジケーションを示す完了したスナップショットが表示されたSnapshotsタブ]
+image::vm-snapshots/snapshot-tab-ready.png[ReadyステータスとGuestAgent/Online Indicationを示す完了したスナップショットが表示されたSnapshotsタブ]
 
 === CLIを使用したスナップショットの作成
 
@@ -221,7 +221,7 @@ Status:
 主なステータスフィールド:
 
 * **Phase**: `InProgress`、`Succeeded`、または `Failed`
-* **ReadyToUse**: `true` の場合、復元に利用可能（WebコンソールのStatus列では **Ready** と表示）
+* **ReadyToUse**: `true` の場合、復元に利用可能 (WebコンソールのStatus列では **Ready** と表示) 
 * **Error**: スナップショットが失敗した場合のエラーメッセージ
 
 == スナップショットの管理
@@ -287,14 +287,14 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 
 スナップショットからVMを復元すると、VMのディスクがスナップショット取得時の状態に戻ります。
 
-IMPORTANT: スナップショットから復元する前に、VMを停止する必要があります。VirtualMachineRestoreのspecに `targetReadinessPolicy: StopTarget` を設定することで、このプロセスを自動化できます。他のオプションには `FailImmediate`（デフォルト）、`WaitGracePeriod`（最大5分待機）、`WaitEventually`（無期限待機）があります。詳細については、link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/backup-and-restore[公式ドキュメント,window=_blank]を参照してください。
+IMPORTANT: スナップショットから復元する前に、VMを停止する必要があります。VirtualMachineRestoreのspecに `targetReadinessPolicy: StopTarget` を設定することで、このプロセスを自動化できます。他のオプションには `FailImmediate` (デフォルト) 、`WaitGracePeriod` (最大5分待機) 、`WaitEventually` (無期限待機) があります。詳細については、link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/backup-and-restore[公式ドキュメント,window=_blank]を参照してください。
 
 === Webコンソールを使用した復元
 
 . VMの詳細ページに移動します。
-. VMが停止していることを確認します（実行中の場合は停止してください）。
+. VMが停止していることを確認します (実行中の場合は停止してください) 。
 . **Snapshots** タブに移動します。
-. 復元したいスナップショットの横にあるケバブメニュー（3つの点）をクリックします。
+. 復元したいスナップショットの横にあるケバブメニュー (3つの点) をクリックします。
 . **Restore VirtualMachineSnapshot** を選択します。
 +
 image::vm-snapshots/snapshot-kebab-restore.png[RestoreおよびDeleteオプションが表示されたケバブメニュー]
@@ -395,13 +395,13 @@ NOTE: VirtualMachineSnapshotを削除すると、関連するVirtualMachineSnaps
 
 === CSIドライバーの要件
 
-VMスナップショットには、スナップショット機能をサポートするCSI（Container Storage Interface）ドライバーが必要です。一般的なサポート対象ストレージソリューションは以下の通りです。
+VMスナップショットには、スナップショット機能をサポートするCSI (Container Storage Interface) ドライバーが必要です。一般的なサポート対象ストレージソリューションは以下の通りです。
 
 * Red Hat OpenShift Data Foundation (ODF)
 * AWS EBS CSI
 * Microsoft Azure Disk CSI
 * Google Cloud Persistent Disk CSI
-* LVM Storage (LVMS)（シンプロビジョニングされたプールデバイスクラスを使用する場合）
+* LVM Storage (LVMS) (シンプロビジョニングされたプールデバイスクラスを使用する場合) 
 * VMware vSphere CSI
 * NetApp Trident
 * Pure Storage
@@ -409,18 +409,18 @@ VMスナップショットには、スナップショット機能をサポート
 
 === VolumeSnapshotClassの設定
 
-VolumeSnapshotClassは、スナップショットの作成および管理方法を決定します。ストレージクラスに対応するスナップショットクラスがあることを確認してください。
+VolumeSnapshotClassは、スナップショットの作成および管理方法を決定します。ストレージクラスに対応する snapshot class があることを確認してください。
 
 [source,bash,role=execute]
 ----
 # ストレージクラスの確認
 oc get storageclass
 
-# 対応するスナップショットクラスの確認
+# 対応する snapshot class の確認
 oc get volumesnapshotclass
 ----
 
-スナップショットが失敗する場合は、スナップショットクラスがストレージプロビジョナーと一致しているか確認してください。
+スナップショットが失敗する場合は、snapshot class が storage provisioner と一致しているか確認してください。
 
 === ストレージ容量
 
@@ -451,8 +451,8 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 
 **考えられる原因**:
 
-* オンラインスナップショットがタイムアウトした（デフォルトは5分の `failureDeadline`）
-* QEMUゲストエージェントが応答していない
+* オンラインスナップショットがタイムアウトした (デフォルトは5分の `failureDeadline`) 
+* QEMU guest agentが応答していない
 * ストレージプロバイダーが低速、または応答していない
 
 **解決策**:
@@ -462,13 +462,13 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 oc describe virtualmachinesnapshot <snapshot-name> -n <namespace>
 ----
 
-`status.conditions` および `status.indications` フィールドを確認します。タイムアウトによりスナップショットが失敗した場合は、スナップショットspecの `failureDeadline` を増やすか、代わりにオフラインスナップショットを取得することを検討してください。
+`status.conditions` および `status.indications` フィールドを確認します。タイムアウトによりスナップショットが失敗した場合は、Snapshot specの `failureDeadline` を増やすか、代わりにオフラインスナップショットを取得することを検討してください。
 
 === スナップショットで NoGuestAgent または QuiesceFailed が表示される
 
-**問題**: スナップショットは完了したが、インジケーションに `NoGuestAgent` または `QuiesceFailed` が表示されており、クラッシュ整合性のみのスナップショットになっている。
+**問題**: スナップショットは完了したが、Indicationに `NoGuestAgent` または `QuiesceFailed` が表示されており、クラッシュ整合性のみのスナップショットになっている。
 
-**解決策**: VM内でQEMUゲストエージェントをインストールして起動します。
+**解決策**: VM内でQEMU guest agentをインストールして起動します。
 
 [source,bash]
 ----
@@ -498,9 +498,9 @@ oc wait vm database-vm -n vm-snapshots --for=jsonpath='{.status.printableStatus}
 
 === VolumeSnapshotClassが見つからずスナップショットが失敗する
 
-**問題**: ストレージプロビジョナーに一致するVolumeSnapshotClassがないため、スナップショット作成が失敗する。
+**問題**: ストレージプロビジョナーに一致する VolumeSnapshotClass がないため、スナップショット作成が失敗する。
 
-**解決策**: ストレージクラスに対してVolumeSnapshotClassが存在することを確認します。
+**解決策**: ストレージクラスに対して VolumeSnapshotClass が存在することを確認します。
 
 [source,bash,role=execute]
 ----
@@ -533,7 +533,7 @@ oc get volumesnapshot -n vm-snapshots
 このチュートリアルでは、以下の内容を学習しました。
 
 * OpenShift VirtualizationにおけるVMスナップショットリソースの仕組み
-* オンラインスナップショットとオフラインスナップショットの違い、およびインジケーションの意味
+* オンラインスナップショットとオフラインスナップショットの違い、Indicationの意味
 * WebコンソールおよびCLIを使用したスナップショットの作成方法
 * スナップショットの管理、一覧表示、削除方法
 * スナップショットからのVMの復元方法
@@ -544,6 +544,6 @@ oc get volumesnapshot -n vm-snapshots
 
 * xref:getting-started:virtctl-basics.adoc[] - VM管理のためのCLIコマンド
 * xref:custom-golden-images.adoc[] - 再利用可能なVMイメージの作成
-* xref:cloning-vms.adoc[] - VMのクローン作成（スナップショットからのクローン作成を含む）
+* xref:cloning-vms.adoc[] - VMのクローン作成 (スナップショットからのクローン作成を含む) 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/backup-and-restore[VMスナップショットを使用したバックアップと復元 - Red Hatドキュメント,window=_blank]
 * link:https://kubevirt.io/user-guide/storage/snapshot_restore_api/[Snapshot Restore API - KubeVirtユーザーガイド,window=_blank]

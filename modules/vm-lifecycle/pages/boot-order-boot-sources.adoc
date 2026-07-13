@@ -3,21 +3,21 @@
 
 == 概要
 
-本チュートリアルでは、OpenShift VirtualizationでVMのブート順序、ブートソース、およびブートオプションを構成する方法を説明します。ブート構成を理解することは、カスタムOSのインストール、レスキューおよびリカバリのシナリオ、マルチブート環境、セキュリティコンプライアンス要件において不可欠です。
+本チュートリアルでは、OpenShift VirtualizationでVMのブート順序、ブートソース、ブートオプションを構成する方法を説明します。ブート構成を理解することは、カスタムOSのインストール、レスキューおよびリカバリのシナリオ、マルチブート環境、セキュリティコンプライアンス要件において不可欠です。
 
-ブート構成により、VMがどのデバイスから起動を試みるか、その順序、および使用するファームウェアモード（BIOSまたはUEFI）を制御できます。OpenShift Virtualizationは、永続ボリューム、コンテナイメージ、ネットワークベースのソースなど、さまざまなブートソースをサポートしています。
+ブート構成により、VMがどのデバイスから起動を試みるか、その順序や使用するファームウェアモード (BIOSまたはUEFI) を制御できます。OpenShift Virtualizationは、永続ボリューム、コンテナイメージ、ネットワークベースのソースなど、さまざまなブートソースをサポートしています。
 
 == 前提条件
 
-* OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以降
+* OpenShift Virtualization Operator がインストールされたOpenShift 4.18以降
 * CLIツール: `oc`, `virtctl`, `kubectl`
 * VMのブートプロセスに関する基本的な理解
-* 永続ボリューム用に構成されたストレージクラス
-* コンテナレジストリの例を使用する場合: コンテナレジストリ（Quay.io、Docker Hub、または内部レジストリ）へのアクセス権
+* 永続ボリューム用に構成された Storage Class
+* コンテナレジストリの例を使用する場合: コンテナレジストリ (Quay.io、Docker Hub、または内部レジストリ) へのアクセス権
 
 == OpenShift Virtualizationのブートソースタイプ
 
-OpenShift Virtualizationは、複数のブートソースタイプをサポートしています。
+OpenShift Virtualization は、複数のブートソースタイプをサポートしています。
 
 [cols="1,2,2",options="header"]
 |===
@@ -29,14 +29,14 @@ OpenShift Virtualizationは、複数のブートソースタイプをサポー�
 
 |**ContainerDisk**
 |コンテナにパッケージ化されたディスクイメージから起動
-|エフェメラル（一時的）なVM、テスト、CI/CD、イミュータブルなワークロード
+|一時的なVM、テスト、CI/CD、Immutable なワークロード
 
 |**DataVolume**
 |Containerized Data Importer (CDI) を介してプロビジョニングされたディスクから起動
-|HTTP、S3、またはレジストリソースからのイメージのインポート
+|HTTP、S3、レジストリソースからのイメージのインポート
 
 |**CloudInitNoCloud**
-|初期化ディスク（起動不可だが、ブートディスクと併用されるのが一般的）
+|初期化ディスク (起動不可だが、ブートディスクと併用されるのが一般的) 
 |VMの構成と初期化
 |===
 
@@ -44,11 +44,11 @@ OpenShift Virtualizationは、複数のブートソースタイプをサポー�
 
 OpenShift Virtualizationは、2つのファームウェアモードをサポートしています。
 
-=== BIOS (レガシーモード)
+=== BIOS (Legacy Mode)
 
 * 従来のPC BIOSファームウェア
 * 古いオペレーティングシステムとの互換性あり
-* ブートデバイスのサイズ制限（MBRで2TBまで）
+* ブートデバイスのサイズ制限 (MBRで2TBまで) 
 * 起動時間が短い
 * ほとんどのLinuxディストリビューションのデフォルト
 
@@ -56,7 +56,7 @@ OpenShift Virtualizationは、2つのファームウェアモードをサポー�
 
 * モダンなファームウェアインターフェイス
 * セキュアブートに必須
-* GPTパーティションテーブルと大容量ディスク（2TB超）をサポート
+* GPTパーティションテーブルと大容量ディスク (2TB超) をサポート
 * Windows 11および最新のWindows Serverバージョンで必須
 * より優れたセキュリティ機能
 
@@ -66,16 +66,16 @@ OpenShift Virtualizationは、2つのファームウェアモードをサポー�
 
 **重要な概念:**
 
-* `bootOrder` の数値が小さいほど優先度が高くなります（1は2より先に起動）
+* `bootOrder` の数値が小さいほど優先度が高くなります (1は2より先に起動) 
 * ディスクとインターフェイスのみにブート順序を指定可能
 * `bootOrder` が指定されていない場合、ファームウェアが決定します
 * 通常、プライマリブートディスクには `bootOrder: 1` を割り当てます
 
-== シナリオ1: PersistentVolumeClaim (PVC) からの起動（最も一般的）
+== シナリオ1: PersistentVolumeClaim (PVC) からの起動 (最も一般的) 
 
 これは、永続ストレージを使用する本番VMの標準構成です。
 
-テスト用の名前空間を作成します。
+テスト用の namespace を作成します。
 
 [source,bash,role=execute]
 ----
@@ -174,9 +174,9 @@ oc get vmi vm-boot-pvc -n boot-demo
 * 従来のサーバーデプロイメント
 * 状態の永続性が必要な開発環境
 
-== シナリオ2: ContainerDiskからの起動（エフェメラル）
+== シナリオ2: ContainerDiskからの起動 (一時的) 
 
-ContainerDiskは、OCIコンテナ形式でディスクイメージをパッケージ化します。イミュータブル（不変）でステートレスなワークロードに最適です。
+ContainerDiskは、OCIコンテナ形式でディスクイメージをパッケージ化します。Immutable (不変) でステートレスなワークロードに最適です。
 
 xref:attachment$boot-order-boot-sources/vm-boot-from-containerdisk.yaml[vm-boot-from-containerdisk.yaml をダウンロード]
 
@@ -233,7 +233,7 @@ spec:
 
 重要な注意点:
 
-* ContainerDiskはエフェメラルです。VMの停止時にすべての変更が失われます
+* ContainerDiskは一時的です。VMの停止時にすべての変更が失われます
 * レジストリからイメージがプルされるため、デプロイが高速です
 * テストやCI/CDパイプラインに最適
 * quay.io/containerdisks のパブリックイメージを使用するか、自作も可能です
@@ -249,7 +249,7 @@ oc apply -f vm-boot-from-containerdisk.yaml
 
 * テストおよび開発
 * CI/CDパイプライン
-* イミュータブルなインフラストラクチャパターン
+* Immutable なインフラストラクチャパターン
 * 永続性が不要なシナリオ
 * ストレージのオーバーヘッドなしで素早くVMをプロビジョニングしたい場合
 
@@ -329,8 +329,8 @@ spec:
 
 * CDIが自動的にイメージをダウンロードおよび変換します
 * イメージは一度だけインポートされ、その後はPVCに格納されます
-* 次回以降の起動はPVC（永続的）を使用します
-* 一部のストレージクラスでは、アノテーション `cdi.kubevirt.io/storage.bind.immediate.requested: "true"` が必要です
+* 次回以降の起動はPVC (永続ストレージ) を使用します
+* 一部のStorage Classでは、アノテーション `cdi.kubevirt.io/storage.bind.immediate.requested: "true"` が必要です
 
 インポートの進捗状況を監視:
 
@@ -445,9 +445,9 @@ spec:
 
 ブートシーケンスの説明:
 
-1. `bootOrder: 1` - プライマリディスク（最初に起動を試みる）
-2. `bootOrder: 2` - セカンダリディスク（プライマリが失敗した場合のフォールバック）
-3. `bootOrder: 3` - CD-ROM（インストールメディア、最後の手段）
+1. `bootOrder: 1` - プライマリディスク (最初に起動を試みる) 
+2. `bootOrder: 2` - セカンダリディスク (プライマリが失敗した場合のフォールバック) 
+3. `bootOrder: 3` - CD-ROM (インストールメディア、最後の手段) 
 
 デプロイ:
 
@@ -458,7 +458,7 @@ oc apply -f vm-multiple-boot-devices.yaml
 
 使用する場合:
 
-* 災害復旧（DR）シナリオ
+* 災害復旧 (DR) シナリオ
 * カスタムOSのインストール
 * さまざまなOS構成のテスト
 * フォールバックブートオプションを必要とする環境
@@ -541,7 +541,7 @@ spec:
 主な構成:
 
 * `firmware.bootloader.efi` がUEFIモードを有効にします
-* `secureBoot: false` - セキュアブートは無効です（サポートされているOSでは有効化可能）
+* `secureBoot: false` - セキュアブートは無効です (サポートされているOSでは有効化可能) 
 * マシンタイプ `pc-q35-rhel9.4.0` はUEFIと互換性があります
 
 デプロイ:
@@ -555,11 +555,11 @@ oc apply -f vm-boot-uefi.yaml
 
 * Windows 11または最新のWindows Server VM
 * セキュアブートを必要とするシステム
-* 大容量ディスク（2TB超）のサポート
+* 大容量ディスク (2TB超) のサポート
 * 強化されたセキュリティ要件
 * UEFIを推奨するモダンなLinuxディストリビューション
 
-== シナリオ6: セキュアブート付きUEFI（上級者向け）
+== シナリオ6: セキュアブート付きUEFI (上級者向け) 
 
 セキュアブートは、ブートプロセス中に未承認のコードが実行されるのを防ぎます。これにはUEFIファームウェアと互換性のあるオペレーティングシステムが必要です。
 
@@ -640,8 +640,8 @@ spec:
 重要な要件:
 
 * `secureBoot: true` がセキュアブートを有効にします
-* `features.smm.enabled: true` がセキュアブート（System Management Mode）に必要です
-* オペレーティングシステムがセキュアブートをサポートしている必要があります（ほとんどのモダンなLinuxおよびWindows）
+* `features.smm.enabled: true` がセキュアブート (System Management Mode) に必要です
+* オペレーティングシステムがセキュアブートをサポートしている必要があります (ほとんどの最新 Linux および Windows) 
 * ブートローダーとカーネルが信頼されたキーで署名されている必要があります
 
 デプロイ:
@@ -654,7 +654,7 @@ oc apply -f vm-boot-uefi-secureboot.yaml
 使用する場合:
 
 * セキュリティコンプライアンス要件
-* Windows 11（セキュアブートが必要）
+* Windows 11 (セキュアブートが必要) 
 * 厳格なブート整合性要件がある環境
 * ルートキットやブートレベルのマルウェアに対する防御
 
@@ -737,15 +737,15 @@ spec:
 
 主な構成:
 
-* セカンダリネットワークインターフェイス (`pxe-net`) に `bootOrder: 1` を設定（ディスクより先に起動）
-* ディスクに `bootOrder: 2` を設定（ネットワークブート試行後のフォールバック）
-* Multusを介して構成されたセカンダリネットワーク（例: `pxe-network`）が必要
+* セカンダリネットワークインターフェイス (`pxe-net`) に `bootOrder: 1` を設定 (ディスクより先に起動) 
+* ディスクに `bootOrder: 2` を設定 (ネットワークブート試行後のフォールバック) 
+* Multusを介して構成されたセカンダリネットワーク (例: `pxe-network`) が必要
 * 直接的なネットワークアクセスにブリッジインターフェイスバインディングを使用
-* プライマリポッドネットワーク (`default`) は一般的な接続用として維持
+* プライマリPodネットワーク (`default`) は一般的な接続用として維持
 
 PXEブートの前提条件:
 
-* セカンダリネットワークが構成されておりアクセス可能であること（ネットワークチュートリアルを参照）
+* セカンダリネットワークが構成されておりアクセス可能であること (ネットワークチュートリアルを参照) 
 * セカンダリネットワーク上でPXEサーバーが構成されていること
 * DHCPサーバーがブート情報を提供していること
 * TFTPサーバーがブートファイルを提供していること
@@ -874,7 +874,7 @@ oc get vmi -n boot-demo
 
 [source,bash,role=execute]
 ----
-# 詳細なVM情報（vm-boot-pvcを自分のVM名に置き換え）
+# 詳細なVM情報 (vm-boot-pvcを自分のVM名に置き換え)
 oc describe vm vm-boot-pvc -n boot-demo
 ----
 
@@ -882,10 +882,10 @@ oc describe vm vm-boot-pvc -n boot-demo
 
 [source,bash,role=execute]
 ----
-# ブート順序を表示するVM仕様を取得（vm-boot-pvcを自分のVM名に置き換え）
+# ブート順序を表示するVM spec を取得 (vm-boot-pvcを自分のVM名に置き換え) 
 oc get vm vm-boot-pvc -n boot-demo -o yaml | grep -A 5 bootOrder
 
-# ファームウェア構成の確認（vm-boot-uefiを自分のVM名に置き換え）
+# ファームウェア構成の確認 (vm-boot-uefiを自分のVM名に置き換え) 
 oc get vm vm-boot-uefi -n boot-demo -o yaml | grep -A 10 firmware
 ----
 
@@ -893,10 +893,10 @@ oc get vm vm-boot-uefi -n boot-demo -o yaml | grep -A 10 firmware
 
 [source,bash,role=execute]
 ----
-# シリアルコンソールアクセス（vm-boot-pvcを自分のVM名に置き換え）
+# シリアルコンソールアクセス (vm-boot-pvcを自分のVM名に置き換え) 
 virtctl console vm-boot-pvc -n boot-demo
 
-# VNCグラフィカルコンソール（vm-boot-menuを自分のVM名に置き換え）
+# VNCグラフィカルコンソール (vm-boot-menuを自分のVM名に置き換え) 
 virtctl vnc vm-boot-menu -n boot-demo
 ----
 
@@ -927,7 +927,7 @@ journalctl -b
 
 **解決策**:
 
-* デバイスが実際にブート可能（ブートローダーがある）か確認
+* デバイスが実際にブート可能 (ブートローダーがある) か確認
 * デバイスがVMに正しく接続されているか確認
 * VMイベントを確認:
 
@@ -970,41 +970,41 @@ oc edit vm vm-boot-secureboot -n boot-demo
 * PXEサーバーがネットワークからアクセス可能か確認
 * DHCPがPXEブートオプションを提供するように構成されているか確認
 * VMネットワークインターフェイスがブリッジバインディングを使用していることを確認
-* ファイアウォールルールがPXEトラフィック（DHCP、TFTP）を許可しているか確認
+* ファイアウォールルールがPXEトラフィック (DHCP、TFTP) を許可しているか確認
 * ネットワークインターフェイスに `bootOrder` が設定されていることを確認
 
-=== 問題: ContainerDiskイメージのプルに失敗する
+=== 問題: ContainerDisk イメージのプルに失敗する
 
-**現象**: ContainerDiskを使用するVMがイメージプルエラーで失敗する。
+**現象**: ContainerDisk を使用するVMがイメージプルエラーで失敗する。
 
 **解決策**:
 
 * コンテナイメージが存在し、アクセス可能であることを確認
 * プライベートレジストリを使用している場合は、イメージプルシークレットを確認
-* イメージが正しい形式（コンテナ内の /disk/ パスにあるディスク）であることを確認
+* イメージが正しい形式 (コンテナ内の /disk/ パスにあるディスク) であることを確認
 
 [source,bash,role=execute]
 ----
-# ポッドイベントの確認
+# Podイベントの確認
 oc get events -n boot-demo
 ----
 
 [source,bash,role=execute]
 ----
-# virt-launcherポッドログの確認（最初に実際のポッド名を確認）
+# virt-launcher Podログの確認 (最初に実際のPod名を確認) 
 oc get pods -n boot-demo
 oc logs -n boot-demo virt-launcher-vm-boot-containerdisk-xxxxx
 ----
 
 === 問題: HTTP DataVolumeインポートが失敗する
 
-**現象**: HTTPソースを持つDataVolumeが ImportInProgress でスタックするか失敗する。
+**現象**: HTTPソースを持つ DataVolume が ImportInProgress でスタックするか失敗する。
 
 **解決策**:
 
 * URLがクラスターからアクセス可能であることを確認
 * 十分なストレージクォータがあることを確認
-* ストレージクラスが動的プロビジョニングをサポートしていることを確認
+* Storage Class が動的プロビジョニングをサポートしていることを確認
 * 必要に応じて即時バインディング用のアノテーションを追加
 
 [source,bash,role=execute]
@@ -1013,7 +1013,7 @@ oc logs -n boot-demo virt-launcher-vm-boot-containerdisk-xxxxx
 oc get dv -n boot-demo
 oc describe dv vm-boot-http-disk -n boot-demo
 
-# インポーターポッドログの確認（最初に実際のポッド名を確認）
+# Importer Podログの確認 (最初に実際のPod名を確認) 
 oc get pods -n boot-demo
 oc logs -n boot-demo importer-vm-boot-http-disk-xxxxx
 
@@ -1027,13 +1027,13 @@ oc logs -n openshift-cnv cdi-deployment-xxxxx
 === ブート順序の構成
 
 * プライマリブートデバイスには必ず `bootOrder` を明示的に設定する
-* 1、2、3のように順番に番号を振る（番号を飛ばさない）
+* 1、2、3のように順番に番号を振る (番号を飛ばさない) 
 * VMアノテーションまたはラベルにブートシーケンスをドキュメント化する
 * コンソール経由でBIOS/UEFIセットアップにアクセスしてブート順序をテストする
 
 === ファームウェアの選択
 
-* 新規デプロイメントにはUEFIを使用する（優れたセキュリティ、モダンな機能）
+* 新規デプロイメントにはUEFIを使用する (優れたセキュリティ、モダンな機能) 
 * BIOSは古いオペレーティングシステムとの互換性のためにのみ使用する
 * セキュアブートは、必要であり、OSがサポートしている場合のみ有効にする
 * セキュアブートを使用する場合は、常にSMMを有効にする
@@ -1041,7 +1041,7 @@ oc logs -n openshift-cnv cdi-deployment-xxxxx
 === ブートソースの選択
 
 * 永続性を必要とする本番ワークロードにはPVCを使用する
-* エフェメラルでイミュータブルなワークロードにはContainerDiskを使用する
+* 一時的で Immutable なワークロードにはContainerDiskを使用する
 * 中央レポジトリからの自動デプロイにはHTTP DataVolumeを使用する
 * カスタムイメージはバージョン管理のためにContainerDiskとしてパッケージ化する
 
@@ -1056,7 +1056,7 @@ oc logs -n openshift-cnv cdi-deployment-xxxxx
 
 * ディスクパフォーマンス向上のためにvirtioバスを使用する
 * パフォーマンスチューニングにはディスクキャッシングモードを検討する
-* 適切なストレージクラスを使用する（ブートディスクにはSSD）
+* 適切なStorage Classを使用する (ブートディスクにはSSD) 
 * VM起動を高速化するためにPVCを事前プロビジョニングする
 
 == クリーンアップ
@@ -1068,7 +1068,7 @@ oc logs -n openshift-cnv cdi-deployment-xxxxx
 # すべてのVMを削除
 oc delete vm --all -n boot-demo
 
-# 名前空間を削除
+# namespaceを削除
 oc delete namespace boot-demo
 ----
 
@@ -1078,7 +1078,7 @@ WARNING: VMを削除すると、関連付けられたDataVolumeとPVCも削除�
 
 本チュートリアルでは、以下について学びました。
 
-* さまざまなブートソースタイプ（PVC、ContainerDisk、HTTP DataVolume）
+* さまざまなブートソースタイプ (PVC、ContainerDisk、HTTP DataVolume) 
 * ブートデバイス順序の構成方法
 * BIOSとUEFIファームウェアモードの違い
 * セキュアブートの有効化と構成方法
@@ -1087,7 +1087,7 @@ WARNING: VMを削除すると、関連付けられたDataVolumeとPVCも削除�
 * ブート構成に関するベストプラクティス
 * 一般的な問題とトラブルシューティング
 
-ブート構成を理解することは、適切なVMライフサイクル管理、セキュリティコンプライアンス、および多様なオペレーティングシステム要件への対応に不可欠です。
+ブート構成を理解することは、適切なVMライフサイクル管理、セキュリティコンプライアンス、多様なオペレーティングシステム要件への対応に不可欠です。
 
 == 参照先
 

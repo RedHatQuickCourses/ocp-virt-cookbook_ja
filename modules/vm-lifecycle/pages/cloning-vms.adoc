@@ -3,14 +3,14 @@
 
 == 概要
 
-このチュートリアルでは、OpenShift Virtualizationで既存の仮想マシン（VM）をクローンし、同一またはカスタマイズされたVMインスタンスを迅速にデプロイする方法を説明します。VMのクローン作成では、ディスク内容全体、設定、インストール済みのソフトウェアを含めて既存のVMのコピーが作成されるため、環境の迅速なプロビジョニングが可能になります。
+このチュートリアルでは、OpenShift Virtualizationで既存の仮想マシンをクローンし、同一またはカスタマイズされたVMインスタンスを迅速にデプロイする方法を説明します。VMのクローン作成では、ディスク内容全体、設定、インストール済みのソフトウェアを含めて既存のVMのコピーが作成されるため、環境の迅速なプロビジョニングが可能になります。
 
 == VMクローンとは
 
 VMクローンは、既存のVMを複製して新しい仮想マシンを作成するものです。OpenShift Virtualizationでは、クローン作成のために主に2つの手法が用意されています。
 
-* **Webコンソールでのクローン作成**: VMをクローンするためのシンプルなポイント＆クリック型のインターフェース
-* **CLIベースのクローン作成**: PVCをクローンし、新しいVMを作成する手動プロセス
+* **Webコンソールでのクローン作成**: VMをクローンするためのシンプルなポイント & クリック型のインターフェース
+* **CLIベースのクローン作成**: PVC をクローンし、新しいVMを作成する手動プロセス
 
 VMクローンの主な利点:
 
@@ -51,24 +51,24 @@ VMクローンの主な利点:
 
 == 前提条件
 
-* OpenShift 4.18以降およびOpenShift Virtualizationオペレーターのインストール済み環境
+* OpenShift 4.18 以降および OpenShift Virtualization Operator のインストール済み環境
 * OpenShift WebコンソールまたはCLIツール (`oc`, `virtctl`) へのアクセス権
-* ボリュームのクローン作成をサポートするストレージクラス
-* クローン元のVM（または作成するVM）
+* ボリュームのクローン作成をサポートする Storage Class
+* クローン元のVM (または作成するVM) 
 * PersistentVolumeClaim (PVC) に関する基本的な理解
 
 == クローン手法の理解
 
-OpenShift Virtualizationには、VMをクローンする2つのアプローチがあります。
+OpenShift Virtualization には、VMをクローンする2つのアプローチがあります。
 
-=== Webコンソールでのクローン作成（推奨）
+=== Webコンソールでのクローン作成 (推奨) 
 
 Webコンソールは、効率的なクローン作成エクスペリエンスを提供します。
 
 * 自動的にPVCのクローン処理を実行
 * クローンされたディスクを使用して新しいVMを作成
 * 実行中または停止中のVMからのクローンをサポート
-* VM設定（CPU、メモリ、ネットワーク）を保持
+* VM設定 (CPU、メモリ、ネットワーク) を保持
 
 === 手動でのCLIクローン作成
 
@@ -77,14 +77,14 @@ Webコンソールは、効率的なクローン作成エクスペリエンス�
 * ソースVMのPVCをクローン
 * クローンされたPVCを参照する新しいVMを作成
 * クローンプロセス中のカスタマイズが可能
-* 名前空間をまたぐクローン作成に有用
+* namespaceをまたぐクローン作成に有用
 
 === ストレージのクローン動作
 
 基盤となるストレージシステムによってクローンのパフォーマンスが決まります。
 
-* **スマートクローン**: ストレージスナップショットを使用（高速、CSI対応ストレージクラス）
-* **ホスト支援型クローン**: ポッド経由でデータをコピー（低速、任意のストレージクラス）
+* **Smart cloning**: ストレージスナップショットを使用 (高速、CSI対応Storage Class) 
+* **Host-assisted cloning**: Pod経由でデータをコピー (低速、任意のStorage Class) 
 
 == Webコンソールを使用したVMのクローン作成
 
@@ -92,7 +92,7 @@ Webコンソールは、VMをクローンするための最もシンプルな方
 
 === セットアップ：ソースVMの作成
 
-まず、名前空間とソースVMを作成します。
+まず、namespaceとソースVMを作成します。
 
 [source,bash,role=execute]
 ----
@@ -198,15 +198,15 @@ OpenShift Webコンソールを使用してVMをクローンするには:
 image::clone-vm-list.png[source-webserver VMが表示された仮想マシンリスト]
 
 . クローンしたいVM (`source-webserver`) を探します。
-. VMの横にある *⋮* （アクションメニュー）をクリックします。
+. VMの横にある *⋮*  (アクションメニュー) をクリックします。
 . *クローン* を選択します。
 +
 image::clone-vm-actions-menu.png[クローンオプションが強調表示されたアクションメニュー]
 
 . 「仮想マシンのクローン」ダイアログで:
-  * 新しいVMの名前を入力します（例: `webserver-clone-1`）。
+  * 新しいVMの名前を入力します (例: `webserver-clone-1`) 。
   * 必要に応じて「作成後に仮想マシンを開始する」にチェックを入れて即座に開始します。
-  * 設定の詳細（オペレーティングシステム、CPU、メモリ、NIC、ディスク）を確認します。
+  * 設定の詳細 (オペレーティングシステム、CPU、メモリ、NIC、ディスク) を確認します。
 . *クローン* をクリックします。
 +
 image::clone-vm-dialog.png[名前と設定が表示された仮想マシンのクローンダイアログ]
@@ -215,10 +215,10 @@ Webコンソールは以下の処理を実行します。
 
 * ソースVMのPVCをクローン
 * クローンされたディスクを使用して新しいVMを作成
-* VMの設定（CPU、メモリ、ネットワーク）を保持
+* VMの設定 (CPU、メモリ、ネットワーク) を保持
 * オプションを選択した場合はVMを開始
 
-仮想マシンリストでクローンの進捗状況を監視します。PVCのクローンが完了するまで、クローンは「プロビジョニング中」と表示されます。
+仮想マシンリストでクローンの進捗状況を監視します。PVCのクローンが完了するまで、クローンは「Provisioning」と表示されます。
 
 image::clone-vm-dialog-full.png[要求の進捗状況が表示された仮想マシンのクローンダイアログ]
 
@@ -239,13 +239,13 @@ oc get vmi -n vm-cloning-demo
 virtctl console webserver-clone-1 -n vm-cloning-demo
 ----
 
-クローンされたVMには、nginxがプリインストールされており（ソースから継承）、最初は同じホスト名になっています。
+クローンされたVMには、nginxがプリインストールされており (ソースから継承)、最初は同じホスト名になっています。
 
 == CLIを使用したVMのクローン作成
 
-自動化やカスタマイズ、あるいは名前空間をまたぐクローン作成には、CLIを使用します。
+自動化やカスタマイズ、あるいはnamespaceをまたぐクローン作成には、CLIを使用します。
 
-=== 手法1：PVCをクローンし、その後にVMを作成（推奨）
+=== 手法1：PVCをクローンし、その後にVMを作成 (推奨) 
 
 これはCLIでの推奨されるアプローチです。まず、ソースVMのPVCを特定します。
 
@@ -287,10 +287,10 @@ spec:
         storage: 30Gi
     storageClassName: gp3-csi  # <2>
 ----
-<1> `WaitForFirstConsumer` バインディングモードを使用するストレージクラスで必要
-<2> ストレージクラスを指定（省略した場合はソースPVCから継承）
+<1> `WaitForFirstConsumer` バインディングモードを使用するStorage Classで必要
+<2> Storage Classを指定 (省略した場合はソースPVCから継承) 
 
-IMPORTANT: `cdi.kubevirt.io/storage.bind.immediate.requested: "true"` アノテーションは、`WaitForFirstConsumer` バインディングモードを使用するストレージクラス（AWS EBS gp3-csi、Azure Diskなど）において重要です。このアノテーションがないと、VMが使用しようとするまでDataVolumeは `PendingPopulation` 状態のままになります。
+IMPORTANT: `cdi.kubevirt.io/storage.bind.immediate.requested: "true"` アノテーションは、`WaitForFirstConsumer` バインディングモードを使用するStorage Class (AWS EBS gp3-csi、Azure Diskなど) において重要です。このアノテーションがないと、VMが使用しようとするまでDataVolumeは `PendingPopulation` 状態のままになります。
 
 DataVolumeを適用します。
 
@@ -374,7 +374,7 @@ VMを開始します。
 virtctl start webserver-clone-2 -n vm-cloning-demo
 ----
 
-=== 手法2：VM全体をクローンする（代替アプローチ）
+=== 手法2：VM全体をクローンする (代替アプローチ) 
 
 NOTE: この手法は手動での編集が必要であり、推奨されません。より信頼性が高くトラブルシューティングが容易な「手法1」を使用してください。
 
@@ -458,9 +458,9 @@ spec:
 * `metadata.resourceVersion`
 * `metadata.creationTimestamp`
 * `metadata.generation`
-* `status` セクション（セクション全体）
+* `status` セクション (セクション全体) 
 
-*5. MACアドレスを削除（重要）:*
+*5. MACアドレスを削除 (重要) :*
 
 自動割り当てを行うために、ネットワークインターフェースから `macAddress` フィールドを削除します。
 
@@ -493,7 +493,7 @@ oc apply -f clone-base.yaml
 
 === 新しいホスト名とパスワードでのクローン作成
 
-DataVolumeクローンを作成します（手法2と同様）。
+DataVolumeクローンを作成します (手法2と同様)。
 
 [source,bash,role=execute]
 ----
@@ -616,26 +616,26 @@ hostname
 # 出力: webserver-custom
 
 systemctl status nginx
-# nginxが実行中であることを確認（ソースから継承）
+# nginxが実行中であることを確認 (ソースから継承) 
 
 curl localhost
 # カスタムHTMLを表示
 ----
 
-== 名前空間をまたぐクローン作成
+== namespaceをまたぐクローン作成
 
-環境分離（開発、テスト、本番）のために、別の名前空間へVMをクローンします。
+環境分離 (開発、テスト、本番) のために、別のnamespaceへVMをクローンします。
 
-=== ターゲット名前空間の作成
+=== ターゲットnamespaceの作成
 
 [source,bash,role=execute]
 ----
 oc create namespace vm-cloning-production
 ----
 
-=== 名前空間をまたぐクローン作成のためのRBAC設定
+=== namespaceをまたぐクローン作成のためのRBAC設定
 
-ターゲット名前空間のサービスアカウントには、ソース名前空間のPVCへアクセスする権限が必要です。
+ターゲットnamespaceのサービスアカウントには、ソースnamespaceのPVCへアクセスする権限が必要です。
 
 xref:attachment$cloning-vms/cross-namespace-clone-rbac.yaml[cross-namespace-clone-rbac.yaml をダウンロード]
 
@@ -676,9 +676,9 @@ RBACを適用します。
 oc apply -f cross-namespace-clone-rbac.yaml
 ----
 
-=== 名前空間をまたぐクローン作成
+=== namespace をまたぐクローン作成
 
-デモ名前空間からクローンするDataVolumeを本番名前空間に作成します。
+demo namespace からクローンする DataVolume を production namespace に作成します。
 
 xref:attachment$cloning-vms/cross-namespace-clone-datavolume.yaml[cross-namespace-clone-datavolume.yaml をダウンロード]
 
@@ -782,8 +782,8 @@ spec:
 
 本番環境の主な違い:
 
-* 異なる名前空間
-* より多くのリソース（4コア、8Gi RAM）
+* 異なるnamespace
+* より多くのリソース (4コア、8Gi RAM) 
 * 本番固有のラベル
 * アクセス用パスワードの設定
 * 本番固有のカスタマイズ
@@ -802,12 +802,12 @@ virtctl start webserver-production -n vm-cloning-production
 
 クローン速度はストレージに依存します。
 
-* **スマートクローン**（CSIスナップショット）: 非常に高速、ストレージスナップショットを使用
+* **Smart cloning** (CSIスナップショット): 非常に高速、ストレージスナップショットを使用
   - Ceph RBD, AWS EBS, Azure Disk, GCP PD
   - フェーズ: `SnapshotForSmartCloneInProgress` → `SmartClonePVCInProgress`
 
-* **ホスト支援型クローン**: 低速、ポッド経由でデータをコピー
-  - スナップショットサポートがないストレージクラス
+* **Host-assisted cloning**: 低速、Pod経由でデータをコピー
+  - スナップショットサポートがないStorage Class
   - フェーズ: 進捗率が表示される `CloneInProgress`
 
 どちらの手法が使用されているか確認します。
@@ -820,9 +820,9 @@ oc get dv <datavolume-name> -n <namespace> -o yaml | grep cloneType
 出力:
 [source,yaml]
 ----
-cdi.kubevirt.io/cloneType: snapshot  # スマートクローン
+cdi.kubevirt.io/cloneType: snapshot  # Smart cloning
 # または
-cdi.kubevirt.io/cloneType: copy      # ホスト支援型クローン
+cdi.kubevirt.io/cloneType: copy      # Host-assisted cloning
 ----
 
 === ストレージ容量の要件
@@ -831,8 +831,8 @@ cdi.kubevirt.io/cloneType: copy      # ホスト支援型クローン
 
 * クローンは独立したコピーであり、スナップショットではありません。
 * 各クローンはソースボリュームと同じサイズのストレージを必要とします。
-* 容量の計画: （クローン数 × ソースボリュームサイズ）
-* 名前空間のクォータとストレージクラスの容量を確認してください。
+* 容量の計画: (クローン数 x ソースボリュームサイズ) 
+* namespaceのクォータとStorage Classの容量を確認してください。
 
 使用可能なストレージを検証します。
 
@@ -844,11 +844,11 @@ oc describe sc <storage-class-name>
 
 === ストレージのベストプラクティス
 
-* より高速なクローン作成のために、スナップショット対応のストレージクラスを使用する
+* より高速なクローン作成のために、スナップショット対応のStorage Classを使用する
 * クローンを作成する前に十分なストレージ容量を確保する
-* 名前空間内のストレージ使用量を監視する
+* namespace内のストレージ使用量を監視する
 * 使用していないクローンを定期的にクリーンアップする
-* 名前空間に対するストレージクォータを検討する
+* namespaceに対するストレージクォータを検討する
 
 == 検証とトラブルシューティング
 
@@ -921,20 +921,20 @@ cloud-init status
 # cloud-initログの表示
 sudo cat /var/log/cloud-init-output.log
 
-# マシンIDの確認（カスタマイズされている場合）
+# マシンIDの確認 (カスタマイズされている場合) 
 cat /etc/machine-id
 ----
 
 == よくある問題と解決策
 
-=== 問題：クローンが「プロビジョニング中」または「CloneInProgress」でスタックする
+=== 問題：クローンが「Provisioning」または「CloneInProgress」でスタックする
 
 **状況**: DataVolumeが長時間 `CloneInProgress` と表示される。
 
 **考えられる原因**:
 * ソースボリュームが大きい
 * ストレージまたはネットワークが遅い
-* 大規模ボリュームでのホスト支援型クローン
+* 大規模ボリュームでのHost-assisted cloning
 
 **解決策**:
 
@@ -943,18 +943,18 @@ cat /etc/machine-id
 # クローンイベントを確認
 oc describe dv <datavolume-name> -n <namespace>
 
-# CDIポッドを確認
+# CDI Podを確認
 oc get pods -n <namespace> | grep cdi
 
 # CDIログを表示
 oc logs <cdi-pod> -n <namespace>
 ----
 
-ボリュームが大きい場合、ホスト支援型クローンにはかなりの時間がかかることがあります。これは正常な動作です。
+ボリュームが大きい場合、Host-assisted cloningにはかなりの時間がかかることがあります。これは正常な動作です。
 
 === 問題：クローンが「permission denied」で失敗する
 
-**状況**: 名前空間をまたぐクローンがRBACエラーで失敗する。
+**状況**: namespaceをまたぐクローンがRBACエラーで失敗する。
 
 **解決策**: RBAC権限を確認します。
 
@@ -1018,7 +1018,7 @@ oc get dv <datavolume-name> -n <namespace> -o yaml
 
 === 問題：クローンは成功したがVMが起動しない
 
-**状況**: DataVolumeは成功したが、VMが「スケジューリング中」または「起動中」のままになる。
+**状況**: DataVolumeは成功したが、VMが「Scheduling」または「Starting」のままになる。
 
 **考えられる原因**:
 * PVCがバインドされていない
@@ -1035,7 +1035,7 @@ oc get pvc -n <namespace>
 # VMイベントを確認
 oc describe vm <vm-name> -n <namespace>
 
-# VMIを確認（存在する場合）
+# VMIを確認 (存在する場合) 
 oc describe vmi <vm-name> -n <namespace>
 ----
 
@@ -1045,10 +1045,10 @@ oc describe vmi <vm-name> -n <namespace>
 
 [source,bash,role=execute]
 ----
-# デモ名前空間内のすべてのVMを削除
+# demo namespace内のすべてのVMを削除
 oc delete vm --all -n vm-cloning-demo
 
-# デモ名前空間内のすべてのDataVolumeを削除
+# demo namespace内のすべてのDataVolumeを削除
 oc delete dv --all -n vm-cloning-demo
 
 # 本番VMを削除
@@ -1059,7 +1059,7 @@ oc delete dv --all -n vm-cloning-production
 oc delete role datavolume-cloner -n vm-cloning-demo
 oc delete rolebinding allow-clone-from-demo -n vm-cloning-demo
 
-# 名前空間を削除
+# namespaceを削除
 oc delete namespace vm-cloning-demo
 oc delete namespace vm-cloning-production
 ----
@@ -1076,13 +1076,13 @@ oc get namespace | grep vm-cloning
 このチュートリアルで学んだ内容:
 
 * OpenShift VirtualizationにおけるVMクローンの仕組み
-* WebコンソールとCLIによるクローン手法の違い
+* WebコンソールとCLIによるクローン方法の違い
 * OpenShift Webコンソールを使用したVMのクローン作成方法
 * スタンドアロンDataVolumeを使用したCLIによるクローン作成方法
 * cloud-initによるクローンのカスタマイズ方法
-* RBACを使用した名前空間をまたぐVMのクローン作成方法
+* RBACを使用したnamespaceをまたぐVMのクローン作成方法
 * スケールアウトシナリオ向けの複数クローン作成
-* ストレージの考慮事項：スマートクローンとホスト支援型クローンの違い
+* ストレージの考慮事項：Smart cloningとHost-assisted cloningの違い
 * クローン後のカスタマイズに関するベストプラクティス
 * 認証情報とシステムIDに関するセキュリティプラクティス
 * よくある問題とトラブルシューティング手法
@@ -1092,4 +1092,4 @@ VMのクローン作成は、OpenShift Virtualizationで事前設定済みの環
 
 == 参照
 
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/advanced-vm-creation#virt-creating-vms-by-cloning-pvcs[PVCのクローン作成によるVMの作成,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/advanced-vm-creation#virt-creating-vms-by-cloning-pvcs[PVCのクローンによるVMの作成,window=_blank]

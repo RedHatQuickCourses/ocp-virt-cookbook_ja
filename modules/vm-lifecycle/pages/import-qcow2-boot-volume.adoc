@@ -3,20 +3,20 @@
 
 == 概要
 
-このチュートリアルでは、既存のqcow2ディスクイメージをローカルのKVMプラットフォームからOpenShift Virtualizationにインポートして、ブートボリュームを作成する方法を説明します。これは、他の仮想化プラットフォームから仮想マシン（VM）を移行する場合や、OVA形式では利用できないカスタムOSテンプレートをデプロイする場合に特に役立ちます。
+このチュートリアルでは、既存のqcow2ディスクイメージをローカルのKVMプラットフォームからOpenShift Virtualizationにインポートして、ブートボリュームを作成する方法を説明します。これは、他の仮想化プラットフォームから仮想マシン (VM) を移行する場合や、OVA形式では利用できないカスタムOSテンプレートをデプロイする場合に特に役立ちます。
 
 qcow2 (QEMU Copy-On-Write version 2) は、KVMやその他のQEMUベースの仮想化プラットフォームで一般的に使用されるディスクイメージ形式です。これらのイメージをインポートすることで、既存のワークロードをOpenShift Virtualizationへ迅速に移行できます。
 
-注意: このチュートリアルは、OpenShift Virtualizationを導入したOpenShift 4.18.33環境で、AWS EBS gp3-csiストレージクラスを使用してテストされています。
+NOTE: このチュートリアルは、OpenShift Virtualizationを導入したOpenShift 4.18.33環境で、AWßS EBS gp3-csiストレージクラスを使用してテストされています。
 
 == 前提条件
 
-* OpenShift 4.18以降と xref:getting-started:install-openshift-virtualization.adoc[OpenShift Virtualizationオペレーターのインストール]
+* OpenShift 4.18以降と xref:getting-started:install-openshift-virtualization.adoc[OpenShift Virtualization Operator のインストール]
 * CLIツール: `oc`, xref:getting-started:virtctl-basics.adoc[`virtctl`]
 * `qemu-img` (オプション) - qcow2イメージの詳細をローカルで調査するために使用
-* ローカルで利用可能な（またはHTTP/S3経由でアクセス可能な）qcow2イメージファイル
+* ローカルで利用可能な (またはHTTP/S3経由でアクセス可能な) qcow2イメージファイル
 * xref:getting-started:default-storage-class.adoc[ストレージクラスの設定] - 動的なボリュームプロビジョニング用
-* 名前空間（namespace）内の十分なストレージクォータ
+* namespace 内の十分なストレージクォータ
 
 == インポート方法の概要
 
@@ -40,7 +40,7 @@ qcow2イメージをOpenShift Virtualizationにインポートする主な方法
 
 |**VM with DataVolumeTemplate**
 |アップロードを伴うVM作成
-|VM仕様にアップロードソースを含むDataVolumeTemplateを組み込む
+|VM specにアップロードソースを含むDataVolumeTemplateを組み込む
 |===
 
 このチュートリアルでは、導入として最も分かりやすい **virtctl image-upload** メソッドに焦点を当てます。その他の方法は後のセクションで扱います。
@@ -62,7 +62,7 @@ curl -LO https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x
 ls -lh Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
 ----
 
-=== イメージ詳細の確認（オプション）
+=== イメージ詳細の確認 (オプション) 
 
 ローカルに `qemu-img` がインストールされている場合は、イメージを調査できます。
 
@@ -80,11 +80,11 @@ virtual size: 5 GiB (5368709120 bytes)
 disk size: 420 MiB
 ----
 
-仮想サイズ（virtual size）に注意してください。DataVolumeを作成する際は、少なくともこの容量以上のストレージを指定する必要があります。
+Virtual size に注意してください。DataVolumeを作成する際は、少なくともこの容量以上のストレージを指定する必要があります。
 
-== ステップ 2: 名前空間の作成
+== ステップ 2: namespaceの作成
 
-インポートするVM用の名前空間を作成します。
+インポートするVM用のnamespaceを作成します。
 
 [source,bash,role=execute]
 ----
@@ -109,12 +109,12 @@ virtctl image-upload pvc fedora-imported-disk \
 
 * `pvc fedora-imported-disk` - 作成されるPVCの名前
 * `--image-path` - ローカルのqcow2ファイルへのパス
-* `--size` - 作成するPVCのサイズ（qcow2イメージの仮想サイズ以上である必要があります）
-* `--namespace` - 対象の名前空間
-* `--insecure` - TLS検証をスキップ（自己署名証明書を使用する場合）
-* `--force-bind` - PVCの即時バインドを強制（`WaitForFirstConsumer`モードのStorageClassで必須）
+* `--size` - 作成するPVCのサイズ (qcow2イメージのVirtual size以上である必要があります) 
+* `--namespace` - 対象のnamespace
+* `--insecure` - TLS検証をスキップ (自己署名証明書を使用する場合) 
+* `--force-bind` - PVCの即時バインドを強制 (`WaitForFirstConsumer`モードのStorageClassで必須) 
 
-重要: `--force-bind` フラグは、`volumeBindingMode: WaitForFirstConsumer` を使用するStorageClass（AWS EBS、Azure Disk、その他のクラウドプロバイダーで一般的）を使用する場合に必須です。このフラグがないと、PVCが保留（pending）状態のままとなり、アップロードが開始されません。
+重要: `--force-bind` フラグは、`volumeBindingMode: WaitForFirstConsumer` を使用するStorageClass (AWS EBS、Azure Disk、その他のクラウドプロバイダーで一般的) を使用する場合に必須です。このフラグがないと、PVCが保留 (pending) 状態のままとなり、アップロードが開始されません。
 
 アップロードの進行状況の出力:
 [source,text]
@@ -147,7 +147,7 @@ fedora-imported-disk   Pending
 fedora-imported-disk   Bound     pvc-xxxxx                                  10Gi       RWO
 ----
 
-必要に応じて `cdi-upload` ポッドのログを確認してください。
+必要に応じて `cdi-upload` Podのログを確認してください。
 
 [source,bash,role=execute]
 ----
@@ -254,7 +254,7 @@ VMコンソールにアクセスします。
 virtctl console fedora-imported-vm -n imported-vms
 ----
 
-cloud-initで設定した資格情報（ユーザー: `fedora`、パスワード: `fedora123`）でログインします。
+cloud-initで設定した資格情報 (ユーザー: `fedora`、パスワード: `fedora123`) でログインします。
 
 インポートしたイメージからシステムが起動したことを確認します。
 
@@ -352,7 +352,7 @@ podman build -t quay.io/youruser/fedora-disk:v1 .
 podman push quay.io/youruser/fedora-disk:v1
 ----
 
-VM仕様で使用します。
+VM specで使用します。
 
 [source,yaml]
 ----
@@ -362,13 +362,13 @@ volumes:
       image: quay.io/youruser/fedora-disk:v1
 ----
 
-注意: ContainerDiskは一時的なものです。変更はVM停止時に失われるため、個別の永続ボリュームをアタッチしない限り保持されません。
+注意: ContainerDiskは一時的なものです。変更はVM停止時に失われるため、個別の Persistent Volume をアタッチしない限り保持されません。
 
 === 方法 4: DataVolumeTemplateとアップロードソースを用いたVM
 
-この方法は、DataVolumeTemplateを使用して、VM作成とアップロード機能を組み合わせます。DataVolumeはVM仕様内にインラインで定義され、VM作成時に自動的に作成されます。
+この方法は、DataVolumeTemplateを使用して、VM作成とアップロード機能を組み合わせます。DataVolumeはVM spec内にインラインで定義され、VM作成時に自動的に作成されます。
 
-**この方法の用途:**
+**用途:**
 - VMとそのストレージを単一のマニフェストで定義したい
 - GitOpsや宣言的なワークフローを使用している
 - DataVolumeのライフサイクルをVMに連動させたい
@@ -426,7 +426,7 @@ spec:
           name: rootdisk
 ----
 
-VMを作成します（これによりVMとDataVolumeの両方が作成されます）。
+VMを作成します。これによりVMとDataVolumeの両方が作成されます) 。
 
 [source,bash,role=execute]
 ----
@@ -452,7 +452,7 @@ virtctl image-upload dv vm-with-upload-disk \
 virtctl start vm-with-upload -n imported-vms
 ----
 
-**この方法のメリット:**
+**メリット:**
 - 単一マニフェストでVMとストレージの両方を定義できる
 - DataVolumeのライフサイクルがVMとともに管理される
 - Infrastructure-as-Codeワークフローに適している
@@ -471,8 +471,8 @@ virtctl start vm-with-upload -n imported-vms
 * **cloud-initのインストール** - 適切な初期化のためにcloud-initがインストールされていることを確認
 
 === ストレージのサイジング
-* **拡張性を考慮** - VM操作を見越して、仮想サイズよりも多くのストレージを割り当て
-* **シンプロビジョニング** - 利用可能な場合はシンプロビジョニングをサポートするストレージクラスを使用
+* **拡張性を考慮** - VM操作を見越して、Virtual sizeよりも多くのストレージを割り当て
+* **シンプロビジョニング** - 利用可能な場合、シンプロビジョニングをサポートするストレージクラスを使用
 * **使用状況の監視** - 定期的にPVCの使用状況を追跡
 
 === セキュリティ
@@ -490,7 +490,7 @@ virtctl start vm-with-upload -n imported-vms
 
 === アップロードが "Waiting for PVC upload pod to be ready" で停止する
 
-アップロードがポッドを待機したままになり、PVCが "WaitForFirstConsumer" ステータスになる場合は、StorageClassのバインドモードの問題です。
+アップロードがPodを待機したままになり、PVCが "WaitForFirstConsumer" ステータスになる場合は、StorageClass の binding mode の問題です。
 
 PVCのステータスを確認します。
 
@@ -525,7 +525,7 @@ oc delete pvc fedora-imported-disk -n imported-vms
 
 === アップロードが "Unable to get PVC Prime name from PVC" で失敗する
 
-このエラーは、DataVolumeベースのアップロードを使用する特定のCDIバージョンで発生する可能性があります。解決策は、代わりにPVCメソッドを使用することです（このチュートリアルで採用している方法です）。
+このエラーは、DataVolumeベースのアップロードを使用する特定のCDIバージョンで発生する可能性があります。解決策は、代わりにPVCメソッドを使用することです (このチュートリアルで採用している方法です) 。
 
 [source,bash,role=execute]
 ----
@@ -538,10 +538,10 @@ virtctl image-upload pvc <pvc-name> \
 ----
 
 一般的な原因:
-* **CDIオペレーターの問題**: `cdi-deployment` と `cdi-operator` ポッドが実行されているか確認
-* **ストレージクラスの問題**: StorageClassがボリュームをプロビジョニングできることを確認
+* **CDI Operator の問題**: `cdi-deployment` と `cdi-operator` Podが実行されているか確認
+* **Storage Classの問題**: StorageClass がボリュームをプロビジョニングできることを確認
 
-CDIポッドの状態を確認します。
+CDI Podの状態を確認します。
 
 [source,bash,role=execute]
 ----
@@ -550,7 +550,7 @@ oc get pods -n openshift-cnv | grep cdi
 
 === アップロードがスタックする、または非常に低速
 
-CDIアップロードプロキシポッドの状態を確認します。
+CDI upload proxy Podの状態を確認します。
 
 [source,bash,role=execute]
 ----
@@ -562,7 +562,7 @@ oc logs -n openshift-cnv <cdi-uploadproxy-pod>
 
 === PVCサイズ不足エラー
 
-`--size` パラメータは、qcow2イメージの仮想サイズよりも大きくする必要があります。
+`--size` パラメータは、qcow2イメージのVirtual sizeよりも大きくする必要があります。
 
 [source,bash]
 ----
@@ -602,7 +602,7 @@ virtctl console fedora-imported-vm -n imported-vms
 
 一般的な原因:
 * イメージが破損している - チェックサムを確認
-* マシンの種類が誤っている - VM仕様で `machine.type` を調整
+* マシンの種類が誤っている - VM specで `machine.type` を調整
 * ブートローダーがない - イメージに適切なブート設定があるか確認
 
 == クリーンアップ
@@ -631,7 +631,7 @@ oc delete namespace imported-vms
 * `virtctl image-upload pvc` を使用したqcow2イメージの直接アップロード
 * インポートしたブートボリュームを使用したVMの作成
 * アップロードプロセスの監視
-* その他のインポート方法（HTTP, ContainerDisk, DataVolumeTemplate）の使用
+* その他のインポート方法 (HTTP、ContainerDisk、DataVolumeTemplate) の使用
 * イメージインポートとストレージ管理のベストプラクティス
 * 一般的なインポートの問題のトラブルシューティング
 
