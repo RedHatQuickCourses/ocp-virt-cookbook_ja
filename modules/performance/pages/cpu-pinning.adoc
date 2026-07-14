@@ -3,45 +3,45 @@
 
 == 概要
 
-本チュートリアルでは、OpenShift Virtualizationにおいて仮想マシン向けの専用CPU配置を設定する方法を解説します。デフォルトでは、仮想マシンのvCPUはホスト上の他のワークロードと物理CPU時間を共有します。専用CPU配置を使用すると、各vCPUが特定の物理CPUに固定（ピン留め）されるため、CPUスティールが排除され、スケジューリングのジッター（揺らぎ）が軽減されます。
+本チュートリアルでは、OpenShift Virtualizationにおいて仮想マシン向けの専用CPU配置を設定する方法を解説します。デフォルトでは、仮想マシンのvCPUはホスト上の他のワークロードと物理CPUの処理時間を共有します。専用CPU配置を使用すると、各vCPUが特定の物理CPUに固定 (pinning) されるため、CPUスティールが排除され、スケジューラによる割り当ての揺らぎ (jitter) を低減します。
 
-この設定は、予測可能なレイテンシが求められるNFV/通信アプリケーション、リアルタイム処理、HPC、およびレイテンシに敏感なデータベースなどのワークロードに不可欠です。
+この設定は、想定可能な遅延が求められるNFV/通信アプリケーション、リアルタイム処理、HPC、遅延に敏感なデータベースなどのワークロードに不可欠です。
 
 == 前提条件
 
-* OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以上（4.21で検証済み）
-* クラスター管理者アクセス権（`system:admin` または同等の権限）
+* OpenShift Virtualization Operator がインストールされたOpenShift 4.18以上 (4.21で検証済み) 
+* クラスター管理者アクセス権 (`system:admin` または同等の権限) 
 * `oc` および `virtctl` CLIがインストール済みであること
-* 十分な物理CPUコアを持つワーカーノード（少なくとも4コア推奨）
-* KubernetesのQoSクラスに関する知識（xref:resource-limits-qos.adoc[]を参照）
+* 十分な物理CPUコアを持つワーカーノード (少なくとも4コア推奨) 
+* KubernetesのQoSクラスに関する知識 (xref:resource-limits-qos.adoc[]を参照) 
 
 == 専用CPU配置の理解
 
-OpenShiftはKubernetesのCPUマネージャーを使用して、Podに排他的な物理CPUを割り当てます。CPUマネージャーが `static` ポリシーで実行されている場合、Podのコンテナーをホストの専用CPUに固定し、他のワークロードがそれらのCPUを使用できないように制限できます。
+OpenShiftはKubernetesのCPU Managerを使用して、Podに排他的な物理CPUを割り当てます。CPU Managerが `static` ポリシーで実行されている場合、Podのコンテナーをホストの専用CPUに固定し、他のワークロードがそれらのCPUを使用できないように制限できます。
 
-KubeVirtの `dedicatedCpuPlacement` フィールドは、CPUマネージャーに対して `virt-launcher` PodのvCPUを物理CPUに固定するように指示します。Podが実行されると、各ゲストvCPUは予約された物理CPUに直接マッピングされます。
+KubeVirtの `dedicatedCpuPlacement` フィールドは、CPU Managerに対して `virt-launcher` PodのvCPUを物理CPUに固定するように指示します。Podが実行されると、各ゲストvCPUは予約された物理CPUに直接マッピングされます。
 
 専用配置が機能するには、以下の2つの要件を満たす必要があります。
 
-* ノードのCPUマネージャーが `static` ポリシーで実行されていること。
-* VMのQoSが *Guaranteed* であること：CPUおよびメモリの要求量（request）が上限（limit）と一致しており、かつCPU数が整数である必要があります。
+* ノードのCPU Managerが `static` ポリシーで実行されていること。
+* VMのQoSが *Guaranteed* であること：CPUおよびメモリの requests が limits と一致しており、かつCPU数が整数である必要があります。
 
 [cols="1,2,2",options="header"]
 |===
 |モード |vCPUの動作 |ユースケース
 
-|デフォルト（共有）
-|vCPUが他のすべてのワークロードとホストCPU時間を競合する
-|汎用VM、開発環境、レイテンシが重要ではないワークロード
+|デフォルト (shared) 
+|vCPUが他のすべてのワークロードと物理CPUの処理時間を共有する
+|汎用VM、開発環境、遅延が重要ではないワークロード
 
 |専用 (`dedicatedCpuPlacement: true`)
 |vCPUが予約済み物理CPUに固定され、CPUスティールが発生しない
-|NFV/通信、リアルタイム処理、HPC、レイテンシに敏感なデータベース
+|NFV/通信、リアルタイム処理、HPC、遅延に敏感なデータベース
 |===
 
-== ステップ 1: CPUマネージャーのスタティックポリシーを有効にする
+== ステップ 1: CPU ManagerのStatic Policyを有効にする
 
-CPUマネージャーのポリシーは、`KubeletConfig` リソースを使用してMachineConfigPoolごとに設定します。
+CPU Managerのポリシーは、`KubeletConfig` リソースを使用してMachineConfigPoolごとに設定します。
 
 まず、この設定の対象を識別するために、ワーカーのMachineConfigPoolにラベルを追加します。
 
@@ -54,7 +54,7 @@ NOTE: シングルノードOpenShift (SNO) クラスターの場合、ノード�
 
 xref:attachment$cpu-pinning/kubeletconfig-static-policy.yaml[kubeletconfig-static-policy.yaml をダウンロード]
 
-`KubeletConfig` を適用して、スタティックCPUマネージャーポリシーを有効にします。
+`KubeletConfig` を適用して、Static CPU manager policy を有効にします。
 
 [source,bash,role=execute]
 ----
@@ -87,7 +87,7 @@ NAME     CONFIG                                             UPDATED   UPDATING  
 worker   rendered-worker-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   True      False      False
 ----
 
-=== CPUマネージャーポリシーの確認
+=== CPU Manager Policy の確認
 
 各ワーカーノードのkubeletが `static` ポリシーで実行されていることを確認します。
 
@@ -105,7 +105,7 @@ cpuManagerReconcilePeriod: 5s
 
 == ステップ 2: 専用CPUワークロード用のノードにラベルを付ける
 
-専用CPU配置を要求するVMは、CPUマネージャーが実行されているノードのみをターゲットにするためにノードセレクターが必要です。スタティックポリシーが有効な各ワーカーノードに `cpumanager=true` ラベルを適用します。
+専用CPU配置をリクエストするVMは、CPU Managerが実行されているノードのみをターゲットにするためにNodeSelectorが必要です。Static Policyが有効な各ワーカーノードに `cpumanager=true` ラベルを適用します。
 
 [source,bash,role=execute]
 ----
@@ -127,7 +127,7 @@ worker-01    Ready    worker   10d   v1.34.5   true
 worker-02    Ready    worker   10d   v1.34.5   true
 ----
 
-NOTE: KubeVirt CRで `CPUManager` フィーチャーゲートが有効になっている場合、KubeVirtが自動的に `cpumanager=true` ラベルを管理できます。有効な場合、KubeVirtはスタティックCPUマネージャーポリシーが実行されているノードを検出し、ラベルの付与・削除を自動的に行います。フィーチャーゲートがない場合は、ノードの追加や再設定のたびにこのラベルを手動で管理してください。
+NOTE: KubeVirt CRで `CPUManager` フィーチャーゲートが有効になっている場合、KubeVirtが自動的に `cpumanager=true` ラベルを管理できます。有効な場合、KubeVirtはStatic CPU manager policyが実行されているノードを検出し、ラベルの付与や削除を自動的に行います。フィーチャーゲートがない場合は、ノードの追加や再設定のたびにこのラベルを手動で管理してください。
 
 == ステップ 3: 名前空間の作成
 
@@ -138,7 +138,7 @@ oc create namespace cpu-pinning-demo
 
 == ステップ 4: 専用CPU配置でVMをデプロイする
 
-以下のVM仕様は、`dedicatedCpuPlacement: true` を使用して2つの専用vCPUを要求します。`nodeSelector` により、VMは `cpumanager=true` とラベル付けされたノードでのみスケジューリングされます。メモリの要求量と上限は同一であり、Guaranteed QoS要件を満たしています。
+以下のVM仕様は、`dedicatedCpuPlacement: true` を使用して2つの専用vCPUをリクエストします。`nodeSelector` により、VMは `cpumanager=true` とラベル付けされたノードでのみスケジューリングされます。メモリのrequestsとlimitsは同一であり、Guaranteed QoS要件を満たしています。
 
 WARNING: この例のcloud-initパスワードはデモンストレーション目的のみです。本番環境では、SSHキー認証または強力でユニークなパスワードを使用してください。
 
@@ -202,7 +202,7 @@ spec:
 EOF
 ----
 
-NOTE: QEMUおよびハイパーバイザーのオーバーヘッドを考慮し、メモリ制限（2Gi）はゲストメモリ（1Gi）よりも高く設定されています。KubeVirtがどのようにVMのメモリ仕様をコンテナーリソース値に変換するかについては、xref:resource-limits-qos.adoc[]を参照してください。
+NOTE: QEMUおよびハイパーバイザーのオーバーヘッドを考慮し、メモリ制限 (2Gi) はゲストメモリ (1Gi) よりも高く設定されています。KubeVirtがどのようにVMのメモリ仕様をコンテナーリソース値に変換するかについては、xref:resource-limits-qos.adoc[]を参照してください。
 
 VMがRunning状態になるまで待ちます。
 
@@ -218,7 +218,7 @@ NAME              AGE   STATUS    READY
 vm-dedicated-cpu  30s   Running   True
 ----
 
-== ステップ 5: CPUピン留めの確認
+== ステップ 5: CPU pinning の確認
 
 === ホスト側での確認
 
@@ -243,7 +243,7 @@ vm-dedicated-cpu  60s   Running   10.128.0.45   worker-01   True
 oc debug node/<node-name>
 ----
 
-デバッグシェル内で、CPUマネージャーの状態ファイルを確認します。このファイルには、各コンテナーにどの物理CPUが割り当てられているかが記録されています。
+デバッグシェル内で、CPU Manager state fileを確認します。このファイルには、各コンテナーにどの物理CPUが割り当てられているかが記録されています。
 
 [source,bash,role=execute]
 ----
@@ -274,7 +274,7 @@ VMコンソールに接続します。
 virtctl console vm-dedicated-cpu -n cpu-pinning-demo
 ----
 
-ユーザー `fedora`、パスワード `redhat` でログインします。ゲストOS内で、オペレーティングシステムから認識されているvCPUの数を確認します。
+ユーザー `fedora`、パスワード `redhat` でログインします。ゲストOS内で認識されているvCPUの数を確認します。
 
 [source,bash,role=execute]
 ----
@@ -290,15 +290,15 @@ Core(s) per socket:      1
 Socket(s):               2
 ----
 
-ゲストは2つのvCPU（2ソケット、1コア、各1スレッド）を認識しており、要求されたトポロジーと一致しています。
+ゲストは2つのvCPU (2ソケット、1コア、各1スレッド) を認識しており、リクエストされた Topology と一致しています。
 
 `Ctrl+]` を押してコンソールから切断します。
 
-== エミュレーター・スレッドの分離
+== Emulator Thread の分離
 
-QEMUは、I/O、タイマー、その他のハイパーバイザー・タスクを処理するエミュレーター・スレッドを実行します。デフォルトでは、このスレッドはVMのvCPUと物理CPU時間を共有するため、レイテンシのスパイクを引き起こす可能性があります。`isolateEmulatorThread` オプションは、このスレッド専用に追加の物理CPUを予約します。
+QEMUは、I/O、タイマー、その他のハイパーバイザータスクを処理するEmulator Threadを実行します。デフォルトでは、このスレッドはVMのvCPUと物理CPUの処理時間を共有するため、遅延のスパイクを引き起こす可能性があります。`isolateEmulatorThread` オプションは、このスレッド専用に追加の物理CPUを予約します。
 
-エミュレーター・スレッドの分離を有効にするには、VMスペックのCPUセクションに `dedicatedCpuPlacement: true` と併せて `isolateEmulatorThread: true` を追加します。
+Emulator Threadの分離を有効にするには、VMスペックのCPUセクションに `dedicatedCpuPlacement: true` と併せて `isolateEmulatorThread: true` を追加します。
 
 [source,yaml]
 ----
@@ -311,9 +311,9 @@ domain:
     isolateEmulatorThread: true
 ----
 
-この設定により、KubeVirtは合計3つの物理CPUを要求します（2つはvCPU用、1つはエミュレーター・スレッド専用）。エミュレーターに起因するわずかなジッターにも敏感なワークロードの場合にこのオプションを使用してください。
+この設定により、KubeVirtは合計3つの物理CPUをリクエストします (2つはvCPU用、1つはEmulator Thread専用) 。エミュレーターに起因するわずかな揺らぎにも敏感なワークロードの場合にこのオプションを使用してください。
 
-NOTE: Simultaneous Multithreading (SMT) が有効なノードで `full-pcpus-only` CPUマネージャーオプションを使用している場合、偶数のvCPUで `isolateEmulatorThread` を使用するとスケジューリングエラーが発生することがあります。これを解決するには、KubeVirt CRで `AlignCPUs` フィーチャーゲートを有効にしてください。
+NOTE: Simultaneous Multithreading (SMT) が有効なノードで `full-pcpus-only` CPU Manager option を使用している場合、偶数のvCPUで `isolateEmulatorThread` を使用するとスケジューリングエラーが発生することがあります。これを解決するには、KubeVirt CRで `AlignCPUs` フィーチャーゲートを有効にしてください。
 
 == トラブルシューティング
 
@@ -334,10 +334,10 @@ Warning  FailedScheduling  0/3 nodes are available: 3 node(s) didn't match Pod's
 
 *考えられる原因と解決策:*
 
-* *`cpumanager=true` ラベル付きノードがない*: `oc get nodes -L cpumanager` を実行し、スタティックCPUマネージャーポリシーが適用されているノードにラベルを付与します。
-* *利用可能な固定可能CPUが不足している*: CPUマネージャーは割り当て可能なプールからCPUを予約します。`oc describe node <node-name>` でノードのキャパシティを確認し、要求を満たすのに十分なCPUがあるか検証します。
+* *`cpumanager=true` ラベル付きノードがない*: `oc get nodes -L cpumanager` を実行し、Static CPU manager policyが適用されているノードにラベルを付与します。
+* *利用可能な固定可能CPUが不足している*: CPU Managerは割り当て可能なプールからCPUを予約します。`oc describe node <node-name>` でノードのキャパシティを確認し、リクエストを満たすのに十分なCPUがあるか検証します。
 
-=== VM起動後にCPUピン留めが有効にならない
+=== VM起動後に CPU pinning が有効にならない
 
 KubeletConfigが正しく適用されたか確認します。
 
@@ -362,7 +362,7 @@ oc logs -n openshift-machine-config-operator -l k8s-app=machine-config-operator 
 
 === VMが "insufficient dedicated CPU resources" でアドミッションに失敗する
 
-このエラーは、`dedicatedCpuPlacement: true` が設定されているが、QoSクラスがGuaranteedではないことを意味します。CPU要求量と上限が等しいこと、および両方が整数値であることを確認してください。
+このエラーは、`dedicatedCpuPlacement: true` が設定されているが、QoSクラスがGuaranteedではないことを意味します。CPU requestsとlimitsが等しいこと、両方が整数値であることを確認してください。
 
 virt-launcher Podに実際に割り当てられているQoSクラスを確認します。
 
@@ -371,11 +371,11 @@ virt-launcher Podに実際に割り当てられているQoSクラスを確認し
 oc get pod -n cpu-pinning-demo -l kubevirt.io/domain=vm-dedicated-cpu -o jsonpath='{.items[0].status.qosClass}{"\n"}'
 ----
 
-値は `Guaranteed` である必要があります。`Burstable` の場合は、VMのリソース仕様を見直し、メモリ要求量とメモリ上限が一致していることを確認してください。
+値は `Guaranteed` である必要があります。`Burstable` の場合は、VMのリソース仕様を見直し、Memory requestsとMemory limitsが一致していることを確認してください。
 
 === `cpu_manager_state` にVMのエントリが表示されない
 
-CPUマネージャー状態ファイルにvirt-launcher PodのCPU割り当てがリストされていない場合、ノードのkubeletがまだ `none` ポリシーで動作している可能性があります。ポリシーを確認します。
+CPU Manager state fileにvirt-launcher PodのCPU割り当てがリストされていない場合、ノードのkubeletがまだ `none` ポリシーで動作している可能性があります。ポリシーを確認します。
 
 [source,bash,role=execute]
 ----
@@ -400,7 +400,7 @@ oc delete namespace cpu-pinning-demo
 oc label node <node-name> cpumanager-
 ----
 
-CPUマネージャーポリシーを元に戻すには、`KubeletConfig` を削除し、MachineConfigPoolからラベルを削除します。
+CPU manager policy を元に戻すには、`KubeletConfig` を削除し、MachineConfigPoolからラベルを削除します。
 
 [source,bash,role=execute]
 ----
@@ -412,18 +412,18 @@ oc delete kubeletconfig cpumanager-enabled
 oc label machineconfigpool worker custom-kubelet-
 ----
 
-WARNING: `KubeletConfig` を削除すると、kubelet設定を元に戻すために別のMCOロールアウトがトリガーされます。CPUマネージャーの動作に依存する追加のワークロードをスケジュールする前に、MachineConfigPoolのロールアウトが完了したことを確認してください。
+WARNING: `KubeletConfig` を削除すると、kubelet設定を元に戻すために別のMCOロールアウトがトリガーされます。CPU Managerの動作に依存する追加のワークロードをスケジュールする前に、MachineConfigPoolのロールアウトが完了したことを確認してください。
 
 == まとめ
 
 このチュートリアルでは、以下の方法を学びました。
 
-* `KubeletConfig` リソースを使用して、Kubernetes CPUマネージャーで `static` ポリシーを設定する
+* `KubeletConfig` リソースを使用して、Kubernetes CPU Manager で `static` ポリシーを設定する
 * 専用CPU配置が利用可能であることを示すノードラベルを付ける
 * `dedicatedCpuPlacement: true` とGuaranteed QoSを持つ仮想マシンをデプロイする
-* CPUマネージャー状態ファイルを使用して、ホスト側からCPUピン留めを確認する
-* ゲスト内からvCPUトポロジーを確認する
-* 必要に応じて `isolateEmulatorThread: true` を使用してQEMUエミュレーター・スレッドを分離する
+* CPU Manager state fileを使用して、ホスト側から CPU pinning を確認する
+* ゲスト内からvCPU Topology を確認する
+* 必要に応じて `isolateEmulatorThread: true` を使用してQEMU Emulator Threadを分離する
 
 == 参照
 
@@ -431,5 +431,5 @@ WARNING: `KubeletConfig` を削除すると、kubelet設定を元に戻すため
 * xref:vm-configuration:node-placement-affinity.adoc[ノード配置とアフィニティ] -- VMスケジューリング用の特定のノードをターゲットにする
 * xref:vm-configuration:infrastructure-node-placement.adoc[インフラストラクチャノード配置] -- 仮想化ワークロード専用のノードプール
 * link:https://kubevirt.io/user-guide/compute/dedicated_cpu_resources/[KubeVirt 専用CPUリソース (英語),window=_blank]
-* link:https://docs.openshift.com/container-platform/4.18/scalability_and_performance/using-cpu-manager.html[CPUマネージャーとトポロジーマネージャーの使用 - OpenShiftドキュメント (英語),window=_blank]
+* link:https://docs.openshift.com/container-platform/4.18/scalability_and_performance/using-cpu-manager.html[CPU Manager と Topology Manager の使用 - OpenShiftドキュメント (英語),window=_blank]
 * link:https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/[CPU管理ポリシー - Kubernetesドキュメント (英語),window=_blank]
