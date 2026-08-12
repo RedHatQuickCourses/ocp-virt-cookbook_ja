@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>仮想マシン向け SR-IOV セカンダリネットワークの構成 :: OpenShift Virtualization cookbook</title>
+    <title>仮想マシン用 SR-IOV セカンダリネットワークの構成 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="linux-bridges.html">
     <link rel="next" href="vm-ingress-routes.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
     <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -300,7 +300,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">仮想マシン向け SR-IOV セカンダリネットワークの構成</h1>
+<h1 class="page">仮想マシン用 SR-IOV セカンダリネットワークの構成</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
@@ -313,7 +313,7 @@
 </div>
 <div class="paragraph">
 <p>SR-IOV (Single Root I/O Virtualization) を使用すると、単一の物理ネットワークアダプターが複数の仮想機能 (VF) を提供できるようになり、それらを直接仮想マシン (VM) にパススルーできます。
-ソフトウェアベースのネットワーキング (OVN オーバーレイや Linux ブリッジ) とは異なり、SR-IOV はホストのネットワークスタックを完全にバイパスするため、VM はネイティブに近いネットワークパフォーマンスを得ることができます。
+ソフトウェアベースのネットワーキング (OVN overlay や Linux bridge) とは異なり、SR-IOV はホストのネットワークスタックを完全にバイパスするため、VM は物理環境に限りなく近いネットワークパフォーマンスを得ることができます。
 このため、SR-IOV はネットワーク機能 (NFV)、リアルタイムデータ処理、大規模データ転送など、高スループットや低レイテンシ、あるいはその両方が求められるワークロードにとって最適な選択肢となります。</p>
 </div>
 <div class="paragraph">
@@ -332,13 +332,13 @@
 <div class="ulist">
 <ul>
 <li>
-<p>OpenShift Virtualization オペレーターがインストールされた OpenShift 4.18+ クラスター (4.21 で検証済み)</p>
+<p>OpenShift Virtualization Operator がインストールされた OpenShift 4.18+ クラスター (4.21 で検証済み)</p>
 </li>
 <li>
 <p>クラスターに SR-IOV Network Operator がインストールされていること</p>
 </li>
 <li>
-<p>ワーカーノードに SR-IOV 対応ネットワークアダプターが少なくとも 1 つ搭載されていること (Intel X710、XXV710、E810、または Mellanox ConnectX-4/5/6 ファミリー)</p>
+<p>Worker Node に SR-IOV 対応ネットワークアダプターが少なくとも 1 つ搭載されていること (Intel X710、XXV710、E810、Mellanox ConnectX-4/5/6 ファミリー)</p>
 </li>
 <li>
 <p>BIOS/UEFI で IOMMU (Intel VT-d または AMD-Vi) が有効になっていること</p>
@@ -354,10 +354,19 @@
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>警告: SR-IOV の設定を変更すると、物理 NIC 上の仮想機能の数が変更されます。
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+SR-IOV の設定を変更すると、物理 NIC 上の仮想機能の数が変更されます。
 アダプターやドライバーによっては、Machine Config Operator を介して SR-IOV Network Operator が管理するノードの再起動が必要になる場合があります。
-本番環境のノードに対しては、計画的に実施してください。</p>
+本番環境のノードに対して、計画的に実施してください。
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -365,7 +374,7 @@
 <h2 id="_ステップ_1_sr_iov_operator_の準備状況の確認"><a class="anchor" href="#_ステップ_1_sr_iov_operator_の準備状況の確認"></a>ステップ 1: SR-IOV Operator の準備状況の確認</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>OperatorHub から SR-IOV Network Operator をインストールした後、その ClusterServiceVersion が <code>Succeeded</code> と報告され、すべてのオペレーター Pod が実行中であることを確認します。</p>
+<p>OperatorHub から SR-IOV Network Operator をインストールした後、その ClusterServiceVersion が <code>Succeeded</code> と報告され、すべての Operator Pod が実行中であることを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -373,7 +382,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力 (バージョンは異なる場合があります):</p>
+<p>期待される出力 (バージョンにより異なる場合があります):</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -382,7 +391,7 @@ sriov-network-operator.v4.21.0-202605200241   SR-IOV Network Operator   4.21.0-2
 </div>
 </div>
 <div class="paragraph">
-<p>オペレーター Pod が実行中であることを確認します:</p>
+<p>Operator Pod が実行中であることを確認します:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -390,8 +399,8 @@ sriov-network-operator.v4.21.0-202605200241   SR-IOV Network Operator   4.21.0-2
 </div>
 </div>
 <div class="paragraph">
-<p>オペレーター、webhook、および injector Pod が <code>Running</code> 状態になっているはずです。
-SR-IOV 対応ハードウェアを持つ各ワーカーノード上には、<code>sriov-network-config-daemon</code> Pod も表示されるはずです。</p>
+<p>Operator、webhook、injector Pod が <code>Running</code> 状態になっているはずです。
+SR-IOV 対応ハードウェアを持つ各 Worker Node 上には、<code>sriov-network-config-daemon</code> Pod も表示されるはずです。</p>
 </div>
 </div>
 </div>
@@ -416,7 +425,7 @@ SR-IOV 対応ハードウェアを持つ各ワーカーノード上には、<cod
 </div>
 <div class="paragraph">
 <p><code>.status.interfaces</code> セクションで、<code>totalvfs</code> が 0 より大きいエントリを探します。
-各エントリには、PCI アドレス、ベンダーおよびデバイス ID、ドライバー、リンク速度、およびアダプターがサポートする最大 VF 数が表示されます。</p>
+各エントリには、PCI アドレス、ベンダーおよびデバイス ID、ドライバー、リンク速度、アダプターがサポートする最大 VF 数が表示されます。</p>
 </div>
 <div class="paragraph">
 <p>たとえば、Mellanox ConnectX-4 Lx のエントリは次のようになります:</p>
@@ -433,9 +442,18 @@ SR-IOV 対応ハードウェアを持つ各ワーカーノード上には、<cod
   vendor: "15b3"</pre>
 </div>
 </div>
-<div class="paragraph">
-<p>注記: インターフェースが表示されない場合は、IOMMU が有効になっているかを確認してください。
-最も迅速な確認方法は、ノード上に IOMMU グループが存在するかを確認することです:</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+インターフェースが表示されない場合は、IOMMU が有効になっているかを確認してください。
+最も迅速な確認方法は、ノード上に IOMMU グループが存在するかを確認することです:
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -452,7 +470,7 @@ SR-IOV 対応ハードウェアを持つ各ワーカーノード上には、<cod
 <h2 id="_ステップ_3_sriovnetworknodepolicy_の作成"><a class="anchor" href="#_ステップ_3_sriovnetworknodepolicy_の作成"></a>ステップ 3: SriovNetworkNodePolicy の作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><code>SriovNetworkNodePolicy</code> は、特定の物理機能 (PF) 上に作成する VF の数と、使用するデバイスタイプをオペレーターに指示します。
+<p><code>SriovNetworkNodePolicy</code> は、特定の物理機能 (PF) 上に作成する VF の数と、使用するデバイスタイプを Operator に指示します。
 OpenShift Virtualization の VM の場合、<code>deviceType: vfio-pci</code> を設定して、VF を VFIO フレームワーク経由で公開し、ゲストへの直接 PCI パススルーを実現します。</p>
 </div>
 <div class="paragraph">
@@ -511,10 +529,19 @@ EOF</code></pre>
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>重要: このポリシーを適用すると、SR-IOV 設定デーモンがトリガーされ、ノード上の VF が構成されます。
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+このポリシーを適用すると、SR-IOV 設定デーモンがトリガーされ、ノード上の VF が構成されます。
 ドライバーによっては、ノードのドレイン (drain) および再起動が必要になる場合があります。
-オペレーターが Machine Config Operator を介してこれを自動的に処理しますが、ノードは一時的に利用できなくなります。</p>
+Operator が Machine Config Operator を介してこれを自動的に処理しますが、ノードは一時的に利用できなくなります。
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>ポリシーの適用状況を監視します:</p>
@@ -577,11 +604,11 @@ EOF</code></pre>
 <div class="sectionbody">
 <div class="paragraph">
 <p>トランク構成では、物理スイッチポートは同じケーブルで複数の VLAN を伝送します。
-各 <code>SriovNetwork</code> リソースは個別の VLAN を定義します。オペレーターはそれぞれに対して個別の <code>NetworkAttachmentDefinition</code> (NAD) を生成します。
+各 <code>SriovNetwork</code> リソースは個別の VLAN を定義します。Operator はそれぞれに対して個別の <code>NetworkAttachmentDefinition</code> (NAD) を生成します。
 これらの NAD を通じて VF が VM に割り当てられると、自動的に指定された VLAN ID で送信トラフィックにタグ付けされ、受信時にタグが削除されるため、ゲスト OS はタグなしのフレームを認識することになります。</p>
 </div>
 <div class="paragraph">
-<p>まず、VM 用のネームスペースを作成します:</p>
+<p>まず、VM 用の namespace を作成します:</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/sriov-secondary/sriov-demo-namespace.yaml" class="xref attachment">sriov-demo-namespace.yaml をダウンロード</a></p>
@@ -651,7 +678,7 @@ EOF</code></pre>
 <p><code>vlan</code>&#8201;&#8212;&#8201;このネットワークを使用する VF に割り当てられる 802.1Q VLAN ID。NIC がハードウェアレベルでタグの付与・削除を処理するため、ゲスト OS はインターフェース上でタグなしのトラフィックのみを認識します。</p>
 </li>
 <li>
-<p><code>networkNamespace</code>&#8201;&#8212;&#8201;NAD が作成されるネームスペース。このネームスペース内の VM が参照できます。</p>
+<p><code>networkNamespace</code>&#8201;&#8212;&#8201;NAD が作成される namespace。この namespace 内の VM が参照できます。</p>
 </li>
 <li>
 <p><code>resourceName</code>&#8201;&#8212;&#8201;<code>SriovNetworkNodePolicy</code> の <code>resourceName</code> と一致する必要があります。両方のネットワークが同じ VF プールを共有します。</p>
@@ -688,9 +715,18 @@ sriov-net-mgmt   5s</pre>
 <p>クラスター接続用の Pod ネットワーク、VLAN 100 上のデータプレーン SR-IOV インターフェース、VLAN 200 上の管理プレーン SR-IOV インターフェースという 3 つのネットワークインターフェースを持つ VM を作成します。
 これは、ネットワーク機能が異なるトラフィックタイプに対して分離されたプレーンを必要とする、本番環境のパターンを模倣したものです。</p>
 </div>
-<div class="paragraph">
-<p>警告: この例の cloud-init パスワードはデモ目的専用です。
-本番環境では、常に SSH キー認証または強力なパスワードを使用してください。</p>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+この例の cloud-init パスワードはデモ目的専用です。
+本番環境では、常に SSH キー認証または強力なパスワードを使用してください。
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/sriov-secondary/fedora-sriov-vm.yaml" class="xref attachment">fedora-sriov-vm.yaml をダウンロード</a></p>
@@ -831,7 +867,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Pod ネットワークで使用されている virtio NIC に加えて、2 つの Mellanox (または Intel) イーサネット VF エントリが表示されるはずです。
+<p>Pod ネットワークで使用されている virtio NIC に加えて、2 つの Mellanox (または Intel) Ethernet VF エントリが表示されるはずです。
 これは VFIO パススルーがアクティブであることを確認するもので、VF はエミュレートされたものではなく、ゲストに直接公開された実際の PCI デバイスです。</p>
 </div>
 </div>
@@ -861,9 +897,18 @@ EOF</code></pre>
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>注記: ゲスト内のインターフェース名は、PCI バス/スロットの順序に基づいて <code>udev</code> によって割り当てられるため、環境によって異なる場合があります。
-<code>ip link show</code> を使用して、どれが SR-IOV VF であるかを識別してください (virtio インターフェースとは異なる Mellanox または Intel のハードウェアアドレスが表示されます)。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+ゲスト内のインターフェース名は、PCI バス/スロットの順序に基づいて <code>udev</code> によって割り当てられるため、環境によって異なる場合があります。
+<code>ip link show</code> を使用して、どれが SR-IOV VF であるかを識別してください (virtio インターフェースとは異なる Mellanox または Intel のハードウェアアドレスが表示されます)。
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -927,7 +972,7 @@ enp8s0           UP             10.200.0.10/24</pre>
 <p><strong>DHCP</strong>&#8201;&#8212;&#8201;各 VLAN に DHCP サーバーをデプロイし、NetworkManager を介してゲストに自動的にアドレスを取得させます。</p>
 </li>
 <li>
-<p><strong>Cloud-init</strong>&#8201;&#8212;&#8201;VM の cloud-init ボリュームに <code>networkData</code> セクションを追加して、初回起動時に固定 IP を設定します。詳細は <a href="static-ip-configuration.html" class="xref page">VMへの静的IPの設定</a> を参照してください。</p>
+<p><strong>cloud-init</strong>&#8201;&#8212;&#8201;VM の cloud-init ボリュームに <code>networkData</code> セクションを追加して、初回起動時に固定 IP を設定します。詳細は <a href="static-ip-configuration.html" class="xref page">VM への静的 IP の設定</a> を参照してください。</p>
 </li>
 <li>
 <p><strong>NetworkManager 接続ファイル</strong>&#8201;&#8212;&#8201;cloud-init の <code>write_files</code> を使用して、起動時に NetworkManager がアクティブにする <code>.nmconnection</code> ファイルを作成します。</p>
@@ -1014,7 +1059,7 @@ enp8s0           UP             10.200.0.10/24</pre>
 <p><code>SriovNetwork</code> の <code>resourceName</code> が <code>SriovNetworkNodePolicy</code> の <code>resourceName</code> と一致しているか確認します。</p>
 </li>
 <li>
-<p>両方の NAD が正しいネームスペースに存在することを確認します: <code>oc get net-attach-def -n sriov-demo</code>。</p>
+<p>両方の NAD が正しい namespace に存在することを確認します: <code>oc get net-attach-def -n sriov-demo</code>。</p>
 </li>
 <li>
 <p>virt-launcher Pod のリソース割り当てを調査します: <code>oc describe pod -n sriov-demo -l app=fedora-sriov-vm</code>。</p>
@@ -1091,7 +1136,7 @@ enp8s0           UP             10.200.0.10/24</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>同期が完了したら、ネームスペースを削除します:</p>
+<p>同期が完了したら、namespace を削除します:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1109,7 +1154,7 @@ enp8s0           UP             10.200.0.10/24</pre>
 <div class="ulist">
 <ul>
 <li>
-<p>SR-IOV が PCI パススルーを介して VF を直接 VM に渡すことで、どのようにネイティブに近いネットワークパフォーマンスを提供するのか</p>
+<p>SR-IOV が PCI パススルーを介して VF を直接 VM に渡すことで、物理環境に限りなく近いネットワークパフォーマンスを提供する方法</p>
 </li>
 <li>
 <p><code>SriovNetworkNodeState</code> を使用して SR-IOV 対応デバイスを検出する方法</p>
@@ -1118,7 +1163,7 @@ enp8s0           UP             10.200.0.10/24</pre>
 <p>VM ワークロード向けに <code>deviceType: vfio-pci</code> を指定した <code>SriovNetworkNodePolicy</code> を作成する方法</p>
 </li>
 <li>
-<p>SR-IOV で VLAN トランキングがどのように機能するか (1 つの物理ポートが複数の VLAN を伝送し、各 <code>SriovNetwork</code> がハードウェアレベルで VF に VLAN を割り当てる仕組み)</p>
+<p>SR-IOV で VLAN トランキングが機能する方法 (1 つの物理ポートが複数の VLAN を伝送し、各 <code>SriovNetwork</code> がハードウェアレベルで VF に VLAN を割り当てる仕組み)</p>
 </li>
 <li>
 <p>データプレーン (VLAN 100) および管理プレーン (VLAN 200) トラフィック用に個別の <code>SriovNetwork</code> リソースを作成する方法</p>
@@ -1154,15 +1199,15 @@ enp8s0           UP             10.200.0.10/24</pre>
 <p><a href="localnet-vlan.html" class="xref page">Localnet VLAN 設定</a>&#8201;&#8212;&#8201;localnet トポロジでの VLAN タギング (ソフトウェアベースの代替案)</p>
 </li>
 <li>
-<p><a href="linux-bridges.html" class="xref page">Linux ブリッジ</a>&#8201;&#8212;&#8201;より単純なハードウェア要件向けの別のセカンダリネットワークオプション</p>
+<p><a href="linux-bridges.html" class="xref page">Linux bridge</a>&#8201;&#8212;&#8201;より単純なハードウェア要件向けの別のセカンダリネットワークオプション</p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="linux-bridges.html">Linuxブリッジ</a></span>
-  <span class="next"><a href="vm-ingress-routes.html">VM Ingress およびルート</a></span>
+  <span class="prev"><a href="linux-bridges.html">Linux bridge</a></span>
+  <span class="next"><a href="vm-ingress-routes.html">VM Ingress および Routes</a></span>
 </nav>
 </article>
   </div>

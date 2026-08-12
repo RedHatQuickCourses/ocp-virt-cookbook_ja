@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>OpenShift Virtualization VMのためのCloud-init基礎 :: OpenShift Virtualization cookbook</title>
+    <title>OpenShift Virtualization VM のための cloud-init 基礎 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="virtctl-basics.html">
     <link rel="next" href="../storage/index.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="index.html">はじめに</a>
+    <a class="nav-link" href="index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -290,8 +290,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
-    <li><a href="index.html">はじめに</a></li>
-    <li><a href="cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a></li>
+    <li><a href="index.html">スタートガイド</a></li>
+    <li><a href="cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a></li>
   </ul>
 </nav>
 </div>
@@ -300,36 +300,36 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">OpenShift Virtualization VMのためのCloud-init基礎</h1>
+<h1 class="page">OpenShift Virtualization VM のための cloud-init 基礎</h1>
 <div class="sect1">
 <h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Cloud-initは、仮想マシンの初回起動時の初期化を自動化するための業界標準ツールです。
-OpenShift Virtualizationでは、ほぼすべてのVMがCloud-initを使用して、ユーザー設定、パスワード設定、SSHキーの注入、パッケージのインストール、およびネットワークアドレスの割り当てを行います。
-本チュートリアルでは、Cloud-initの動作原理、KubeVirtによるVMへのデータ配信方法、そしてVirtualMachineマニフェストへのCloud-init設定の埋め込み方法について解説します。</p>
+<p>cloud-init は、仮想マシンの初回起動時の初期化を自動化するための業界標準ツールです。
+OpenShift Virtualization では、ほぼすべての VM が cloud-init を使用して、ユーザー設定、パスワード設定、SSH キーの注入、パッケージのインストール、ネットワークアドレスの割り当てを行います。
+本チュートリアルでは、cloud-init の動作原理、KubeVirt による VM への cloud-init データの配信方法、VirtualMachine マニフェストへの cloud-init 設定の埋め込み方法について解説します。</p>
 </div>
 <div class="sect2">
 <h3 id="_学習内容"><a class="anchor" href="#_学習内容"></a>学習内容</h3>
 <div class="ulist">
 <ul>
 <li>
-<p>Cloud-initとは何か、なぜVMの自動化に重要なのか</p>
+<p>cloud-init とは何か、なぜ VM の自動化に重要なのか</p>
 </li>
 <li>
-<p>3つのCloud-initデータタイプ：userData、networkData、metadata</p>
+<p>3 つの cloud-init データタイプ：userData、networkData、metadata</p>
 </li>
 <li>
-<p>KubeVirtがNoCloudデータソースを介してどのようにCloud-initデータをVMに配信するか</p>
+<p>KubeVirt が NoCloud データソースを介した cloud-init データの VM への配信</p>
 </li>
 <li>
-<p>ユーザー作成、パッケージインストール、スクリプト実行のための一般的なcloud-configモジュール</p>
+<p>ユーザー作成、パッケージインストール、スクリプト実行のための一般的な cloud-config モジュール</p>
 </li>
 <li>
-<p>VirtualMachineマニフェストにCloud-initを埋め込む2つのパターン（インライン記述とSecret参照）</p>
+<p>VirtualMachine マニフェストに cloud-init を埋め込む 2 つのパターン (インライン記述と Secret 参照)</p>
 </li>
 <li>
-<p>Cloud-initが正常に実行されたことを確認する方法</p>
+<p>cloud-init が正常に実行されたことを確認する方法</p>
 </li>
 </ul>
 </div>
@@ -350,65 +350,74 @@ OpenShift Virtualizationでは、ほぼすべてのVMがCloud-initを使用し�
 <div class="ulist">
 <ul>
 <li>
-<p>OpenShift VirtualizationがインストールされたOpenShift 4.18以上</p>
+<p>OpenShift Virtualization がインストールされた OpenShift 4.18 以上</p>
 </li>
 <li>
-<p><code>oc</code> および <code>virtctl</code> CLIツールがインストールされていること（<a href="virtctl-basics.html" class="xref page">virtctl を使用した VM 管理</a>を参照）</p>
+<p><code>oc</code> および <code>virtctl</code> CLI ツールがインストールされていること (<a href="virtctl-basics.html" class="xref page">virtctl を使用した VM 管理</a>を参照)</p>
 </li>
 <li>
-<p>YAML構文の基礎知識</p>
+<p>YAML 構文の基礎知識</p>
 </li>
 <li>
-<p>VM作成の経験（<a href="create-vm-web-console.html" class="xref page">Webコンソールを使用したテンプレートからのVM作成</a>を参照）</p>
+<p>VM 作成の経験 (<a href="create-vm-web-console.html" class="xref page">Web コンソールを使用したテンプレートからの VM の作成</a>を参照)</p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cloud_initとは"><a class="anchor" href="#_cloud_initとは"></a>Cloud-initとは？</h2>
+<h2 id="_cloud_init_とは"><a class="anchor" href="#_cloud_init_とは"></a>cloud-init とは？</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Cloud-initは、仮想マシンの初回起動時にゲストOS内で実行されるオープンソースフレームワークです。
-外部ソースから設定データを読み込み、ユーザーアカウントの作成、SSHアクセスの設定、パッケージのインストール、設定ファイルの書き込み、スクリプトの実行など、本来手動で行う必要のあるタスクを自動化するために使用されます。</p>
+<p>cloud-init は、仮想マシンの初回起動時にゲスト OS 内で実行されるオープンソースフレームワークです。
+外部ソースから設定データを読み込み、ユーザーアカウントの作成、SSH アクセスの設定、パッケージのインストール、設定ファイルの書き込み、スクリプトの実行など、本来手動で行う必要のあるタスクを自動化するために使用されます。</p>
 </div>
 <div class="paragraph">
-<p>Cloud-initは、Fedora、RHEL、CentOS、Ubuntu、Debianなど、ほとんどのLinuxディストリビューションでサポートされています。
-これは、AWS、Azure、GCPなどの主要なクラウドプラットフォームや、OpenShift Virtualizationの基盤であるKubeVirtを含む仮想化プラットフォーム全体で標準的な初期化メカニズムとなっています。</p>
+<p>cloud-init は、Fedora、RHEL、CentOS、Ubuntu、Debian など、ほとんどの Linux ディストリビューションでサポートされています。
+これは、AWS、Azure、GCP などの主要なクラウドプラットフォームや、OpenShift Virtualization の基盤である KubeVirt を含む仮想化プラットフォーム全体で標準的な初期化メカニズムとなっています。</p>
 </div>
-<div class="paragraph">
-<p>注意: Cloud-initはデフォルトではVMの初回起動時にのみ実行されます。インスタンスデータが明示的にクリアされない限り、2回目以降の再起動ではCloud-initはスキップされます。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+cloud-init はデフォルトでは VM の初回起動時にのみ実行されます。インスタンスデータが明示的にクリアされない限り、2 回目以降の再起動では cloud-init はスキップされます。
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_kubevirtによるcloud_initの配信"><a class="anchor" href="#_kubevirtによるcloud_initの配信"></a>KubeVirtによるCloud-initの配信</h2>
+<h2 id="_kubevirt_による_cloud_init_の配信"><a class="anchor" href="#_kubevirt_による_cloud_init_の配信"></a>KubeVirt による cloud-init の配信</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>従来のクラウド環境では、VMはメタデータサービス（<code>169.254.169.254</code> のHTTPエンドポイント）からCloud-initデータを取得します。
-KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチを採用しています。</p>
+<p>従来のクラウド環境では、VM はメタデータサービス (<code>169.254.169.254</code> の HTTP エンドポイント) から cloud-init データを取得します。
+KubeVirt は、*NoCloud データソース*と呼ばれる異なるアプローチを採用しています。</p>
 </div>
 <div class="paragraph">
-<p>NoCloudを使用する場合、KubeVirtは以下の動作を行います。</p>
+<p>NoCloud を使用する場合、KubeVirt は以下の動作を行います。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>VirtualMachineマニフェスト（または参照されたSecret）からCloud-initデータを読み取る</p>
+<p>VirtualMachine マニフェスト (または参照された Secret) から cloud-init データを読み取る</p>
 </li>
 <li>
-<p>データをISOイメージとしてフォーマットされた仮想ディスクにパッケージ化する</p>
+<p>データを ISO イメージとしてフォーマットされた仮想ディスクにパッケージ化する</p>
 </li>
 <li>
-<p>virtioデバイスを介してディスクをVMに接続する</p>
+<p>virtio デバイスを介してディスクを VM に接続する</p>
 </li>
 <li>
-<p>ゲストOS内のCloud-initがそのディスクを検出し、データを読み取って設定を適用する</p>
+<p>ゲスト OS 内の cloud-init がそのディスクを検出し、データを読み取って設定を適用する</p>
 </li>
 </ol>
 </div>
 <div class="paragraph">
-<p>つまり、Cloud-initの設定はKubernetesリソース内に完結しており、外部のメタデータサービスは不要です。</p>
+<p>つまり、cloud-init の設定は Kubernetes リソース内に完結しており、外部のメタデータサービスは不要です。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -431,22 +440,22 @@ KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチ
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><code>cloudInitNoCloud</code> ボリュームタイプを指定することで、KubeVirtにNoCloudデータソースディスクを作成するよう指示します。</td>
+<td><code>cloudInitNoCloud</code> ボリュームタイプを指定することで、KubeVirt に NoCloud データソースディスクを作成するよう指示。</td>
 </tr>
 </table>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cloud_initのデータタイプ"><a class="anchor" href="#_cloud_initのデータタイプ"></a>Cloud-initのデータタイプ</h2>
+<h2 id="_cloud_init_のデータタイプ"><a class="anchor" href="#_cloud_init_のデータタイプ"></a>cloud-init のデータタイプ</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Cloud-initは3種類の構成データを受け入れます。KubeVirtでは、これらは <code>cloudInitNoCloud</code> ボリューム下のフィールドに対応します。</p>
+<p>cloud-init は 3 種類の構成データを受け入れます。KubeVirt では、これらは <code>cloudInitNoCloud</code> ボリューム下のフィールドに対応します。</p>
 </div>
 <div class="sect2">
 <h3 id="_userdata_cloud_config"><a class="anchor" href="#_userdata_cloud_config"></a>userData (cloud-config)</h3>
 <div class="paragraph">
-<p>主要な構成チャネルです。userDataには <strong>cloud-config</strong> ドキュメントが含まれます。これは <code>#cloud-config</code> ヘッダーで始まるYAMLファイルです。ここでユーザー、パッケージ、スクリプト、ファイル、およびVMのほとんどのカスタマイズを定義します。</p>
+<p>主要な構成チャネルです。userData には <strong>cloud-config</strong> ドキュメントが含まれます。これは <code>#cloud-config</code> ヘッダーで始まる YAML ファイルです。ここでユーザー、パッケージ、スクリプト、ファイル、VM のほとんどのカスタマイズを定義します。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -466,16 +475,16 @@ KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチ
 </div>
 </div>
 <div class="paragraph">
-<p>重要: 1行目の <code>#cloud-config</code> ヘッダーは必須です。これがないと、Cloud-initはデータをcloud-configドキュメントとして認識せず、処理を黙ってスキップします。</p>
+<p>重要: 1 行目の <code>#cloud-config</code> ヘッダーは必須です。これがないと、cloud-init はデータを cloud-config ドキュメントとして認識せず、処理を黙ってスキップします。</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_networkdata_network_config_v2"><a class="anchor" href="#_networkdata_network_config_v2"></a>networkData (network-config v2)</h3>
 <div class="paragraph">
-<p>VMインターフェース用のネットワーク設定です。Netplan互換の <strong>network-config version 2</strong> 形式を使用します。静的IP、カスタムDNS、またはマルチインターフェース設定が必要な場合に使用します。</p>
+<p>VM インターフェース用のネットワーク設定です。Netplan 互換の <strong>network-config version 2</strong> 形式を使用します。静的 IP、カスタム DNS、マルチインターフェース設定が必要な場合に使用します。</p>
 </div>
 <div class="paragraph">
-<p>シンプルなDHCP設定の例：</p>
+<p>シンプルな DHCP 設定の例：</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -488,7 +497,7 @@ KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチ
 </div>
 </div>
 <div class="paragraph">
-<p>DNSとルートを指定した静的IP設定の例：</p>
+<p>DNS とルートを指定した静的 IP 設定の例：</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -514,24 +523,24 @@ KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチ
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>CIDR表記でのサブネットマスク付きの静的IPアドレス。</td>
+<td>CIDR 表記でのサブネットマスク付きの静的 IP アドレス</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>DNSリゾルバのアドレス。</td>
+<td>DNS リゾルバのアドレス</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>ルートとして定義されたデフォルトゲートウェイ（<code>gateway4</code> は非推奨）。</td>
+<td>ルートとして定義されたデフォルトゲートウェイ (<code>gateway4</code> は非推奨)</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>特定のゲートウェイ経由で <code>10.0.0.0/8</code> ネットワークに到達するための追加ルート。</td>
+<td>特定のゲートウェイ経由で <code>10.0.0.0/8</code> ネットワークに到達するための追加ルート</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>インターフェース名が予測できない場合に備え、名前の代わりにMACアドレスでインターフェースを指定することも可能です。</p>
+<p>インターフェース名が予測できない場合に備え、名前の代わりに MAC アドレスでインターフェースを指定することも可能です。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -549,17 +558,26 @@ KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチ
             via: 192.168.1.1</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>注意: KubeVirt VMでは、最初のインターフェースは通常 <code>enp1s0</code>、2番目は <code>enp2s0</code> となります。これらの名前はNetworkAttachmentDefinitionの順序ではなく、VirtualMachineスペックでインターフェースが定義された順序に対応します。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+KubeVirt VM では、最初のインターフェースは通常 <code>enp1s0</code>、2 番目は <code>enp2s0</code> となります。これらの名前は NetworkAttachmentDefinition の順序ではなく、VirtualMachine Spec でインターフェースが定義された順序に対応します。
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>マルチインターフェース設定やVLAN、高度なシナリオについては、<a href="../networking/static-ip-configuration.html" class="xref page">静的IP設定</a>を参照してください。</p>
+<p>マルチインターフェース設定や VLAN、高度なシナリオについては、<a href="../networking/static-ip-configuration.html" class="xref page">静的 IP 設定</a>を参照してください。</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_metadata"><a class="anchor" href="#_metadata"></a>metadata</h3>
 <div class="paragraph">
-<p><code>instance-id</code> や <code>local-hostname</code> などのVMインスタンスメタデータです。多くの場合、KubeVirtはVirtualMachineリソースからメタデータを自動的に生成するため、手動で設定する必要はほとんどありません。</p>
+<p><code>instance-id</code> や <code>local-hostname</code> などの VM インスタンスメタデータです。多くの場合、KubeVirt は VirtualMachine リソースからメタデータを自動的に生成するため、手動で設定する必要はほとんどありません。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -569,17 +587,26 @@ KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチ
     local-hostname: my-vm</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>ヒント: ホスト名のみを設定したい場合は、カスタムメタデータを提供するのではなく、userData内の <code>hostname</code> モジュールを使用してください。</p>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+ホスト名のみを設定したい場合は、カスタムメタデータを提供するのではなく、userData 内の <code>hostname</code> モジュールを使用してください。
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cloud_initの実行ステージ"><a class="anchor" href="#_cloud_initの実行ステージ"></a>Cloud-initの実行ステージ</h2>
+<h2 id="_cloud_init_の実行ステージ"><a class="anchor" href="#_cloud_init_の実行ステージ"></a>cloud-init の実行ステージ</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Cloud-initは起動プロセス中に5つのステージで実行されます。これらのステージを理解すると、設定がいつ反映されるかを予測するのに役立ちます。</p>
+<p>cloud-init は起動プロセス中に 5 つのステージで実行されます。これらのステージを理解すると、設定がいつ反映されるかを予測するのに役立ちます。</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -598,12 +625,12 @@ KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチ
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Generator</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">非常に早い起動時 (systemd generator)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Cloud-initを実行するかどうかを判断</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cloud-init を実行するかどうかを判断</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Local</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ネットワークが立ち上がる前</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">networkDataからネットワーク設定を適用</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">networkData からネットワーク設定を適用</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Network</p></td>
@@ -612,8 +639,8 @@ KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチ
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Config</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Networkステージの後</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">設定モジュールの実行：ユーザー作成、ファイル書き込み、SSHキーのインストール</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Network ステージの後</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">設定モジュールの実行：ユーザー作成、ファイル書き込み、SSH キーのインストール</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Final</p></td>
@@ -623,15 +650,15 @@ KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチ
 </tbody>
 </table>
 <div class="paragraph">
-<p>この順序により、ネットワーク設定（networkData）はユーザー設定（userDataモジュール）よりも先に適用されます。<code>runcmd</code> で指定されたコマンドは、他のすべてのモジュールが完了した後に最後に実行されます。</p>
+<p>この順序により、ネットワーク設定 (networkData) はユーザー設定 (userData モジュール) よりも先に適用されます。<code>runcmd</code> で指定されたコマンドは、他のすべてのモジュールが完了した後に最後に実行されます。</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_一般的なcloud_configモジュール"><a class="anchor" href="#_一般的なcloud_configモジュール"></a>一般的なCloud-configモジュール</h2>
+<h2 id="_一般的な_cloud_config_モジュール"><a class="anchor" href="#_一般的な_cloud_config_モジュール"></a>一般的な Cloud-config モジュール</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>以下のモジュールは、最も一般的なVM初期化タスクをカバーしています。各例は <code>#cloud-config</code> userDataドキュメントの該当セクションを示しています。</p>
+<p>以下のモジュールは、最も一般的な VM 初期化タスクをカバーしています。各例は <code>#cloud-config</code> userData ドキュメントの該当セクションを示しています。</p>
 </div>
 <div class="sect2">
 <h3 id="_ユーザー作成とパスワード設定"><a class="anchor" href="#_ユーザー作成とパスワード設定"></a>ユーザー作成とパスワード設定</h3>
@@ -648,7 +675,7 @@ user:
 </div>
 </div>
 <div class="paragraph">
-<p><code>user</code> キーはデフォルトユーザーを設定します。パスワードログインを許可するには <code>lock_passwd: false</code> と <code>plain_text_passwd</code> を設定します。最上位レベルで <code>ssh_pwauth: true</code> を追加すると、SSHでのパスワード認証が有効になります（多くのクラウドイメージではデフォルトで無効になっています）。</p>
+<p><code>user</code> キーはデフォルトユーザーを設定します。パスワードログインを許可するには <code>lock_passwd: false</code> と <code>plain_text_passwd</code> を設定します。最上位レベルで <code>ssh_pwauth: true</code> を追加すると、SSH でのパスワード認証が有効になります (多くのクラウドイメージではデフォルトで無効になっています)。</p>
 </div>
 <div class="paragraph">
 <p>デフォルト以外の追加ユーザーを作成するには、<code>users</code> リストを使用します。</p>
@@ -680,8 +707,17 @@ packages:
   - python3</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>注意: パッケージのインストールは <strong>final</strong> ステージで実行されます。VMはパッケージのインストール完了前であっても、コンソールからアクセス可能です。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+パッケージのインストールは <strong>final</strong> ステージで実行されます。VM はパッケージのインストール完了前であっても、コンソールからアクセス可能です。
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -695,7 +731,7 @@ runcmd:
 </div>
 </div>
 <div class="paragraph">
-<p>コマンドは <strong>final</strong> ステージ中に順番に実行されます。各エントリは文字列（<code>/bin/sh</code> 経由で実行）またはリスト（直接実行）にできます。</p>
+<p>コマンドは <strong>final</strong> ステージ中に順番に実行されます。各エントリは文字列 (<code>/bin/sh</code> 経由で実行) またはリスト (直接実行) にできます。</p>
 </div>
 </div>
 <div class="sect2">
@@ -717,22 +753,31 @@ write_files:
     permissions: '0600'</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>ヒント: <code>write_files</code> によって書き込まれたファイルは <strong>config</strong> ステージ中に作成されるため、<code>runcmd</code> が実行される前に存在します。これにより、設定ファイルを安全に書き込んでから、それに依存するサービスを <code>runcmd</code> で開始できます。</p>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<code>write_files</code> によって書き込まれたファイルは <strong>config</strong> ステージ中に作成されるため、<code>runcmd</code> が実行される前に存在します。これにより、設定ファイルを安全に書き込んでから、それに依存するサービスを <code>runcmd</code> で開始できます。
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_virtualmachineマニフェストへのcloud_init埋め込み"><a class="anchor" href="#_virtualmachineマニフェストへのcloud_init埋め込み"></a>VirtualMachineマニフェストへのCloud-init埋め込み</h2>
+<h2 id="_virtualmachine_マニフェストへの_cloud_init_埋め込み"><a class="anchor" href="#_virtualmachine_マニフェストへの_cloud_init_埋め込み"></a>VirtualMachine マニフェストへの cloud-init 埋め込み</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VirtualMachineにCloud-initデータを提供するには2つのパターンがあります。</p>
+<p>VirtualMachine に cloud-init データを提供するには 2 つのパターンがあります。</p>
 </div>
 <div class="sect2">
 <h3 id="_インライン記述_cloudinitnocloud"><a class="anchor" href="#_インライン記述_cloudinitnocloud"></a>インライン記述 (cloudInitNoCloud)</h3>
 <div class="paragraph">
-<p>最も簡単な方法は、Cloud-initデータをVirtualMachineマニフェストに直接埋め込む方法です。</p>
+<p>最も簡単な方法は、cloud-init データを VirtualMachine マニフェストに直接埋め込む方法です。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/minimal-cloud-init-vm.yaml" class="xref attachment">minimal-cloud-init-vm.yaml をダウンロード</a></p>
@@ -793,7 +838,7 @@ spec:
                 - vim
                 - git
               runcmd:
-                - echo "Cloud-init complete" &gt; /tmp/cloud-init-done
+                - echo "cloud-init complete" &gt; /tmp/cloud-init-done
           name: cloudinitdisk
   dataVolumeTemplates:
     - metadata:
@@ -813,28 +858,28 @@ spec:
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><code>cloudInitNoCloud</code> ボリュームタイプがNoCloudデータソースディスクを作成します。</td>
+<td><code>cloudInitNoCloud</code> ボリュームタイプが NoCloud データソースディスクを作成します。</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td><code>userData</code> フィールドに <code>#cloud-config</code> で始まるcloud-config YAMLを含めます。</td>
+<td><code>userData</code> フィールドに <code>#cloud-config</code> で始まる cloud-config YAML を含めます。</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>このパターンは小規模な設定に適しています。大規模な設定や機密情報を含む場合は、Secret参照を使用してください。</p>
+<p>このパターンは小規模な設定に適しています。大規模な設定や機密情報を含む場合は、Secret 参照を使用してください。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_secret参照"><a class="anchor" href="#_secret参照"></a>Secret参照</h3>
+<h3 id="_secret_参照"><a class="anchor" href="#_secret_参照"></a>Secret 参照</h3>
 <div class="paragraph">
-<p>複雑な設定や、パスワードやトークンなどの機密値がCloud-initに含まれる場合は、Kubernetes Secretにデータを格納し、VirtualMachineからそれを参照します。</p>
+<p>複雑な設定や、パスワードやトークンなどの機密値が cloud-init に含まれる場合は、Kubernetes Secret にデータを格納し、VirtualMachine から Secret を参照します。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/cloud-init-secret-vm.yaml" class="xref attachment">cloud-init-secret-vm.yaml をダウンロード</a></p>
 </div>
 <div class="paragraph">
-<p>まず、Secretを作成します。</p>
+<p>まず、Secret を作成します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -861,7 +906,7 @@ packages:
 </div>
 </div>
 <div class="paragraph">
-<p>次に、VirtualMachineマニフェストから参照します。</p>
+<p>次に、VirtualMachine マニフェストから参照します。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -876,7 +921,7 @@ packages:
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>KubeVirtはSecretから <code>userdata</code> キーを読み取り、それをCloud-initのuserDataとして提供します。</td>
+<td>KubeVirt は Secret から <code>userdata</code> キーを読み取り、それを cloud-init の userData として提供します。</td>
 </tr>
 </table>
 </div>
@@ -884,13 +929,13 @@ packages:
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cloud_initの実行確認"><a class="anchor" href="#_cloud_initの実行確認"></a>Cloud-initの実行確認</h2>
+<h2 id="_cloud_init_の実行確認"><a class="anchor" href="#_cloud_init_の実行確認"></a>cloud-init の実行確認</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VMが起動した後、Cloud-initの設定処理が成功したかを確認します。</p>
+<p>VM が起動した後、cloud-init の設定処理が成功したかを確認します。</p>
 </div>
 <div class="paragraph">
-<p>VMコンソールにアクセスします。</p>
+<p>VM コンソールにアクセスします。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -898,7 +943,7 @@ packages:
 </div>
 </div>
 <div class="paragraph">
-<p>Cloud-initの状態を確認します。</p>
+<p>cloud-init の状態を確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -906,7 +951,7 @@ packages:
 </div>
 </div>
 <div class="paragraph">
-<p>成功した場合の期待される出力：</p>
+<p>成功した場合に期待される出力：</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -918,7 +963,7 @@ DataSourceNoCloud [seed=/dev/vdb]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Cloud-initがエラーを報告している場合は、ログを確認します。</p>
+<p>cloud-init がエラーを報告している場合は、ログを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -926,7 +971,7 @@ DataSourceNoCloud [seed=/dev/vdb]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>詳細な診断手順や一般的な問題の解決策については、<a href="../networking/cloud-init-troubleshooting.html" class="xref page">Cloud-initのトラブルシューティング</a>を参照してください。</p>
+<p>詳細な診断手順や一般的な問題の解決策については、<a href="../networking/cloud-init-troubleshooting.html" class="xref page">cloud-init のトラブルシューティング</a>を参照してください。</p>
 </div>
 </div>
 </div>
@@ -937,36 +982,36 @@ DataSourceNoCloud [seed=/dev/vdb]</code></pre>
 <dl>
 <dt class="hdlist1"><strong><code>#cloud-config</code> ヘッダーの欠落</strong></dt>
 <dd>
-<p>userDataの1行目は、正確に <code>#cloud-config</code> である必要があります。これがないと、Cloud-initはエラーメッセージを出さずにuserDataブロック全体を無視します。</p>
+<p>userData の 1 行目は、正確に <code>#cloud-config</code> である必要があります。これがないと、cloud-init はエラーメッセージを出さずに userData ブロック全体を無視します。</p>
 </dd>
-<dt class="hdlist1"><strong>YAMLのインデントエラー</strong></dt>
+<dt class="hdlist1"><strong>YAML のインデントエラー</strong></dt>
 <dd>
-<p>Cloud-configはYAMLです。インデントの不整合（タブとスペースの混在、ネストの深さ間違い）は解析失敗の原因となります。VM内で <code>cloud-init devel schema --config-file /path/to/config.yaml</code> を使用して構文を検証してください。</p>
+<p>Cloud-config は YAML です。インデントの不整合 (タブとスペースの混在、ネストの深さ間違い) は解析失敗の原因となります。VM 内で <code>cloud-init devel schema --config-file /path/to/config.yaml</code> を使用して構文を検証してください。</p>
 </dd>
-<dt class="hdlist1"><strong>ネットワーク設定をuserDataに記述</strong></dt>
+<dt class="hdlist1"><strong>ネットワーク設定を userData に記述</strong></dt>
 <dd>
-<p>ネットワークインターフェースの設定は <code>userData</code> ではなく <code>networkData</code> に記述します。userData内にnetwork-config v2のYAMLを配置しても反映されません。</p>
+<p>ネットワークインターフェースの設定は <code>userData</code> ではなく <code>networkData</code> に記述します。userData 内に network-config v2 の YAML を配置しても反映されません。</p>
 </dd>
-<dt class="hdlist1"><strong>再起動時にCloud-initが再実行されるという期待</strong></dt>
+<dt class="hdlist1"><strong>再起動時に cloud-init が再実行されるという期待</strong></dt>
 <dd>
-<p>Cloud-initは初回起動時に一度だけ実行されます。再実行させるには、<code>cloud-init clean</code> を実行してから再起動する必要があります。</p>
+<p>cloud-init は初回起動時に一度だけ実行されます。再実行させるには、<code>cloud-init clean</code> を実行してから再起動する必要があります。</p>
 </dd>
-<dt class="hdlist1"><strong>Secretキー名の間違い</strong></dt>
+<dt class="hdlist1"><strong>Secret キー名の間違い</strong></dt>
 <dd>
-<p><code>secretRef</code> を使用する場合、Secretは <code>userdata</code> という名前のキー（すべて小文字）を持つ必要があります。<code>userData</code> や <code>user-data</code> という名前のキーは検出されません。</p>
+<p><code>secretRef</code> を使用する場合、Secret は <code>userdata</code> という名前のキー (すべて小文字) を持つ必要があります。<code>userData</code> や <code>user-data</code> という名前のキーは検出されません。</p>
 </dd>
 </dl>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_windows_vmの場合sysprep"><a class="anchor" href="#_windows_vmの場合sysprep"></a>Windows VMの場合：Sysprep</h2>
+<h2 id="_windows_vm_の場合sysprep"><a class="anchor" href="#_windows_vm_の場合sysprep"></a>Windows VM の場合：Sysprep</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Cloud-initはLinux専用のツールです。Windows VMの場合、OpenShift Virtualizationは <strong>Sysprep</strong> をサポートしています。これはMicrosoft System Preparationツールのことで、初回起動時の同様のカスタマイズ（ホスト名、管理者パスワード、ドメイン参加、無人セットアップ）を実行します。</p>
+<p>cloud-init は Linux 専用のツールです。Windows VM の場合、OpenShift Virtualization は <strong>Sysprep</strong> をサポートしています。これは Microsoft System Preparation ツールのことで、初回起動時の同様のカスタマイズ (ホスト名、管理者パスワード、ドメイン参加、無人セットアップ) を実行します。</p>
 </div>
 <div class="paragraph">
-<p>Windows VMの設定については、<a href="../vm-configuration/remote-access-windows-vms.html" class="xref page">Windows VMへのリモートアクセス</a>を参照してください。</p>
+<p>Windows VM の設定については、<a href="../vm-configuration/remote-access-windows-vms.html" class="xref page">Windows VM へのリモートアクセス</a>を参照してください。</p>
 </div>
 </div>
 </div>
@@ -995,19 +1040,19 @@ oc delete namespace demo</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>Cloud-initは標準のLinux VM初期化フレームワークであり、初回起動時に自動的に設定を行う</p>
+<p>cloud-init は標準の Linux VM 初期化フレームワークであり、初回起動時に自動的に設定を行う</p>
 </li>
 <li>
-<p>KubeVirtはNoCloudデータソースを介してCloud-initデータを配信し、VMに接続されたvirtioディスクとしてパッケージ化する</p>
+<p>KubeVirt は NoCloud データソースを介して cloud-init データを配信し、VM に接続された virtio ディスクとしてパッケージ化する</p>
 </li>
 <li>
-<p>3つのデータタイプ：userData（ユーザー・パッケージ・スクリプト用のcloud-config）、networkData（network-config v2）、metadata（インスタンス識別子）</p>
+<p>3 つのデータタイプ：userData (ユーザー・パッケージ・スクリプト用の cloud-config)、networkData (network-config v2)、metadata (インスタンス識別子)</p>
 </li>
 <li>
-<p>Cloud-initはステージ順に実行される：ネットワーク設定が最初、次にユーザー/ファイル設定、最後にコマンドとパッケージ</p>
+<p>cloud-init はステージ順に実行される：ネットワーク設定が最初、次にユーザー/ファイル設定、最後にコマンドとパッケージ</p>
 </li>
 <li>
-<p>2つのマニフェストパターン：シンプルな構成にはインライン <code>cloudInitNoCloud</code>、複雑なデータや機密データにはSecret参照</p>
+<p>2 つのマニフェストパターン：シンプルな構成にはインライン <code>cloudInitNoCloud</code>、複雑なデータや機密データには Secret 参照</p>
 </li>
 <li>
 <p><code>cloud-init status --long</code> および <code>/var/log/cloud-init.log</code> を使用した検証</p>
@@ -1022,19 +1067,19 @@ oc delete namespace demo</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="../networking/static-ip-configuration.html" class="xref page">VMへの静的IPの設定</a> - Cloud-initによる静的IP、DHCP、マルチインターフェース、VLANの詳細解説</p>
+<p><a href="../networking/static-ip-configuration.html" class="xref page">VM への静的 IP の設定</a> - cloud-init による静的 IP、DHCP、マルチインターフェース、VLAN の詳細解説</p>
 </li>
 <li>
-<p><a href="../networking/cloud-init-troubleshooting.html" class="xref page">Cloud-init IP 設定トラブルシューティングガイド</a> - Cloud-initの問題に対する診断手順と解決策</p>
+<p><a href="../networking/cloud-init-troubleshooting.html" class="xref page">cloud-init IP 設定トラブルシューティングガイド</a> - cloud-init の問題に対する診断手順と解決策</p>
 </li>
 <li>
-<p><a href="../vm-configuration/remote-access-windows-vms.html" class="xref page">Red Hat OpenShift 上の Windows 11 VM にリモートデスクトップでアクセスする方法</a> - SysprepによるWindows VMの設定</p>
+<p><a href="../vm-configuration/remote-access-windows-vms.html" class="xref page">Red Hat OpenShift 上の Windows 11 VM にリモートデスクトップでアクセスする方法</a> - Sysprep による Windows VM の設定</p>
 </li>
 <li>
-<p><a href="https://cloudinit.readthedocs.io/en/latest/" target="_blank" rel="noopener">Cloud-init 公式ドキュメント</a></p>
+<p><a href="https://cloudinit.readthedocs.io/en/latest/" target="_blank" rel="noopener">cloud-init 公式ドキュメント</a></p>
 </li>
 <li>
-<p><a href="https://cloudinit.readthedocs.io/en/latest/reference/modules.html" target="_blank" rel="noopener">Cloud-init モジュールリファレンス</a></p>
+<p><a href="https://cloudinit.readthedocs.io/en/latest/reference/modules.html" target="_blank" rel="noopener">cloud-init モジュールリファレンス</a></p>
 </li>
 <li>
 <p><a href="https://kubevirt.io/user-guide/virtual_machines/disks_and_volumes/#cloudinitnocloud" target="_blank" rel="noopener">KubeVirt cloudInitNoCloud ドキュメント</a></p>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>仮想マシン向けの専用CPU配置 :: OpenShift Virtualization cookbook</title>
+    <title>仮想マシン向けの専用 CPU 配置 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="resource-limits-qos.html">
     <link rel="next" href="numa-hugepages.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -291,7 +291,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">VM パフォーマンスチューニング</a></li>
-    <li><a href="cpu-pinning.html">専用CPU配置</a></li>
+    <li><a href="cpu-pinning.html">専用 CPU 配置</a></li>
   </ul>
 </nav>
 </div>
@@ -300,15 +300,15 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">仮想マシン向けの専用CPU配置</h1>
+<h1 class="page">仮想マシン向けの専用 CPU 配置</h1>
 <div class="sect1">
 <h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>本チュートリアルでは、OpenShift Virtualizationにおいて仮想マシン向けの専用CPU配置を設定する方法を解説します。デフォルトでは、仮想マシンのvCPUはホスト上の他のワークロードと物理CPU時間を共有します。専用CPU配置を使用すると、各vCPUが特定の物理CPUに固定（ピン留め）されるため、CPUスティールが排除され、スケジューリングのジッター（揺らぎ）が軽減されます。</p>
+<p>本チュートリアルでは、OpenShift Virtualization において仮想マシン向けの専用 CPU 配置を設定する方法を解説します。デフォルトでは、仮想マシンの vCPU はホスト上の他のワークロードと物理 CPU の処理時間を共有します。専用 CPU 配置を使用すると、各 vCPU が特定の物理 CPU に固定 (pinning) されるため、CPU スティールが排除され、スケジューラーによる割り当ての揺らぎ (jitter) を低減します。</p>
 </div>
 <div class="paragraph">
-<p>この設定は、予測可能なレイテンシが求められるNFV/通信アプリケーション、リアルタイム処理、HPC、およびレイテンシに敏感なデータベースなどのワークロードに不可欠です。</p>
+<p>この設定は、予測可能な低遅延が求められる NFV/通信アプリケーション、リアルタイム処理、HPC、遅延に敏感なデータベースなどのワークロードに不可欠です。</p>
 </div>
 </div>
 </div>
@@ -318,43 +318,43 @@
 <div class="ulist">
 <ul>
 <li>
-<p>OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以上（4.21で検証済み）</p>
+<p>OpenShift Virtualization Operator がインストールされた OpenShift 4.18 以上 (4.21 で検証済み)</p>
 </li>
 <li>
-<p>クラスター管理者アクセス権（<code>system:admin</code> または同等の権限）</p>
+<p>クラスター管理者アクセス権 (<code>system:admin</code> または同等の権限)</p>
 </li>
 <li>
-<p><code>oc</code> および <code>virtctl</code> CLIがインストール済みであること</p>
+<p><code>oc</code> および <code>virtctl</code> CLI がインストール済みであること</p>
 </li>
 <li>
-<p>十分な物理CPUコアを持つワーカーノード（少なくとも4コア推奨）</p>
+<p>十分な物理 CPU コアを持つ Worker Node (少なくとも 4 コア推奨)</p>
 </li>
 <li>
-<p>KubernetesのQoSクラスに関する知識（<a href="resource-limits-qos.html" class="xref page">VMリソース制限とQoSの設定</a>を参照）</p>
+<p>Kubernetes の QoS クラスに関する知識 (<a href="resource-limits-qos.html" class="xref page">VM Resource Limits と QoS の設定</a>を参照)</p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_専用cpu配置の理解"><a class="anchor" href="#_専用cpu配置の理解"></a>専用CPU配置の理解</h2>
+<h2 id="_専用_cpu_配置の理解"><a class="anchor" href="#_専用_cpu_配置の理解"></a>専用 CPU 配置の理解</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>OpenShiftはKubernetesのCPUマネージャーを使用して、Podに排他的な物理CPUを割り当てます。CPUマネージャーが <code>static</code> ポリシーで実行されている場合、Podのコンテナーをホストの専用CPUに固定し、他のワークロードがそれらのCPUを使用できないように制限できます。</p>
+<p>OpenShift は Kubernetes の CPU Manager を使用して、Pod に排他的な物理 CPU を割り当てます。CPU Manager が <code>static</code> ポリシーで実行されている場合、Pod のコンテナをホストの専用 CPU に固定し、他のワークロードがそれらの CPU を使用できないように制限できます。</p>
 </div>
 <div class="paragraph">
-<p>KubeVirtの <code>dedicatedCpuPlacement</code> フィールドは、CPUマネージャーに対して <code>virt-launcher</code> PodのvCPUを物理CPUに固定するように指示します。Podが実行されると、各ゲストvCPUは予約された物理CPUに直接マッピングされます。</p>
+<p>KubeVirt の <code>dedicatedCpuPlacement</code> フィールドは、CPU Manager に対して <code>virt-launcher</code> Pod の vCPU を物理 CPU に固定するように指示します。Pod が実行されると、各ゲスト vCPU は予約された物理 CPU に直接マッピングされます。</p>
 </div>
 <div class="paragraph">
-<p>専用配置が機能するには、以下の2つの要件を満たす必要があります。</p>
+<p>専用配置が機能するには、以下の 2 つの要件を満たす必要があります。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>ノードのCPUマネージャーが <code>static</code> ポリシーで実行されていること。</p>
+<p>ノードの CPU Manager が <code>static</code> ポリシーで実行されていること。</p>
 </li>
 <li>
-<p>VMのQoSが <strong>Guaranteed</strong> であること：CPUおよびメモリの要求量（request）が上限（limit）と一致しており、かつCPU数が整数である必要があります。</p>
+<p>VM の QoS が <strong>Guaranteed</strong> であること：CPU およびメモリの requests が limits と一致しており、かつ CPU 数が整数である必要があります。</p>
 </li>
 </ul>
 </div>
@@ -367,33 +367,33 @@
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top">モード</th>
-<th class="tableblock halign-left valign-top">vCPUの動作</th>
+<th class="tableblock halign-left valign-top">vCPU の動作</th>
 <th class="tableblock halign-left valign-top">ユースケース</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">デフォルト（共有）</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">vCPUが他のすべてのワークロードとホストCPU時間を競合する</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">汎用VM、開発環境、レイテンシが重要ではないワークロード</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">デフォルト (shared)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vCPU が他のすべてのワークロードと物理 CPU の処理時間を共有する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">汎用 VM、開発環境、遅延が重要ではないワークロード</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">専用 (<code>dedicatedCpuPlacement: true</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">vCPUが予約済み物理CPUに固定され、CPUスティールが発生しない</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">NFV/通信、リアルタイム処理、HPC、レイテンシに敏感なデータベース</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vCPU が予約済み物理 CPU に固定され、CPU スティールが発生しない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFV/通信、リアルタイム処理、HPC、遅延に敏感なデータベース</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_1_cpuマネージャーのスタティックポリシーを有効にする"><a class="anchor" href="#_ステップ_1_cpuマネージャーのスタティックポリシーを有効にする"></a>ステップ 1: CPUマネージャーのスタティックポリシーを有効にする</h2>
+<h2 id="_ステップ_1_cpu_manager_の_static_policy_を有効にする"><a class="anchor" href="#_ステップ_1_cpu_manager_の_static_policy_を有効にする"></a>ステップ 1: CPU Manager の Static Policy を有効にする</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>CPUマネージャーのポリシーは、<code>KubeletConfig</code> リソースを使用してMachineConfigPoolごとに設定します。</p>
+<p>CPU Manager のポリシーは、<code>KubeletConfig</code> リソースを使用して MachineConfigPool ごとに設定します。</p>
 </div>
 <div class="paragraph">
-<p>まず、この設定の対象を識別するために、ワーカーのMachineConfigPoolにラベルを追加します。</p>
+<p>まず、この設定の対象を識別するために、Worker の MachineConfigPool にラベルを追加します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -407,7 +407,7 @@
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-シングルノードOpenShift (SNO) クラスターの場合、ノードは <code>worker</code> ではなく <code>master</code> MachineConfigPoolに属します。上記のコマンドおよび後述する <code>KubeletConfig</code> の <code>machineConfigPoolSelector</code> において、<code>worker</code> を <code>master</code> に置き換えてください。
+シングルノード OpenShift (SNO) クラスターの場合、ノードは <code>worker</code> ではなく <code>master</code> MachineConfigPool に属します。上記のコマンドおよび後述する <code>KubeletConfig</code> の <code>machineConfigPoolSelector</code> において、<code>worker</code> を <code>master</code> に置き換えてください。
 </td>
 </tr>
 </table>
@@ -416,7 +416,7 @@
 <p><a href="_attachments/cpu-pinning/kubeletconfig-static-policy.yaml" class="xref attachment">kubeletconfig-static-policy.yaml をダウンロード</a></p>
 </div>
 <div class="paragraph">
-<p><code>KubeletConfig</code> を適用して、スタティックCPUマネージャーポリシーを有効にします。</p>
+<p><code>KubeletConfig</code> を適用して、Static CPU manager policy を有効にします。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -436,7 +436,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Machine Config Operatorが、ターゲットプール内の全ノードに新しいkubelet設定を適用します。ロールアウトを監視します。</p>
+<p>Machine Config Operator が、ターゲットプール内の全ノードに新しい kubelet 設定を適用します。ロールアウトを監視します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -453,9 +453,9 @@ worker   rendered-worker-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   True      False     
 </div>
 </div>
 <div class="sect2">
-<h3 id="_cpuマネージャーポリシーの確認"><a class="anchor" href="#_cpuマネージャーポリシーの確認"></a>CPUマネージャーポリシーの確認</h3>
+<h3 id="_cpu_manager_policy_の確認"><a class="anchor" href="#_cpu_manager_policy_の確認"></a>CPU Manager Policy の確認</h3>
 <div class="paragraph">
-<p>各ワーカーノードのkubeletが <code>static</code> ポリシーで実行されていることを確認します。</p>
+<p>各 Worker Node の kubelet が <code>static</code> ポリシーで実行されていることを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -475,10 +475,10 @@ cpuManagerReconcilePeriod: 5s</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_2_専用cpuワークロード用のノードにラベルを付ける"><a class="anchor" href="#_ステップ_2_専用cpuワークロード用のノードにラベルを付ける"></a>ステップ 2: 専用CPUワークロード用のノードにラベルを付ける</h2>
+<h2 id="_ステップ_2_専用_cpu_ワークロード用のノードにラベルを付ける"><a class="anchor" href="#_ステップ_2_専用_cpu_ワークロード用のノードにラベルを付ける"></a>ステップ 2: 専用 CPU ワークロード用のノードにラベルを付ける</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>専用CPU配置を要求するVMは、CPUマネージャーが実行されているノードのみをターゲットにするためにノードセレクターが必要です。スタティックポリシーが有効な各ワーカーノードに <code>cpumanager=true</code> ラベルを適用します。</p>
+<p>専用 CPU 配置をリクエストする VM は、CPU Manager が実行されているノードのみをターゲットにするために NodeSelector が必要です。Static Policy が有効な各 Worker Node に <code>cpumanager=true</code> ラベルを適用します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -510,7 +510,7 @@ worker-02    Ready    worker   10d   v1.34.5   true</pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-KubeVirt CRで <code>CPUManager</code> フィーチャーゲートが有効になっている場合、KubeVirtが自動的に <code>cpumanager=true</code> ラベルを管理できます。有効な場合、KubeVirtはスタティックCPUマネージャーポリシーが実行されているノードを検出し、ラベルの付与・削除を自動的に行います。フィーチャーゲートがない場合は、ノードの追加や再設定のたびにこのラベルを手動で管理してください。
+KubeVirt CR で <code>CPUManager</code> フィーチャーゲートが有効になっている場合、KubeVirt が自動的に <code>cpumanager=true</code> ラベルを管理できます。有効な場合、KubeVirt は Static CPU manager policy が実行されているノードを検出し、ラベルの付与や削除を自動的に行います。フィーチャーゲートがない場合は、ノードの追加や再設定のたびにこのラベルを手動で管理してください。
 </td>
 </tr>
 </table>
@@ -518,7 +518,7 @@ KubeVirt CRで <code>CPUManager</code> フィーチャーゲートが有効に�
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_3_名前空間の作成"><a class="anchor" href="#_ステップ_3_名前空間の作成"></a>ステップ 3: 名前空間の作成</h2>
+<h2 id="_ステップ_3_namespace_の作成"><a class="anchor" href="#_ステップ_3_namespace_の作成"></a>ステップ 3: namespace の作成</h2>
 <div class="sectionbody">
 <div class="listingblock execute">
 <div class="content">
@@ -528,10 +528,10 @@ KubeVirt CRで <code>CPUManager</code> フィーチャーゲートが有効に�
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_4_専用cpu配置でvmをデプロイする"><a class="anchor" href="#_ステップ_4_専用cpu配置でvmをデプロイする"></a>ステップ 4: 専用CPU配置でVMをデプロイする</h2>
+<h2 id="_ステップ_4_専用_cpu_配置で_vm_をデプロイする"><a class="anchor" href="#_ステップ_4_専用_cpu_配置で_vm_をデプロイする"></a>ステップ 4: 専用 CPU 配置で VM をデプロイする</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>以下のVM仕様は、<code>dedicatedCpuPlacement: true</code> を使用して2つの専用vCPUを要求します。<code>nodeSelector</code> により、VMは <code>cpumanager=true</code> とラベル付けされたノードでのみスケジューリングされます。メモリの要求量と上限は同一であり、Guaranteed QoS要件を満たしています。</p>
+<p>以下の VM 仕様は、<code>dedicatedCpuPlacement: true</code> を使用して 2 つの専用 vCPU をリクエストします。<code>nodeSelector</code> により、VM は <code>cpumanager=true</code> とラベル付けされたノードでのみスケジューリングされます。メモリの requests と limits は同一であり、Guaranteed QoS 要件を満たしています。</p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -540,7 +540,7 @@ KubeVirt CRで <code>CPUManager</code> フィーチャーゲートが有効に�
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-この例のcloud-initパスワードはデモンストレーション目的のみです。本番環境では、SSHキー認証または強力でユニークなパスワードを使用してください。
+この例の cloud-init パスワードはデモンストレーション目的のみです。本番環境では、SSH キー認証または強力でユニークなパスワードを使用してください。
 </td>
 </tr>
 </table>
@@ -613,13 +613,13 @@ EOF</code></pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-QEMUおよびハイパーバイザーのオーバーヘッドを考慮し、メモリ制限（2Gi）はゲストメモリ（1Gi）よりも高く設定されています。KubeVirtがどのようにVMのメモリ仕様をコンテナーリソース値に変換するかについては、<a href="resource-limits-qos.html" class="xref page">VMリソース制限とQoSの設定</a>を参照してください。
+QEMU およびハイパーバイザーのオーバーヘッドを考慮し、メモリ制限 (2Gi) はゲストメモリ (1Gi) よりも高く設定されています。KubeVirt がどのように VM のメモリ仕様をコンテナリソース値に変換するかについては、<a href="resource-limits-qos.html" class="xref page">VM Resource Limits と QoS の設定</a>を参照してください。
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>VMがRunning状態になるまで待ちます。</p>
+<p>VM が Running 状態になるまで待ちます。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -638,12 +638,12 @@ vm-dedicated-cpu  30s   Running   True</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_5_cpuピン留めの確認"><a class="anchor" href="#_ステップ_5_cpuピン留めの確認"></a>ステップ 5: CPUピン留めの確認</h2>
+<h2 id="_ステップ_5_cpu_pinning_の確認"><a class="anchor" href="#_ステップ_5_cpu_pinning_の確認"></a>ステップ 5: CPU pinning の確認</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_ホスト側での確認"><a class="anchor" href="#_ホスト側での確認"></a>ホスト側での確認</h3>
 <div class="paragraph">
-<p>VMが実行されているノードを特定します。</p>
+<p>VM が実行されているノードを特定します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -668,7 +668,7 @@ vm-dedicated-cpu  60s   Running   10.128.0.45   worker-01   True</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>デバッグシェル内で、CPUマネージャーの状態ファイルを確認します。このファイルには、各コンテナーにどの物理CPUが割り当てられているかが記録されています。</p>
+<p>デバッグシェル内で、CPU Manager state file を確認します。このファイルには、各コンテナにどの物理 CPU が割り当てられているかが記録されています。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -676,7 +676,7 @@ vm-dedicated-cpu  60s   Running   10.128.0.45   worker-01   True</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>出力はJSONオブジェクトです。<code>entries</code> マップは <code>virt-launcher</code> PodのUIDをキーとしており、各エントリにはそのPod内の <code>compute</code> コンテナーに排他的に割り当てられた物理CPU IDがリストされています。</p>
+<p>出力は JSON オブジェクトです。<code>entries</code> マップは <code>virt-launcher</code> Pod の UID をキーとしており、各エントリにはその Pod 内の <code>compute</code> コンテナに排他的に割り当てられた物理 CPU ID がリストされています。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -684,7 +684,7 @@ vm-dedicated-cpu  60s   Running   10.128.0.45   worker-01   True</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>この例では、CPU <code>2</code> と <code>42</code> がVMの2つのvCPU専用に予約されています。これらは <code>defaultCpuSet</code> から削除されるため、VMの実行中には他のワークロードがそれらを使用することはできません。</p>
+<p>この例では、CPU <code>2</code> と <code>42</code> が VM の 2 つの vCPU 専用に予約されています。これらは <code>defaultCpuSet</code> から削除されるため、VM の実行中には他のワークロードがそれらを使用することはできません。</p>
 </div>
 <div class="paragraph">
 <p>デバッグシェルを終了します。</p>
@@ -698,7 +698,7 @@ vm-dedicated-cpu  60s   Running   10.128.0.45   worker-01   True</pre>
 <div class="sect2">
 <h3 id="_ゲスト側での確認"><a class="anchor" href="#_ゲスト側での確認"></a>ゲスト側での確認</h3>
 <div class="paragraph">
-<p>VMコンソールに接続します。</p>
+<p>VM コンソールに接続します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -706,7 +706,7 @@ vm-dedicated-cpu  60s   Running   10.128.0.45   worker-01   True</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>ユーザー <code>fedora</code>、パスワード <code>redhat</code> でログインします。ゲストOS内で、オペレーティングシステムから認識されているvCPUの数を確認します。</p>
+<p>ユーザー <code>fedora</code>、パスワード <code>redhat</code> でログインします。ゲスト OS 内で認識されている vCPU の数を確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -725,7 +725,7 @@ Socket(s):               2</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>ゲストは2つのvCPU（2ソケット、1コア、各1スレッド）を認識しており、要求されたトポロジーと一致しています。</p>
+<p>ゲストは 2 つの vCPU (2 ソケット、1 コア、各 1 スレッド) を認識しており、リクエストされた Topology と一致しています。</p>
 </div>
 <div class="paragraph">
 <p><code>Ctrl+]</code> を押してコンソールから切断します。</p>
@@ -734,13 +734,13 @@ Socket(s):               2</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_エミュレータースレッドの分離"><a class="anchor" href="#_エミュレータースレッドの分離"></a>エミュレーター・スレッドの分離</h2>
+<h2 id="_emulator_thread_の分離"><a class="anchor" href="#_emulator_thread_の分離"></a>Emulator Thread の分離</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>QEMUは、I/O、タイマー、その他のハイパーバイザー・タスクを処理するエミュレーター・スレッドを実行します。デフォルトでは、このスレッドはVMのvCPUと物理CPU時間を共有するため、レイテンシのスパイクを引き起こす可能性があります。<code>isolateEmulatorThread</code> オプションは、このスレッド専用に追加の物理CPUを予約します。</p>
+<p>QEMU は、I/O、タイマー、その他のハイパーバイザータスクを処理する Emulator Thread を実行します。デフォルトでは、このスレッドは VM の vCPU と物理 CPU の処理時間を共有するため、遅延のスパイクを引き起こす可能性があります。<code>isolateEmulatorThread</code> オプションは、このスレッド専用に追加の物理 CPU を予約します。</p>
 </div>
 <div class="paragraph">
-<p>エミュレーター・スレッドの分離を有効にするには、VMスペックのCPUセクションに <code>dedicatedCpuPlacement: true</code> と併せて <code>isolateEmulatorThread: true</code> を追加します。</p>
+<p>Emulator Thread の分離を有効にするには、VM スペックの CPU セクションに <code>dedicatedCpuPlacement: true</code> と併せて <code>isolateEmulatorThread: true</code> を追加します。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -754,7 +754,7 @@ Socket(s):               2</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>この設定により、KubeVirtは合計3つの物理CPUを要求します（2つはvCPU用、1つはエミュレーター・スレッド専用）。エミュレーターに起因するわずかなジッターにも敏感なワークロードの場合にこのオプションを使用してください。</p>
+<p>この設定により、KubeVirt は合計 3 つの物理 CPU をリクエストします (2 つは vCPU 用、1 つは Emulator Thread 専用) 。エミュレーターに起因するわずかな揺らぎにも敏感なワークロードの場合にこのオプションを使用してください。</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -763,7 +763,7 @@ Socket(s):               2</pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only</code> CPUマネージャーオプションを使用している場合、偶数のvCPUで <code>isolateEmulatorThread</code> を使用するとスケジューリングエラーが発生することがあります。これを解決するには、KubeVirt CRで <code>AlignCPUs</code> フィーチャーゲートを有効にしてください。
+Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only</code> CPU Manager option を使用している場合、偶数の vCPU で <code>isolateEmulatorThread</code> を使用するとスケジューリングエラーが発生することがあります。これを解決するには、KubeVirt CR で <code>AlignCPUs</code> フィーチャーゲートを有効にしてください。
 </td>
 </tr>
 </table>
@@ -774,9 +774,9 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 <h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_vmがpending状態のままになる"><a class="anchor" href="#_vmがpending状態のままになる"></a>VMがPending状態のままになる</h3>
+<h3 id="_vm_が_pending_状態のままになる"><a class="anchor" href="#_vm_が_pending_状態のままになる"></a>VM が Pending 状態のままになる</h3>
 <div class="paragraph">
-<p>スケジューリングの失敗がないかVMIイベントを確認します。</p>
+<p>スケジューリングの失敗がないか VMI イベントを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -797,18 +797,18 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 <div class="ulist">
 <ul>
 <li>
-<p><strong><code>cpumanager=true</code> ラベル付きノードがない</strong>: <code>oc get nodes -L cpumanager</code> を実行し、スタティックCPUマネージャーポリシーが適用されているノードにラベルを付与します。</p>
+<p><strong><code>cpumanager=true</code> ラベル付きノードがない</strong>: <code>oc get nodes -L cpumanager</code> を実行し、Static CPU manager policy が適用されているノードにラベルを付与します。</p>
 </li>
 <li>
-<p><strong>利用可能な固定可能CPUが不足している</strong>: CPUマネージャーは割り当て可能なプールからCPUを予約します。<code>oc describe node &lt;node-name&gt;</code> でノードのキャパシティを確認し、要求を満たすのに十分なCPUがあるか検証します。</p>
+<p><strong>利用可能な固定可能 CPU が不足している</strong>: CPU Manager は割り当て可能なプールから CPU を予約します。<code>oc describe node &lt;node-name&gt;</code> でノードのキャパシティを確認し、リクエストを満たすのに十分な CPU があるか検証します。</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vm起動後にcpuピン留めが有効にならない"><a class="anchor" href="#_vm起動後にcpuピン留めが有効にならない"></a>VM起動後にCPUピン留めが有効にならない</h3>
+<h3 id="_vm_起動後に_cpu_pinning_が有効にならない"><a class="anchor" href="#_vm_起動後に_cpu_pinning_が有効にならない"></a>VM 起動後に CPU pinning が有効にならない</h3>
 <div class="paragraph">
-<p>KubeletConfigが正しく適用されたか確認します。</p>
+<p>KubeletConfig が正しく適用されたか確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -816,7 +816,7 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 </div>
 </div>
 <div class="paragraph">
-<p>MachineConfigPoolの状態を確認します。</p>
+<p>MachineConfigPool の状態を確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -824,7 +824,7 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 </div>
 </div>
 <div class="paragraph">
-<p><code>UPDATED</code> が <code>False</code> または <code>DEGRADED</code> が <code>True</code> の場合、設定は完全に適用されていません。MCOログを調査してください。</p>
+<p><code>UPDATED</code> が <code>False</code> または <code>DEGRADED</code> が <code>True</code> の場合、設定は完全に適用されていません。MCO ログを調査してください。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -833,12 +833,12 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vmが_insufficient_dedicated_cpu_resources_でアドミッションに失敗する"><a class="anchor" href="#_vmが_insufficient_dedicated_cpu_resources_でアドミッションに失敗する"></a>VMが "insufficient dedicated CPU resources" でアドミッションに失敗する</h3>
+<h3 id="_vm_が_insufficient_dedicated_cpu_resources_でアドミッションに失敗する"><a class="anchor" href="#_vm_が_insufficient_dedicated_cpu_resources_でアドミッションに失敗する"></a>VM が "insufficient dedicated CPU resources" でアドミッションに失敗する</h3>
 <div class="paragraph">
-<p>このエラーは、<code>dedicatedCpuPlacement: true</code> が設定されているが、QoSクラスがGuaranteedではないことを意味します。CPU要求量と上限が等しいこと、および両方が整数値であることを確認してください。</p>
+<p>このエラーは、<code>dedicatedCpuPlacement: true</code> が設定されているが、QoS クラスが Guaranteed ではないことを意味します。CPU requests と limits が等しいこと、両方が整数値であることを確認してください。</p>
 </div>
 <div class="paragraph">
-<p>virt-launcher Podに実際に割り当てられているQoSクラスを確認します。</p>
+<p>virt-launcher Pod に実際に割り当てられている QoS クラスを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -846,13 +846,13 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 </div>
 </div>
 <div class="paragraph">
-<p>値は <code>Guaranteed</code> である必要があります。<code>Burstable</code> の場合は、VMのリソース仕様を見直し、メモリ要求量とメモリ上限が一致していることを確認してください。</p>
+<p>値は <code>Guaranteed</code> である必要があります。<code>Burstable</code> の場合は、VM のリソース仕様を見直し、Memory requests と Memory limits が一致していることを確認してください。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_cpu_manager_state_にvmのエントリが表示されない"><a class="anchor" href="#_cpu_manager_state_にvmのエントリが表示されない"></a><code>cpu_manager_state</code> にVMのエントリが表示されない</h3>
+<h3 id="_cpu_manager_state_に_vm_のエントリが表示されない"><a class="anchor" href="#_cpu_manager_state_に_vm_のエントリが表示されない"></a><code>cpu_manager_state</code> に VM のエントリが表示されない</h3>
 <div class="paragraph">
-<p>CPUマネージャー状態ファイルにvirt-launcher PodのCPU割り当てがリストされていない場合、ノードのkubeletがまだ <code>none</code> ポリシーで動作している可能性があります。ポリシーを確認します。</p>
+<p>CPU Manager state file に virt-launcher Pod の CPU 割り当てがリストされていない場合、ノードの kubelet がまだ <code>none</code> ポリシーで動作している可能性があります。ポリシーを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -860,7 +860,7 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 </div>
 </div>
 <div class="paragraph">
-<p><code>cpuManagerPolicy</code> が存在しないか <code>none</code> に設定されている場合、KubeletConfigがそのノードにまだ適用されていません。MachineConfigPoolのロールアウトが完了するまで待機してください。</p>
+<p><code>cpuManagerPolicy</code> が存在しないか <code>none</code> に設定されている場合、KubeletConfig がそのノードにまだ適用されていません。MachineConfigPool のロールアウトが完了するまで待機してください。</p>
 </div>
 </div>
 </div>
@@ -885,7 +885,7 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 </div>
 </div>
 <div class="paragraph">
-<p>CPUマネージャーポリシーを元に戻すには、<code>KubeletConfig</code> を削除し、MachineConfigPoolからラベルを削除します。</p>
+<p>CPU manager policy を元に戻すには、<code>KubeletConfig</code> を削除し、MachineConfigPool からラベルを削除します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -904,7 +904,7 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-<code>KubeletConfig</code> を削除すると、kubelet設定を元に戻すために別のMCOロールアウトがトリガーされます。CPUマネージャーの動作に依存する追加のワークロードをスケジュールする前に、MachineConfigPoolのロールアウトが完了したことを確認してください。
+<code>KubeletConfig</code> を削除すると、kubelet 設定を元に戻すために別の MCO ロールアウトがトリガーされます。CPU Manager の動作に依存する追加のワークロードをスケジュールする前に、MachineConfigPool のロールアウトが完了したことを確認してください。
 </td>
 </tr>
 </table>
@@ -920,22 +920,22 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 <div class="ulist">
 <ul>
 <li>
-<p><code>KubeletConfig</code> リソースを使用して、Kubernetes CPUマネージャーで <code>static</code> ポリシーを設定する</p>
+<p><code>KubeletConfig</code> リソースを使用して、Kubernetes CPU Manager で <code>static</code> ポリシーを設定する</p>
 </li>
 <li>
-<p>専用CPU配置が利用可能であることを示すノードラベルを付ける</p>
+<p>専用 CPU 配置が利用可能であることを示すノードラベルを付ける</p>
 </li>
 <li>
-<p><code>dedicatedCpuPlacement: true</code> とGuaranteed QoSを持つ仮想マシンをデプロイする</p>
+<p><code>dedicatedCpuPlacement: true</code> と Guaranteed QoS を持つ仮想マシンをデプロイする</p>
 </li>
 <li>
-<p>CPUマネージャー状態ファイルを使用して、ホスト側からCPUピン留めを確認する</p>
+<p>CPU Manager state file を使用して、ホスト側から CPU pinning を確認する</p>
 </li>
 <li>
-<p>ゲスト内からvCPUトポロジーを確認する</p>
+<p>ゲスト内から vCPU Topology を確認する</p>
 </li>
 <li>
-<p>必要に応じて <code>isolateEmulatorThread: true</code> を使用してQEMUエミュレーター・スレッドを分離する</p>
+<p>必要に応じて <code>isolateEmulatorThread: true</code> を使用して QEMU Emulator Thread を分離する</p>
 </li>
 </ul>
 </div>
@@ -947,30 +947,30 @@ Simultaneous Multithreading (SMT) が有効なノードで <code>full-pcpus-only
 <div class="ulist">
 <ul>
 <li>
-<p><a href="resource-limits-qos.html" class="xref page">VMリソース制限とQoS</a>&#8201;&#8212;&#8201;Guaranteed QoSの要件とメモリオーバーヘッド</p>
+<p><a href="resource-limits-qos.html" class="xref page">VM リソース制限と QoS</a>&#8201;&#8212;&#8201;Guaranteed QoS の要件とメモリオーバーヘッド</p>
 </li>
 <li>
-<p><a href="../vm-configuration/node-placement-affinity.html" class="xref page">ノード配置とアフィニティ</a>&#8201;&#8212;&#8201;VMスケジューリング用の特定のノードをターゲットにする</p>
+<p><a href="../vm-configuration/node-placement-affinity.html" class="xref page">ノード配置とアフィニティ</a>&#8201;&#8212;&#8201;VM スケジューリング用の特定のノードをターゲットにする</p>
 </li>
 <li>
 <p><a href="../vm-configuration/infrastructure-node-placement.html" class="xref page">インフラストラクチャノード配置</a>&#8201;&#8212;&#8201;仮想化ワークロード専用のノードプール</p>
 </li>
 <li>
-<p><a href="https://kubevirt.io/user-guide/compute/dedicated_cpu_resources/" target="_blank" rel="noopener">KubeVirt 専用CPUリソース (英語)</a></p>
+<p><a href="https://kubevirt.io/user-guide/compute/dedicated_cpu_resources/" target="_blank" rel="noopener">KubeVirt 専用 CPU リソース (英語)</a></p>
 </li>
 <li>
-<p><a href="https://docs.openshift.com/container-platform/4.18/scalability_and_performance/using-cpu-manager.html" target="_blank" rel="noopener">CPUマネージャーとトポロジーマネージャーの使用 - OpenShiftドキュメント (英語)</a></p>
+<p><a href="https://docs.openshift.com/container-platform/4.18/scalability_and_performance/using-cpu-manager.html" target="_blank" rel="noopener">CPU Manager と Topology Manager の使用 - OpenShift ドキュメント (英語)</a></p>
 </li>
 <li>
-<p><a href="https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/" target="_blank" rel="noopener">CPU管理ポリシー - Kubernetesドキュメント (英語)</a></p>
+<p><a href="https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/" target="_blank" rel="noopener">CPU 管理ポリシー - Kubernetes ドキュメント (英語)</a></p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="resource-limits-qos.html">リソース制限とQoS</a></span>
-  <span class="next"><a href="numa-hugepages.html">NUMAとHugepages</a></span>
+  <span class="prev"><a href="resource-limits-qos.html">Resource limits と QoS</a></span>
+  <span class="next"><a href="numa-hugepages.html">NUMA と Hugepages</a></span>
 </nav>
 </article>
   </div>

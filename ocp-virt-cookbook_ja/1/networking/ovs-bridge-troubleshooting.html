@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Localnetネットワーク用のOVSブリッジ作成のトラブルシューティング :: OpenShift Virtualization cookbook</title>
+    <title>Localnet ネットワーク用の OVS bridge 作成のトラブルシューティング :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="vm-ingress-routes.html">
     <link rel="next" href="../vm-configuration/index.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -291,7 +291,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">ネットワーク構成</a></li>
-    <li><a href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a></li>
+    <li><a href="ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a></li>
   </ul>
 </nav>
 </div>
@@ -300,7 +300,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Localnetネットワーク用のOVSブリッジ作成のトラブルシューティング</h1>
+<h1 class="page">Localnet ネットワーク用の OVS bridge 作成のトラブルシューティング</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
@@ -312,26 +312,26 @@
 </div>
 </div>
 <div class="paragraph">
-<p>このガイドは、OpenShift Virtualizationにおいて、Localnetセカンダリネットワーク用のOVS (Open vSwitch) ブリッジが正しく作成および構成されていることを確認するのに役立ちます。</p>
+<p>このガイドは、OpenShift Virtualization において、Localnet セカンダリネットワーク用の OVS (Open vSwitch) bridge が正しく作成および構成されていることを確認するのに役立ちます。</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ovsブリッジとlinuxブリッジの理解"><a class="anchor" href="#_ovsブリッジとlinuxブリッジの理解"></a>OVSブリッジとLinuxブリッジの理解</h2>
+<h2 id="_ovs_bridge_と_linux_bridge_の理解"><a class="anchor" href="#_ovs_bridge_と_linux_bridge_の理解"></a>OVS bridge と Linux bridge の理解</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><strong>重要</strong>: OVSブリッジの動作はLinuxブリッジとは異なります。</p>
+<p><strong>重要</strong>: OVS bridge の動作は Linux bridge とは異なります。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>OVSブリッジ</strong>は、`ovs-vsctl`コマンドを使用して確認できます。</p>
+<p><strong>OVS bridge</strong>は、<code>ovs-vsctl</code> コマンドを使用して確認できます。</p>
 </li>
 <li>
-<p><strong>OVSブリッジ</strong>は、`ip addr show`や`ip link show`では通常のネットワークインターフェースとして表示されない場合があります。</p>
+<p><strong>OVS bridge</strong>は、<code>ip addr show</code> や <code>ip link show</code> では通常のネットワークインターフェースとして表示されない場合があります。</p>
 </li>
 <li>
-<p>これは<strong>正常かつ想定された動作</strong>です。OVSブリッジは標準的なLinuxネットワークデバイスではなく、OVSデータベース内に存在するためです。</p>
+<p>これは<strong>正常かつ想定された動作</strong>です。OVS bridge は標準的な Linux ネットワークデバイスではなく、OVS データベース内に存在するためです。</p>
 </li>
 </ul>
 </div>
@@ -341,9 +341,9 @@
 <h2 id="_検証プロセス"><a class="anchor" href="#_検証プロセス"></a>検証プロセス</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_ステップ_1_nodenetworkconfigurationpolicyのステータス確認"><a class="anchor" href="#_ステップ_1_nodenetworkconfigurationpolicyのステータス確認"></a>ステップ 1: NodeNetworkConfigurationPolicyのステータス確認</h3>
+<h3 id="_ステップ_1_nodenetworkconfigurationpolicy_のステータス確認"><a class="anchor" href="#_ステップ_1_nodenetworkconfigurationpolicy_のステータス確認"></a>ステップ 1: NodeNetworkConfigurationPolicy のステータス確認</h3>
 <div class="paragraph">
-<p>まず、NNCPが適用され、正常に構成されていることを確認します。</p>
+<p>まず、NNCP が適用され、正常に構成されていることを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -365,9 +365,9 @@ br-vlan-creation   Available   SuccessfullyConfigured</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_2_nncpの詳細情報の取得"><a class="anchor" href="#_ステップ_2_nncpの詳細情報の取得"></a>ステップ 2: NNCPの詳細情報の取得</h3>
+<h3 id="_ステップ_2_nncp_の詳細情報の取得"><a class="anchor" href="#_ステップ_2_nncp_の詳細情報の取得"></a>ステップ 2: NNCP の詳細情報の取得</h3>
 <div class="paragraph">
-<p>NNCPの完全な構成とステータスを確認します。</p>
+<p>NNCP の完全な構成とステータスを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -407,16 +407,16 @@ br-vlan-creation   Available   SuccessfullyConfigured</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_3_ovsブリッジが存在することの確認"><a class="anchor" href="#_ステップ_3_ovsブリッジが存在することの確認"></a>ステップ 3: OVSブリッジが存在することの確認</h3>
+<h3 id="_ステップ_3_ovs_bridge_の確認"><a class="anchor" href="#_ステップ_3_ovs_bridge_の確認"></a>ステップ 3: OVS bridge の確認</h3>
 <div class="paragraph">
-<p><strong>これがOVSブリッジを確認するための正しい方法です:</strong></p>
+<p><strong>これが OVS bridge を確認するための正しい方法です:</strong></p>
 </div>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ノード名を取得
 oc get nodes
 
-# すべてのOVSブリッジを一覧表示
+# すべてのOVS bridgeを一覧表示
 oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl list-br</code></pre>
 </div>
 </div>
@@ -435,13 +435,13 @@ Removing debug pod ...</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>このリストに <code>br-vlan</code> が表示されていれば、ブリッジは正常に作成されています。</p>
+<p>このリストに <code>br-vlan</code> が表示されていれば、bridge は正常に作成されています。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_4_ブリッジ構成の詳細確認"><a class="anchor" href="#_ステップ_4_ブリッジ構成の詳細確認"></a>ステップ 4: ブリッジ構成の詳細確認</h3>
+<h3 id="_ステップ_4_bridge_構成の詳細確認"><a class="anchor" href="#_ステップ_4_bridge_構成の詳細確認"></a>ステップ 4: bridge 構成の詳細確認</h3>
 <div class="paragraph">
-<p>完全なOVS構成を確認して、ブリッジポートとインターフェースを表示します。</p>
+<p>OVS 構成を確認して、bridge ポートとインターフェースを表示します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -465,7 +465,7 @@ Removing debug pod ...</pre>
 <div class="ulist">
 <ul>
 <li>
-<p>ブリッジ名 (<code>br-vlan</code>) が出力にあること</p>
+<p>bridge 名 (<code>br-vlan</code>) が出力にあること</p>
 </li>
 <li>
 <p>物理インターフェース (例: <code>enp11s0f0np0</code>) がポートとしてリストされていること</p>
@@ -479,7 +479,7 @@ Removing debug pod ...</pre>
 <div class="sect2">
 <h3 id="_ステップ_5_物理インターフェースのステータス確認"><a class="anchor" href="#_ステップ_5_物理インターフェースのステータス確認"></a>ステップ 5: 物理インターフェースのステータス確認</h3>
 <div class="paragraph">
-<p>物理インターフェースがブリッジに接続されており、UP状態であることを確認します。</p>
+<p>物理インターフェースが bridge に接続されており、UP 状態であることを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -504,7 +504,7 @@ Removing debug pod ...</pre>
 <p><code>UP,LOWER_UP</code> - インターフェースが動作可能であること</p>
 </li>
 <li>
-<p><code>master ovs-system</code> - インターフェースがOVSによって管理されていること</p>
+<p><code>master ovs-system</code> - インターフェースが OVS によって管理されていること</p>
 </li>
 <li>
 <p><code>state UP</code> - インターフェースの状態がアップしていること</p>
@@ -513,7 +513,7 @@ Removing debug pod ...</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_6_なぜ_ip_addr_show_br_vlan_が失敗するのか"><a class="anchor" href="#_ステップ_6_なぜ_ip_addr_show_br_vlan_が失敗するのか"></a>ステップ 6: なぜ "ip addr show br-vlan" が失敗するのか</h3>
+<h3 id="_ステップ_6_ip_addr_show_br_vlan_が失敗する理由"><a class="anchor" href="#_ステップ_6_ip_addr_show_br_vlan_が失敗する理由"></a>ステップ 6: "ip addr show br-vlan" が失敗する理由</h3>
 <div class="paragraph">
 <p><strong>これは正常な動作です:</strong></p>
 </div>
@@ -531,21 +531,21 @@ Removing debug pod ...</pre>
 </div>
 </div>
 <div class="paragraph">
-<p><strong>この理由:</strong></p>
+<p><strong>理由:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>OVSブリッジは通常のLinuxネットワークデバイスとしてではなく、OVSデータベース内に存在するためです。</p>
+<p>OVS bridge は通常の Linux ネットワークデバイスとしてではなく、OVS データベース内に存在するためです。</p>
 </li>
 <li>
 <p>内部インターフェースを持たない限り、標準の <code>ip</code> コマンド出力には表示されません。</p>
 </li>
 <li>
-<p>これはブリッジの作成失敗を意味するものではありません。</p>
+<p>これは bridge の作成失敗を意味するものではありません。</p>
 </li>
 <li>
-<p>OVSブリッジを確認する際は、必ず <code>ovs-vsctl</code> コマンドを使用してください。</p>
+<p>OVS bridge を確認する際は、必ず <code>ovs-vsctl</code> コマンドを使用してください。</p>
 </li>
 </ul>
 </div>
@@ -556,14 +556,14 @@ Removing debug pod ...</pre>
 <h2 id="_よくある問題と解決策"><a class="anchor" href="#_よくある問題と解決策"></a>よくある問題と解決策</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_問題_1_ovs_vsctl_list_br_にブリッジが表示されない"><a class="anchor" href="#_問題_1_ovs_vsctl_list_br_にブリッジが表示されない"></a>問題 1: ovs-vsctl list-br にブリッジが表示されない</h3>
+<h3 id="_問題_1_ovs_vsctl_list_br_に_bridge_が表示されない"><a class="anchor" href="#_問題_1_ovs_vsctl_list_br_に_bridge_が表示されない"></a>問題 1: ovs-vsctl list-br に bridge が表示されない</h3>
 <div class="paragraph">
-<p><strong>症状:</strong></p>
+<p><strong>事象:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>NNCPは <code>Available: True</code> を示しているが、ブリッジが <code>ovs-vsctl list-br</code> に表示されない</p>
+<p>NNCP は <code>Available: True</code> を示しているが、bridge が <code>ovs-vsctl list-br</code> に表示されない</p>
 </li>
 </ul>
 </div>
@@ -575,7 +575,7 @@ Removing debug pod ...</pre>
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># NNCPの条件を確認
 oc get nncp br-vlan-creation -o jsonpath='{.status.conditions[?(@.type=="Available")]}' | jq
 
-# NMStateオペレーターのログを確認
+# NMState Operatorのログを確認
 oc logs -n openshift-nmstate -l app=kubernetes-nmstate-operator
 
 # 問題のあるノードネットワーク状態があるか確認
@@ -591,23 +591,23 @@ oc get nns -A</code></pre>
 <p>物理インターフェース名の不一致 (<code>ip link show</code> で確認)</p>
 </li>
 <li>
-<p>ノード上でOVSが正しく実行されていない</p>
+<p>ノード上で OVS が正しく実行されていない</p>
 </li>
 <li>
-<p>NMStateオペレーターの問題</p>
+<p>NMState Operator の問題</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_問題_2_物理インターフェースがブリッジに接続されていない"><a class="anchor" href="#_問題_2_物理インターフェースがブリッジに接続されていない"></a>問題 2: 物理インターフェースがブリッジに接続されていない</h3>
+<h3 id="_問題_2_物理インターフェースが_bridge_に接続されていない"><a class="anchor" href="#_問題_2_物理インターフェースが_bridge_に接続されていない"></a>問題 2: 物理インターフェースが bridge に接続されていない</h3>
 <div class="paragraph">
-<p><strong>症状:</strong></p>
+<p><strong>事象:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>ブリッジは存在するが、<code>ovs-vsctl show</code> でインターフェースがポートとして表示されない</p>
+<p>bridge は存在するが、<code>ovs-vsctl show</code> でインターフェースがポートとして表示されない</p>
 </li>
 </ul>
 </div>
@@ -616,7 +616,7 @@ oc get nns -A</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ブリッジ上のすべてのポートを一覧表示
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># bridge上のすべてのポートを一覧表示
 oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl list-ports br-vlan
 
 # インターフェースのステータスを確認
@@ -632,10 +632,10 @@ oc get nncp br-vlan-creation -o yaml | grep -A 5 "name: &lt;interface-name&gt;"<
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>NNCP内の物理インターフェース名が正しいことを確認します。</p>
+<p>NNCP 内の物理インターフェース名が正しいことを確認します。</p>
 </li>
 <li>
-<p>インターフェースが別のブリッジによって既に使用されていないか確認します。</p>
+<p>インターフェースが別の bridge によって既に使用されていないか確認します。</p>
 </li>
 <li>
 <p>インターフェースが存在し、ノードで使用可能であることを確認します。</p>
@@ -644,14 +644,14 @@ oc get nncp br-vlan-creation -o yaml | grep -A 5 "name: &lt;interface-name&gt;"<
 </div>
 </div>
 <div class="sect2">
-<h3 id="_問題_3_ノードセレクターの不一致"><a class="anchor" href="#_問題_3_ノードセレクターの不一致"></a>問題 3: ノードセレクターの不一致</h3>
+<h3 id="_問題_3_nodeselector_の不一致"><a class="anchor" href="#_問題_3_nodeselector_の不一致"></a>問題 3: NodeSelector の不一致</h3>
 <div class="paragraph">
-<p><strong>症状:</strong></p>
+<p><strong>事象:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>NNCPは成功しているが、ブリッジが存在しない</p>
+<p>NNCP は成功しているが、bridge が存在しない</p>
 </li>
 </ul>
 </div>
@@ -663,7 +663,7 @@ oc get nncp br-vlan-creation -o yaml | grep -A 5 "name: &lt;interface-name&gt;"<
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ノードラベルを確認
 oc get nodes --show-labels
 
-# NNCPノードセレクターを確認
+# NNCP NodeSelectorを確認
 oc get nncp br-vlan-creation -o jsonpath='{.spec.nodeSelector}'</code></pre>
 </div>
 </div>
@@ -673,26 +673,26 @@ oc get nncp br-vlan-creation -o jsonpath='{.spec.nodeSelector}'</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>シングルノードOpenShift (SNO) ノードには <code>control-plane,master,worker</code> のロールがある</p>
+<p>Single Node OpenShift (SNO) ノードには <code>control-plane,master,worker</code> のロールがある</p>
 </li>
 <li>
-<p><code>node-role.kubernetes.io/worker: ""</code> セレクターを持つNNCPは引き続き一致する</p>
+<p><code>node-role.kubernetes.io/worker: ""</code> セレクターを持つ NNCP は引き続き一致する</p>
 </li>
 <li>
-<p>NNCPステータスが "X/X nodes successfully configured" を示しているか確認してください</p>
+<p>NNCP ステータスが "X/X nodes successfully configured" を示しているか確認する</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_問題_4_ブリッジは作成されたが機能していない"><a class="anchor" href="#_問題_4_ブリッジは作成されたが機能していない"></a>問題 4: ブリッジは作成されたが機能していない</h3>
+<h3 id="_問題_4_bridge_は作成されたが機能していない"><a class="anchor" href="#_問題_4_bridge_は作成されたが機能していない"></a>問題 4: bridge は作成されたが機能していない</h3>
 <div class="paragraph">
-<p><strong>症状:</strong></p>
+<p><strong>事象:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>ブリッジは存在し、インターフェースも接続されているが、トラフィックが流れない</p>
+<p>bridge は存在し、インターフェースも接続されているが、トラフィックが流れない</p>
 </li>
 </ul>
 </div>
@@ -731,15 +731,15 @@ oc debug node/&lt;node-name&gt; -- chroot /host ethtool &lt;interface-name&gt; |
 </div>
 </div>
 <div class="sect1">
-<h2 id="_localnet用ブリッジマッピングの確認"><a class="anchor" href="#_localnet用ブリッジマッピングの確認"></a>Localnet用ブリッジマッピングの確認</h2>
+<h2 id="_localnet_用_bridge_mapping_の確認"><a class="anchor" href="#_localnet_用_bridge_mapping_の確認"></a>Localnet 用 bridge mapping の確認</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>OVSブリッジを作成した後、OVN-Kubernetesへのブリッジマッピングが正しく機能していることを確認する必要があります。</p>
+<p>OVS bridge を作成した後、OVN-Kubernetes への bridge mapping が正しく機能していることを確認する必要があります。</p>
 </div>
 <div class="sect2">
-<h3 id="_ブリッジマッピングとは何か"><a class="anchor" href="#_ブリッジマッピングとは何か"></a>ブリッジマッピングとは何か</h3>
+<h3 id="_bridge_mapping_とは何か"><a class="anchor" href="#_bridge_mapping_とは何か"></a>bridge mapping とは何か</h3>
 <div class="paragraph">
-<p>ブリッジマッピングは、<strong>論理ネットワーク名</strong> (NetworkAttachmentDefinitionsで使用) を<strong>物理OVSブリッジ</strong>に接続します。例えば:</p>
+<p>bridge mapping は、<strong>論理ネットワーク名</strong> (NetworkAttachmentDefinitions で使用) を<strong>物理 OVS bridge</strong>に接続します。例えば:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -747,25 +747,25 @@ oc debug node/&lt;node-name&gt; -- chroot /host ethtool &lt;interface-name&gt; |
 <p>論理名: <code>localnet-vlan</code></p>
 </li>
 <li>
-<p>物理ブリッジ: <code>br-vlan</code></p>
+<p>物理 bridge: <code>br-vlan</code></p>
 </li>
 <li>
-<p>マッピング: <code>localnet-vlan:br-vlan</code></p>
+<p>mapping: <code>localnet-vlan:br-vlan</code></p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_1_ブリッジマッピングのnncpステータス確認"><a class="anchor" href="#_ステップ_1_ブリッジマッピングのnncpステータス確認"></a>ステップ 1: ブリッジマッピングのNNCPステータス確認</h3>
+<h3 id="_ステップ_1_bridge_mapping_の_nncp_ステータス確認"><a class="anchor" href="#_ステップ_1_bridge_mapping_の_nncp_ステータス確認"></a>ステップ 1: bridge mapping の NNCP ステータス確認</h3>
 <div class="paragraph">
-<p>ブリッジマッピングのNNCPが正常に適用されたか確認します:</p>
+<p>bridge mapping の NNCP が正常に適用されたか確認します:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべてのNNCPを一覧表示
 oc get nncp | grep mapping
 
-# 特定のブリッジマッピングNNCPを確認
+# NNCP の特定の bridge mapping を確認
 oc get nncp localnet-vlan-bridge-mapping</code></pre>
 </div>
 </div>
@@ -779,7 +779,7 @@ oc get nncp localnet-vlan-bridge-mapping</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_2_ブリッジマッピングの詳細構成を取得"><a class="anchor" href="#_ステップ_2_ブリッジマッピングの詳細構成を取得"></a>ステップ 2: ブリッジマッピングの詳細構成を取得</h3>
+<h3 id="_ステップ_2_bridge_mapping_の詳細構成を取得"><a class="anchor" href="#_ステップ_2_bridge_mapping_の詳細構成を取得"></a>ステップ 2: bridge mapping の詳細構成を取得</h3>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nncp localnet-vlan-bridge-mapping -o yaml</code></pre>
@@ -809,9 +809,9 @@ status:
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_3_ノード上のovnブリッジマッピングを確認"><a class="anchor" href="#_ステップ_3_ノード上のovnブリッジマッピングを確認"></a>ステップ 3: ノード上のOVNブリッジマッピングを確認</h3>
+<h3 id="_ステップ_3_ノード上の_ovn_bridge_mapping_を確認"><a class="anchor" href="#_ステップ_3_ノード上の_ovn_bridge_mapping_を確認"></a>ステップ 3: ノード上の OVN bridge mapping を確認</h3>
 <div class="paragraph">
-<p>これが<strong>非常に重要な検証作業</strong>です。OVN-Kubernetesにブリッジマッピングが構成されているか確認します:</p>
+<p>これが<strong>非常に重要な検証作業</strong>です。OVN-Kubernetes に bridge mapping が構成されているか確認します:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -827,26 +827,26 @@ status:
 </div>
 </div>
 <div class="paragraph">
-<p><strong>この意味:</strong></p>
+<p><strong>意味:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>localnet-vlan:br-vlan</code> = カスタムマッピング</p>
+<p><code>localnet-vlan:br-vlan</code> = カスタム mapping</p>
 </li>
 <li>
-<p><code>physnet:br-ex</code> = デフォルトのOpenShiftマッピング</p>
+<p><code>physnet:br-ex</code> = デフォルトの OpenShift mapping</p>
 </li>
 <li>
-<p>複数のマッピングがある場合はカンマで区切られます</p>
+<p>複数の mapping がある場合はカンマで区切られます</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_4_完全なovs外部idの確認"><a class="anchor" href="#_ステップ_4_完全なovs外部idの確認"></a>ステップ 4: 完全なOVS外部IDの確認</h3>
+<h3 id="_ステップ_4_すべての_ovs_external_id_の確認"><a class="anchor" href="#_ステップ_4_すべての_ovs_external_id_の確認"></a>ステップ 4: すべての OVS External ID の確認</h3>
 <div class="paragraph">
-<p>すべてのOVS外部IDを取得して、完全な構成を確認します:</p>
+<p>すべての OVS external ID を取得して、完全な構成を確認します:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -867,7 +867,7 @@ status:
 <div class="ulist">
 <ul>
 <li>
-<p><code>ovn-bridge-mappings</code> にマッピングが含まれていること</p>
+<p><code>ovn-bridge-mappings</code> に mapping が含まれていること</p>
 </li>
 <li>
 <p><code>hostname</code> がノードと一致すること</p>
@@ -881,7 +881,7 @@ status:
 <div class="sect2">
 <h3 id="_ステップ_5_物理インターフェースの接続確認"><a class="anchor" href="#_ステップ_5_物理インターフェースの接続確認"></a>ステップ 5: 物理インターフェースの接続確認</h3>
 <div class="paragraph">
-<p>物理インターフェースがブリッジに接続されていることを確認します:</p>
+<p>物理インターフェースが bridge に接続されていることを確認します:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -897,16 +897,16 @@ status:
 </div>
 </div>
 <div class="paragraph">
-<p>これで、物理インターフェースがブリッジ上のポートであり、トラフィックを送信できる状態であることが確認できます。</p>
+<p>これで、物理インターフェースが bridge 上のポートであり、トラフィックを送信できる状態であることが確認できます。</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ブリッジマッピングのトラフィックフロー"><a class="anchor" href="#_ブリッジマッピングのトラフィックフロー"></a>ブリッジマッピングのトラフィックフロー</h2>
+<h2 id="_bridge_mapping_のトラフィックフロー"><a class="anchor" href="#_bridge_mapping_のトラフィックフロー"></a>bridge mapping のトラフィックフロー</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>ブリッジマッピングを介したトラフィックフローの理解:</p>
+<p>bridge mapping を介したトラフィックフローの理解:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -925,7 +925,7 @@ status:
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ OVN-Kubernetes (ブリッジマッピングを参照)                         │
+│ OVN-Kubernetes (bridge mappingを参照)                         │
 │   localnet-vlan → br-vlan                                        │
 └────────────────────────┬────────────────────────────────────────┘
                          │
@@ -946,17 +946,17 @@ status:
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ブリッジマッピングの問題のトラブルシューティング"><a class="anchor" href="#_ブリッジマッピングの問題のトラブルシューティング"></a>ブリッジマッピングの問題のトラブルシューティング</h2>
+<h2 id="_bridge_mapping_の問題のトラブルシューティング"><a class="anchor" href="#_bridge_mapping_の問題のトラブルシューティング"></a>bridge mapping の問題のトラブルシューティング</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_問題_1_ブリッジマッピングがovnの外部idにない"><a class="anchor" href="#_問題_1_ブリッジマッピングがovnの外部idにない"></a>問題 1: ブリッジマッピングがOVNの外部IDにない</h3>
+<h3 id="_問題_1_bridge_mapping_が_ovn_の_external_id_にない"><a class="anchor" href="#_問題_1_bridge_mapping_が_ovn_の_external_id_にない"></a>問題 1: bridge mapping が OVN の External ID にない</h3>
 <div class="paragraph">
-<p><strong>症状:</strong></p>
+<p><strong>事象:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>NNCPは成功しているが、<code>ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings</code> にマッピングが含まれていない</p>
+<p>NNCP は成功しているが、<code>ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings</code> に mapping が含まれていない</p>
 </li>
 </ul>
 </div>
@@ -965,13 +965,13 @@ status:
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># NNCPが適用されたか確認
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># NNCP が適用されたか確認
 oc get nncp localnet-vlan-bridge-mapping -o yaml
 
-# NMStateオペレーターを再起動
+# NMState Operator を再起動
 oc delete pod -n openshift-nmstate -l app=kubernetes-nmstate-operator
 
-# NMStateハンドラーのログを確認
+# NMState ハンドラーのログを確認
 oc logs -n openshift-nmstate -l component=kubernetes-nmstate-handler</code></pre>
 </div>
 </div>
@@ -981,13 +981,13 @@ oc logs -n openshift-nmstate -l component=kubernetes-nmstate-handler</code></pre
 <div class="ulist">
 <ul>
 <li>
-<p>ブリッジが作成される前にNNCPが適用された</p>
+<p>bridge が作成される前に NNCP が適用された</p>
 </li>
 <li>
-<p>NMStateハンドラーが正常に動作していない</p>
+<p>NMState ハンドラーが正常に動作していない</p>
 </li>
 <li>
-<p>OVSサービスの不具合</p>
+<p>OVS サービスの不具合</p>
 </li>
 </ul>
 </div>
@@ -995,18 +995,18 @@ oc logs -n openshift-nmstate -l component=kubernetes-nmstate-handler</code></pre
 <p><strong>解決策:</strong></p>
 </div>
 <div class="paragraph">
-<p>ブリッジが存在することを確認した後、ブリッジマッピングのNNCPを削除して再作成してください。</p>
+<p>bridge が存在することを確認した後、bridge mapping の NNCP を削除して再作成してください。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_問題_2_マッピング内のブリッジ名が間違っている"><a class="anchor" href="#_問題_2_マッピング内のブリッジ名が間違っている"></a>問題 2: マッピング内のブリッジ名が間違っている</h3>
+<h3 id="_問題_2_mapping_内の_bridge_名が間違っている"><a class="anchor" href="#_問題_2_mapping_内の_bridge_名が間違っている"></a>問題 2: mapping 内の bridge 名が間違っている</h3>
 <div class="paragraph">
-<p><strong>症状:</strong></p>
+<p><strong>事象:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>ブリッジマッピングは存在するが、間違ったブリッジ名を使用している</p>
+<p>bridge mapping は存在するが、間違った bridge 名を使用している</p>
 </li>
 </ul>
 </div>
@@ -1015,10 +1015,10 @@ oc logs -n openshift-nmstate -l component=kubernetes-nmstate-handler</code></pre
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 存在するブリッジを確認
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 存在するbridgeを確認
 oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl list-br
 
-# マッピングが参照しているものを確認
+# mappingが参照しているものを確認
 oc get nncp localnet-vlan-bridge-mapping -o jsonpath='{.spec.desiredState.ovn.bridge-mappings[0].bridge}'</code></pre>
 </div>
 </div>
@@ -1026,18 +1026,18 @@ oc get nncp localnet-vlan-bridge-mapping -o jsonpath='{.spec.desiredState.ovn.br
 <p><strong>解決策:</strong></p>
 </div>
 <div class="paragraph">
-<p>マッピングNNCP内のブリッジ名が、実際のOVSブリッジ名と完全に一致していることを確認してください。</p>
+<p>mappingNNCP 内の bridge 名が、実際の OVS bridge 名と完全に一致していることを確認してください。</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_問題_3_論理名の不一致"><a class="anchor" href="#_問題_3_論理名の不一致"></a>問題 3: 論理名の不一致</h3>
 <div class="paragraph">
-<p><strong>症状:</strong></p>
+<p><strong>事象:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>ブリッジマッピングが存在するにもかかわらず、VMがネットワークに接続できない</p>
+<p>bridge mapping が存在するにもかかわらず、VM がネットワークに接続できない</p>
 </li>
 </ul>
 </div>
@@ -1046,7 +1046,7 @@ oc get nncp localnet-vlan-bridge-mapping -o jsonpath='{.spec.desiredState.ovn.br
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ブリッジマッピング内の論理名を確認
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># bridge mapping内の論理名を確認
 oc get nncp localnet-vlan-bridge-mapping -o jsonpath='{.spec.desiredState.ovn.bridge-mappings[0].localnet}'
 
 # NetworkAttachmentDefinition または ClusterUserDefinedNetwork (CUDN) が同じ名前を参照しているか確認
@@ -1057,18 +1057,18 @@ oc get network-attachment-definitions &lt;nad-name&gt; -n &lt;namespace&gt; -o y
 <p><strong>解決策:</strong></p>
 </div>
 <div class="paragraph">
-<p>ブリッジマッピング内の論理ネットワーク名は、NetworkAttachmentDefinition または ClusterUserDefinedNetwork 構成で使用されている名前と一致する必要があります。</p>
+<p>bridge mapping 内の論理ネットワーク名は、NetworkAttachmentDefinition または ClusterUserDefinedNetwork 構成で使用されている名前と一致する必要があります。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_問題_4_複数のマッピングの競合"><a class="anchor" href="#_問題_4_複数のマッピングの競合"></a>問題 4: 複数のマッピングの競合</h3>
+<h3 id="_問題_4_複数の_mapping_の競合"><a class="anchor" href="#_問題_4_複数の_mapping_の競合"></a>問題 4: 複数の mapping の競合</h3>
 <div class="paragraph">
-<p><strong>症状:</strong></p>
+<p><strong>事象:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>複数のブリッジマッピングが構成されているが、トラフィックが間違ったブリッジに送信される</p>
+<p>複数の  bridge mapping が構成されているが、トラフィックが間違った bridge に送信される</p>
 </li>
 </ul>
 </div>
@@ -1077,7 +1077,7 @@ oc get network-attachment-definitions &lt;nad-name&gt; -n &lt;namespace&gt; -o y
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべてのブリッジマッピングを一覧表示
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべての bridge mapping を一覧表示
 oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings</code></pre>
 </div>
 </div>
@@ -1093,7 +1093,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . ext
 <p><strong>解決策:</strong></p>
 </div>
 <div class="paragraph">
-<p>各論理ネットワーク名がユニークであり、正しいブリッジにマッピングされていることを確認してください。OVNは最初の一致するマッピングを使用します。</p>
+<p>各論理ネットワーク名がユニークであり、正しい bridge に mapping されていることを確認してください。OVN は最初の一致する mapping を使用します。</p>
 </div>
 </div>
 </div>
@@ -1102,23 +1102,23 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . ext
 <h2 id="_完全な検証チェックリスト"><a class="anchor" href="#_完全な検証チェックリスト"></a>完全な検証チェックリスト</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>このチェックリストを使用して、OVSブリッジとブリッジマッピングが正しく構成されているかを確認してください:</p>
+<p>このチェックリストを使用して、OVS bridge と bridge mapping が 正しく構成されているかを確認してください:</p>
 </div>
 <div class="sect2">
-<h3 id="_ブリッジ作成"><a class="anchor" href="#_ブリッジ作成"></a>ブリッジ作成</h3>
+<h3 id="_bridge_作成"><a class="anchor" href="#_bridge_作成"></a>bridge 作成</h3>
 <div class="ulist checklist">
 <ul class="checklist">
 <li>
-<p><i class="fa fa-square-o"></i> NNCPステータスが <code>Available: True</code> かつ <code>SuccessfullyConfigured</code> になっていること</p>
+<p><i class="fa fa-square-o"></i> NNCP ステータスが <code>Available: True</code> かつ <code>SuccessfullyConfigured</code> になっていること</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> NNCPメッセージがすべてのノードで正常に構成されたことを示していること</p>
+<p><i class="fa fa-square-o"></i> NNCP メッセージがすべてのノードで正常に構成されたことを示していること</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> <code>ovs-vsctl list-br</code> にブリッジ名が含まれていること</p>
+<p><i class="fa fa-square-o"></i> <code>ovs-vsctl list-br</code> に bridge 名が含まれていること</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> <code>ovs-vsctl show</code> で物理インターフェースがポートとしてブリッジに表示されていること</p>
+<p><i class="fa fa-square-o"></i> <code>ovs-vsctl show</code> で物理インターフェースがポートとして bridge に表示されていること</p>
 </li>
 <li>
 <p><i class="fa fa-square-o"></i> 物理インターフェースが <code>UP,LOWER_UP</code> ステータスであること</p>
@@ -1130,35 +1130,35 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . ext
 <p><i class="fa fa-square-o"></i> 物理リンクがキャリア状態であること (ケーブル接続済み)</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> NMStateオペレーターログにエラーがないこと</p>
+<p><i class="fa fa-square-o"></i> NMState Operator ログにエラーがないこと</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ブリッジマッピング"><a class="anchor" href="#_ブリッジマッピング"></a>ブリッジマッピング</h3>
+<h3 id="_bridge_mapping"><a class="anchor" href="#_bridge_mapping"></a>bridge mapping</h3>
 <div class="ulist checklist">
 <ul class="checklist">
 <li>
-<p><i class="fa fa-square-o"></i> ブリッジマッピングNNCPが <code>Available: True</code> であること</p>
+<p><i class="fa fa-square-o"></i> bridge mapping NNCP が <code>Available: True</code> であること</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> <code>ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings</code> にマッピングが含まれていること</p>
+<p><i class="fa fa-square-o"></i> <code>ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings</code> に mapping が含まれていること</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> マッピング形式が正しいこと: <code>logical-name:bridge-name</code></p>
+<p><i class="fa fa-square-o"></i> mapping 形式が正しいこと: <code>logical-name:bridge-name</code></p>
 </li>
 <li>
 <p><i class="fa fa-square-o"></i> 論理ネットワーク名が NetworkAttachmentDefinition (NAD) / CUDN で使用するものと一致していること</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> マッピング内のブリッジ名が実際のOVSブリッジと一致していること</p>
+<p><i class="fa fa-square-o"></i> mapping 内の bridge 名が実際の OVS bridge と一致していること</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> 物理インターフェースがブリッジに接続されていること (<code>ovs-vsctl list-ports</code>)</p>
+<p><i class="fa fa-square-o"></i> 物理インターフェースが bridge に接続されていること (<code>ovs-vsctl list-ports</code>)</p>
 </li>
 <li>
-<p><i class="fa fa-square-o"></i> 他のブリッジマッピングとの競合がないこと</p>
+<p><i class="fa fa-square-o"></i> 他の bridge mapping との競合がないこと</p>
 </li>
 </ul>
 </div>
@@ -1169,7 +1169,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . ext
 <h2 id="_その他の検証コマンド"><a class="anchor" href="#_その他の検証コマンド"></a>その他の検証コマンド</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_ovsサービスステータスの確認"><a class="anchor" href="#_ovsサービスステータスの確認"></a>OVSサービスステータスの確認</h3>
+<h3 id="_ovs_サービスステータスの確認"><a class="anchor" href="#_ovs_サービスステータスの確認"></a>OVS サービスステータスの確認</h3>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt; -- chroot /host systemctl status openvswitch</code></pre>
@@ -1177,7 +1177,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . ext
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ovsログの表示"><a class="anchor" href="#_ovsログの表示"></a>OVSログの表示</h3>
+<h3 id="_ovs_ログの表示"><a class="anchor" href="#_ovs_ログの表示"></a>OVS ログの表示</h3>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt; -- chroot /host journalctl -u openvswitch -n 50</code></pre>
@@ -1185,7 +1185,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . ext
 </div>
 </div>
 <div class="sect2">
-<h3 id="_すべてのovsインターフェースのリスト"><a class="anchor" href="#_すべてのovsインターフェースのリスト"></a>すべてのOVSインターフェースのリスト</h3>
+<h3 id="_すべての_ovs_インターフェースのリスト"><a class="anchor" href="#_すべての_ovs_インターフェースのリスト"></a>すべての OVS インターフェースのリスト</h3>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl list interface</code></pre>
@@ -1193,7 +1193,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . ext
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ovsデータベースの確認"><a class="anchor" href="#_ovsデータベースの確認"></a>OVSデータベースの確認</h3>
+<h3 id="_ovs_データベースの確認"><a class="anchor" href="#_ovs_データベースの確認"></a>OVS データベースの確認</h3>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl list bridge</code></pre>
@@ -1201,7 +1201,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . ext
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ovsブリッジトラフィックの監視_オプション"><a class="anchor" href="#_ovsブリッジトラフィックの監視_オプション"></a>OVSブリッジトラフィックの監視 (オプション)</h3>
+<h3 id="_ovs_bridge_トラフィックの監視_オプション"><a class="anchor" href="#_ovs_bridge_トラフィックの監視_オプション"></a>OVS bridge トラフィックの監視 (オプション)</h3>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ポートとその統計を表示
@@ -1215,19 +1215,19 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-ofctl dump-ports br-vlan</co
 <h2 id="_clusteruserdefinednetwork_cudn_の検証"><a class="anchor" href="#_clusteruserdefinednetwork_cudn_の検証"></a>ClusterUserDefinedNetwork (CUDN) の検証</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>NetworkAttachmentDefinitionの代わりにClusterUserDefinedNetworkを使用する場合、追加の検証手順が必要です。</p>
+<p>NetworkAttachmentDefinition の代わりに ClusterUserDefinedNetwork を使用する場合、追加の検証手順が必要です。</p>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_1_cudnリソースの確認"><a class="anchor" href="#_ステップ_1_cudnリソースの確認"></a>ステップ 1: CUDNリソースの確認</h3>
+<h3 id="_ステップ_1_cudn_リソースの確認"><a class="anchor" href="#_ステップ_1_cudn_リソースの確認"></a>ステップ 1: CUDN リソースの確認</h3>
 <div class="paragraph">
-<p>ClusterUserDefinedNetworkが正常に作成されたか確認します:</p>
+<p>ClusterUserDefinedNetwork が正常に作成されたか確認します:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべてのCUDNを一覧表示
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべての CUDN を一覧表示
 oc get clusteruserdefinednetwork
 
-# 詳細なCUDN情報を取得
+# 詳細な CUDN 情報を取得
 oc get clusteruserdefinednetwork &lt;cudn-name&gt; -o yaml</code></pre>
 </div>
 </div>
@@ -1242,9 +1242,9 @@ cudn-localnet-vlan-100   5m</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_2_cudn構成の確認"><a class="anchor" href="#_ステップ_2_cudn構成の確認"></a>ステップ 2: CUDN構成の確認</h3>
+<h3 id="_ステップ_2_cudn_構成の確認"><a class="anchor" href="#_ステップ_2_cudn_構成の確認"></a>ステップ 2: CUDN 構成の確認</h3>
 <div class="paragraph">
-<p>CUDN specを確認して、適切な構成であることを確かめます:</p>
+<p>CUDN spec を確認して、適切な構成であることを確かめます:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1266,7 +1266,7 @@ cudn-localnet-vlan-100   5m</pre>
     topology: Localnet
     localnet:
       role: Secondary
-      physicalNetworkName: localnet-vlan  # ブリッジマッピングの論理名と一致すること
+      physicalNetworkName: localnet-vlan  # bridge mappingの論理名と一致すること
       vlanID: 100
       ipam:
         mode: Disabled  # ニーズに応じてStaticなども可</code></pre>
@@ -1274,16 +1274,16 @@ cudn-localnet-vlan-100   5m</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_3_自動作成されたnetworkattachmentdefinitionの確認"><a class="anchor" href="#_ステップ_3_自動作成されたnetworkattachmentdefinitionの確認"></a>ステップ 3: 自動作成されたNetworkAttachmentDefinitionの確認</h3>
+<h3 id="_ステップ_3_自動作成された_networkattachmentdefinition_の確認"><a class="anchor" href="#_ステップ_3_自動作成された_networkattachmentdefinition_の確認"></a>ステップ 3: 自動作成された NetworkAttachmentDefinition の確認</h3>
 <div class="paragraph">
-<p>CUDNは選択された名前空間内に自動的にNetworkAttachmentDefinitionを作成します:</p>
+<p>CUDN は選択された namespace 内に自動的に NetworkAttachmentDefinition を作成します:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべての名前空間のNADを一覧表示
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべてのnamespaceのNADを一覧表示
 oc get network-attachment-definitions -A | grep &lt;cudn-name&gt;
 
-# 特定の名前空間を確認
+# 特定のnamespaceを確認
 oc get network-attachment-definitions -n &lt;namespace&gt;</code></pre>
 </div>
 </div>
@@ -1299,16 +1299,16 @@ vm-guests-vlan-prod   cudn-localnet-vlan-100   5m</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_4_physicalnetworkname_がブリッジマッピングと一致することを確認"><a class="anchor" href="#_ステップ_4_physicalnetworkname_がブリッジマッピングと一致することを確認"></a>ステップ 4: physicalNetworkName がブリッジマッピングと一致することを確認</h3>
+<h3 id="_ステップ_4_physicalnetworkname_が_bridge_mapping_と一致することを確認"><a class="anchor" href="#_ステップ_4_physicalnetworkname_が_bridge_mapping_と一致することを確認"></a>ステップ 4: physicalNetworkName が bridge mapping と一致することを確認</h3>
 <div class="paragraph">
-<p>CUDN内の <code>physicalNetworkName</code> は、ブリッジマッピング内の論理ネットワーク名と一致する必要があります:</p>
+<p>CUDN 内の <code>physicalNetworkName</code> は、bridge mapping 内の論理ネットワーク名と一致する必要があります:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># CUDNのphysicalNetworkNameを取得
 oc get clusteruserdefinednetwork &lt;cudn-name&gt; -o jsonpath='{.spec.network.localnet.physicalNetworkName}'
 
-# ブリッジマッピングの論理名を取得
+# bridge mappingの論理名を取得
 oc get nncp &lt;bridge-mapping-nncp&gt; -o jsonpath='{.spec.desiredState.ovn.bridge-mappings[0].localnet}'
 
 # OVN内で一致することを確認
@@ -1320,45 +1320,45 @@ oc debug node/&lt;node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . ext
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ステップ_5_名前空間を跨いだネットワーク可用性の確認"><a class="anchor" href="#_ステップ_5_名前空間を跨いだネットワーク可用性の確認"></a>ステップ 5: 名前空間を跨いだネットワーク可用性の確認</h3>
+<h3 id="_ステップ_5_namespace_を跨いだネットワーク可用性の確認"><a class="anchor" href="#_ステップ_5_namespace_を跨いだネットワーク可用性の確認"></a>ステップ 5: namespace を跨いだネットワーク可用性の確認</h3>
 <div class="paragraph">
-<p>異なる名前空間のVMが両方ともCUDNを使用できるかテストします:</p>
+<p>異なる namespace の VM が両方とも CUDN を使用できるかテストします:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 最初の名前空間のVMを確認
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 最初のnamespaceのVMを確認
 oc get vmi -n vm-guests-vlan-prod -o jsonpath='{.items[*].status.interfaces[?(@.name=="cudn_vlan_network")].ipAddress}'
 
-# 2番目の名前空間のVMを確認
+# 2番目のnamespaceのVMを確認
 oc get vmi -n vm-guests-vlan-dev -o jsonpath='{.items[*].status.interfaces[?(@.name=="cudn_vlan_network")].ipAddress}'</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>VMがCUDNネットワークに接続されていれば、両方ともIPアドレスが返されるはずです。</p>
+<p>VM が CUDN ネットワークに接続されていれば、両方とも IP アドレスが返されるはずです。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_cudn固有のよくある問題"><a class="anchor" href="#_cudn固有のよくある問題"></a>CUDN固有のよくある問題</h3>
+<h3 id="_cudn_固有のよくある問題"><a class="anchor" href="#_cudn_固有のよくある問題"></a>CUDN 固有のよくある問題</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>選択した名前空間にNADが作成されない</strong>:</p>
+<p><strong>選択した namespace に NAD が作成されない</strong>:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>症状</strong>: CUDNは存在するが、<code>oc get network-attachment-definitions -n &lt;namespace&gt;</code> に何も表示されない</p>
+<p><strong>事象</strong>: CUDN は存在するが、<code>oc get network-attachment-definitions -n &lt;namespace&gt;</code> に何も表示されない</p>
 </li>
 <li>
-<p><strong>原因</strong>: 名前空間セレクターが名前空間ラベルと一致しない</p>
+<p><strong>原因</strong>: namespace セレクターが namespace ラベルと一致しない</p>
 </li>
 <li>
-<p><strong>解決策</strong>: 名前空間ラベルがCUDNセレクターと一致することを確認する</p>
+<p><strong>解決策</strong>: namespace ラベルが CUDN セレクターと一致することを確認する</p>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 名前空間ラベルを確認
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># namespaceラベルを確認
 oc get namespace &lt;namespace-name&gt; -o jsonpath='{.metadata.labels}'
 
-# CUDNセレクターを確認
+# CUDN セレクターを確認
 oc get clusteruserdefinednetwork &lt;cudn-name&gt; -o jsonpath='{.spec.namespaceSelector}'</code></pre>
 </div>
 </div>
@@ -1367,14 +1367,14 @@ oc get clusteruserdefinednetwork &lt;cudn-name&gt; -o jsonpath='{.spec.namespace
 </div>
 </li>
 <li>
-<p><strong>VMが "failed bridge mapping validation" で失敗する</strong>:</p>
+<p><strong>VM が "failed bridge mapping validation" で失敗する</strong>:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>症状</strong>: CUDNが存在するにもかかわらず、VMポッドが失敗する</p>
+<p><strong>事象</strong>: CUDN が存在するにもかかわらず、VM Pod が失敗する</p>
 </li>
 <li>
-<p><strong>原因</strong>: CUDN内の <code>physicalNetworkName</code> がブリッジマッピングの論理名と一致しない</p>
+<p><strong>原因</strong>: CUDN 内の <code>physicalNetworkName</code> が bridge mapping の論理名と一致しない</p>
 </li>
 <li>
 <p><strong>解決策</strong>: 完全一致 (大文字小文字を区別) することを確認する</p>
@@ -1390,20 +1390,20 @@ oc get nncp &lt;bridge-mapping-nncp&gt; -o jsonpath='{.spec.desiredState.ovn.bri
 </div>
 </li>
 <li>
-<p><strong>IPAMモードの問題</strong>:</p>
+<p><strong>IPAM モードの問題</strong>:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>症状</strong>: VMが期待通りのIPアドレスを取得できない</p>
+<p><strong>事象</strong>: VM が期待通りの IP アドレスを取得できない</p>
 </li>
 <li>
-<p><strong>原因</strong>: IPAMモードの構成ミス、またはcloud-initが機能していない</p>
+<p><strong>原因</strong>: IPAM モードの構成ミス、または cloud-init が機能していない</p>
 </li>
 <li>
-<p><strong>cloud-init経由の固定IP</strong>: CUDNで <code>ipam.mode: Disabled</code> に設定</p>
+<p><strong>cloud-init 経由の固定 IP</strong>: CUDN で <code>ipam.mode: Disabled</code> に設定</p>
 </li>
 <li>
-<p><strong>OVN IPAMの場合</strong>: <code>staticIPAMConfig</code> を含めて <code>ipam.mode: Static</code> に設定</p>
+<p><strong>OVN IPAM の場合</strong>: <code>staticIPAMConfig</code> を含めて <code>ipam.mode: Static</code> に設定</p>
 </li>
 <li>
 <p><strong>検証</strong>:</p>
@@ -1427,40 +1427,40 @@ virtctl console -n &lt;namespace&gt; &lt;vm-name&gt;
 </div>
 </div>
 <div class="sect1">
-<h2 id="_localnet_vlanネットワークのトラブルシューティング"><a class="anchor" href="#_localnet_vlanネットワークのトラブルシューティング"></a>Localnet VLANネットワークのトラブルシューティング</h2>
+<h2 id="_localnet_vlan_ネットワークのトラブルシューティング"><a class="anchor" href="#_localnet_vlan_ネットワークのトラブルシューティング"></a>Localnet VLAN ネットワークのトラブルシューティング</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_よくある問題"><a class="anchor" href="#_よくある問題"></a>よくある問題</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>VLANトラフィックがVMに到達しない</strong>:</p>
+<p><strong>VLAN トラフィックが VM に到達しない</strong>:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>物理スイッチの構成がVLANタグ付けをサポートしているか確認</p>
+<p>物理スイッチの構成が VLAN タグ付けをサポートしているか確認</p>
 </li>
 <li>
-<p>ワーカーノード上のブリッジマッピング構成を確認</p>
+<p>Worker Node 上の bridge mapping 構成を確認</p>
 </li>
 <li>
-<p>VLAN IDがネットワークインフラと一致しているか確認</p>
+<p>VLAN ID がネットワークインフラと一致しているか確認</p>
 </li>
 <li>
-<p>物理NICが接続されており、UP状態であることを確認</p>
+<p>物理 NIC が接続されており、UP 状態であることを確認</p>
 </li>
 <li>
-<p>OVSブリッジが物理インターフェースをポートとして含んでいるか確認</p>
+<p>OVS bridge が物理インターフェースをポートとして含んでいるか確認</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong>IPアドレスの割り当て問題</strong>:</p>
+<p><strong>IP アドレスの割り当て問題</strong>:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>DHCPサーバーがVLANネットワーク上で使用可能か確認</p>
+<p>DHCP サーバーが VLAN ネットワーク上で使用可能か確認</p>
 </li>
 </ul>
 </div>
@@ -1470,10 +1470,10 @@ virtctl console -n &lt;namespace&gt; &lt;vm-name&gt;
 <div class="ulist">
 <ul>
 <li>
-<p>物理ネットワークが構成済みのVLANをサポートしているか確認</p>
+<p>物理ネットワークが構成済みの VLAN をサポートしているか確認</p>
 </li>
 <li>
-<p>物理ネットワークからVLANサブネットへの接続をテスト</p>
+<p>物理ネットワークから VLAN サブネットへの接続をテスト</p>
 </li>
 <li>
 <p>物理スイッチポートがトランクモードになっているか確認</p>
@@ -1482,52 +1482,52 @@ virtctl console -n &lt;namespace&gt; &lt;vm-name&gt;
 </div>
 </li>
 <li>
-<p><strong>カスタムブリッジ作成の問題</strong>:</p>
+<p><strong>カスタム bridge 作成の問題</strong>:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>注意: OVSブリッジは <code>ip addr show</code> に表示されません。代わりに <code>ovs-vsctl list-br</code> を使用してください。</p>
+<p>注意: OVS bridge は <code>ip addr show</code> に表示されません。代わりに <code>ovs-vsctl list-br</code> を使用してください。</p>
 </li>
 <li>
 <p>物理インターフェース名が正しいことを確認してください。</p>
 </li>
 <li>
-<p>NMStateオペレーターが正常に動作しているか確認してください。</p>
+<p>NMState Operator が正常に動作しているか確認してください。</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong>ブリッジマッピングが機能しない</strong>:</p>
+<p><strong>bridge mapping が機能しない</strong>:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>マッピング内のブリッジ名が作成済みのブリッジと一致しているか確認</p>
+<p>mapping 内の bridge 名が作成済みの bridge と一致しているか確認</p>
 </li>
 <li>
-<p>OVNブリッジマッピングを確認: <code>ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings</code></p>
+<p>OVN bridge mapping を確認: <code>ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings</code></p>
 </li>
 <li>
-<p>マッピング内のlocalnet名がNAD構成と一致しているか確認</p>
+<p>mapping 内の localnet 名が NAD 構成と一致しているか確認</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong>VMポッドが "failed bridge mapping validation" エラーで失敗する</strong>:</p>
+<p><strong>VM Pod が "failed bridge mapping validation" エラーで失敗する</strong>:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>症状</strong>: VMポッドが次のエラーで失敗する: <code>failed to find OVN bridge-mapping for network: "localnet-vlan-100"</code></p>
+<p><strong>事象</strong>: VM Pod が次のエラーで失敗する: <code>failed to find OVN bridge-mapping for network: "localnet-vlan-100"</code></p>
 </li>
 <li>
-<p><strong>原因</strong>: NetworkAttachmentDefinitionに <code>physicalNetworkName</code> パラメーターがない</p>
+<p><strong>原因</strong>: NetworkAttachmentDefinition に <code>physicalNetworkName</code> パラメーターがない</p>
 </li>
 <li>
-<p><strong>解決策</strong>: NADがブリッジマッピングの論理名と一致する <code>"physicalNetworkName": "localnet-vlan"</code> を含んでいるか確認する</p>
+<p><strong>解決策</strong>: NAD が bridge mapping の論理名と一致する <code>"physicalNetworkName": "localnet-vlan"</code> を含んでいるか確認する</p>
 </li>
 <li>
-<p><strong>検証</strong>: NADを更新した後、<code>oc delete</code> と <code>oc apply</code> で再作成する</p>
+<p><strong>検証</strong>: NAD を更新した後、<code>oc delete</code> と <code>oc apply</code> で再作成する</p>
 </li>
 </ul>
 </div>
@@ -1545,22 +1545,22 @@ oc get network-attachment-definitions -n vm-guests-vlan
 # すべてのNodeNetworkConfigurationPoliciesを確認
 oc get nncp
 
-# ブリッジ作成ステータスを確認 (カスタムブリッジ使用時)
+# bridge 作成ステータスを確認 (カスタムbridge使用時)
 oc get nncp br-vlan-creation -o yaml
 
-# ワーカーノード上のブリッジマッピングを確認
+# Worker Node 上のbridge mappingを確認
 oc get nncp localnet-vlan-bridge-mapping -o yaml
 
-# ワーカーノード上の物理インターフェースステータスを確認
+# Worker Node 上の物理インターフェースステータスを確認
 oc debug node/&lt;worker-node-name&gt; -- chroot /host ip link show ens224
 
-# OVSブリッジ構成を確認
+# OVS bridge構成を確認
 oc debug node/&lt;worker-node-name&gt; -- chroot /host ovs-vsctl show
 
-# OVNブリッジマッピングを確認
+# OVNbridge mappingを確認
 oc debug node/&lt;worker-node-name&gt; -- chroot /host ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings
 
-# カスタムブリッジ上のすべてのポートを一覧表示
+# カスタムbridge上のすべてのポートを一覧表示
 oc debug node/&lt;worker-node-name&gt; -- chroot /host ovs-vsctl list-ports br-vlan
 
 # VMネットワークステータスを確認
@@ -1569,7 +1569,7 @@ oc get vmi -n vm-guests-vlan -o yaml | grep -A 10 networks
 # トラブルシューティングのためにOVN-Kubernetesログを表示
 oc logs -n openshift-ovn-kubernetes -l app=ovnkube-node
 
-# ブリッジ作成が失敗した場合にNMStateオペレーターログを確認
+# bridge作成が失敗した場合に NMState Operator ログを確認
 oc logs -n openshift-nmstate -l app=kubernetes-nmstate-operator</code></pre>
 </div>
 </div>
@@ -1585,19 +1585,19 @@ oc logs -n openshift-nmstate -l app=kubernetes-nmstate-operator</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>OVSブリッジとLinuxブリッジの違い、およびなぜそれらが <code>ip addr show</code> 出力に表示されないのか</p>
+<p>OVS bridge と Linux bridge の違い、および <code>ip addr show</code> 出力に表示されない理由</p>
 </li>
 <li>
-<p><code>ovs-vsctl</code> を使用して、OVSブリッジの作成、物理インターフェースの接続、ブリッジポート構成を検証する方法</p>
+<p><code>ovs-vsctl</code> を使用して、OVS bridge の作成、物理インターフェースの接続、bridge ポート構成を検証する方法</p>
 </li>
 <li>
-<p>論理ネットワーク名を物理OVSブリッジに接続するOVNブリッジマッピングを検証する方法</p>
+<p>論理ネットワーク名を物理 OVS bridge に接続する OVN bridge mapping を検証する方法</p>
 </li>
 <li>
-<p>ブリッジの欠落、インターフェース接続の失敗、論理名の不一致など、一般的な問題をトラブルシューティングする方法</p>
+<p>bridge の欠落、インターフェース接続の失敗、論理名の不一致など、一般的な問題をトラブルシューティングする方法</p>
 </li>
 <li>
-<p>ClusterUserDefinedNetwork (CUDN) リソース、自動作成されたNAD、および名前空間を跨いだネットワークの可用性を検証する方法</p>
+<p>ClusterUserDefinedNetwork (CUDN) リソース、自動作成された NAD、namespace を 跨いだネットワークの可用性を検証する方法</p>
 </li>
 </ul>
 </div>
@@ -1622,7 +1622,7 @@ oc logs -n openshift-nmstate -l app=kubernetes-nmstate-operator</code></pre>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="vm-ingress-routes.html">VM Ingress およびルート</a></span>
+  <span class="prev"><a href="vm-ingress-routes.html">VM Ingress および Routes</a></span>
   <span class="next"><a href="../vm-configuration/index.html">仮想マシンの設定</a></span>
 </nav>
 </article>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>セレクターおよびアフィニティルールによるVMノードの配置 :: OpenShift Virtualization cookbook</title>
+    <title>Selector および Affinity rule による VM ノードの配置 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="infrastructure-node-placement.html">
     <link rel="next" href="hotplug-volumes-interfaces.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -291,7 +291,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">仮想マシンの設定</a></li>
-    <li><a href="node-placement-affinity.html">ノードの配置とアフィニティ</a></li>
+    <li><a href="node-placement-affinity.html">ノードの配置と Affinity</a></li>
   </ul>
 </nav>
 </div>
@@ -300,28 +300,28 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">セレクターおよびアフィニティルールによるVMノードの配置</h1>
+<h1 class="page">Selector および Affinity rule による VM ノードの配置</h1>
 <div class="sect1">
 <h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>ノードの配置は、どのOpenShiftクラスタノードで仮想マシン（VM）を実行するかを制御します。デフォルトでは、Kubernetesスケジューラが利用可能なノード全体にVMを自動的に配置しますが、特定のハードウェアを持つノードで特定のVMを実行する、ワークロードを分離する、あるいはパフォーマンスや可用性の理由からVM同士を近くに配置したり遠ざけたりするなど、より詳細な制御が必要になることがよくあります。</p>
+<p>ノードの配置は、どの OpenShift クラスターノードで仮想マシンを実行するかを制御します。デフォルトでは、Kubernetes スケジューラーが利用可能なノード全体に VM を自動的に配置しますが、特定のハードウェアを持つノードで特定の VM を実行する、ワークロードを分離する、あるいはパフォーマンスや可用性の理由から VM 同士を近くに配置したり遠ざけたりするなど、より詳細な制御が必要になることがよくあります。</p>
 </div>
 <div class="paragraph">
-<p>このチュートリアルでは、OpenShift VirtualizationにおけるVM配置を制御するための、ノードセレクター、ノードアフィニティ、およびポッドアフィニティ／アンチアフィニティルールについて説明します。</p>
+<p>このチュートリアルでは、OpenShift Virtualization における VM 配置を制御するための、NodeSelector、NodeAffinity、PodAffinity/Anti-Affinity rule について説明します。</p>
 </div>
 <div class="sect2">
 <h3 id="_学習内容"><a class="anchor" href="#_学習内容"></a>学習内容</h3>
 <div class="ulist">
 <ul>
 <li>
-<p>単純なノード配置にノードセレクターを使用する方法</p>
+<p>単純なノード配置に NodeSelector を使用する方法</p>
 </li>
 <li>
-<p>ノードアフィニティルール（必須および優先）の設定方法</p>
+<p>NodeAffinity rule (必須 (required)、優先 (preferred)) の設定方法</p>
 </li>
 <li>
-<p>VMの共存を制御するためにポッドアフィニティおよびアンチアフィニティを使用する方法</p>
+<p>VM の共存を制御するために PodAffinity/Anti-Affinity を使用する方法</p>
 </li>
 <li>
 <p>ノードにラベルを付け、配置を確認する方法</p>
@@ -340,16 +340,16 @@
 <div class="ulist">
 <ul>
 <li>
-<p>OpenShift 4.18以降とOpenShift Virtualizationがインストールされていること</p>
+<p>OpenShift 4.18 以降と OpenShift Virtualization がインストールされていること</p>
 </li>
 <li>
-<p>ノードにラベルを付けるためのクラスタ管理者権限</p>
+<p>ノードにラベルを付けるためのクラスター管理者権限</p>
 </li>
 <li>
-<p><code>oc</code> および <code>virtctl</code> CLIツールがインストールされていること</p>
+<p><code>oc</code> および <code>virtctl</code> CLI ツールがインストールされていること</p>
 </li>
 <li>
-<p>クラスタ内に複数のワーカーノードがあること（意味のある配置を行うため）</p>
+<p>クラスター内に複数の Worker Node があること (意味のある配置を行うため)</p>
 </li>
 </ul>
 </div>
@@ -359,7 +359,7 @@
 <h2 id="_ノード配置オプションの理解"><a class="anchor" href="#_ノード配置オプションの理解"></a>ノード配置オプションの理解</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>OpenShift Virtualizationには、VMの実行場所を制御するための3つの主要なメカニズムがあります。</p>
+<p>OpenShift Virtualization には、VM の実行場所を制御するための 3 つの主要なメカニズムがあります。</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -376,19 +376,19 @@
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ノードセレクター</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">特定のラベルを持つノードにVMを配置する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NodeSelector</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">特定のラベルを持つノードに VM を配置する</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">シンプルで理解しやすい</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ノードアフィニティ</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">必須/優先ルールを用いた複雑なノード選択</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NodeAffinity</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">必須 (required) /優先 (preferred) ルールを用いた複雑なノード選択</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">柔軟性が高く、複数の条件をサポート</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ポッドアフィニティ/アンチアフィニティ</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">他のVMやポッドに関連付けてVMを配置する</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">VMの共存パターンを制御する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PodAffinity/Anti-Affinity</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">他の VM や Pod に関連付けて VM を配置する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM の共存パターンを制御する</p></td>
 </tr>
 </tbody>
 </table>
@@ -399,7 +399,7 @@
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-VMの配置ルールは、そのVMを実行する基盤となる <code>virt-launcher</code> ポッドに適用されます。Kubernetesスケジューラは、ポッドをノードに配置する際にこれらのルールを評価します。
+VM の配置ルールは、その VM を実行する基盤となる <code>virt-launcher</code> Pod に適用されます。Kubernetes スケジューラーは、Pod をノードに配置する際にこれらのルールを評価します。
 </td>
 </tr>
 </table>
@@ -410,7 +410,7 @@ VMの配置ルールは、そのVMを実行する基盤となる <code>virt-laun
 <h2 id="_ノードへのラベル付け"><a class="anchor" href="#_ノードへのラベル付け"></a>ノードへのラベル付け</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>セレクターやアフィニティルールを使用する前に、ノードにラベルを付けてその特性を識別します。</p>
+<p>Selector や Affinity rule を使用する前に、ノードにラベルを付けてその特性を識別します。</p>
 </div>
 <div class="sect2">
 <h3 id="_既存のノードラベルの表示"><a class="anchor" href="#_既存のノードラベルの表示"></a>既存のノードラベルの表示</h3>
@@ -435,7 +435,7 @@ ip-10-0-82-27.ec2.internal    Ready    worker                 22d   v1.31.14   b
 <div class="sect2">
 <h3 id="_ノードへのカスタムラベルの追加"><a class="anchor" href="#_ノードへのカスタムラベルの追加"></a>ノードへのカスタムラベルの追加</h3>
 <div class="paragraph">
-<p>特性（ハードウェア、場所、ワークロードの種類）に基づいてノードにラベルを付けます。</p>
+<p>特性 (ハードウェア、場所、ワークロードの種類) に基づいてノードにラベルを付けます。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -501,15 +501,15 @@ oc label node $WORKER1 gpu-</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ノードセレクターの使用"><a class="anchor" href="#_ノードセレクターの使用"></a>ノードセレクターの使用</h2>
+<h2 id="_nodeselector_の使用"><a class="anchor" href="#_nodeselector_の使用"></a>NodeSelector の使用</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>ノードセレクターは、ノードラベルを正確に一致させることでVMの配置を制御する最もシンプルな方法です。</p>
+<p>NodeSelector は、ノードラベルを正確に一致させることで VM の配置を制御する最もシンプルな方法です。</p>
 </div>
 <div class="sect2">
-<h3 id="_チュートリアル用ネームスペースの作成"><a class="anchor" href="#_チュートリアル用ネームスペースの作成"></a>チュートリアル用ネームスペースの作成</h3>
+<h3 id="_チュートリアル用_namespace_の作成"><a class="anchor" href="#_チュートリアル用_namespace_の作成"></a>チュートリアル用 namespace の作成</h3>
 <div class="paragraph">
-<p>まず、チュートリアルのリソースを配置するためのネームスペースを作成します。</p>
+<p>まず、チュートリアルのリソースを配置するための namespace を作成します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -518,9 +518,9 @@ oc label node $WORKER1 gpu-</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_基本的なノードセレクターの例"><a class="anchor" href="#_基本的なノードセレクターの例"></a>基本的なノードセレクターの例</h3>
+<h3 id="_基本的な_nodeselector_の例"><a class="anchor" href="#_基本的な_nodeselector_の例"></a>基本的な NodeSelector の例</h3>
 <div class="paragraph">
-<p><code>storage=ssd</code> というラベルを持つノードでのみ実行されるVMを作成します。</p>
+<p><code>storage=ssd</code> というラベルを持つノードでのみ実行される VM を作成します。</p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -529,7 +529,7 @@ oc label node $WORKER1 gpu-</code></pre>
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-この例のcloud-initパスワードはデモ目的のみです。本番環境では常に強力で一意なパスワードやSSH鍵認証を使用してください。
+この例の cloud-init パスワードはデモ目的のみです。本番環境では常に強力で一意なパスワードや SSH 鍵認証を使用してください。
 </td>
 </tr>
 </table>
@@ -580,7 +580,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>VMに適用して起動します。</p>
+<p>VM に適用して起動します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -592,7 +592,7 @@ virtctl start database-vm -n vm-placement</code></pre>
 <div class="sect2">
 <h3 id="_ノード配置の確認"><a class="anchor" href="#_ノード配置の確認"></a>ノード配置の確認</h3>
 <div class="paragraph">
-<p>VMがどのノードで実行されているかを確認します。</p>
+<p>VM がどのノードで実行されているかを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -629,7 +629,7 @@ ip-10-0-24-89.ec2.internal   Ready    worker   30d   v1.30.0   ssd</code></pre>
 <div class="sect2">
 <h3 id="_複数のラベル選択"><a class="anchor" href="#_複数のラベル選択"></a>複数のラベル選択</h3>
 <div class="paragraph">
-<p>ノードセレクターは複数のラベルをサポートしています（すべて一致する必要があります）。</p>
+<p>NodeSelector は複数のラベルをサポートしています (すべて一致する必要があります) 。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -643,21 +643,21 @@ ip-10-0-24-89.ec2.internal   Ready    worker   30d   v1.30.0   ssd</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>VMは、指定された値を持つこれら3つすべてのラベルを持つノードでのみ実行されます。</p>
+<p>VM は、指定された値を持つこれら 3 つすべてのラベルを持つノードでのみ実行されます。</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ノードアフィニティの使用"><a class="anchor" href="#_ノードアフィニティの使用"></a>ノードアフィニティの使用</h2>
+<h2 id="_nodeaffinity_の使用"><a class="anchor" href="#_nodeaffinity_の使用"></a>NodeAffinity の使用</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>ノードアフィニティは、必須および優先ルールにより、より柔軟なノード選択を提供します。</p>
+<p>NodeAffinity は、必須 (required) および優先 (preferred) ルールにより、より柔軟なノード選択を提供します。</p>
 </div>
 <div class="sect2">
-<h3 id="_ノードアフィニティの必須設定"><a class="anchor" href="#_ノードアフィニティの必須設定"></a>ノードアフィニティの必須設定</h3>
+<h3 id="_nodeaffinity_の必須_required_設定"><a class="anchor" href="#_nodeaffinity_の必須_required_設定"></a>NodeAffinity の必須 (required) 設定</h3>
 <div class="paragraph">
-<p>必須アフィニティ（ハード要件）は、一致するノードが存在しない場合にスケジュールを防止します。</p>
+<p>required Affinity (ハード要件) は、一致するノードが存在しない場合にスケジュールを防止します。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/node-placement-affinity/vm-node-affinity-required.yaml" class="xref attachment">Download vm-node-affinity-required.yaml</a></p>
@@ -722,24 +722,24 @@ spec:
 <div class="ulist">
 <ul>
 <li>
-<p><strong>requiredDuringSchedulingIgnoredDuringExecution</strong>: 一致するノードが存在しない場合、VMは起動しません。</p>
+<p><strong>requiredDuringSchedulingIgnoredDuringExecution</strong>: 一致するノードが存在しない場合、VM は起動しません。</p>
 </li>
 <li>
 <p><strong>matchExpressions</strong>: <code>In</code>、<code>NotIn</code>、<code>Exists</code>、<code>DoesNotExist</code>、<code>Gt</code>、<code>Lt</code> などの演算子をサポートします。</p>
 </li>
 <li>
-<p><strong>nodeSelectorTerms</strong>: 複数の項は OR 関係（いずれかの項が一致すればよい）になります。</p>
+<p><strong>nodeSelectorTerms</strong>: 複数の項は OR 関係 (いずれかの項が一致すればよい) になります。</p>
 </li>
 <li>
-<p>1つの項の中にある複数の <strong>matchExpressions</strong> は AND 関係（すべて一致する必要がある）になります。</p>
+<p>1 つの項の中にある複数の <strong>matchExpressions</strong> は AND 関係 (すべて一致する必要がある) になります。</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ノードアフィニティの優先設定"><a class="anchor" href="#_ノードアフィニティの優先設定"></a>ノードアフィニティの優先設定</h3>
+<h3 id="_nodeaffinity_の優先_preferred_設定"><a class="anchor" href="#_nodeaffinity_の優先_preferred_設定"></a>NodeAffinity の優先 (preferred) 設定</h3>
 <div class="paragraph">
-<p>優先アフィニティ（ソフト要件）は、一致するノードへの配置を試みますが、必要に応じて他のノードを使用することも可能です。</p>
+<p>preferred Affinity (ソフト要件) は、一致するノードへの配置を試みますが、必要に応じて他のノードを使用することも可能です。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/node-placement-affinity/vm-node-affinity-preferred.yaml" class="xref attachment">Download vm-node-affinity-preferred.yaml</a></p>
@@ -807,19 +807,19 @@ spec:
 <div class="ulist">
 <ul>
 <li>
-<p><strong>preferredDuringSchedulingIgnoredDuringExecution</strong>: スケジューラは一致するノードを優先しますが、他へ配置することもできます。</p>
+<p><strong>preferredDuringSchedulingIgnoredDuringExecution</strong>: スケジューラーは一致するノードを優先しますが、他へ配置することもできます。</p>
 </li>
 <li>
 <p><strong>weight</strong>: 1〜100。ウェイトが高いほど優先順位が高くなります。</p>
 </li>
 <li>
-<p>複数の優先設定は加算的（スコアが結合）です。</p>
+<p>複数の preference (優先条件) は加算方式であり、それぞれのスコアが合算されます。</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_必須および優先アフィニティの組み合わせ"><a class="anchor" href="#_必須および優先アフィニティの組み合わせ"></a>必須および優先アフィニティの組み合わせ</h3>
+<h3 id="_必須_required_および優先_preferred_affinity_の組み合わせ"><a class="anchor" href="#_必須_required_および優先_preferred_affinity_の組み合わせ"></a>必須 (required) および優先 (preferred) Affinity の組み合わせ</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
@@ -845,21 +845,21 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>このVMはプロダクションノードで実行される必要がありますが、NVMeストレージを持つノードが好ましいことを意味します。</p>
+<p>この VM はプロダクションノードで実行される必要がありますが、NVMe ストレージを持つノードが好ましいことを意味します。</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ポッドアフィニティとアンチアフィニティの使用"><a class="anchor" href="#_ポッドアフィニティとアンチアフィニティの使用"></a>ポッドアフィニティとアンチアフィニティの使用</h2>
+<h2 id="_podaffinity_と_anti_affinity_の使用"><a class="anchor" href="#_podaffinity_と_anti_affinity_の使用"></a>PodAffinity と Anti-Affinity の使用</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>ポッドアフィニティおよびアンチアフィニティは、他のVMやポッドに関連付けてVMの配置を制御し、共存や分離のパターンを実現します。</p>
+<p>PodAffinity および Anti-Affinity は、他の VM や Pod に関連付けて VM の配置を制御し、共存や分離のパターンを実現します。</p>
 </div>
 <div class="sect2">
-<h3 id="_ポッドアフィニティ_vmを一緒に実行する"><a class="anchor" href="#_ポッドアフィニティ_vmを一緒に実行する"></a>ポッドアフィニティ: VMを一緒に実行する</h3>
+<h3 id="_podaffinity_vm_を一緒に実行する"><a class="anchor" href="#_podaffinity_vm_を一緒に実行する"></a>PodAffinity: VM を一緒に実行する</h3>
 <div class="paragraph">
-<p>ポッドアフィニティを使用して、VMを同じノード上または同じアベイラビリティーゾーン内で実行します。</p>
+<p>PodAffinity を使用して、VM を同じノード上または同じアベイラビリティーゾーン内で実行します。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/node-placement-affinity/vm-pod-affinity.yaml" class="xref attachment">Download vm-pod-affinity.yaml</a></p>
@@ -916,7 +916,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>このVMは、<code>app=database</code> ラベルを持つポッド/VMと同じノード（<code>topologyKey: kubernetes.io/hostname</code>）で実行されます。</p>
+<p>この VM は、<code>app=database</code> ラベルを持つ Pod/VM と同じノード (<code>topologyKey: kubernetes.io/hostname</code>) で実行されます。</p>
 </div>
 <div class="paragraph">
 <p>一般的なトポロジーキー:</p>
@@ -949,9 +949,9 @@ spec:
 </table>
 </div>
 <div class="sect2">
-<h3 id="_ポッドアンチアフィニティ_vmを分離する"><a class="anchor" href="#_ポッドアンチアフィニティ_vmを分離する"></a>ポッドアンチアフィニティ: VMを分離する</h3>
+<h3 id="_podanti_affinity_vm_を分離する"><a class="anchor" href="#_podanti_affinity_vm_を分離する"></a>PodAnti-Affinity: VM を分離する</h3>
 <div class="paragraph">
-<p>高可用性を確保するために、ポッドアンチアフィニティを使用してノード間にVMを分散させます。</p>
+<p>高可用性を確保するために、PodAnti-Affinity を使用してノード間に VM を分散させます。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/node-placement-affinity/vm-pod-anti-affinity.yaml" class="xref attachment">Download vm-pod-anti-affinity.yaml</a></p>
@@ -1008,11 +1008,11 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>これにより、複数のキャッシュVMが同じノードで実行されることがなくなり、可用性が向上します。</p>
+<p>これにより、複数のキャッシュ VM が同じノードで実行されることがなくなり、可用性が向上します。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_優先ポッドアンチアフィニティ"><a class="anchor" href="#_優先ポッドアンチアフィニティ"></a>優先ポッドアンチアフィニティ</h3>
+<h3 id="_preferred_podanti_affinity"><a class="anchor" href="#_preferred_podanti_affinity"></a>preferred PodAnti-Affinity</h3>
 <div class="paragraph">
 <p>厳格な制約なしでベストエフォート型の分散を行う場合:</p>
 </div>
@@ -1037,7 +1037,7 @@ spec:
 </div>
 </div>
 <div class="sect2">
-<h3 id="_複数のアフィニティルールの組み合わせ"><a class="anchor" href="#_複数のアフィニティルールの組み合わせ"></a>複数のアフィニティルールの組み合わせ</h3>
+<h3 id="_複数の_affinity_rule_の組み合わせ"><a class="anchor" href="#_複数の_affinity_rule_の組み合わせ"></a>複数の Affinity rule の組み合わせ</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
@@ -1075,7 +1075,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>このVMは以下のように配置されます:</p>
+<p>この VM は以下のように配置されます:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1083,10 +1083,10 @@ spec:
 <p>プロダクションノードで実行されなければならない</p>
 </li>
 <li>
-<p>データベース階層のVMがあるノードで実行されることが望ましい</p>
+<p>データベース階層の VM があるノードで実行されることが望ましい</p>
 </li>
 <li>
-<p>他のWebフロントエンドVMがあるノードでは実行してはならない</p>
+<p>他の Web フロントエンド VM があるノードでは実行してはならない</p>
 </li>
 </ul>
 </div>
@@ -1099,7 +1099,7 @@ spec:
 <div class="sect2">
 <h3 id="_パターン_1_高可用性データベースクラスタ"><a class="anchor" href="#_パターン_1_高可用性データベースクラスタ"></a>パターン 1: 高可用性データベースクラスタ</h3>
 <div class="paragraph">
-<p>データベースVMを複数のノードに分散させる:</p>
+<p>データベース VM を複数のノードに分散させる:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1126,13 +1126,13 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>各データベースVMレプリカは異なるノードで実行され、単一ノードの障害がクラスタ全体に影響を与えるのを防ぎます。</p>
+<p>各データベース VM レプリカは異なるノードで実行され、単一ノードの障害がクラスター全体に影響を与えるのを防ぎます。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_パターン_2_gpuワークロードの分離"><a class="anchor" href="#_パターン_2_gpuワークロードの分離"></a>パターン 2: GPUワークロードの分離</h3>
+<h3 id="_パターン_2_gpu_ワークロードの分離"><a class="anchor" href="#_パターン_2_gpu_ワークロードの分離"></a>パターン 2: GPU ワークロードの分離</h3>
 <div class="paragraph">
-<p>GPUワークロード専用のノードを割り当てる:</p>
+<p>GPU ワークロード専用のノードを割り当てる:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1148,7 +1148,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>ノードセレクターとテイント/容認（Taints/Tolerations）を組み合わせて、GPUノードをGPUワークロード専用として予約します。</p>
+<p>NodeSelector と Taints/Toleration を組み合わせて、GPU ノードを GPU ワークロード専用として予約します。</p>
 </div>
 </div>
 <div class="sect2">
@@ -1183,7 +1183,7 @@ spec:
 <div class="sect2">
 <h3 id="_パターン_4_環境の分離"><a class="anchor" href="#_パターン_4_環境の分離"></a>パターン 4: 環境の分離</h3>
 <div class="paragraph">
-<p>開発用VMがプロダクションノードで実行されないようにする:</p>
+<p>開発用 VM がプロダクションノードで実行されないようにする:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1205,7 +1205,7 @@ spec:
 </div>
 </div>
 <div class="sect1">
-<h2 id="_webコンソールによる配置の確認"><a class="anchor" href="#_webコンソールによる配置の確認"></a>Webコンソールによる配置の確認</h2>
+<h2 id="_web_コンソールによる配置の確認"><a class="anchor" href="#_web_コンソールによる配置の確認"></a>Web コンソールによる配置の確認</h2>
 <div class="sectionbody">
 <div class="olist arabic">
 <ol class="arabic">
@@ -1213,7 +1213,7 @@ spec:
 <p><strong>Virtualization</strong> &#8594; <strong>VirtualMachines</strong> に移動します。</p>
 </li>
 <li>
-<p>VMをクリックして詳細を表示します。</p>
+<p>VM をクリックして詳細を表示します。</p>
 </li>
 <li>
 <p><strong>Configuration</strong> タブをクリックします。</p>
@@ -1222,10 +1222,10 @@ spec:
 <p><strong>Scheduling</strong> サブタブに移動します。</p>
 </li>
 <li>
-<p>設定されたノードセレクター、アフィニティ、容認が表示されます。</p>
+<p>設定された NodeSelector、Affinity、Toleration が表示されます。</p>
 </li>
 <li>
-<p><strong>Overview</strong> タブで、VMがどのノードで実行されているかを確認します。</p>
+<p><strong>Overview</strong> タブで、VM がどのノードで実行されているかを確認します。</p>
 </li>
 </ol>
 </div>
@@ -1235,12 +1235,12 @@ spec:
 <h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_vmが保留pending状態でスタックしている"><a class="anchor" href="#_vmが保留pending状態でスタックしている"></a>VMが保留（Pending）状態でスタックしている</h3>
+<h3 id="_vm_が保留_pending_状態でスタックしている"><a class="anchor" href="#_vm_が保留_pending_状態でスタックしている"></a>VM が保留 (Pending) 状態でスタックしている</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: VMが保留状態のまま起動しません。</p>
+<p><strong>問題</strong>: VM が保留状態のまま起動しません。</p>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1265,10 +1265,10 @@ oc describe vmi &lt;vm-name&gt; -n vm-placement</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>ノードセレクターまたは必須アフィニティルールに一致するノードが存在しない。</p>
+<p>NodeSelector または required Affinity rule に一致するノードが存在しない。</p>
 </li>
 <li>
-<p>一致するすべてのノードが満杯（CPU/メモリ不足）。</p>
+<p>一致するすべてのノードが満杯 (CPU/メモリ不足) 。</p>
 </li>
 <li>
 <p>ノード上のテイントによりスケジュールが許可されていない。</p>
@@ -1302,18 +1302,18 @@ oc get vm &lt;vm-name&gt; -n vm-placement -o yaml | grep -A 20 "affinity:"</code
 <p>配置制約を緩和する。</p>
 </li>
 <li>
-<p>必須アフィニティを優先アフィニティに変更する。</p>
+<p>required Affinity を preferred Affinity に変更する。</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vmが意図しないノードで実行されている"><a class="anchor" href="#_vmが意図しないノードで実行されている"></a>VMが意図しないノードで実行されている</h3>
+<h3 id="_vm_が意図しないノードで実行されている"><a class="anchor" href="#_vm_が意図しないノードで実行されている"></a>VM が意図しないノードで実行されている</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: VMが優先アフィニティと一致しないノードで実行されています。</p>
+<p><strong>問題</strong>: VM が preferred Affinity と一致しないノードで実行されています。</p>
 </div>
 <div class="paragraph">
-<p><strong>説明</strong>: 優先アフィニティはソフト制約です。以下の場合はスケジューラがそれを無視することがあります:</p>
+<p><strong>説明</strong>: preferred Affinity はソフト制約です。以下の場合はスケジューラーがそれを無視することがあります:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1324,7 +1324,7 @@ oc get vm &lt;vm-name&gt; -n vm-placement -o yaml | grep -A 20 "affinity:"</code
 <p>一致するノードにリソースがない。</p>
 </li>
 <li>
-<p>他のVMの優先順位の方が高い。</p>
+<p>他の VM の優先順位の方が高い。</p>
 </li>
 </ul>
 </div>
@@ -1346,7 +1346,7 @@ oc get node &lt;node-name&gt; --show-labels</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>配置が重要であれば、優先アフィニティを必須に変更する。</p>
+<p>配置が重要であれば、preferred Affinity を required Affinity に変更する。</p>
 </li>
 <li>
 <p>優先ルールのウェイトを増やす。</p>
@@ -1358,12 +1358,12 @@ oc get node &lt;node-name&gt; --show-labels</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_アンチアフィニティが機能しない"><a class="anchor" href="#_アンチアフィニティが機能しない"></a>アンチアフィニティが機能しない</h3>
+<h3 id="_anti_affinity_が機能しない"><a class="anchor" href="#_anti_affinity_が機能しない"></a>Anti-Affinity が機能しない</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: アンチアフィニティルールを持つ複数のVMが同じノードで実行されています。</p>
+<p><strong>問題</strong>: Anti-Affinity ルールを持つ複数の VM が同じノードで実行されています。</p>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1380,16 +1380,16 @@ oc get vm &lt;vm-name&gt; -n vm-placement -o yaml | grep -A 15 "podAntiAffinity:
 <div class="ulist">
 <ul>
 <li>
-<p><strong>ラベルの不一致</strong>: アンチアフィニティのラベルセレクターがVMラベルと一致していない。</p>
+<p><strong>ラベルの不一致</strong>: Anti-Affinity のラベル Selector が VM ラベルと一致していない。</p>
 </li>
 <li>
 <p><strong>間違ったトポロジーキー</strong>: ホスト名の代わりにゾーンを使用している。</p>
 </li>
 <li>
-<p><strong>優先 vs 必須</strong>: 優先を使用している場合、必要に応じて同じノードへの配置が許可される。</p>
+<p><strong>優先 (preferred) vs 必須 (required)</strong>: preferred を使用している場合、必要に応じて同じノードへの配置が許可される。</p>
 </li>
 <li>
-<p><strong>ノード不足</strong>: すべてのレプリカのアンチアフィニティを満たすのに十分なノードがない。</p>
+<p><strong>ノード不足</strong>: すべてのレプリカの Anti-Affinity を満たすのに十分なノードがない。</p>
 </li>
 </ul>
 </div>
@@ -1410,12 +1410,12 @@ oc get vm &lt;vm-name&gt; -n vm-placement -o yaml | grep -A 5 "labelSelector:"</
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ノードセレクターが無視される"><a class="anchor" href="#_ノードセレクターが無視される"></a>ノードセレクターが無視される</h3>
+<h3 id="_nodeselector_が無視される"><a class="anchor" href="#_nodeselector_が無視される"></a>NodeSelector が無視される</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: VMが指定されたラベルを持たないノードで実行されています。</p>
+<p><strong>問題</strong>: VM が指定されたラベルを持たないノードで実行されています。</p>
 </div>
 <div class="paragraph">
-<p><strong>ノードセレクターが正しく定義されているか確認します</strong>:</p>
+<p><strong>NodeSelector が正しく定義されているか確認します</strong>:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1427,7 +1427,7 @@ oc get vm &lt;vm-name&gt; -n vm-placement -o jsonpath='{.spec.template.spec.node
 </div>
 </div>
 <div class="paragraph">
-<p><strong>よくある間違い</strong>: YAML内の間違ったレベルに <code>nodeSelector</code> を記述してしまうこと:</p>
+<p><strong>よくある間違い</strong>: YAML 内の間違ったレベルに <code>nodeSelector</code> を記述してしまうこと:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1494,19 +1494,19 @@ oc get nodes --show-labels | grep -E "storage|workload"</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>ノードセレクター、ノードアフィニティ、およびポッドアフィニティ/アンチアフィニティの違い</p>
+<p>NodeSelector、NodeAffinity、PodAffinity/Anti-Affinity の違い</p>
 </li>
 <li>
 <p>配置制御のためにノードにラベルを付ける方法</p>
 </li>
 <li>
-<p>単純な配置制約にノードセレクターを使用する方法</p>
+<p>単純な配置制約に NodeSelector を使用する方法</p>
 </li>
 <li>
-<p>必須および優先のノードアフィニティルールの設定方法</p>
+<p>必須 (required)、優先 (preferred) NodeAffinity ルールの設定方法</p>
 </li>
 <li>
-<p>VMの共存や分離のためにポッドアフィニティ/アンチアフィニティを使用する方法</p>
+<p>VM の共存や分離のために PodAffinity/Anti-Affinity を使用する方法</p>
 </li>
 <li>
 <p>HA、パフォーマンス、分離のための一般的な配置パターン</p>
@@ -1524,26 +1524,26 @@ oc get nodes --show-labels | grep -E "storage|workload"</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="../getting-started/vm-lifecycle-states.html" class="xref page">VMライフサイクル状態と基本操作の理解</a> - VMの状態とライフサイクル管理</p>
+<p><a href="../getting-started/vm-lifecycle-states.html" class="xref page">VM ライフサイクルの状態と基本操作の理解</a> - VM の状態とライフサイクル管理</p>
 </li>
 <li>
-<p><a href="../getting-started/virtctl-basics.html" class="xref page">virtctl を使用した VM 管理</a> - VM管理のためのCLIコマンド</p>
+<p><a href="../getting-started/virtctl-basics.html" class="xref page">virtctl を使用した VM 管理</a> - VM 管理のための CLI コマンド</p>
 </li>
 <li>
 <p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/nodes#virt-node-placement-vms" target="_blank" rel="noopener">仮想マシンのノード配置 - Red Hat ドキュメント</a></p>
 </li>
 <li>
-<p><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/" target="_blank" rel="noopener">ポッドのノードへの割り当て - Kubernetes ドキュメント</a></p>
+<p><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/" target="_blank" rel="noopener">Pod のノードへの割り当て - Kubernetes ドキュメント</a></p>
 </li>
 <li>
-<p><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/" target="_blank" rel="noopener">テイントと容認 - Kubernetes ドキュメント</a></p>
+<p><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/" target="_blank" rel="noopener">Taint と Toleration - Kubernetes ドキュメント</a></p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="infrastructure-node-placement.html">Infrastructure Node Placement</a></span>
+  <span class="prev"><a href="infrastructure-node-placement.html">Infrastructure 配置戦略</a></span>
   <span class="next"><a href="hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a></span>
 </nav>
 </article>

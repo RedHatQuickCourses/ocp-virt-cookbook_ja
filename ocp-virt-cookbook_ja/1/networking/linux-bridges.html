@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>仮想マシンのためのLinuxブリッジセカンダリネットワークの作成 :: OpenShift Virtualization cookbook</title>
+    <title>仮想マシン用 Linux bridge セカンダリネットワークの作成 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="layer2-secondary.html">
     <link rel="next" href="sriov-secondary.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -291,7 +291,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">ネットワーク構成</a></li>
-    <li><a href="linux-bridges.html">Linuxブリッジ</a></li>
+    <li><a href="linux-bridges.html">Linux bridge</a></li>
   </ul>
 </nav>
 </div>
@@ -300,7 +300,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">仮想マシンのためのLinuxブリッジセカンダリネットワークの作成</h1>
+<h1 class="page">仮想マシン用 Linux bridge セカンダリネットワークの作成</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
@@ -312,30 +312,39 @@
 </div>
 </div>
 <div class="paragraph">
-<p>Linuxブリッジセカンダリネットワークは、https://nmstate.io/kubernetes-nmstate/[Kubernetes NMState Operator,_window=blank]を使用してクラスターノード上に新しいLinuxブリッジデバイスを作成し、https://github.com/k8snetworkplumbingwg/multus-cni[Multus CNI,window=_blank]をhttps://www.cni.dev/plugins/current/main/bridge/[bridge CNIプラグイン,_window=blank]と組み合わせて、Podおよび`VirtualMachine` (VM) をブリッジに接続します。</p>
+<p>Linux bridge セカンダリネットワークは、 <a href="https://nmstate.io/kubernetes-nmstate/">Kubernetes NMState Operator</a>を使用してクラスターノード上に新しい Linux bridge デバイスを作成し、 <a href="https://github.com/k8snetworkplumbingwg/multus-cni" target="_blank" rel="noopener">Multus CNI</a>を <a href="https://www.cni.dev/plugins/current/main/bridge/">bridge CNI プラグイン</a>と組み合わせて、Pod および <code>VirtualMachine</code> (VM) をブリッジに接続します。</p>
 </div>
 <div class="paragraph">
-<p>このLinuxブリッジはノードのネットワーク名前空間で実行され、同じノード上で実行されているPodやVM間のレイヤー2ネットワークスイッチとして機能します。
-また、Linuxブリッジを物理ホストインターフェイスにリンクすることで、クラスター内の他のノードで実行されているVMやPodへの接続を含め、外部ネットワークへの接続を可能にすることもできます。</p>
+<p>この Linux bridge はノードのネットワーク namespace で実行され、同じノード上で実行されている Pod や VM 間のレイヤー 2 ネットワークスイッチとして機能します。
+また、Linux bridge を物理ホストインターフェースにリンクすることで、クラスター内の他のノードで実行されている VM や Pod への接続を含め、外部ネットワークへの接続を可能にすることもできます。</p>
 </div>
 <div class="paragraph">
-<p>要約すると、以下の条件が適用される場合にLinuxブリッジセカンダリネットワークを使用できます。</p>
+<p>要約すると、以下の条件が適用される場合に Linux bridge セカンダリネットワークを使用できます。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>プライマリネットワークとして使用する予定がない場合（現在、OpenShiftでbridge CNIプラグインを使用してこれを行うことはできません）。</p>
+<p>プライマリネットワークとして使用する予定がない場合 (現在、OpenShift で bridge CNI プラグインを使用してこれを行うことはできません)</p>
 </li>
 <li>
-<p>VMをクラスター外部のネットワーク（またはNATゲートウェイを介さずにローカル/物理ネットワーク）に接続する必要がある場合。</p>
+<p>VM をクラスター外部のネットワーク (または NAT ゲートウェイを介さずにローカル/物理ネットワーク) に接続する必要がある場合</p>
 </li>
 <li>
-<p><code>VirtualMachine</code> をVLANに接続する必要がある場合。</p>
+<p><code>VirtualMachine</code> を VLAN に接続する必要がある場合</p>
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>注記: Linuxブリッジの <code>NetworkAttachmentDefinition</code> は、<code>VirtualMachine</code> をVLANに接続するための最も簡単な方法です。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Linux bridge の <code>NetworkAttachmentDefinition</code> は、<code>VirtualMachine</code> を VLAN に接続するための最も簡単な方法です。
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -345,19 +354,19 @@
 <div class="ulist">
 <ul>
 <li>
-<p>OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.20以降のクラスター</p>
+<p>OpenShift Virtualization Operator がインストールされた OpenShift 4.20 以降のクラスター</p>
 </li>
 <li>
-<p>クラスターにNMStateオペレーターがインストールされていること</p>
+<p>クラスターに NMState Operator がインストールされていること</p>
 </li>
 <li>
-<p>NodeNetworkConfigurationPolicyおよびNetworkAttachmentDefinitionリソースを作成するためのクラスター管理者アクセス権限</p>
+<p>NodeNetworkConfigurationPolicy および NetworkAttachmentDefinition リソースを作成するためのクラスター管理者アクセス権限</p>
 </li>
 <li>
-<p>インストール済みのCLIツール: <code>oc</code>, <code>virtctl</code></p>
+<p>インストール済みの CLI ツール: <code>oc</code>, <code>virtctl</code></p>
 </li>
 <li>
-<p>ワーカーノードで利用可能な物理ネットワークインターフェイス（外部ネットワークに接続する場合）</p>
+<p>Worker Node で利用可能な物理ネットワークインターフェース (外部ネットワークに接続する場合)</p>
 </li>
 </ul>
 </div>
@@ -372,37 +381,37 @@
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#create_linux_bridge_nncp">Linuxブリッジノードネットワーク設定ポリシーの作成</a></p>
+<p><a href="#create_linux_bridge_nncp">Linux bridge ノードネットワーク設定ポリシーの作成</a></p>
 </li>
 <li>
-<p><a href="#create_net_attach_def">NetworkAttachmentDefinitionの作成</a>（ブリッジネットワークをPodおよびVMに公開するため）</p>
+<p><a href="#create_net_attach_def">NetworkAttachmentDefinition の作成</a> (ブリッジネットワークを Pod および VM に公開)</p>
 </li>
 <li>
-<p><a href="#attach_virtual_machines">VirtualMachineの接続</a>（Linuxブリッジセカンダリネットワークへ）</p>
+<p><a href="#attach_virtual_machines">VirtualMachine の接続</a> (Linux bridge セカンダリネットワークへ VM を接続)</p>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#create_first_vm">最初のVirtualMachineの作成</a></p>
+<p><a href="#create_first_vm">最初の VirtualMachine の作成</a></p>
 </li>
 <li>
-<p><a href="#create_second_vm">2つ目のVirtualMachineの作成</a></p>
+<p><a href="#create_second_vm">2 つ目の VirtualMachine の作成</a></p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><a href="#test_secondary_network">Linuxブリッジセカンダリネットワークのテスト</a></p>
+<p><a href="#test_secondary_network">Linux bridge セカンダリネットワークのテスト</a></p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="create_linux_bridge_nncp"><a class="anchor" href="#create_linux_bridge_nncp"></a>Linuxブリッジノードネットワーク設定ポリシーの作成</h2>
+<h2 id="create_linux_bridge_nncp"><a class="anchor" href="#create_linux_bridge_nncp"></a>Linux bridge Node Network Configuration Policy の作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>最初のステップは、<code>NodeNetworkConfigurationPolicy</code> (<code>nncp</code>) を使用してクラスターノード上にLinuxブリッジを定義することです。
-すべての <code>nncp</code> オブジェクトはクラスタースコープであるため、名前空間には存在しません。
+<p>最初のステップは、<code>NodeNetworkConfigurationPolicy</code> (<code>nncp</code>) を使用してクラスターノード上に Linux bridge を定義することです。
+すべての <code>nncp</code> オブジェクトはクラスタースコープであるため、namespace には存在しません。
 ただし、キーと値のラベルを使用して、<code>nncp</code> を適用するノードを制御することは可能です。</p>
 </div>
 <div class="admonitionblock important">
@@ -416,10 +425,10 @@
 <div class="title">必要な手順:</div>
 <ul>
 <li>
-<p><code>NodeNetworkConfigurationPolicy</code> を作成するには、Kubernetes NMState Operatorをインストールしておく必要があります。</p>
+<p><code>NodeNetworkConfigurationPolicy</code> を作成するには、Kubernetes NMState Operator をインストールしておく必要があります。</p>
 </li>
 <li>
-<p><code>nncp</code> の作成をスキップしてセカンダリブリッジアダプターでVMを起動しようとすると、起動に失敗します。</p>
+<p><code>nncp</code> の作成をスキップしてセカンダリブリッジアダプターで VM を起動しようとすると、起動に失敗します。</p>
 </li>
 </ul>
 </div>
@@ -429,7 +438,7 @@
 </div>
 <div class="paragraph">
 <p>以下の <code>NodeNetworkConfigurationPolicy</code> をコピーし、<code>lnbr0-bridge.nncp.yaml</code> という名前の新しいファイルに貼り付けます。
-外部ネットワークに接続するには、最後の2行のコメントを外し、ノード上のセカンダリまたはターシャリ（プライマリとセカンダリがボンディングされている場合）のデバイス名と一致するようにデバイス名を変更する必要があります。</p>
+外部ネットワークに接続するには、最後の 2 行のコメントを外し、ノード上の 2 つ目、または 3 つ目 (プライマリとセカンダリがボンディングされている場合) のデバイス名と一致するようにデバイス名を変更する必要があります。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -460,16 +469,16 @@ spec:
 <div class="title">上記の例について:</div>
 <ul>
 <li>
-<p><strong><code>lnbr0</code></strong> (<code>linux bridge 0</code> の短縮形): この例におけるLinuxブリッジのインターフェイス名です。名前は任意です。</p>
+<p><strong><code>lnbr0</code></strong> (<code>linux bridge 0</code> の短縮形): この例における Linux bridge のインターフェース名です。名前は任意です。</p>
 </li>
 <li>
-<p><strong><code>ipv4</code></strong>: ブリッジ自体がゲートウェイとして機能する場合を除き、独自のIPアドレスを必要としないため、アドレッシングは無効になっています。</p>
+<p><strong><code>ipv4</code></strong>: ブリッジ自体がゲートウェイとして機能する場合を除き、独自の IP アドレスを必要としないため、IP アドレス割り当ては無効になっています。</p>
 </li>
 <li>
-<p><strong><code>options.stp.enabled</code></strong>: スパニングツリープロトコルを有効または無効にするブール値です（この例では無効）。</p>
+<p><strong><code>options.stp.enabled</code></strong>: スパニングツリープロトコルを有効または無効にするブール値です (この例では無効) 。</p>
 </li>
 <li>
-<p><strong><code>port</code></strong> (コメントアウト): ブリッジインターフェイスをバインドするネットワークアダプターのリスト（通常は1つのみ）です。</p>
+<p><strong><code>port</code></strong> (コメントアウト): ブリッジインターフェースをバインドするネットワークアダプターのリスト (通常は 1 つのみ) です。</p>
 <div class="ulist">
 <ul>
 <li>
@@ -480,11 +489,20 @@ spec:
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>注記: フィールドの説明と例を含む完全なスキーマについては、https://nmstate.io/devel/yaml_api.html[NMState APIガイド,window=_blank]を参照してください。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+フィールドの説明と例を含む完全なスキーマについては、 <a href="https://nmstate.io/devel/yaml_api.html" target="_blank" rel="noopener">NMState API ガイド</a>を参照してください。
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>ファイルを <code>lnbr0-bridge.nncp.yaml</code> として保存したら、<code>nncp</code> マニフェストをOpenShiftクラスターに適用します。</p>
+<p>ファイルを <code>lnbr0-bridge.nncp.yaml</code> として保存したら、<code>nncp</code> マニフェストを OpenShift クラスターに適用します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -492,7 +510,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>数分後、クラスター内の各該当ノードで、設定された接続状態を持つ <code>lnbr0</code> という名前の新しいブリッジインターフェイスが作成されます。</p>
+<p>数分後、クラスター内の各該当ノードで、設定された接続状態を持つ <code>lnbr0</code> という名前の新しいブリッジインターフェースが作成されます。</p>
 </div>
 <div class="paragraph">
 <p>この進行状況を確認するには、<code>NodeNetworkConfigurationPolicy</code> に関連するアクションを実行する <code>NodeNetworkConfigurationEnactment</code> (<code>nnce</code>) オブジェクトを表示します。</p>
@@ -506,30 +524,39 @@ spec:
 <p>上記のコマンドを実行すると、適用が完了するまでクラスター内の各ノードのステータスが <code>Progressing</code> となり、その後各ノードのステータスが <code>Available</code> に変わります。</p>
 </div>
 <div class="paragraph">
-<p><code>lnbr0</code> インターフェイスがノード上に存在することを確認するには、クラスターの <code>NodeNetworkState</code> を表示する（各ノードで <code>ip addr show</code> を実行するのと同等）、またはノードでデバッグセッションを開始します。</p>
+<p><code>lnbr0</code> インターフェースがノード上に存在することを確認するには、クラスターの <code>NodeNetworkState</code> を表示する (各ノードで <code>ip addr show</code> を実行するのと同等) 、またはノードでデバッグセッションを開始します。</p>
 </div>
 <div class="paragraph">
-<p>クラスター内のすべてのノードの <code>NodeNetworkState</code> を表示するには、<code>nns</code> リソースを取得し、必要に応じてブリッジインターフェイスを <code>grep</code> します。</p>
+<p>クラスター内のすべてのノードの <code>NodeNetworkState</code> を表示するには、<code>nns</code> リソースを取得し、必要に応じてブリッジインターフェースを <code>grep</code> します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe nns | grep lnbr0</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>注記: <code>nmstate</code> オブジェクト（NMState Operatorをトリガーするもの）と同様に、<code>nncp</code> オブジェクトもクラスタースコープであるため、名前空間は不要です。ただし、クラスター内に複数の <code>nncp</code> オブジェクトを共存させることは可能です。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>nmstate</code> オブジェクト (NMState Operator をトリガーするもの) と同様に、<code>nncp</code> オブジェクトもクラスタースコープであるため、namespace は不要です。ただし、クラスター内に複数の <code>nncp</code> オブジェクトを共存させることは可能です。
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>ノード上にLinuxブリッジインターフェイスが存在することが確認できたら、<a href="#create_net_attach_def">NetworkAttachmentDefinitionの作成</a>に進みます。</p>
+<p>ノード上に Linux bridge インターフェースが存在することが確認できたら、<a href="#create_net_attach_def">NetworkAttachmentDefinition の作成</a>に進みます。</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="create_net_attach_def"><a class="anchor" href="#create_net_attach_def"></a>LinuxブリッジNetworkAttachmentDefinitionの作成</h2>
+<h2 id="create_net_attach_def"><a class="anchor" href="#create_net_attach_def"></a>Linux bridge NetworkAttachmentDefinition の作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>次のステップは、Pod/VMにレイヤー2ネットワーキングを提供する <code>NetworkAttachmentDefinition</code> を作成することです。
-<code>NetworkAttachmentDefinition</code> は、特定のプロジェクト/名前空間内のPod/VMがセカンダリネットワークに接続できるようにするためのものです。</p>
+<p>次のステップは、Pod/VM に L2 ネットワーキングを提供する <code>NetworkAttachmentDefinition</code> を作成することです。
+<code>NetworkAttachmentDefinition</code> は、特定のプロジェクト/namespace 内の Pod/VM がセカンダリネットワークに接続できるようにするためのものです。</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -538,14 +565,14 @@ spec:
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-<code>NetworkAttachmentDefinition</code> を作成するために必須ではありませんが、<code>VirtualMachine</code> をブリッジネットワークに接続する前に、ブリッジインターフェイスを定義する <code>nncp</code> オブジェクトがクラスター内に存在している必要があります。
-これを怠ると、ブリッジベースのNICを持つVMは起動できなくなります。
+<code>NetworkAttachmentDefinition</code> を作成するために必須ではありませんが、<code>VirtualMachine</code> をブリッジネットワークに接続する前に、ブリッジインターフェースを定義する <code>nncp</code> オブジェクトがクラスター内に存在している必要があります。
+これを怠ると、ブリッジベースの NIC を持つ VM は起動できなくなります。
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>まず、VM用の名前空間が存在しない場合は作成します。</p>
+<p>まず、VM 用の namespace が存在しない場合は作成します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -553,7 +580,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>次に、その名前空間に切り替えます。</p>
+<p>次に、その namespace に切り替えます。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -562,7 +589,7 @@ spec:
 </div>
 <div class="paragraph">
 <p>続いて、以下の <code>NetworkAttachmentDefinition</code> をコピーし、<code>lnbr0-bridge.net-attach-def.yaml</code> という新しいファイルに貼り付けます。
-<code>nncp</code> で物理ポートをバインドすることを選択した場合は、必要に応じて <code>vlan</code> IDを変更してください。</p>
+<code>nncp</code> で物理ポートをバインドすることを選択した場合は、必要に応じて <code>vlan</code> ID を変更してください。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -586,46 +613,46 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>上記の例の各フィールドについて説明します（オプションのフィールドはそれぞれのデフォルト値で表示されています）。</p>
+<p>上記の例の各フィールドについて説明します (オプションのフィールドはそれぞれのデフォルト値で表示されています) 。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong><code>metadata.name</code></strong>: <code>NetworkAttachmentDefinition</code> のKubernetes名です。</p>
+<p><strong><code>metadata.name</code></strong>: <code>NetworkAttachmentDefinition</code> の Kubernetes 名です。</p>
 </li>
 <li>
-<p><strong><code>metadata.namespace</code></strong>: Pod/VMが実行されている名前空間（この例では <code>bridge-demo</code>）と一致させる必要がありますが、別の名前空間に存在することも可能です。</p>
+<p><strong><code>metadata.namespace</code></strong>: Pod/VM が実行されている namespace (この例では <code>bridge-demo</code>) と一致させる必要がありますが、別の namespace に存在することも可能です。</p>
 </li>
 <li>
-<p><strong><code>spec.config</code></strong>: 以下のサブフィールドを持つJSON文字列値を受け入れます。</p>
+<p><strong><code>spec.config</code></strong>: 以下のサブフィールドを持つ JSON 文字列値を受け入れます。</p>
 <div class="ulist">
 <ul>
 <li>
 <p><strong><code>"name"</code></strong>: 設定の名前。<code>metadata.name</code> と一致させるのが理想的です。</p>
 </li>
 <li>
-<p><strong><code>"cniVersion"</code></strong>: 現在サポートされているCNIバージョンは <code>"0.3.1"</code> のみです。</p>
+<p><strong><code>"cniVersion"</code></strong>: 現在サポートされている CNI バージョンは <code>"0.3.1"</code> のみです。</p>
 </li>
 <li>
-<p><strong><code>"type"</code></strong> (必須): Linuxブリッジインターフェイスを使用するには <code>"bridge"</code> に設定する必要があります。</p>
+<p><strong><code>"type"</code></strong> (必須): Linux bridge インターフェースを使用するには <code>"bridge"</code> に設定する必要があります。</p>
 </li>
 <li>
-<p><strong><code>"bridge"</code></strong> (必須): NNCP定義を介してノード/ホスト上で定義されたブリッジインターフェイスの名前。</p>
+<p><strong><code>"bridge"</code></strong> (必須): NNCP 定義を介してノード/ホスト上で定義されたブリッジインターフェースの名前。</p>
 </li>
 <li>
-<p><strong><code>"ipam"</code></strong> (非サポート): OpenShift Virtualizationはbridge CNIプラグインを使用したIPアドレス管理をサポートしていないため、このフィールドは空にする必要があります（<code>layer2</code> 専用）。</p>
+<p><strong><code>"ipam"</code></strong> (非サポート): OpenShift Virtualization は bridge CNI プラグインを使用した IP アドレス管理をサポートしていないため、このフィールドは空にする必要があります (<code>layer2</code> 専用) 。</p>
 </li>
 <li>
-<p><strong><code>"vlan"</code></strong> (オプション): インターフェイスの希望するVLAN ID（デフォルトは <code>1</code>）。</p>
+<p><strong><code>"vlan"</code></strong> (オプション): インターフェースで利用したい VLAN ID (デフォルトは <code>1</code>) 。</p>
 </li>
 <li>
-<p><strong><code>"macspoofchk"</code></strong> (オプション): MACスプーフィングチェックを有効にするかどうか。コンテナーから発信されるトラフィックをインターフェイスのMACアドレスに制限します（デフォルトは <code>false</code>）。</p>
+<p><strong><code>"macspoofchk"</code></strong> (オプション): MAC スプーフィングチェックを有効にするかどうか。コンテナから送信されるトラフィックをインターフェースの MAC アドレスに制限します (デフォルトは <code>false</code>) 。</p>
 </li>
 <li>
-<p><strong><code>"disableContainerInterface"</code></strong> (オプション): コンテナーネットワークインターフェイス（vethピア）の状態をダウンに設定します（デフォルトは <code>false</code>）。</p>
+<p><strong><code>"disableContainerInterface"</code></strong> (オプション): コンテナネットワークインターフェース (veth peer) の状態をダウンに設定します (デフォルトは <code>false</code>) 。</p>
 </li>
 <li>
-<p><strong><code>"portIsolation"</code></strong> (オプション): ホストインターフェイスで分離（アイソレーション）を設定するかどうか。これによりコンテナー間の通信が防止され、ホストとの通信またはゲートウェイ経由の通信のみが強制されます（デフォルトは <code>false</code>）。</p>
+<p><strong><code>"portIsolation"</code></strong> (オプション): ホストインターフェースで Isolation を設定するための設定。これによりコンテナ間の通信が防止され、ホストとの通信またはゲートウェイ経由の通信のみが強制されます (デフォルトは <code>false</code>) 。</p>
 </li>
 </ul>
 </div>
@@ -633,7 +660,7 @@ spec:
 </ul>
 </div>
 <div class="paragraph">
-<p>LinuxブリッジCNIプラグインのその他の構成例（OpenShift Virtualizationではサポートされていない例を含む）については、https://www.cni.dev/plugins/current/main/bridge/[bridge CNIプラグインのドキュメント,window=_blank]、および公式の <a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/networking#virt-creating-linux-bridge-nad-cli_virt-connecting-vm-to-linux-bridge" target="_blank" rel="noopener">OpenShiftドキュメント</a>を参照してください。</p>
+<p>Linux bridge CNI プラグインのその他の構成例 (OpenShift Virtualization ではサポートされていない例を含む) については、 <a href="https://www.cni.dev/plugins/current/main/bridge/" target="_blank" rel="noopener">bridge CNI プラグインのドキュメント</a>、および公式の <a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/networking#virt-creating-linux-bridge-nad-cli_virt-connecting-vm-to-linux-bridge" target="_blank" rel="noopener">OpenShift ドキュメント</a>を参照してください。</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -643,29 +670,29 @@ spec:
 </td>
 <td class="content">
 <div class="ulist">
-<div class="title">IPアドレッシングとインターフェイスボンディング:</div>
+<div class="title">IP アドレス割り当てとインターフェースボンディング:</div>
 <ul>
 <li>
-<p>前述の通り、<code>VirtualMachine</code> の <code>NetworkAttachmentDefinition</code> でのIPアドレス管理（IPAM）の使用はOpenShift Virtualizationではサポートされていないため、<code>"ipam": {}</code> 定義は空のままにする必要があります。</p>
+<p>前述の通り、<code>VirtualMachine</code> の <code>NetworkAttachmentDefinition</code> での IP アドレス管理 (IPAM) の使用は OpenShift Virtualization ではサポートされていないため、<code>"ipam": {}</code> 定義は空のままにする必要があります。</p>
 </li>
 <li>
-<p>Linuxブリッジネットワーク上のVMインターフェイスにIPアドレスを割り当てるには、次のいずれかの方法を使用します。</p>
+<p>Linux bridge ネットワーク上の VM インターフェースに IP アドレスを割り当てるには、次のいずれかの方法を使用します。</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>cloud-init networkData</strong>: VMのcloud-init設定で静的IPアドレスを設定する（予測可能なアドレッシングに推奨）</p>
+<p><strong>cloud-init networkData</strong>: VM の cloud-init 設定で静的 IP アドレスを設定 (予測可能な IP アドレス割り当てで推奨)</p>
 </li>
 <li>
-<p><strong>外部DHCPサーバー</strong>: ブリッジネットワーク上にDHCPサーバーが存在する場合、VMは自動的にIPアドレスを取得します</p>
+<p><strong>外部 DHCP サーバー</strong>: ブリッジネットワーク上に DHCP サーバーが存在する場合、VM は自動的に IP アドレスを取得</p>
 </li>
 <li>
-<p><strong>手動設定</strong>: 起動後、VM内部で <code>nmcli</code> やネットワーク設定を使用して手動でIPアドレスを設定する</p>
+<p><strong>手動設定</strong>: 起動後、VM 内部で <code>nmcli</code> やネットワーク設定を使用して手動で IP アドレスを設定</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p>OpenShift Virtualizationは、https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/configuring_and_managing_networking/configuring-a-network-bond#upstream-switch-configuration-depending-on-the-bonding-modes[Linuxブリッジボンディングモード,window=_blank] 0、5、6をサポートしていません。</p>
+<p>OpenShift Virtualization は、 <a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/configuring_and_managing_networking/configuring-a-network-bond#upstream-switch-configuration-depending-on-the-bonding-modes" target="_blank" rel="noopener">Linux bridge bonding mode</a> 0、5、6 をサポートしていません。</p>
 </li>
 </ul>
 </div>
@@ -674,7 +701,7 @@ spec:
 </table>
 </div>
 <div class="paragraph">
-<p>ファイルを <code>lnbr0-bridge.net-attach-def.yaml</code> として保存したら、<code>network-attachment-definition</code> をOpenShiftクラスターに適用します。</p>
+<p>ファイルを <code>lnbr0-bridge.net-attach-def.yaml</code> として保存したら、<code>network-attachment-definition</code> を OpenShift クラスターに適用します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -690,15 +717,15 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>3つのコンポーネントのうち2つが揃ったので、最後のコンポーネントである <a href="#attach_virtual_machines">VirtualMachineの接続</a> に進みます。</p>
+<p>3 つのコンポーネントのうち 2 つが揃ったので、最後のコンポーネントである <a href="#attach_virtual_machines">VirtualMachine の接続</a> に進みます。</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="attach_virtual_machines"><a class="anchor" href="#attach_virtual_machines"></a>VirtualMachineのセカンダリネットワークへの接続</h2>
+<h2 id="attach_virtual_machines"><a class="anchor" href="#attach_virtual_machines"></a>VirtualMachine のセカンダリネットワークへの接続</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>このステップでは、ブリッジにセカンダリネットワークとして接続される2つの新しいVirtualMachineを作成します。</p>
+<p>このステップでは、ブリッジにセカンダリネットワークとして接続される 2 つの新しい VirtualMachine を作成します。</p>
 </div>
 <div class="paragraph">
 <p>これまでの作業をまとめると、以下の通りです。</p>
@@ -706,10 +733,10 @@ spec:
 <div class="ulist">
 <ul>
 <li>
-<p><code>kubernetes-nmstate-operator</code> をインストールし、<code>nmstate</code> オブジェクトを作成してデプロイをトリガーしました（本ガイド以前の工程）。</p>
+<p><code>kubernetes-nmstate-operator</code> をインストールし、<code>nmstate</code> オブジェクトを作成してデプロイをトリガーしました (本ガイドより前のチュートリアル) 。</p>
 </li>
 <li>
-<p><code>NodeNetworkConfigurationPolicy</code> を適用し、OpenShiftクラスターノード上にLinuxブリッジデバイスを作成しました。</p>
+<p><code>NodeNetworkConfigurationPolicy</code> を適用し、OpenShift クラスターノード上に Linux bridge デバイスを作成しました。</p>
 </li>
 <li>
 <p>進行中に <code>NodeNetworkConfigurationEnactment</code> を表示してブリッジのデプロイを監視しました。</p>
@@ -718,20 +745,20 @@ spec:
 <p><code>NodeNetworkState</code> オブジェクトを表示して、ノード上にブリッジが存在することを確認しました。</p>
 </li>
 <li>
-<p>(Multus) <code>NetworkAttachmentDefinition</code> を作成しました。これにより、<code>VirtualMachine</code> がLinuxブリッジに接続し、仮想スイッチとして、または（物理デバイスにバインドされている場合は）ホストネットワークへのブリッジとして機能できるようになります。</p>
+<p>(Multus) <code>NetworkAttachmentDefinition</code> を作成しました。これにより、<code>VirtualMachine</code> が Linux bridge に接続し、仮想スイッチとして、または (物理デバイスにバインドされている場合は) ホストネットワークへのブリッジとして機能できるようになります。</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>以上のポイントを踏まえ、<a href="#create_first_vm">最初のVirtualMachineの作成</a> に進みます。</p>
+<p>以上のポイントを踏まえ、<a href="#create_first_vm">最初の VirtualMachine の作成</a> に進みます。</p>
 </div>
 <div class="sect2">
-<h3 id="create_first_vm"><a class="anchor" href="#create_first_vm"></a>最初のVirtualMachineの作成</h3>
+<h3 id="create_first_vm"><a class="anchor" href="#create_first_vm"></a>最初の VirtualMachine の作成</h3>
 <div class="paragraph">
-<p>これまでと同様に、このセクションでは提供されたYAMLデータを使用してオブジェクト（<code>kind</code>: <code>VirtualMachine</code>）のマニフェストを作成し、<code>oc apply</code> を使用してクラスターに適用します。</p>
+<p>これまでと同様に、このセクションでは提供された YAML データを使用してオブジェクト (<code>kind</code>: <code>VirtualMachine</code>) のマニフェストを作成し、<code>oc apply</code> を使用してクラスターに適用します。</p>
 </div>
 <div class="paragraph">
-<p>以下のVirtualMachineマニフェストを使用して、YAMLコンテンツを <code>fedora-bridge-demo.vm.yaml</code> という名前の新しいファイルにコピーして貼り付けます。</p>
+<p>以下の VirtualMachine マニフェストを使用して、YAML コンテンツを <code>fedora-bridge-demo.vm.yaml</code> という名前の新しいファイルにコピーして貼り付けます。</p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -740,7 +767,7 @@ spec:
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-この例のcloud-initパスワードはデモ目的専用です。本番環境では常に強力でユニークなパスワードまたはSSHキー認証を使用してください。
+この例の cloud-init パスワードはデモ目的専用です。本番環境では常に強力でユニークなパスワードまたは SSH キー認証を使用してください。
 </td>
 </tr>
 </table>
@@ -817,54 +844,51 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>上記の例の特定のフィールドを確認します（すべてのフィールドパスは <code>spec.template.spec</code> からの相対パスです）。</p>
+<p>上記の例の特定のフィールドを確認します (すべてのフィールドパスは <code>spec.template.spec</code> からの相対パスです) 。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong><code>domain.devices.interfaces</code></strong>: プライマリの <code>default</code> とセカンダリの <code>nic-linux-bridge</code> という2つのインターフェイスがリストされています。</p>
+<p><strong><code>domain.devices.interfaces</code></strong>: プライマリの <code>default</code> とセカンダリの <code>nic-linux-bridge</code> という 2 つのインターフェースがリストされています。</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong><code>bridge</code></strong>: VMのNICをホストコンテナーに接続する2つの方法のうちの1つです（もう1つはIP <code>masquerade</code>）。
-これはvm-to-containerブリッジを使用しますが、<code>lnbr0</code> ブリッジはcontainer-to-nodeを接続します（これで接続が完了します）。</p>
+<p><strong><code>bridge</code></strong>: VM の NIC をホストコンテナに接続する 2 つの方法のうちの 1 つ (もう 1 つは IP <code>masquerade</code>)。
+これは vm-to-container ブリッジを使用しますが、<code>lnbr0</code> ブリッジは container-to-node を接続します (これで接続が完了します) 。</p>
 </li>
 <li>
-<p><strong><code>name</code></strong>: 後で <code>network</code> セクションで参照される任意の識別子。</p>
+<p><strong><code>name</code></strong>: 後で <code>network</code> セクションで参照される任意の識別子</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong><code>networks</code></strong>: <code>interfaces</code> が接続されているネットワークのリスト。</p>
+<p><strong><code>networks</code></strong>: <code>interfaces</code> が接続されているネットワークのリスト</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong><code>name</code></strong>: <code>interfaces</code> フィールドで定義されたブリッジインターフェイスの名前。</p>
+<p><strong><code>name</code></strong>: <code>interfaces</code> フィールドで定義されたブリッジインターフェースの名前</p>
 </li>
 <li>
-<p><strong><code>multus.networkName</code></strong>: Pod/VMにブリッジネットワークへのアクセスを提供する <code>NetworkAttachmentDefinition</code> (NAD) の名前。</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong><code>volumes</code></strong>: 2つの名前付きボリュームがあります。1つはルートの <code>datavolumedisk</code>、もう1つは <code>cloudinitdisk</code> です。</p>
-<div class="ulist">
-<ul>
-<li>
-<p><strong><code>CloudInitNoCloud</code></strong>: これがcloud-initディスクであり、https://cloudinit.readthedocs.io/en/latest/reference/datasources/nocloud.html[NoCloud,window=_blank]データソースを使用することをKubeVirtに通知します。</p>
-<div class="ulist">
-<ul>
-<li>
-<p><strong><code>networkData</code></strong>: これにより、セカンダリインターフェイス (<code>enp2s0</code>) に静的IP (<code>192.168.50.10/24</code>) が構成されます。</p>
-<div class="ulist">
-<ul>
-<li>
-<p><strong><code>ethernets</code></strong>: セカンダリインターフェイス名 <code>enp2s0</code> は、KubeVirtの2番目のネットワークインターフェイスに対する予測可能な命名規則に従います。</p>
+<p><strong><code>multus.networkName</code></strong>: Pod/VM にブリッジネットワークへのアクセスを提供する <code>NetworkAttachmentDefinition</code> (NAD) の名前</p>
 </li>
 </ul>
 </div>
+</li>
+<li>
+<p><strong><code>volumes</code></strong>: 2 つの名前付きボリュームがあります。1 つはルートの <code>datavolumedisk</code>、もう 1 つは <code>cloudinitdisk</code> です。</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>CloudInitNoCloud</code></strong>: これが cloud-init ディスクであり、 <a href="https://cloudinit.readthedocs.io/en/latest/reference/datasources/nocloud.html" target="_blank" rel="noopener">NoCloud</a>データソースを使用することを KubeVirt に通知します。</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>networkData</code></strong>: 上記では、セカンダリインターフェース (<code>enp2s0</code>) に静的 IP (<code>192.168.50.10/24</code>) が構成されます。</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>ethernets</code></strong>: セカンダリインターフェース名 <code>enp2s0</code> は、KubeVirt の 2 番目のネットワークインターフェースに対する予測可能な命名規則に従います。</p>
 </li>
 </ul>
 </div>
@@ -873,12 +897,24 @@ spec:
 </div>
 </li>
 </ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+プライマリインターフェース (<code>enp1s0</code>) は Masquerade を使用し、Pod ネットワークから IP を取得します。
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>注記: プライマリインターフェイス (<code>enp1s0</code>) はマスカレードを使用し、PodネットワークからIPを取得します。</p>
-</div>
-<div class="paragraph">
-<p><code>VirtualMachine</code> マニフェストを <code>fedora-bridge-demo.vm.yaml</code> という名前のファイルとして保存したら、それをOpenShiftクラスターに適用します。</p>
+<p><code>VirtualMachine</code> マニフェストを <code>fedora-bridge-demo.vm.yaml</code> という名前のファイルとして保存したら、それを OpenShift クラスターに適用します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -886,8 +922,8 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p><code>VirtualMachine</code> の状態を確認します。VMを起動する前に、基盤となる <code>DataVolume</code> のクローン作成に時間がかかります。
-VMが <code>Running</code> 状態になるのを待つのではなく、2つ目のVMの作成を進めることができます。</p>
+<p><code>VirtualMachine</code> の状態を確認します。VM を起動する前に、基盤となる <code>DataVolume</code> のクローン作成に時間がかかります。
+VM が <code>Running</code> 状態になるのを待つのではなく、2 つ目の VM の作成を進めることができます。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -898,11 +934,11 @@ VMが <code>Running</code> 状態になるのを待つのではなく、2つ目�
 </div>
 </div>
 <div class="sect1">
-<h2 id="create_second_vm"><a class="anchor" href="#create_second_vm"></a>2つ目のVirtualMachineの作成</h2>
+<h2 id="create_second_vm"><a class="anchor" href="#create_second_vm"></a>2 つ目の VirtualMachine の作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>次の <code>VirtualMachine</code> マニフェストは、最初の <code>vm</code> から名前（ラベルやボリューム名を含む）とIPアドレスを変更していますが、それ以外は同一です。
-提供されたYAMLをコピーし、<code>fedora-bridge-demo2.vm.yaml</code> という新しいファイルに貼り付けます。</p>
+<p>次の <code>VirtualMachine</code> マニフェストは、最初の <code>vm</code> から名前 (ラベルやボリューム名を含む) と IP アドレスを変更していますが、それ以外は同一です。
+提供された YAML をコピーし、<code>fedora-bridge-demo2.vm.yaml</code> という新しいファイルに貼り付けます。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -976,7 +1012,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>ファイルを <code>fedora-bridge-demo2.vm.yaml</code> として保存したら、この2つ目の <code>VirtualMachine</code> をOpenShiftクラスターに適用します。</p>
+<p>ファイルを <code>fedora-bridge-demo2.vm.yaml</code> として保存したら、この 2 つ目の <code>VirtualMachine</code> を OpenShift クラスターに適用します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -984,7 +1020,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>両方のVMが実行されていることを確認し、各 <code>VirtualMachineInstance</code> (<code>vmi</code>) を直接調べてネットワーク <code>interfaces</code> の <code>status</code> を確認します。</p>
+<p>両方の VM が実行されていることを確認し、各 <code>VirtualMachineInstance</code> (<code>vmi</code>) を直接調べてネットワーク <code>interfaces</code> の <code>status</code> を確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -994,21 +1030,21 @@ oc get vmi fedora-bridge-demo2 -n bridge-demo -o jsonpath='{.status.interfaces}'
 </div>
 </div>
 <div class="paragraph">
-<p>2つ目のVMが実行されアクティブになったら、<a href="#test_secondary_network">テスト</a> に進みます。</p>
+<p>2 つ目の VM が実行されアクティブになったら、<a href="#test_secondary_network">テスト</a> に進みます。</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="test_secondary_network"><a class="anchor" href="#test_secondary_network"></a>Linuxブリッジセカンダリネットワークのテスト</h2>
+<h2 id="test_secondary_network"><a class="anchor" href="#test_secondary_network"></a>Linux bridge セカンダリネットワークのテスト</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>変更されていない例では、Linuxブリッジセカンダリネットワークは単純な仮想スイッチとして機能し、（物理ノードインターフェイスにブリッジされていない場合は）同じノード内のPod、VM、名前空間にまたがります。</p>
+<p>変更されていない例では、Linux bridge セカンダリネットワークは単純な仮想スイッチとして機能し、 (物理ノードインターフェースにブリッジされていない場合は) 同じノード内の Pod、VM、namespace にまたがります。</p>
 </div>
 <div class="paragraph">
-<p>Linuxブリッジを介した接続性をテストする最も簡単な方法は、ある <code>VirtualMachine</code> から別の <code>VirtualMachine</code> への基本的な接続性をテストすることです。</p>
+<p>Linux bridge を介した接続性をテストする最も簡単な方法は、ある <code>VirtualMachine</code> から別の <code>VirtualMachine</code> への基本的な接続性をテストすることです。</p>
 </div>
 <div class="paragraph">
-<p>テストを進める前に、<code>bridge-demo</code> 名前空間に以下のリソースが存在している必要があります。</p>
+<p>テストを進める前に、<code>bridge-demo</code> namespace に以下のリソースが存在している必要があります。</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1016,18 +1052,18 @@ oc get vmi fedora-bridge-demo2 -n bridge-demo -o jsonpath='{.status.interfaces}'
 <p><code>NetworkAttachmentDefinition</code>: <code>lnbr0-bridge</code></p>
 </li>
 <li>
-<p><code>VirtualMachine</code>: <code>fedora-bridge-demo</code> (セカンダリNIC IPアドレス: 192.168.50.10)</p>
+<p><code>VirtualMachine</code>: <code>fedora-bridge-demo</code> (セカンダリ NIC IP アドレス: 192.168.50.10)</p>
 </li>
 <li>
-<p><code>VirtualMachine</code>: <code>fedora-bridge-demo2</code> (セカンダリNIC IPアドレス: 192.168.50.20)</p>
+<p><code>VirtualMachine</code>: <code>fedora-bridge-demo2</code> (セカンダリ NIC IP アドレス: 192.168.50.20)</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>テストする最も簡単な方法は、一方のVM（または必要に応じて両方のVM）のコンソールに接続し、もう一方にpingを送信することです。</p>
+<p>テストする最も簡単な方法は、一方の VM (または必要に応じて両方の VM) のコンソールに接続し、もう一方に ping を送信することです。</p>
 </div>
 <div class="paragraph">
-<p><code>virtctl</code> コマンドを使用して最初のVirtualMachineのコンソールにアクセスし、<strong>user</strong>:`fedora`、<strong>password</strong>:`fedora` でログインします（ログインプロンプトが表示されない場合は <code>ENTER</code> を押してください）。</p>
+<p><code>virtctl</code> コマンドを使用して最初の VirtualMachine のコンソールにアクセスし、<strong>user</strong>:`fedora`、<strong>password</strong>:`fedora` でログインします (ログインプロンプトが表示されない場合は <code>ENTER</code> を押してください) 。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1035,7 +1071,7 @@ oc get vmi fedora-bridge-demo2 -n bridge-demo -o jsonpath='{.status.interfaces}'
 </div>
 </div>
 <div class="paragraph">
-<p>VirtualMachineのIPアドレスを確認します。以下のコマンドで、<code>enp2s0</code> インターフェイスに対して静的アドレス <code>192.168.50.10</code> が返されるはずです。</p>
+<p>VirtualMachine の IP アドレスを確認します。以下のコマンドで、<code>enp2s0</code> インターフェースに対して静的アドレス <code>192.168.50.10</code> が返されるはずです。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1043,7 +1079,7 @@ oc get vmi fedora-bridge-demo2 -n bridge-demo -o jsonpath='{.status.interfaces}'
 </div>
 </div>
 <div class="paragraph">
-<p>最初のVMのコンソールから、<code>fedora-bridge-demo2</code> (IPアドレス: <code>192.168.50.20</code>) の <code>VirtualMachine</code> にpingを送信します。応答が表示されれば、セカンダリネットワークは動作しています（<code>CTRL+C</code> を押すとpingを停止します）。</p>
+<p>最初の VM のコンソールから、<code>fedora-bridge-demo2</code> (IP アドレス: <code>192.168.50.20</code>) の <code>VirtualMachine</code> に ping を送信します。応答が表示されれば、セカンダリネットワークは動作しています (<code>CTRL+C</code> を押すと ping を停止します) 。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1051,10 +1087,10 @@ oc get vmi fedora-bridge-demo2 -n bridge-demo -o jsonpath='{.status.interfaces}'
 </div>
 </div>
 <div class="paragraph">
-<p>VMコンソールを終了するには、<code>CTRL+]</code> を押します。</p>
+<p>VM コンソールを終了するには、<code>CTRL+]</code> を押します。</p>
 </div>
 <div class="paragraph">
-<p>この演習のリソースをすべてクリーンアップするには、別の名前空間に切り替えて <code>bridge-demo</code> 名前空間を削除します。</p>
+<p>このチュートリアルのリソースをすべてクリーンアップするには、別の namespace に切り替えて <code>bridge-demo</code> namespace を削除します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1073,19 +1109,19 @@ oc delete namespace bridge-demo</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>NMState Operatorを使用して <code>NodeNetworkConfigurationPolicy</code> でクラスターノード上にLinuxブリッジを作成する方法</p>
+<p>NMState Operator を使用して <code>NodeNetworkConfigurationPolicy</code> でクラスターノード上に Linux bridge を作成する方法</p>
 </li>
 <li>
-<p>bridge CNIプラグインを使用して <code>NetworkAttachmentDefinition</code> を作成し、ブリッジネットワークをVMに公開する方法</p>
+<p>bridge CNI プラグインを使用して <code>NetworkAttachmentDefinition</code> を作成し、ブリッジネットワークを VM に公開する方法</p>
 </li>
 <li>
-<p>プライマリのマスカレードインターフェイスとセカンダリのブリッジインターフェイスの両方でVirtualMachineを構成する方法</p>
+<p>プライマリ masquerade インターフェースとセカンダリブリッジインターフェースの両方で VirtualMachine を構成する方法</p>
 </li>
 <li>
-<p>cloud-init <code>networkData</code> を使用してブリッジネットワークに静的IPアドレスを割り当てる方法</p>
+<p>cloud-init <code>networkData</code> を使用してブリッジネットワークに静的 IP アドレスを割り当てる方法</p>
 </li>
 <li>
-<p>Linuxブリッジセカンダリネットワーク上のVM間のレイヤー2接続性を確認する方法</p>
+<p>Linux bridge セカンダリネットワーク上の VM 間の L2 接続性を確認する方法</p>
 </li>
 </ul>
 </div>
@@ -1097,10 +1133,10 @@ oc delete namespace bridge-demo</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-connecting-vm-to-linux-bridge_virt-connecting-vm-to-linux-bridge" target="_blank" rel="noopener">OpenShift Virtualization - VMのLinuxブリッジへの接続</a></p>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-connecting-vm-to-linux-bridge_virt-connecting-vm-to-linux-bridge" target="_blank" rel="noopener">OpenShift Virtualization - VM の Linux ブリッジへの接続</a></p>
 </li>
 <li>
-<p><a href="https://nmstate.io/devel/yaml_api.html" target="_blank" rel="noopener">NMState APIガイド</a></p>
+<p><a href="https://nmstate.io/devel/yaml_api.html" target="_blank" rel="noopener">NMState API ガイド</a></p>
 </li>
 </ul>
 </div>

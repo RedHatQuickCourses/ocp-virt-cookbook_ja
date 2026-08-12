@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Cloud-init IP 設定トラブルシューティングガイド :: OpenShift Virtualization cookbook</title>
+    <title>cloud-init IP 設定トラブルシューティングガイド :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="static-ip-configuration.html">
     <link rel="next" href="udn-primary-networks.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -291,7 +291,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">ネットワーク構成</a></li>
-    <li><a href="cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a></li>
+    <li><a href="cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a></li>
   </ul>
 </nav>
 </div>
@@ -300,11 +300,11 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Cloud-init IP 設定トラブルシューティングガイド</h1>
+<h1 class="page">cloud-init IP 設定トラブルシューティングガイド</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>本ガイドでは、OpenShift Virtualization における cloud-init を使用した IP アドレス設定に関する問題のトラブルシューティング手順、検証コマンド、および解決策を提供します。</p>
+<p>本ガイドでは、OpenShift Virtualization における cloud-init を使用した IP アドレス設定に関する問題のトラブルシューティング手順、検証コマンド、解決策を提供します。</p>
 </div>
 </div>
 </div>
@@ -357,7 +357,7 @@ oc get vmi &lt;vm-name&gt; -n &lt;namespace&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>空の場合、Guest Agent は実行されていません（<a href="#issue-1-guest-agent-not-running">Guest Agent の問題</a> を参照）。</p>
+<p>空の場合、Guest Agent は実行されていません (<a href="#issue-1-guest-agent-not-running">Guest Agent の問題</a> を参照)。</p>
 </div>
 </div>
 </div>
@@ -466,7 +466,7 @@ curl http://&lt;vm-ip&gt;</code></pre>
 <div class="sect3">
 <h4 id="_問題_dhcp_経由で_vm_が_ip_を取得できない"><a class="anchor" href="#_問題_dhcp_経由で_vm_が_ip_を取得できない"></a>問題: DHCP 経由で VM が IP を取得できない</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:</p>
+<p><strong>事象</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -475,7 +475,7 @@ curl http://&lt;vm-ip&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -546,11 +546,11 @@ sudo nmcli connection up "Wired connection 1"</code></pre>
 <div class="sect3">
 <h4 id="_問題_cloud_init_内のインターフェース名が間違っている"><a class="anchor" href="#_問題_cloud_init_内のインターフェース名が間違っている"></a>問題: cloud-init 内のインターフェース名が間違っている</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:
+<p><strong>事象</strong>:
 ネットワーク設定が適用されず、ログに「device eth0 not found」と表示される。</p>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -581,10 +581,10 @@ ip link show</code></pre>
 <p>最初のインターフェース: <code>enp1s0</code></p>
 </li>
 <li>
-<p>2番目のインターフェース: <code>enp2s0</code></p>
+<p>2 番目のインターフェース: <code>enp2s0</code></p>
 </li>
 <li>
-<p>3番目のインターフェース: <code>enp3s0</code></p>
+<p>3 番目のインターフェース: <code>enp3s0</code></p>
 </li>
 </ul>
 </div>
@@ -610,11 +610,11 @@ ip link show</code></pre>
 <div class="sect3">
 <h4 id="_問題_静的_ip_が適用されない"><a class="anchor" href="#_問題_静的_ip_が適用されない"></a>問題: 静的 IP が適用されない</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:
+<p><strong>事象</strong>:
 設定した静的 IP ではなく、VM が DHCP IP を取得してしまう。</p>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -699,7 +699,7 @@ sudo nmcli connection up "Wired connection 1"</code></pre>
 <div class="sect3">
 <h4 id="_問題_静的_ip_は適用されたが接続できない"><a class="anchor" href="#_問題_静的_ip_は適用されたが接続できない"></a>問題: 静的 IP は適用されたが接続できない</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:</p>
+<p><strong>事象</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -712,7 +712,7 @@ ping 192.168.1.1
 </div>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -768,11 +768,11 @@ ping -c 1 192.168.1.1</code></pre>
 <div class="sect3">
 <h4 id="_問題_セカンダリインターフェースが設定されない"><a class="anchor" href="#_問題_セカンダリインターフェースが設定されない"></a>問題: セカンダリインターフェースが設定されない</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:
+<p><strong>事象</strong>:
 プライマリインターフェースのみ IP を取得し、セカンダリインターフェースがダウンしているか未設定の状態。</p>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -851,11 +851,11 @@ oc describe network-attachment-definition &lt;nad-name&gt; -n &lt;namespace&gt;<
 <div class="sect3">
 <h4 id="_問題_デフォルトルートの競合"><a class="anchor" href="#_問題_デフォルトルートの競合"></a>問題: デフォルトルートの競合</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:
+<p><strong>事象</strong>:
 両方のインターフェースにデフォルトルートがあり、ルーティングの問題が発生している。</p>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -929,11 +929,11 @@ enp2s0:
 <div class="sect3">
 <h4 id="_問題_vlan_インターフェースが作成されない"><a class="anchor" href="#_問題_vlan_インターフェースが作成されない"></a>問題: VLAN インターフェースが作成されない</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:
+<p><strong>事象</strong>:
 VLAN インターフェース (例: <code>enp2s0.100</code>) が存在しない。</p>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1001,11 +1001,11 @@ grep -i vlan /var/log/cloud-init.log</code></pre>
 <div class="sect3">
 <h4 id="_問題_vlan_インターフェースに接続性がない"><a class="anchor" href="#_問題_vlan_インターフェースに接続性がない"></a>問題: VLAN インターフェースに接続性がない</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:
+<p><strong>事象</strong>:
 VLAN インターフェースは存在するがネットワークに到達できない。</p>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1071,11 +1071,11 @@ tcpdump -i enp2s0 -n vlan 100</code></pre>
 <div class="sect3">
 <h4 id="_問題_ipv6_アドレスが適用されない"><a class="anchor" href="#_問題_ipv6_アドレスが適用されない"></a>問題: IPv6 アドレスが適用されない</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:
+<p><strong>事象</strong>:
 IPv4 のみ設定され、IPv6 アドレスがない。</p>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1135,7 +1135,7 @@ ip -6 addr show</code></pre>
 <div class="sect3">
 <h4 id="_問題_dns_が機能しない"><a class="anchor" href="#_問題_dns_が機能しない"></a>問題: DNS が機能しない</h4>
 <div class="paragraph">
-<p><strong>症状</strong>:</p>
+<p><strong>事象</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1148,7 +1148,7 @@ ping google.com
 </div>
 </div>
 <div class="paragraph">
-<p><strong>診断</strong>:</p>
+<p><strong>調査</strong>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1214,7 +1214,7 @@ nslookup google.com</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_診断コマンド"><a class="anchor" href="#_診断コマンド"></a>診断コマンド</h2>
+<h2 id="_調査コマンド"><a class="anchor" href="#_調査コマンド"></a>調査コマンド</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_ネットワークステータスの全確認"><a class="anchor" href="#_ネットワークステータスの全確認"></a>ネットワークステータスの全確認</h3>
@@ -1230,10 +1230,10 @@ ip route show
 echo "=== DNS ==="
 cat /etc/resolv.conf
 
-echo "=== Cloud-init Status ==="
+echo "=== cloud-init Status ==="
 cloud-init status --long
 
-echo "=== Cloud-init Network Config ==="
+echo "=== cloud-init Network Config ==="
 sudo cat /var/lib/cloud/instance/network-config.txt
 
 echo "=== NetworkManager Connections ==="
@@ -1307,24 +1307,24 @@ cloud-init status --long</code></pre>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1番目 (デフォルト Pod ネットワーク)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 番目 (デフォルト Pod ネットワーク)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>enp1s0</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">プライマリネットワーク (DHCP)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">2番目 (Multus/NAD)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2 番目 (Multus/NAD)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>enp2s0</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">セカンダリネットワーク</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">3番目 (Multus/NAD)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 番目 (Multus/NAD)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>enp3s0</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">3番目のネットワーク</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 番目のネットワーク</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">4番目 (Multus/NAD)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4 番目 (Multus/NAD)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>enp4s0</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">4番目のネットワーク</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4 番目のネットワーク</p></td>
 </tr>
 </tbody>
 </table>
@@ -1376,7 +1376,7 @@ cloud-init status --long</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="https://cloudinit.readthedocs.io/en/latest/reference/network-config.html" target="_blank" rel="noopener">Cloud-init ドキュメント - ネットワーク設定</a></p>
+<p><a href="https://cloudinit.readthedocs.io/en/latest/reference/network-config.html" target="_blank" rel="noopener">cloud-init ドキュメント - ネットワーク設定</a></p>
 </li>
 <li>
 <p><a href="https://netplan.io/examples/" target="_blank" rel="noopener">Netplan 設定例</a></p>
@@ -1451,7 +1451,7 @@ status: done</code></pre>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="static-ip-configuration.html">静的IPの設定</a></span>
+  <span class="prev"><a href="static-ip-configuration.html">静的 IP の設定</a></span>
   <span class="next"><a href="udn-primary-networks.html">UDN プライマリネットワーク</a></span>
 </nav>
 </article>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>VirtIOドライバーを使用したWindows VMのデプロイ :: OpenShift Virtualization cookbook</title>
+    <title>VirtIO ドライバーを使用した Windows VM のデプロイ :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="remote-access-windows-vms.html">
     <link rel="next" href="infrastructure-node-placement.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -291,7 +291,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">仮想マシンの設定</a></li>
-    <li><a href="windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a></li>
+    <li><a href="windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a></li>
   </ul>
 </nav>
 </div>
@@ -300,15 +300,15 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">VirtIOドライバーを使用したWindows VMのデプロイ</h1>
+<h1 class="page">VirtIO ドライバーを使用した Windows VM のデプロイ</h1>
 <div class="sect1">
 <h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>このチュートリアルでは、最適なパフォーマンスを得るために、VirtIOドライバーを使用してOpenShift Virtualization上にWindows仮想マシン（VM）をデプロイする方法を説明します。VirtIOドライバーは、ネットワーク、ストレージ、およびその他の重要なVMコンポーネントに対して準仮想化I/O操作を有効にすることで、エミュレートされたハードウェアと比較して大幅なパフォーマンス向上を実現します。</p>
+<p>このチュートリアルでは、最適なパフォーマンスを得るために、VirtIO ドライバーを使用して OpenShift Virtualization 上に Windows 仮想マシン (VM) をデプロイする方法を説明します。VirtIO ドライバーは、ネットワーク、ストレージ、およびその他の重要な VM コンポーネントに対して準仮想化 I/O 操作を有効にすることで、エミュレートされたハードウェアと比較して大幅なパフォーマンス向上を実現します。</p>
 </div>
 <div class="paragraph">
-<p>Windows VMを作成し、Windowsのインストールプロセス中にVirtIOドライバーをインストールして、OpenShift Virtualizationとの統合を強化するためにゲストエージェントを構成します。</p>
+<p>Windows VM を作成し、Windows のインストールプロセス中に VirtIO ドライバーをインストールして、OpenShift Virtualization との統合を強化するためにゲストエージェントを構成します。</p>
 </div>
 </div>
 </div>
@@ -318,22 +318,22 @@
 <div class="ulist">
 <ul>
 <li>
-<p><strong>OpenShift 4.18+</strong>（OpenShift Virtualizationオペレーターがインストール済みであること）</p>
+<p><strong>OpenShift 4.18+</strong> (OpenShift Virtualization Operator がインストール済みであること)</p>
 </li>
 <li>
-<p><strong>CLIツール</strong>: <code>oc</code> および <code>virtctl</code> がインストールされていること</p>
+<p><strong>CLI ツール</strong>: <code>oc</code> および <code>virtctl</code> がインストールされていること</p>
 </li>
 <li>
-<p><strong>WindowsインストールISO</strong> (Windows 10/11 または Server 2019/2022)</p>
+<p><strong>Windows インストール ISO</strong> (Windows 10/11 または Server 2019/2022)</p>
 </li>
 <li>
-<p><strong>VirtIOドライバーISO</strong> (Red HatカスタマーポータルまたはFedoraプロジェクトから入手)</p>
+<p><strong>VirtIO ドライバー ISO</strong> (Red Hat カスタマーポータルまたは Fedora プロジェクトから入手)</p>
 </li>
 <li>
-<p><strong>有効なWindowsライセンス</strong>およびプロダクトキー</p>
+<p><strong>有効な Windows ライセンス</strong>およびプロダクトキー</p>
 </li>
 <li>
-<p><strong>クラスターリソース</strong>: 4GB以上のRAM、60GB以上の利用可能なストレージ</p>
+<p><strong>クラスターリソース</strong>: 4GB 以上の RAM、60GB 以上の利用可能なストレージ</p>
 </li>
 </ul>
 </div>
@@ -348,10 +348,10 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_1_virtioドライバーのダウンロードとアップロード"><a class="anchor" href="#_ステップ_1_virtioドライバーのダウンロードとアップロード"></a>ステップ 1: VirtIOドライバーのダウンロードとアップロード</h2>
+<h2 id="_ステップ_1_virtio_ドライバーのダウンロードとアップロード"><a class="anchor" href="#_ステップ_1_virtio_ドライバーのダウンロードとアップロード"></a>ステップ 1: VirtIO ドライバーのダウンロードとアップロード</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>FedoraプロジェクトからVirtIOドライバーのISOをダウンロードします。</p>
+<p>Fedora プロジェクトから VirtIO ドライバーの ISO をダウンロードします。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -359,7 +359,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p>VirtIOドライバーISO用のDataVolumeを作成します。</p>
+<p>VirtIO ドライバー ISO 用の DataVolume を作成します。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/windows-vm-virtio-drivers/virtio-drivers-dv.yaml" class="xref attachment">virtio-drivers-dv.yaml をダウンロード</a></p>
@@ -386,7 +386,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>VirtIOドライバーのISOをアップロードします。</p>
+<p>VirtIO ドライバーの ISO をアップロードします。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -394,15 +394,15 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>重要: CDIアップロードプロキシが自己署名証明書を使用する開発環境では、<code>--insecure</code> フラグが必要になることがよくあります。</p>
+<p>重要: CDI アップロードプロキシが自己署名証明書を使用する開発環境では、<code>--insecure</code> フラグが必要になることがよくあります。</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_2_windowsインストールisoのアップロード"><a class="anchor" href="#_ステップ_2_windowsインストールisoのアップロード"></a>ステップ 2: WindowsインストールISOのアップロード</h2>
+<h2 id="_ステップ_2_windows_インストール_iso_のアップロード"><a class="anchor" href="#_ステップ_2_windows_インストール_iso_のアップロード"></a>ステップ 2: Windows インストール ISO のアップロード</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>WindowsインストールISO用のDataVolumeを作成します。</p>
+<p>Windows インストール ISO 用の DataVolume を作成します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -426,7 +426,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>WindowsインストールISOをアップロードします（<code>windows.iso</code> は実際のISOファイル名に置き換えてください）。</p>
+<p>Windows インストール ISO をアップロードします (<code>windows.iso</code> は実際の ISO ファイル名に置き換えてください) 。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -436,10 +436,10 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_3_virtio構成を使用したwindows_vmの作成"><a class="anchor" href="#_ステップ_3_virtio構成を使用したwindows_vmの作成"></a>ステップ 3: VirtIO構成を使用したWindows VMの作成</h2>
+<h2 id="_ステップ_3_virtio_構成を使用した_windows_vm_の作成"><a class="anchor" href="#_ステップ_3_virtio_構成を使用した_windows_vm_の作成"></a>ステップ 3: VirtIO 構成を使用した Windows VM の作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VirtIOデバイスと適切なブート順序を使用してWindows仮想マシンを作成します。</p>
+<p>VirtIO デバイスと適切なブート順序を使用して Windows 仮想マシンを作成します。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/windows-vm-virtio-drivers/windows-vm-virtio.yaml" class="xref attachment">windows-vm-virtio.yaml をダウンロード</a></p>
@@ -553,7 +553,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>VMが起動するのを待ちます。</p>
+<p>VM が起動するのを待ちます。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -566,10 +566,10 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_4_virtioストレージドライバーを使用したwindowsのインストール"><a class="anchor" href="#_ステップ_4_virtioストレージドライバーを使用したwindowsのインストール"></a>ステップ 4: VirtIOストレージドライバーを使用したWindowsのインストール</h2>
+<h2 id="_ステップ_4_virtio_ストレージドライバーを使用した_windows_のインストール"><a class="anchor" href="#_ステップ_4_virtio_ストレージドライバーを使用した_windows_のインストール"></a>ステップ 4: VirtIO ストレージドライバーを使用した Windows のインストール</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VMコンソールにアクセスしてWindowsのインストールを開始します。</p>
+<p>VM コンソールにアクセスして Windows のインストールを開始します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -577,50 +577,50 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>または、OpenShift Webコンソールを使用します: <strong>Virtualization</strong> → <strong>VirtualMachines</strong> → <strong>windows-vm-virtio</strong> → <strong>Console</strong> タブ。</p>
+<p>または、OpenShift Web コンソールを使用します: <strong>Virtualization</strong> → <strong>VirtualMachines</strong> → <strong>windows-vm-virtio</strong> → <strong>Console</strong> タブ。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Windowsのインストールを開始</strong>:</p>
+<p><strong>Windows のインストールを開始</strong>:</p>
 <div class="paragraph">
-<p>VMが起動すると、最初に「No bootable device found」というメッセージが表示される場合があります。これは通常の動作です。UEFIブートメニューを操作する必要があります。</p>
+<p>VM が起動すると、最初に「No bootable device found」というメッセージが表示される場合があります。これは通常の動作です。UEFI ブートメニューを操作する必要があります。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>UEFIメニューが表示されるのを待つか、プロンプトが表示されたら何かキーを押して「boot from other media or DVD」を実行します。</p>
+<p>UEFI メニューが表示されるのを待つか、プロンプトが表示されたら何かキーを押して「boot from other media or DVD」を実行します。</p>
 </li>
 <li>
 <p>ブートメニューに移動し、「Boot from DVD/CD」を選択します。</p>
 </li>
 <li>
-<p>利用可能な最初のオプション（通常はWindows ISO）を選択します。</p>
+<p>利用可能な最初のオプション (通常は Windows ISO) を選択します。</p>
 </li>
 <li>
-<p>Windowsのインストールが開始されます。初期セットアップ画面を進めてください。</p>
+<p>Windows のインストールが開始されます。初期セットアップ画面を進めてください。</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong>VirtIOストレージドライバーの読み込み</strong>: 「Windowsのインストール場所を選択してください」画面に到達したら、以下を実行します。</p>
+<p><strong>VirtIO ストレージドライバーの読み込み</strong>: 「Windows のインストール場所を選択してください」画面に到達したら、以下を実行します。</p>
 <div class="ulist">
 <ul>
 <li>
 <p><strong>ドライバーの読み込み</strong>をクリックします。</p>
 </li>
 <li>
-<p>VirtIOドライバーCD（通常は D: または E: ドライブ）を参照します。</p>
+<p>VirtIO ドライバー CD (通常は D: または E: ドライブ) を参照します。</p>
 </li>
 <li>
 <p><code>viostor{windows-version}\amd64\</code> フォルダーに移動します。</p>
 </li>
 <li>
-<p>Windows Server 2022の場合: <code>viostor\2k22\amd64\</code></p>
+<p>Windows Server 2022 の場合: <code>viostor\2k22\amd64\</code></p>
 </li>
 <li>
-<p>Windows 11の場合: <code>viostor\w11\amd64\</code></p>
+<p>Windows 11 の場合: <code>viostor\w11\amd64\</code></p>
 </li>
 <li>
 <p><strong>Red Hat VirtIO SCSI Controller</strong> を選択し、<strong>次へ</strong>をクリックします。</p>
@@ -629,20 +629,20 @@ EOF</code></pre>
 </div>
 </li>
 <li>
-<p><strong>インストールディスクの選択</strong>: インストール対象のリストにVirtIOディスクが表示されます。これを選択してWindowsのインストールを続行します。</p>
+<p><strong>インストールディスクの選択</strong>: インストール対象のリストに VirtIO ディスクが表示されます。これを選択して Windows のインストールを続行します。</p>
 </li>
 <li>
-<p><strong>インストールの完了</strong>: 標準のWindowsセットアップ手順に従います。</p>
+<p><strong>インストールの完了</strong>: 標準の Windows セットアップ手順に従います。</p>
 </li>
 </ol>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_5_残りのvirtioドライバーのインストール"><a class="anchor" href="#_ステップ_5_残りのvirtioドライバーのインストール"></a>ステップ 5: 残りのVirtIOドライバーのインストール</h2>
+<h2 id="_ステップ_5_残りの_virtio_ドライバーのインストール"><a class="anchor" href="#_ステップ_5_残りの_virtio_ドライバーのインストール"></a>ステップ 5: 残りの VirtIO ドライバーのインストール</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Windowsのインストールが完了し、デスクトップに到達したら、以下を実行します。</p>
+<p>Windows のインストールが完了し、デスクトップに到達したら、以下を実行します。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -660,7 +660,7 @@ EOF</code></pre>
 <p><strong>ドライバーの更新</strong> → <strong>コンピューターを参照してドライバーを検索</strong>を選択します。</p>
 </li>
 <li>
-<p>VirtIO CD内の <code>NetKVM{windows-version}\amd64\</code> に移動します。</p>
+<p>VirtIO CD 内の <code>NetKVM{windows-version}\amd64\</code> に移動します。</p>
 </li>
 <li>
 <p>インストールを完了します。</p>
@@ -673,21 +673,21 @@ EOF</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Balloonドライバー</strong>: 「PCIデバイス」を更新 → <code>Balloon{windows-version}\amd64\</code></p>
+<p><strong>Balloon ドライバー</strong>: 「PCI デバイス」を更新 → <code>Balloon{windows-version}\amd64\</code></p>
 </li>
 <li>
-<p><strong>シリアルドライバー</strong>: 「PCIシンプル通信コントローラー」を更新 → <code>vioserial{windows-version}\amd64\</code></p>
+<p><strong>シリアルドライバー</strong>: 「PCI シンプル通信コントローラー」を更新 → <code>vioserial{windows-version}\amd64\</code></p>
 </li>
 <li>
-<p><strong>入力ドライバー</strong>: 「PCI入力デバイス」を更新 → <code>vioinput{windows-version}\amd64\</code></p>
+<p><strong>入力ドライバー</strong>: 「PCI 入力デバイス」を更新 → <code>vioinput{windows-version}\amd64\</code></p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong>QEMUゲストエージェントのインストール</strong>:</p>
+<p><strong>QEMU guest agent のインストール</strong>:</p>
 <div class="paragraph">
-<p>VirtIOドライバーCDから <code>guest-agent\qemu-ga-x86_64.msi</code> を実行し、インストールウィザードに従います。</p>
+<p>VirtIO ドライバー CD から <code>guest-agent\qemu-ga-x86_64.msi</code> を実行し、インストールウィザードに従います。</p>
 </div>
 </li>
 </ol>
@@ -698,7 +698,7 @@ EOF</code></pre>
 <h2 id="_ステップ_6_インストールの確認"><a class="anchor" href="#_ステップ_6_インストールの確認"></a>ステップ 6: インストールの確認</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>すべてのVirtIOドライバーが正しくインストールされていることを確認します。</p>
+<p>すべての VirtIO ドライバーが正しくインストールされていることを確認します。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -709,7 +709,7 @@ EOF</code></pre>
 <p><strong>ゲストエージェントの確認</strong>: <strong>サービス</strong> (services.msc) を開き、<strong>QEMU Guest Agent</strong> が実行中であることを確認します。</p>
 </li>
 <li>
-<p><strong>統合のテスト</strong>: OpenShiftから、ゲストエージェントの通信を確認します。</p>
+<p><strong>統合のテスト</strong>: OpenShift から、ゲストエージェントの通信を確認します。</p>
 </li>
 </ol>
 </div>
@@ -719,7 +719,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>VMのパフォーマンスメトリックを確認します。</p>
+<p>VM のパフォーマンスメトリックを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -729,10 +729,10 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_virtioドライバーの利点"><a class="anchor" href="#_virtioドライバーの利点"></a>VirtIOドライバーの利点</h2>
+<h2 id="_virtio_ドライバーの利点"><a class="anchor" href="#_virtio_ドライバーの利点"></a>VirtIO ドライバーの利点</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VirtIOドライバーをインストールすると、Windows VMで以下の利点が得られます。</p>
+<p>VirtIO ドライバーをインストールすると、Windows VM で以下の利点が得られます。</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -748,11 +748,11 @@ EOF</code></pre>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ネットワーク (NetKVM)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ネットワークスループットが最大10倍向上</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ネットワークスループットが最大 10 倍向上</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ストレージ (viostor)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ストレージのレイテンシが大幅に削減され、IOPSが向上</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ストレージのレイテンシが大幅に削減され、IOPS が向上</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>バルーン (vioser)</strong></p></td>
@@ -786,24 +786,24 @@ EOF</code></pre>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>インストール中のTPM 2.0エラー</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">TPMデバイスの不足</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">VMテンプレートにはWindows 11の要件を満たすTPMサポートが含まれています</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>インストール中の TPM 2.0 エラー</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TPM デバイスの不足</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM テンプレートには Windows 11 の要件を満たす TPM サポートが含まれています</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>起動デバイスが見つからない</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ブート順序の誤り</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Windows ISOが <code>bootOrder: 1</code> で、ルートディスクが <code>bootOrder: 2</code> であることを確認してください</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Windows ISO が <code>bootOrder: 1</code> で、ルートディスクが <code>bootOrder: 2</code> であることを確認してください</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>インストール中にディスクが表示されない</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">VirtIOストレージドライバーが読み込まれていない</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">インストールディスクを選択する前にviostorドライバーを読み込んでください</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtIO ストレージドライバーが読み込まれていない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">インストールディスクを選択する前に viostor ドライバーを読み込んでください</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ネットワークパフォーマンスが低い</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">NetKVMドライバーの不足</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Windowsインストール後にデバイスマネージャーからネットワークドライバーをインストールしてください</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NetKVM ドライバーの不足</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Windows インストール後にデバイスマネージャーからネットワークドライバーをインストールしてください</p></td>
 </tr>
 </tbody>
 </table>
@@ -811,7 +811,7 @@ EOF</code></pre>
 <div class="sect2">
 <h3 id="_アップロードの問題"><a class="anchor" href="#_アップロードの問題"></a>アップロードの問題</h3>
 <div class="paragraph">
-<p>ISOアップロード中にTLS証明書エラーが発生する場合:</p>
+<p>ISO アップロード中に TLS 証明書エラーが発生する場合:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -845,19 +845,19 @@ oc delete dv windows-installation-iso virtio-drivers-iso</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>DataVolumeを使用してVirtIOドライバーとWindowsインストールISOをアップロードする</p>
+<p>DataVolume を使用して VirtIO ドライバーと Windows インストール ISO をアップロードする</p>
 </li>
 <li>
-<p>VirtIOデバイスと適切なハードウェア構成を備えたWindows VMを作成する</p>
+<p>VirtIO デバイスと適切なハードウェア構成を備えた Windows VM を作成する</p>
 </li>
 <li>
-<p>最適なパフォーマンスを得るために、Windowsインストール中にVirtIOストレージドライバーをインストールする</p>
+<p>最適なパフォーマンスを得るために、Windows インストール中に VirtIO ストレージドライバーをインストールする</p>
 </li>
 <li>
-<p>インストール後に残りのVirtIOドライバーとQEMUゲストエージェントを構成する</p>
+<p>インストール後に残りの VirtIO ドライバーと QEMU guest agent を構成する</p>
 </li>
 <li>
-<p>ドライバーの適切なインストールと、OpenShift VirtualizationとのVM統合を確認する</p>
+<p>ドライバーの適切なインストールと、OpenShift Virtualization との VM 統合を確認する</p>
 </li>
 <li>
 <p>一般的なインストール問題のトラブルシューティングを行う</p>
@@ -865,7 +865,7 @@ oc delete dv windows-installation-iso virtio-drivers-iso</code></pre>
 </ul>
 </div>
 <div class="paragraph">
-<p>これで、Windows VMは完全なVirtIOドライバーサポートとOpenShift Virtualizationとの統合を備え、エンタープライズグレードのパフォーマンスを発揮できるようになりました。</p>
+<p>これで、Windows VM は完全な VirtIO ドライバーサポートと OpenShift Virtualization との統合を備え、エンタープライズグレードのパフォーマンスを発揮できるようになりました。</p>
 </div>
 </div>
 </div>
@@ -875,13 +875,13 @@ oc delete dv windows-installation-iso virtio-drivers-iso</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-installing-virtio-drivers.html" target="_blank" rel="noopener">OpenShift VirtIOドライバーのインストール</a></p>
+<p><a href="https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-installing-virtio-drivers.html" target="_blank" rel="noopener">OpenShift VirtIO ドライバーのインストール</a></p>
 </li>
 <li>
-<p><a href="https://kubevirt.io/user-guide/" target="_blank" rel="noopener">KubeVirtユーザーガイド</a></p>
+<p><a href="https://kubevirt.io/user-guide/" target="_blank" rel="noopener">KubeVirt ユーザーガイド</a></p>
 </li>
 <li>
-<p><a href="remote-access-windows-vms.html" class="xref page">Windows VMへのリモートアクセス</a></p>
+<p><a href="remote-access-windows-vms.html" class="xref page">Windows VM へのリモートアクセス</a></p>
 </li>
 </ul>
 </div>
@@ -889,7 +889,7 @@ oc delete dv windows-installation-iso virtio-drivers-iso</code></pre>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a></span>
-  <span class="next"><a href="infrastructure-node-placement.html">Infrastructure Node Placement</a></span>
+  <span class="next"><a href="infrastructure-node-placement.html">Infrastructure 配置戦略</a></span>
 </nav>
 </article>
   </div>

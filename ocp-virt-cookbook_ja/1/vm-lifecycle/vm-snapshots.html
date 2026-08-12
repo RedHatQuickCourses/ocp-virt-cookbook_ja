@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>VMスナップショットの作成と管理 :: OpenShift Virtualization cookbook</title>
+    <title>VM スナップショットの作成と管理 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="cloning-vms.html">
     <link rel="next" href="boot-order-boot-sources.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../getting-started/index.html">はじめに</a>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -290,8 +290,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
-    <li><a href="index.html">VMライフサイクル管理</a></li>
-    <li><a href="vm-snapshots.html">VMスナップショット</a></li>
+    <li><a href="index.html">VM ライフサイクル管理</a></li>
+    <li><a href="vm-snapshots.html">VM スナップショット</a></li>
   </ul>
 </nav>
 </div>
@@ -300,28 +300,28 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">VMスナップショットの作成と管理</h1>
+<h1 class="page">VM スナップショットの作成と管理</h1>
 <div class="sect1">
 <h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VMスナップショットは、ディスクや（オプションで）メモリ状態を含む、特定の時点における仮想マシンの状態をキャプチャします。スナップショットを使用すると、アップデート失敗後の迅速なロールバックや、変更の安全なテスト、メンテナンス作業前の復元ポイントの作成が可能になります。</p>
+<p>VM スナップショットは、ディスクや (オプションで) メモリ状態を含む、特定の時点における仮想マシンの状態をキャプチャします。スナップショットを使用すると、アップデート失敗後の迅速なロールバックや、変更の安全なテスト、メンテナンス作業前の復元ポイントの作成が可能になります。</p>
 </div>
 <div class="paragraph">
-<p>このチュートリアルでは、OpenShift VirtualizationでVMスナップショットを作成、管理、および復元する方法について説明します。</p>
+<p>このチュートリアルでは、OpenShift Virtualization で VM スナップショットを作成、管理、および復元する方法について説明します。</p>
 </div>
 <div class="sect2">
 <h3 id="_学習内容"><a class="anchor" href="#_学習内容"></a>学習内容</h3>
 <div class="ulist">
 <ul>
 <li>
-<p>VMスナップショットリソースの仕組みと、オンラインスナップショットおよびオフラインスナップショットの違い</p>
+<p>VM スナップショットリソースの仕組みと、オンラインスナップショット、オフラインスナップショットの違い</p>
 </li>
 <li>
-<p>WebコンソールおよびCLIを使用したスナップショットの作成、管理、削除方法</p>
+<p>Web コンソールおよび CLI を使用したスナップショットの作成、管理、削除方法</p>
 </li>
 <li>
-<p>スナップショットからのVMの復元方法</p>
+<p>スナップショットからの VM の復元方法</p>
 </li>
 <li>
 <p>スナップショットに関するストレージの要件と考慮事項</p>
@@ -345,23 +345,23 @@
 <div class="ulist">
 <ul>
 <li>
-<p>OpenShift VirtualizationがインストールされたOpenShift 4.18以降</p>
+<p>OpenShift Virtualization がインストールされた OpenShift 4.18 以降</p>
 </li>
 <li>
-<p>スナップショット対象となる実行中または停止中のVM</p>
+<p>スナップショット対象となる実行中または停止中の VM</p>
 </li>
 <li>
-<p>CSIスナップショットをサポートするストレージクラス</p>
+<p>CSI スナップショットをサポートするストレージクラス</p>
 </li>
 <li>
-<p>インストール済みの <code>oc</code> および <code>virtctl</code> CLIツール</p>
+<p>インストール済みの <code>oc</code> および <code>virtctl</code> CLI ツール</p>
 </li>
 </ul>
 </div>
 <div class="sect2">
 <h3 id="_スナップショットストレージのサポート確認"><a class="anchor" href="#_スナップショットストレージのサポート確認"></a>スナップショットストレージのサポート確認</h3>
 <div class="paragraph">
-<p>スナップショットを作成する前に、ストレージがCSIスナップショットをサポートしていることを確認します。</p>
+<p>スナップショットを作成する前に、ストレージが CSI スナップショットをサポートしていることを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -379,28 +379,28 @@ ocs-storagecluster-rbdplugin-snapclass   openshift-storage.rbd.csi.ceph.com   De
 </div>
 </div>
 <div class="paragraph">
-<p>VolumeSnapshotClassが存在しない場合は、クラスター管理者に連絡し、ストレージプロバイダー用に設定を依頼してください。</p>
+<p>VolumeSnapshotClass が存在しない場合は、クラスター管理者に連絡し、ストレージプロバイダー用に設定を依頼してください。</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_vmスナップショットの基礎知識"><a class="anchor" href="#_vmスナップショットの基礎知識"></a>VMスナップショットの基礎知識</h2>
+<h2 id="_vm_スナップショットの基礎知識"><a class="anchor" href="#_vm_スナップショットの基礎知識"></a>VM スナップショットの基礎知識</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_スナップショットリソース"><a class="anchor" href="#_スナップショットリソース"></a>スナップショットリソース</h3>
 <div class="paragraph">
-<p>OpenShift Virtualizationでは、スナップショット用に主に2つのリソースを使用します。</p>
+<p>OpenShift Virtualization では、スナップショット用に主に 2 つのリソースを使用します。</p>
 </div>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>VirtualMachineSnapshot</strong></dt>
 <dd>
-<p>VMのスナップショットを作成するためのリクエストです。ソースVMおよびスナップショット設定への参照が含まれます。</p>
+<p>VM のスナップショットを作成するためのリクエストです。ソース VM およびスナップショット設定への参照が含まれます。</p>
 </dd>
 <dt class="hdlist1"><strong>VirtualMachineSnapshotContent</strong></dt>
 <dd>
-<p>実際のスナップショットデータであり、VirtualMachineSnapshotが処理されると自動的に作成されます。基盤となるVolumeSnapshotへの参照が含まれます。</p>
+<p>実際のスナップショットデータであり、VirtualMachineSnapshot が処理されると自動的に作成されます。基盤となる VolumeSnapshot への参照が含まれます。</p>
 </dd>
 </dl>
 </div>
@@ -423,13 +423,13 @@ ocs-storagecluster-rbdplugin-snapclass   openshift-storage.rbd.csi.ceph.com   De
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">オフラインスナップショット</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">VMが停止している間に取得されるスナップショット。一貫した状態が保証される。</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">VMが停止している必要がある。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM が停止している間に取得されるスナップショット。一貫した状態が保証される。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM が停止している必要がある。</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">オンラインスナップショット</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">VMの実行中に取得されるスナップショット。一貫性のためにファイルシステムの静止（quiescing）が必要。</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">VM内にQEMUゲストエージェントがインストールされ、実行されている必要がある。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM の実行中に取得されるスナップショット。一貫性のためにファイルシステムの静止 (quiescing) が必要。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM 内に QEMU guest agent がインストールされ、実行されている必要がある。</p></td>
 </tr>
 </tbody>
 </table>
@@ -440,17 +440,17 @@ ocs-storagecluster-rbdplugin-snapclass   openshift-storage.rbd.csi.ceph.com   De
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-クリティカルなワークロードの場合は、オフラインスナップショットを使用するか、ファイルシステムの一貫性を保証するためにオンラインスナップショット用のQEMUゲストエージェントがインストールされていることを確認してください。
+クリティカルなワークロードの場合は、オフラインスナップショットを使用するか、ファイルシステムの一貫性を保証するためにオンラインスナップショット用の QEMU guest agent がインストールされていることを確認してください。
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>オンラインスナップショットのデフォルトのタイムアウトは5分です。この期間内にスナップショットが完了しない場合、ステータスは <code>Failed</code> に設定され、ファイルシステムは復帰（thaw）し、VMは通常の動作を再開します。この期限は、VirtualMachineSnapshotのspecで <code>failureDeadline</code> フィールドを設定することで調整可能です（例: <code>failureDeadline: 10m</code>）。</p>
+<p>オンラインスナップショットのデフォルトのタイムアウトは 5 分です。この期間内にスナップショットが完了しない場合、ステータスは <code>Failed</code> に設定され、ファイルシステムは復帰 (thaw) し、VM は通常の動作を再開します。この期限は、VirtualMachineSnapshot の spec で <code>failureDeadline</code> フィールドを設定することで調整可能です (例: <code>failureDeadline: 10m</code>) 。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_スナップショットのインジケーション兆候"><a class="anchor" href="#_スナップショットのインジケーション兆候"></a>スナップショットのインジケーション（兆候）</h3>
+<h3 id="_スナップショットの表示_indication"><a class="anchor" href="#_スナップショットの表示_indication"></a>スナップショットの表示 (Indication)</h3>
 <div class="paragraph">
 <p>オンラインスナップショットの完了後、 <code>status.indications</code> フィールドでスナップショットがどのように取得されたかが報告されます。</p>
 </div>
@@ -461,31 +461,31 @@ ocs-storagecluster-rbdplugin-snapclass   openshift-storage.rbd.csi.ceph.com   De
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">インジケーション</th>
+<th class="tableblock halign-left valign-top">表示</th>
 <th class="tableblock halign-left valign-top">意味</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Online</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">スナップショット作成時にVMが実行されていた。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">スナップショット作成時に VM が実行されていた。</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>GuestAgent</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">QEMUゲストエージェントが正常にファイルシステムを静止させた。アプリケーション整合性のあるスナップショットである。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">QEMU guest agent が正常にファイルシステムを静止させた。アプリケーション整合性のあるスナップショットである。</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>NoGuestAgent</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">QEMUゲストエージェントがインストールされていないか、準備ができていない。クラッシュ整合性のみのスナップショットである。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">QEMU guest agent がインストールされていないか、準備ができていない。クラッシュ整合性のみのスナップショットである。</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>QuiesceFailed</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ゲストエージェントが静止を試みたが失敗した。スナップショットは作成されたが、アプリケーション整合性は保証されない。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">guest agent が静止を試みたが失敗した。スナップショットは作成されたが、アプリケーション整合性は保証されない。</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>スナップショットのインジケーションを確認します。</p>
+<p>スナップショットの Indication を確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -510,20 +510,20 @@ ocs-storagecluster-rbdplugin-snapclass   openshift-storage.rbd.csi.ceph.com   De
 <h2 id="_スナップショットの作成"><a class="anchor" href="#_スナップショットの作成"></a>スナップショットの作成</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_webコンソールを使用したスナップショットの作成"><a class="anchor" href="#_webコンソールを使用したスナップショットの作成"></a>Webコンソールを使用したスナップショットの作成</h3>
+<h3 id="_web_コンソールを使用したスナップショットの作成"><a class="anchor" href="#_web_コンソールを使用したスナップショットの作成"></a>Web コンソールを使用したスナップショットの作成</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
 <p><strong>Virtualization</strong> &#8594; <strong>VirtualMachines</strong> に移動します。</p>
 </li>
 <li>
-<p>スナップショットを取得するVMをクリックします。</p>
+<p>スナップショットを取得する VM をクリックします。</p>
 </li>
 <li>
 <p><strong>Snapshots</strong> タブに移動します。</p>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-snapshots/snapshot-tab-empty.png" alt="スナップショット取得前のSnapshotsタブ">
+<img src="_images/vm-snapshots/snapshot-tab-empty.png" alt="スナップショット取得前の Snapshots タブ">
 </div>
 </div>
 </li>
@@ -536,7 +536,7 @@ ocs-storagecluster-rbdplugin-snapclass   openshift-storage.rbd.csi.ceph.com   De
 </div>
 </li>
 <li>
-<p>スナップショットの名前と（オプションで）説明を入力します。</p>
+<p>スナップショットの名前と (オプションで) 説明を入力します。</p>
 </li>
 <li>
 <p><strong>Save</strong> をクリックします。</p>
@@ -544,18 +544,18 @@ ocs-storagecluster-rbdplugin-snapclass   openshift-storage.rbd.csi.ceph.com   De
 </ol>
 </div>
 <div class="paragraph">
-<p>作成が完了すると、Snapshotsタブにスナップショットのステータスが表示されます。</p>
+<p>作成が完了すると、Snapshots タブにスナップショットのステータスが表示されます。</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-snapshots/snapshot-tab-ready.png" alt="ReadyステータスとGuestAgent/Onlineインジケーションを示す完了したスナップショットが表示されたSnapshotsタブ">
+<img src="_images/vm-snapshots/snapshot-tab-ready.png" alt="Ready ステータスと GuestAgent/Online Indication を示す完了したスナップショットが表示された Snapshots タブ">
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_cliを使用したスナップショットの作成"><a class="anchor" href="#_cliを使用したスナップショットの作成"></a>CLIを使用したスナップショットの作成</h3>
+<h3 id="_cli_を使用したスナップショットの作成"><a class="anchor" href="#_cli_を使用したスナップショットの作成"></a>CLI を使用したスナップショットの作成</h3>
 <div class="paragraph">
-<p>VirtualMachineSnapshotリソースを作成します。</p>
+<p>VirtualMachineSnapshot リソースを作成します。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/vm-snapshots/vm-snapshot.yaml" class="xref attachment">vm-snapshot.yaml をダウンロード</a></p>
@@ -654,7 +654,7 @@ Status:
 <p><strong>Phase</strong>: <code>InProgress</code>、<code>Succeeded</code>、または <code>Failed</code></p>
 </li>
 <li>
-<p><strong>ReadyToUse</strong>: <code>true</code> の場合、復元に利用可能（WebコンソールのStatus列では <strong>Ready</strong> と表示）</p>
+<p><strong>ReadyToUse</strong>: <code>true</code> の場合、復元に利用可能 (Web コンソールの Status 列では <strong>Ready</strong> と表示)</p>
 </li>
 <li>
 <p><strong>Error</strong>: スナップショットが失敗した場合のエラーメッセージ</p>
@@ -670,7 +670,7 @@ Status:
 <div class="sect2">
 <h3 id="_スナップショットの一覧表示"><a class="anchor" href="#_スナップショットの一覧表示"></a>スナップショットの一覧表示</h3>
 <div class="paragraph">
-<p><strong>名前空間内の全スナップショットを一覧表示:</strong></p>
+<p><strong>namespace 内の全スナップショットを一覧表示:</strong></p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -678,7 +678,7 @@ Status:
 </div>
 </div>
 <div class="paragraph">
-<p><strong>全名前空間のスナップショットを一覧表示:</strong></p>
+<p><strong>全 namespace のスナップショットを一覧表示:</strong></p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -686,12 +686,12 @@ Status:
 </div>
 </div>
 <div class="paragraph">
-<p><strong>Webコンソールでスナップショットを表示:</strong></p>
+<p><strong>Web コンソールでスナップショットを表示:</strong></p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>VMの詳細ページに移動します。</p>
+<p>VM の詳細ページに移動します。</p>
 </li>
 <li>
 <p><strong>Snapshots</strong> タブをクリックします。</p>
@@ -703,7 +703,7 @@ Status:
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-snapshots/snapshot-tab-ready.png" alt="ステータスと作成時刻が記載されたスナップショットリストを示すSnapshotsタブ">
+<img src="_images/vm-snapshots/snapshot-tab-ready.png" alt="ステータスと作成時刻が記載されたスナップショットリストを示す Snapshots タブ">
 </div>
 </div>
 </div>
@@ -715,7 +715,7 @@ Status:
 </div>
 </div>
 <div class="paragraph">
-<p>基盤となるVolumeSnapshotを確認する場合:</p>
+<p>基盤となる VolumeSnapshot を確認する場合:</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -752,7 +752,7 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 <h2 id="_スナップショットからの復元"><a class="anchor" href="#_スナップショットからの復元"></a>スナップショットからの復元</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>スナップショットからVMを復元すると、VMのディスクがスナップショット取得時の状態に戻ります。</p>
+<p>スナップショットから VM を復元すると、VM のディスクがスナップショット取得時の状態に戻ります。</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -761,32 +761,32 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-スナップショットから復元する前に、VMを停止する必要があります。VirtualMachineRestoreのspecに <code>targetReadinessPolicy: StopTarget</code> を設定することで、このプロセスを自動化できます。他のオプションには <code>FailImmediate</code>（デフォルト）、<code>WaitGracePeriod</code>（最大5分待機）、<code>WaitEventually</code>（無期限待機）があります。詳細については、<a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/backup-and-restore" target="_blank" rel="noopener">公式ドキュメント</a>を参照してください。
+スナップショットから復元する前に、VM を停止する必要があります。VirtualMachineRestore の spec に <code>targetReadinessPolicy: StopTarget</code> を設定することで、このプロセスを自動化できます。他のオプションには <code>FailImmediate</code> (デフォルト) 、<code>WaitGracePeriod</code> (最大 5 分待機) 、<code>WaitEventually</code> (無期限待機) があります。詳細については、<a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/backup-and-restore" target="_blank" rel="noopener">公式ドキュメント</a>を参照してください。
 </td>
 </tr>
 </table>
 </div>
 <div class="sect2">
-<h3 id="_webコンソールを使用した復元"><a class="anchor" href="#_webコンソールを使用した復元"></a>Webコンソールを使用した復元</h3>
+<h3 id="_web_コンソールを使用した復元"><a class="anchor" href="#_web_コンソールを使用した復元"></a>Web コンソールを使用した復元</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>VMの詳細ページに移動します。</p>
+<p>VM の詳細ページに移動します。</p>
 </li>
 <li>
-<p>VMが停止していることを確認します（実行中の場合は停止してください）。</p>
+<p>VM が停止していることを確認します (実行中の場合は停止してください) 。</p>
 </li>
 <li>
 <p><strong>Snapshots</strong> タブに移動します。</p>
 </li>
 <li>
-<p>復元したいスナップショットの横にあるケバブメニュー（3つの点）をクリックします。</p>
+<p>復元したいスナップショットの横にあるケバブメニュー (3 つの点) をクリックします。</p>
 </li>
 <li>
 <p><strong>Restore VirtualMachineSnapshot</strong> を選択します。</p>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-snapshots/snapshot-kebab-restore.png" alt="RestoreおよびDeleteオプションが表示されたケバブメニュー">
+<img src="_images/vm-snapshots/snapshot-kebab-restore.png" alt="Restore および Delete オプションが表示されたケバブメニュー">
 </div>
 </div>
 </li>
@@ -802,9 +802,9 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 </div>
 </div>
 <div class="sect2">
-<h3 id="_cliを使用した復元"><a class="anchor" href="#_cliを使用した復元"></a>CLIを使用した復元</h3>
+<h3 id="_cli_を使用した復元"><a class="anchor" href="#_cli_を使用した復元"></a>CLI を使用した復元</h3>
 <div class="paragraph">
-<p>VirtualMachineRestoreリソースを作成します。</p>
+<p>VirtualMachineRestore リソースを作成します。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/vm-snapshots/vm-restore.yaml" class="xref attachment">vm-restore.yaml をダウンロード</a></p>
@@ -861,7 +861,7 @@ database-vm-restore-01   VirtualMachine   database-vm   true       2m</code></pr
 </div>
 </div>
 <div class="paragraph">
-<p>復元が完了したら、VMを起動します。</p>
+<p>復元が完了したら、VM を起動します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -869,7 +869,7 @@ database-vm-restore-01   VirtualMachine   database-vm   true       2m</code></pr
 </div>
 </div>
 <div class="paragraph">
-<p>VMが復元された状態で実行されていることを確認します。</p>
+<p>VM が復元された状態で実行されていることを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -883,11 +883,11 @@ database-vm-restore-01   VirtualMachine   database-vm   true       2m</code></pr
 <h2 id="_スナップショットの削除"><a class="anchor" href="#_スナップショットの削除"></a>スナップショットの削除</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_webコンソールを使用した削除"><a class="anchor" href="#_webコンソールを使用した削除"></a>Webコンソールを使用した削除</h3>
+<h3 id="_web_コンソールを使用した削除"><a class="anchor" href="#_web_コンソールを使用した削除"></a>Web コンソールを使用した削除</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>VMの <strong>Snapshots</strong> タブに移動します。</p>
+<p>VM の <strong>Snapshots</strong> タブに移動します。</p>
 </li>
 <li>
 <p>スナップショットの横にあるケバブメニューをクリックします。</p>
@@ -896,7 +896,7 @@ database-vm-restore-01   VirtualMachine   database-vm   true       2m</code></pr
 <p><strong>Delete snapshot</strong> を選択します。</p>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-snapshots/snapshot-kebab-delete.png" alt="Delete snapshotオプションが表示されたケバブメニュー">
+<img src="_images/vm-snapshots/snapshot-kebab-delete.png" alt="Delete snapshot オプションが表示されたケバブメニュー">
 </div>
 </div>
 </li>
@@ -904,7 +904,7 @@ database-vm-restore-01   VirtualMachine   database-vm   true       2m</code></pr
 <p>削除を確定します。</p>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-snapshots/snapshot-delete-confirm.png" alt="VirtualMachineSnapshot削除の確認ダイアログ">
+<img src="_images/vm-snapshots/snapshot-delete-confirm.png" alt="VirtualMachineSnapshot 削除の確認ダイアログ">
 </div>
 </div>
 </li>
@@ -912,7 +912,7 @@ database-vm-restore-01   VirtualMachine   database-vm   true       2m</code></pr
 </div>
 </div>
 <div class="sect2">
-<h3 id="_cliを使用した削除"><a class="anchor" href="#_cliを使用した削除"></a>CLIを使用した削除</h3>
+<h3 id="_cli_を使用した削除"><a class="anchor" href="#_cli_を使用した削除"></a>CLI を使用した削除</h3>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete virtualmachinesnapshot database-vm-snapshot-01 -n vm-snapshots</code></pre>
@@ -925,7 +925,7 @@ database-vm-restore-01   VirtualMachine   database-vm   true       2m</code></pr
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-VirtualMachineSnapshotを削除すると、関連するVirtualMachineSnapshotContentおよび基盤となるVolumeSnapshotも削除され、ストレージ領域が解放されます。
+VirtualMachineSnapshot を削除すると、関連する VirtualMachineSnapshotContent および基盤となる VolumeSnapshot も削除され、ストレージ領域が解放されます。
 </td>
 </tr>
 </table>
@@ -937,9 +937,9 @@ VirtualMachineSnapshotを削除すると、関連するVirtualMachineSnapshotCon
 <h2 id="_ストレージの考慮事項"><a class="anchor" href="#_ストレージの考慮事項"></a>ストレージの考慮事項</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_csiドライバーの要件"><a class="anchor" href="#_csiドライバーの要件"></a>CSIドライバーの要件</h3>
+<h3 id="_csi_ドライバーの要件"><a class="anchor" href="#_csi_ドライバーの要件"></a>CSI ドライバーの要件</h3>
 <div class="paragraph">
-<p>VMスナップショットには、スナップショット機能をサポートするCSI（Container Storage Interface）ドライバーが必要です。一般的なサポート対象ストレージソリューションは以下の通りです。</p>
+<p>VM スナップショットには、スナップショット機能をサポートする CSI (Container Storage Interface) ドライバーが必要です。一般的なサポート対象ストレージソリューションは以下の通りです。</p>
 </div>
 <div class="ulist">
 <ul>
@@ -956,7 +956,7 @@ VirtualMachineSnapshotを削除すると、関連するVirtualMachineSnapshotCon
 <p>Google Cloud Persistent Disk CSI</p>
 </li>
 <li>
-<p>LVM Storage (LVMS)（シンプロビジョニングされたプールデバイスクラスを使用する場合）</p>
+<p>LVM Storage (LVMS) (シンプロビジョニングされたプールデバイスクラスを使用する場合)</p>
 </li>
 <li>
 <p>VMware vSphere CSI</p>
@@ -968,27 +968,27 @@ VirtualMachineSnapshotを削除すると、関連するVirtualMachineSnapshotCon
 <p>Pure Storage</p>
 </li>
 <li>
-<p>Dell CSIドライバー</p>
+<p>Dell CSI ドライバー</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_volumesnapshotclassの設定"><a class="anchor" href="#_volumesnapshotclassの設定"></a>VolumeSnapshotClassの設定</h3>
+<h3 id="_volumesnapshotclass_の設定"><a class="anchor" href="#_volumesnapshotclass_の設定"></a>VolumeSnapshotClass の設定</h3>
 <div class="paragraph">
-<p>VolumeSnapshotClassは、スナップショットの作成および管理方法を決定します。ストレージクラスに対応するスナップショットクラスがあることを確認してください。</p>
+<p>VolumeSnapshotClass は、スナップショットの作成および管理方法を決定します。ストレージクラスに対応する snapshot class があることを確認してください。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ストレージクラスの確認
 oc get storageclass
 
-# 対応するスナップショットクラスの確認
+# 対応する snapshot class の確認
 oc get volumesnapshotclass</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>スナップショットが失敗する場合は、スナップショットクラスがストレージプロビジョナーと一致しているか確認してください。</p>
+<p>スナップショットが失敗する場合は、snapshot class が storage provisioner と一致しているか確認してください。</p>
 </div>
 </div>
 <div class="sect2">
@@ -999,10 +999,10 @@ oc get volumesnapshotclass</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>コピーオンライト</strong>: ほとんどのCSIドライバーはコピーオンライトを使用するため、初期のスナップショットサイズは小さくなります。</p>
+<p><strong>コピーオンライト</strong>: ほとんどの CSI ドライバーはコピーオンライトを使用するため、初期のスナップショットサイズは小さくなります。</p>
 </li>
 <li>
-<p><strong>経時的な増加</strong>: VMのディスクが変更されるにつれて、スナップショットのストレージは増加します。</p>
+<p><strong>経時的な増加</strong>: VM のディスクが変更されるにつれて、スナップショットのストレージは増加します。</p>
 </li>
 <li>
 <p><strong>複数のスナップショット</strong>: スナップショットの数だけ追加の領域が消費されます。</p>
@@ -1035,7 +1035,7 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 <div class="sect2">
 <h3 id="_スナップショットが_inprogress_のまま停止する"><a class="anchor" href="#_スナップショットが_inprogress_のまま停止する"></a>スナップショットが InProgress のまま停止する</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: VirtualMachineSnapshotが <code>InProgress</code> フェーズのまま進まない。</p>
+<p><strong>問題</strong>: VirtualMachineSnapshot が <code>InProgress</code> フェーズのまま進まない。</p>
 </div>
 <div class="paragraph">
 <p><strong>考えられる原因</strong>:</p>
@@ -1043,10 +1043,10 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 <div class="ulist">
 <ul>
 <li>
-<p>オンラインスナップショットがタイムアウトした（デフォルトは5分の <code>failureDeadline</code>）</p>
+<p>オンラインスナップショットがタイムアウトした (デフォルトは 5 分の <code>failureDeadline</code>)</p>
 </li>
 <li>
-<p>QEMUゲストエージェントが応答していない</p>
+<p>QEMU guest agent が応答していない</p>
 </li>
 <li>
 <p>ストレージプロバイダーが低速、または応答していない</p>
@@ -1062,16 +1062,16 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 </div>
 </div>
 <div class="paragraph">
-<p><code>status.conditions</code> および <code>status.indications</code> フィールドを確認します。タイムアウトによりスナップショットが失敗した場合は、スナップショットspecの <code>failureDeadline</code> を増やすか、代わりにオフラインスナップショットを取得することを検討してください。</p>
+<p><code>status.conditions</code> および <code>status.indications</code> フィールドを確認します。タイムアウトによりスナップショットが失敗した場合は、Snapshot spec の <code>failureDeadline</code> を増やすか、代わりにオフラインスナップショットを取得することを検討してください。</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_スナップショットで_noguestagent_または_quiescefailed_が表示される"><a class="anchor" href="#_スナップショットで_noguestagent_または_quiescefailed_が表示される"></a>スナップショットで NoGuestAgent または QuiesceFailed が表示される</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: スナップショットは完了したが、インジケーションに <code>NoGuestAgent</code> または <code>QuiesceFailed</code> が表示されており、クラッシュ整合性のみのスナップショットになっている。</p>
+<p><strong>問題</strong>: スナップショットは完了したが、Indication に <code>NoGuestAgent</code> または <code>QuiesceFailed</code> が表示されており、クラッシュ整合性のみのスナップショットになっている。</p>
 </div>
 <div class="paragraph">
-<p><strong>解決策</strong>: VM内でQEMUゲストエージェントをインストールして起動します。</p>
+<p><strong>解決策</strong>: VM 内で QEMU guest agent をインストールして起動します。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1090,12 +1090,12 @@ sudo systemctl enable --now qemu-guest-agent</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vmが実行中のため復元に失敗する"><a class="anchor" href="#_vmが実行中のため復元に失敗する"></a>VMが実行中のため復元に失敗する</h3>
+<h3 id="_vm_が実行中のため復元に失敗する"><a class="anchor" href="#_vm_が実行中のため復元に失敗する"></a>VM が実行中のため復元に失敗する</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: ターゲットのVMが停止していないというエラーでVirtualMachineRestoreが失敗する。</p>
+<p><strong>問題</strong>: ターゲットの VM が停止していないというエラーで VirtualMachineRestore が失敗する。</p>
 </div>
 <div class="paragraph">
-<p><strong>解決策</strong>: 復元前にVMを停止するか、VirtualMachineRestoreのspecに <code>targetReadinessPolicy: StopTarget</code> を設定して、コントローラーに自動的に停止させます。</p>
+<p><strong>解決策</strong>: 復元前に VM を停止するか、VirtualMachineRestore の spec に <code>targetReadinessPolicy: StopTarget</code> を設定して、コントローラーに自動的に停止させます。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1105,12 +1105,12 @@ oc wait vm database-vm -n vm-snapshots --for=jsonpath='{.status.printableStatus}
 </div>
 </div>
 <div class="sect2">
-<h3 id="_volumesnapshotclassが見つからずスナップショットが失敗する"><a class="anchor" href="#_volumesnapshotclassが見つからずスナップショットが失敗する"></a>VolumeSnapshotClassが見つからずスナップショットが失敗する</h3>
+<h3 id="_volumesnapshotclass_が見つからずスナップショットが失敗する"><a class="anchor" href="#_volumesnapshotclass_が見つからずスナップショットが失敗する"></a>VolumeSnapshotClass が見つからずスナップショットが失敗する</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: ストレージプロビジョナーに一致するVolumeSnapshotClassがないため、スナップショット作成が失敗する。</p>
+<p><strong>問題</strong>: ストレージプロビジョナーに一致する VolumeSnapshotClass がないため、スナップショット作成が失敗する。</p>
 </div>
 <div class="paragraph">
-<p><strong>解決策</strong>: ストレージクラスに対してVolumeSnapshotClassが存在することを確認します。</p>
+<p><strong>解決策</strong>: ストレージクラスに対して VolumeSnapshotClass が存在することを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1119,7 +1119,7 @@ oc get volumesnapshotclass -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{
 </div>
 </div>
 <div class="paragraph">
-<p>VolumeSnapshotClass内の <code>driver</code> は、StorageClass内の <code>provisioner</code> と一致する必要があります。一致するVolumeSnapshotClassが存在しない場合は、新しく作成するか、クラスター管理者に連絡してください。</p>
+<p>VolumeSnapshotClass 内の <code>driver</code> は、StorageClass 内の <code>provisioner</code> と一致する必要があります。一致する VolumeSnapshotClass が存在しない場合は、新しく作成するか、クラスター管理者に連絡してください。</p>
 </div>
 </div>
 </div>
@@ -1156,19 +1156,19 @@ oc get volumesnapshot -n vm-snapshots</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>OpenShift VirtualizationにおけるVMスナップショットリソースの仕組み</p>
+<p>OpenShift Virtualization における VM スナップショットリソースの仕組み</p>
 </li>
 <li>
-<p>オンラインスナップショットとオフラインスナップショットの違い、およびインジケーションの意味</p>
+<p>オンラインスナップショットとオフラインスナップショットの違い、Indication の意味</p>
 </li>
 <li>
-<p>WebコンソールおよびCLIを使用したスナップショットの作成方法</p>
+<p>Web コンソールおよび CLI を使用したスナップショットの作成方法</p>
 </li>
 <li>
 <p>スナップショットの管理、一覧表示、削除方法</p>
 </li>
 <li>
-<p>スナップショットからのVMの復元方法</p>
+<p>スナップショットからの VM の復元方法</p>
 </li>
 <li>
 <p>スナップショットに関するストレージ要件と考慮事項</p>
@@ -1186,27 +1186,27 @@ oc get volumesnapshot -n vm-snapshots</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="../getting-started/virtctl-basics.html" class="xref page">virtctl を使用した VM 管理</a> - VM管理のためのCLIコマンド</p>
+<p><a href="../getting-started/virtctl-basics.html" class="xref page">virtctl を使用した VM 管理</a> - VM 管理のための CLI コマンド</p>
 </li>
 <li>
-<p><a href="custom-golden-images.html" class="xref page">カスタムOSイメージとゴールデンイメージの作成</a> - 再利用可能なVMイメージの作成</p>
+<p><a href="custom-golden-images.html" class="xref page">カスタム OS イメージとゴールデンイメージの作成</a> - 再利用可能な VM イメージの作成</p>
 </li>
 <li>
-<p><a href="cloning-vms.html" class="xref page">仮想マシンのクローン作成による迅速なデプロイ</a> - VMのクローン作成（スナップショットからのクローン作成を含む）</p>
+<p><a href="cloning-vms.html" class="xref page">仮想マシンのクローン作成による迅速なデプロイ</a> - VM のクローン作成 (スナップショットからのクローン作成を含む)</p>
 </li>
 <li>
-<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/backup-and-restore" target="_blank" rel="noopener">VMスナップショットを使用したバックアップと復元 - Red Hatドキュメント</a></p>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/backup-and-restore" target="_blank" rel="noopener">VM スナップショットを使用したバックアップと復元 - Red Hat ドキュメント</a></p>
 </li>
 <li>
-<p><a href="https://kubevirt.io/user-guide/storage/snapshot_restore_api/" target="_blank" rel="noopener">Snapshot Restore API - KubeVirtユーザーガイド</a></p>
+<p><a href="https://kubevirt.io/user-guide/storage/snapshot_restore_api/" target="_blank" rel="noopener">Snapshot Restore API - KubeVirt ユーザーガイド</a></p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="cloning-vms.html">VMのクローン作成</a></span>
-  <span class="next"><a href="boot-order-boot-sources.html">VMのブート順序とブートソース</a></span>
+  <span class="prev"><a href="cloning-vms.html">VM のクローン作成</a></span>
+  <span class="next"><a href="boot-order-boot-sources.html">VM のブート順序とブートソース</a></span>
 </nav>
 </article>
   </div>

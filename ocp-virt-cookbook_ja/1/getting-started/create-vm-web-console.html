@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Webコンソールを使用したテンプレートからのVM作成 :: OpenShift Virtualization cookbook</title>
+    <title>Web コンソールを使用したテンプレートからの VM の作成 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="default-storage-class.html">
     <link rel="next" href="vm-lifecycle-states.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -52,28 +52,28 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="index.html">はじめに</a>
+    <a class="nav-link" href="index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="install-openshift-virtualization.html">OpenShift Virtualizationのインストール</a>
+    <a class="nav-link" href="install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="default-storage-class.html">ストレージ設定</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="create-vm-web-console.html">WebコンソールからVMを作成</a>
+    <a class="nav-link" href="create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="vm-lifecycle-states.html">VMライフサイクル状態</a>
+    <a class="nav-link" href="vm-lifecycle-states.html">VM ライフサイクル状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cloud-init-fundamentals.html">OpenShift Virtualization VMのためのCloud-init基礎</a>
+    <a class="nav-link" href="cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
   </li>
 </ul>
   </li>
@@ -86,7 +86,7 @@
     <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operatorのインストール</a>
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
@@ -98,7 +98,7 @@
     <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスクVM</a>
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
   </li>
 </ul>
   </li>
@@ -111,37 +111,37 @@
     <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/static-ip-configuration.html">静的IPの設定</a>
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">Cloud-init トラブルシューティング</a>
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDNを使用したLocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NADを使用したVLAN付きlocalnetセカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">Localnet VLANとCUDN</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/linux-bridges.html">Linuxブリッジ</a>
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress およびルート</a>
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnetネットワークのトラブルシューティング</a>
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
   </li>
 </ul>
   </li>
@@ -154,10 +154,10 @@
     <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VMの内部DNS</a>
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux仮想マシンへのリモートアクセス</a>
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
@@ -166,13 +166,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIOドライバーを使用したWindows VM</a>
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure Node Placement</a>
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置とアフィニティ</a>
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
@@ -191,16 +191,16 @@
     <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/resource-limits-qos.html">リソース制限とQoS</a>
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/cpu-pinning.html">専用CPU配置</a>
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/numa-hugepages.html">NUMAとHugepages</a>
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイムVM</a>
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
 </ul>
   </li>
@@ -210,25 +210,25 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="../vm-lifecycle/index.html">VMライフサイクル管理</a>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2ブートボリュームのインポート</a>
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">Golden Images トラブルシューティング</a>
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VMのクローン作成</a>
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VMスナップショット</a>
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VMのブート順序とブートソース</a>
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
   </li>
 </ul>
   </li>
@@ -290,8 +290,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
-    <li><a href="index.html">はじめに</a></li>
-    <li><a href="create-vm-web-console.html">WebコンソールからVMを作成</a></li>
+    <li><a href="index.html">スタートガイド</a></li>
+    <li><a href="create-vm-web-console.html">Web コンソールを使用した VM の作成</a></li>
   </ul>
 </nav>
 </div>
@@ -300,12 +300,12 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Webコンソールを使用したテンプレートからのVM作成</h1>
+<h1 class="page">Web コンソールを使用したテンプレートからの VM の作成</h1>
 <div class="sect1">
 <h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>このチュートリアルでは、OpenShift Webコンソールと事前構築済みテンプレートを使用して仮想マシン（VM）を作成する方法を説明します。Webコンソールは、VM管理のための直感的なグラフィカルインターフェースを提供するため、新規ユーザーにとって理想的な出発点となります。</p>
+<p>このチュートリアルでは、OpenShift Web コンソールと事前構築済みテンプレートを使用して仮想マシン (VM) を作成する方法を説明します。Web コンソールは、VM 管理のための直感的なグラフィカルインターフェースを提供するため、新規ユーザーの出発点です。</p>
 </div>
 </div>
 </div>
@@ -315,16 +315,16 @@
 <div class="ulist">
 <ul>
 <li>
-<p>OpenShift VirtualizationオペレーターがインストールされたOpenShift 4.18以降（<a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing" target="_blank" rel="noopener">OpenShift Virtualizationのインストール</a>を参照）</p>
+<p>OpenShift Virtualization Operator がインストールされた OpenShift 4.18 以降 (<a href="https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing" target="_blank" rel="noopener">OpenShift Virtualization のインストール</a>を参照)</p>
 </li>
 <li>
-<p>VMを作成する権限を持つOpenShift Webコンソールへのアクセス</p>
+<p>VM を作成する権限を持つ OpenShift Web コンソールへのアクセス</p>
 </li>
 <li>
-<p>VMディスクプロビジョニング用に構成されたデフォルトのStorageClass</p>
+<p>VM ディスクプロビジョニング用に構成された default StorageClass</p>
 </li>
 <li>
-<p>クラスター内で利用可能なブートソースイメージ（DataSource）</p>
+<p>クラスター内で利用可能なブートソースイメージ (DataSource)</p>
 </li>
 </ul>
 </div>
@@ -344,23 +344,23 @@
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>OpenShift Webコンソールにログインします。</p>
+<p>OpenShift Web コンソールにログインします。</p>
 </li>
 <li>
 <p>左側のナビゲーションメニューで、<strong>Virtualization</strong> をクリックします。</p>
 </li>
 <li>
-<p><strong>VirtualMachines</strong> をクリックして、VM管理インターフェースを表示します。</p>
+<p><strong>VirtualMachines</strong> をクリックして、VM 管理インターフェースを表示します。</p>
 </li>
 </ol>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/virtualization-menu.png" alt="VirtualMachinesが選択された状態の仮想化メニュー">
+<img src="_images/virtualization-menu.png" alt="VirtualMachines が選択された状態の仮想化メニュー">
 </div>
 </div>
 <div class="paragraph">
-<p>VirtualMachinesページには、選択したプロジェクト内のすべてのVMと、そのステータスおよび基本情報が表示されます。</p>
+<p>VirtualMachines ページには、選択したプロジェクト内のすべての VM と、そのステータスおよび基本情報が表示されます。</p>
 </div>
 </div>
 </div>
@@ -368,28 +368,28 @@
 <h2 id="_ステップ_2_利用可能なテンプレートの参照"><a class="anchor" href="#_ステップ_2_利用可能なテンプレートの参照"></a>ステップ 2: 利用可能なテンプレートの参照</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>OpenShift Virtualizationには、一般的なオペレーティングシステム用の事前構成済みテンプレートが含まれています。</p>
+<p>OpenShift Virtualization には、一般的なオペレーティングシステム用の事前構成済みテンプレートが含まれています。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>VirtualMachinesページから、<strong>Create</strong> &#8594; <strong>From template</strong> をクリックします。</p>
+<p>VirtualMachines ページから、<strong>Create</strong> &#8594; <strong>From template</strong> をクリックします。</p>
 </li>
 <li>
 <p>オペレーティングシステムごとに整理された利用可能なテンプレートを参照します。</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Red Hat Enterprise Linux</strong> - さまざまなRHELバージョン</p>
+<p><strong>Red Hat Enterprise Linux</strong> - 様々な RHEL バージョン</p>
 </li>
 <li>
-<p><strong>Fedora</strong> - 最新のFedoraリリース</p>
+<p><strong>Fedora</strong> - 最新の Fedora リリース</p>
 </li>
 <li>
-<p><strong>CentOS Stream</strong> - CentOS Streamバージョン</p>
+<p><strong>CentOS Stream</strong> - CentOS Stream バージョン</p>
 </li>
 <li>
-<p><strong>Microsoft Windows</strong> - Windows Serverおよびデスクトップバージョン</p>
+<p><strong>Microsoft Windows</strong> - Windows Server およびデスクトップバージョン</p>
 </li>
 </ul>
 </div>
@@ -398,7 +398,7 @@
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-templates-catalog.png" alt="OSオプションが表示されたテンプレートカタログ">
+<img src="_images/vm-templates-catalog.png" alt="OS オプションが表示されたテンプレートカタログ">
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -408,7 +408,7 @@
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<strong>Source available</strong> と表示されているテンプレートには、すぐに使用できる事前構成済みのブートソースがあります。これには、クラスター内で <a href="default-storage-class.html" class="xref page">デフォルトのStorageClass</a> が構成されている必要があります。
+<strong>Source available</strong> と表示されているテンプレートには、すぐに使用できる事前構成済みのブートソースがあります。これには、クラスター内で <a href="default-storage-class.html" class="xref page">default StorageClass</a> が構成されている必要があります。
 </td>
 </tr>
 </table>
@@ -419,26 +419,26 @@
 <div class="ulist">
 <ul>
 <li>
-<p>事前構成済みのCPUおよびメモリ設定</p>
+<p>事前構成済みの CPU およびメモリ設定</p>
 </li>
 <li>
-<p>OSに適したディスクサイズ</p>
+<p>OS に適したディスクサイズ</p>
 </li>
 <li>
-<p>ブートソース参照（DataSource）</p>
+<p>ブートソース参照 (DataSource)</p>
 </li>
 <li>
-<p>Cloud-initまたはsysprep構成（該当する場合）</p>
+<p>cloud-init または sysprep 構成 (該当する場合)</p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_3_テンプレートからのvm作成"><a class="anchor" href="#_ステップ_3_テンプレートからのvm作成"></a>ステップ 3: テンプレートからのVM作成</h2>
+<h2 id="_ステップ_3_テンプレートからの_vm_作成"><a class="anchor" href="#_ステップ_3_テンプレートからの_vm_作成"></a>ステップ 3: テンプレートからの VM 作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>この例では、Fedora VMを作成します。他のオペレーティングシステムの場合も手順は同様です。</p>
+<p>この例では、Fedora VM を作成します。他のオペレーティングシステムの場合も手順は同様です。</p>
 </div>
 <div class="sect2">
 <h3 id="_テンプレートの選択"><a class="anchor" href="#_テンプレートの選択"></a>テンプレートの選択</h3>
@@ -457,42 +457,42 @@
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/fedora-template-details.png" alt="Fedoraテンプレート詳細パネル">
+<img src="_images/fedora-template-details.png" alt="Fedora テンプレート詳細パネル">
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vm詳細の構成"><a class="anchor" href="#_vm詳細の構成"></a>VM詳細の構成</h3>
+<h3 id="_vm_詳細の構成"><a class="anchor" href="#_vm_詳細の構成"></a>VM 詳細の構成</h3>
 <div class="paragraph">
-<p><strong>Customize VirtualMachine</strong> ページで、<strong>Overview</strong> タブのVM設定を構成します。</p>
+<p><strong>Customize VirtualMachine</strong> ページで、<strong>Overview</strong> タブの VM 設定を構成します。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Name</strong>: VMの名前を入力します（例: <code>fedora-test-vm</code>）。</p>
+<p><strong>Name</strong>: VM の名前を入力します (例: <code>fedora-test-vm</code>)。</p>
 </li>
 <li>
-<p><strong>Project</strong>: VMを作成するプロジェクト（ネームスペース）を選択します。</p>
+<p><strong>Project</strong>: VM を作成するプロジェクト (namespace) を選択します。</p>
 </li>
 <li>
-<p><strong>Boot source</strong>: デフォルトでFedoraのDataSourceが表示されているはずです。</p>
+<p><strong>Boot source</strong>: デフォルトで Fedora の DataSource が表示されているはずです。</p>
 </li>
 <li>
-<p><strong>CPU</strong>: CPUコア数を調整します（通常、デフォルトは1）。</p>
+<p><strong>CPU</strong>: CPU コア数を調整します (通常、デフォルトは 1)。</p>
 </li>
 <li>
-<p><strong>Memory</strong>: RAM割り当てを調整します（デフォルト値はテンプレートによって異なります）。</p>
+<p><strong>Memory</strong>: RAM 割り当てを調整します (デフォルト値はテンプレートによって異なります)。</p>
 </li>
 </ol>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-customize-overview.png" alt="VMカスタマイズのOverviewタブ">
+<img src="_images/vm-customize-overview.png" alt="VM カスタマイズの Overview タブ">
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ストレージのカスタマイズオプション"><a class="anchor" href="#_ストレージのカスタマイズオプション"></a>ストレージのカスタマイズ（オプション）</h3>
+<h3 id="_ストレージのカスタマイズ_オプション"><a class="anchor" href="#_ストレージのカスタマイズ_オプション"></a>ストレージのカスタマイズ (オプション)</h3>
 <div class="paragraph">
 <p><strong>Disks</strong> タブをクリックしてストレージを変更します。</p>
 </div>
@@ -505,13 +505,13 @@
 <p>必要に応じてディスクサイズを調整したり、追加のディスクを追加したりします。</p>
 </li>
 <li>
-<p>StorageClassがニーズに適していることを確認します。</p>
+<p>StorageClass がニーズに適していることを確認します。</p>
 </li>
 </ol>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-customize-disks.png" alt="VMカスタマイズのDisksタブ">
+<img src="_images/vm-customize-disks.png" alt="VM カスタマイズの Disks タブ">
 </div>
 </div>
 </div>
@@ -532,22 +532,22 @@
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-create-button.png" alt="Create VirtualMachineボタン">
+<img src="_images/vm-create-button.png" alt="Create VirtualMachine ボタン">
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_4_vm作成の監視"><a class="anchor" href="#_ステップ_4_vm作成の監視"></a>ステップ 4: VM作成の監視</h2>
+<h2 id="_ステップ_4_vm_作成の監視"><a class="anchor" href="#_ステップ_4_vm_作成の監視"></a>ステップ 4: VM 作成の監視</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>作成をクリックすると、VM詳細ページにリダイレクトされます。</p>
+<p>作成をクリックすると、VM 詳細ページにリダイレクトされます。</p>
 </div>
 <div class="sect2">
 <h3 id="_プロビジョニングの進捗確認"><a class="anchor" href="#_プロビジョニングの進捗確認"></a>プロビジョニングの進捗確認</h3>
 <div class="paragraph">
-<p>VMは作成中にいくつかのフェーズを通過します。</p>
+<p>VM は作成中にいくつかのフェーズを通過します。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -555,16 +555,16 @@
 <p><strong>Provisioning</strong> - ブートソースからディスクがクローンされています。</p>
 </li>
 <li>
-<p><strong>Starting</strong> - VMが起動しています（起動が選択されている場合）。</p>
+<p><strong>Starting</strong> - VM が起動しています (起動が選択されている場合)。</p>
 </li>
 <li>
-<p><strong>Running</strong> - VMが完全に動作しています。</p>
+<p><strong>Running</strong> - VM が完全に動作しています。</p>
 </li>
 </ol>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-provisioning-status.png" alt="VMプロビジョニングのステータス">
+<img src="_images/vm-provisioning-status.png" alt="VM プロビジョニングのステータス">
 </div>
 </div>
 <div class="paragraph">
@@ -578,39 +578,39 @@ oc get events -n &lt;your-namespace&gt; --field-selector involvedObject.name=&lt
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vmが実行中であることの確認"><a class="anchor" href="#_vmが実行中であることの確認"></a>VMが実行中であることの確認</h3>
+<h3 id="_vm_が実行中であることの確認"><a class="anchor" href="#_vm_が実行中であることの確認"></a>VM が実行中であることの確認</h3>
 <div class="paragraph">
 <p>プロビジョニングが完了すると、ステータスが <strong>Running</strong> に変わります。</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-running-status.png" alt="VM実行中のステータス">
+<img src="_images/vm-running-status.png" alt="VM 実行中のステータス">
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_5_vmコンソールへのアクセス"><a class="anchor" href="#_ステップ_5_vmコンソールへのアクセス"></a>ステップ 5: VMコンソールへのアクセス</h2>
+<h2 id="_ステップ_5_vm_コンソールへのアクセス"><a class="anchor" href="#_ステップ_5_vm_コンソールへのアクセス"></a>ステップ 5: VM コンソールへのアクセス</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Webコンソールは、VMのグラフィカルコンソールへの直接アクセスを提供します。</p>
+<p>Web コンソールは、VM のグラフィカルコンソールへの直接アクセスを提供します。</p>
 </div>
 <div class="sect2">
 <h3 id="_コンソールの起動"><a class="anchor" href="#_コンソールの起動"></a>コンソールの起動</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>VM詳細ページで、<strong>Console</strong> タブをクリックします。</p>
+<p>VM 詳細ページで、<strong>Console</strong> タブをクリックします。</p>
 </li>
 <li>
-<p>ブラウザ内で直接VNCコンソールが読み込まれます。</p>
+<p>ブラウザ内で直接 VNC コンソールが読み込まれます。</p>
 </li>
 </ol>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-console-tab.png" alt="上部に資格情報が表示されたVMコンソール">
+<img src="_images/vm-console-tab.png" alt="上部に資格情報が表示された VM コンソール">
 </div>
 </div>
 </div>
@@ -622,7 +622,7 @@ oc get events -n &lt;your-namespace&gt; --field-selector involvedObject.name=&lt
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Send key</strong> - 特殊なキーの組み合わせを送信（Ctrl+Alt+Delなど）</p>
+<p><strong>Send key</strong> - 特殊なキーの組み合わせを送信 (Ctrl+Alt+Del など)</p>
 </li>
 <li>
 <p><strong>Disconnect</strong> - コンソール接続を閉じる</p>
@@ -639,7 +639,7 @@ oc get events -n &lt;your-namespace&gt; --field-selector involvedObject.name=&lt
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-パフォーマンスを向上させるには、日常的な作業ではWebコンソールではなく、<a href="../vm-configuration/remote-access-linux-vms.html" class="xref page">Linux VMへのSSHアクセス</a> または <a href="../vm-configuration/remote-access-windows-vms.html" class="xref page">Windows VMへのRDP</a> を使用することを検討してください。
+パフォーマンスを向上させるには、日常的な作業では Web コンソールではなく、<a href="../vm-configuration/remote-access-linux-vms.html" class="xref page">Linux VM への SSH アクセス</a> または <a href="../vm-configuration/remote-access-windows-vms.html" class="xref page">Windows VM への RDP</a> を使用することを検討してください。
 </td>
 </tr>
 </table>
@@ -648,18 +648,18 @@ oc get events -n &lt;your-namespace&gt; --field-selector involvedObject.name=&lt
 <div class="sect2">
 <h3 id="_ゲストへのログイン"><a class="anchor" href="#_ゲストへのログイン"></a>ゲストへのログイン</h3>
 <div class="paragraph">
-<p>Fedoraやその他のクラウドイメージの場合、デフォルトの資格情報はcloud-init構成に依存します。</p>
+<p>Fedora やその他のクラウドイメージの場合、デフォルトの資格情報は cloud-init 構成に依存します。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>cloud-initユーザーデータが提供されていない場合は、ユーザーのセットアップが必要になることがあります。</p>
+<p>cloud-init ユーザーデータが提供されていない場合は、ユーザーのセットアップが必要になることがあります。</p>
 </li>
 <li>
 <p>デフォルトの資格情報については、テンプレートのドキュメントを確認してください。</p>
 </li>
 <li>
-<p>自動化されたユーザーセットアップを行うために、テンプレート内のcloud-initをカスタマイズすることを検討してください。</p>
+<p>自動化されたユーザーセットアップを行うために、テンプレート内の cloud-init をカスタマイズすることを検討してください。</p>
 </li>
 </ul>
 </div>
@@ -667,24 +667,24 @@ oc get events -n &lt;your-namespace&gt; --field-selector involvedObject.name=&lt
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_6_基本的なvm操作"><a class="anchor" href="#_ステップ_6_基本的なvm操作"></a>ステップ 6: 基本的なVM操作</h2>
+<h2 id="_ステップ_6_基本的な_vm_操作"><a class="anchor" href="#_ステップ_6_基本的な_vm_操作"></a>ステップ 6: 基本的な VM 操作</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Webコンソールは、一般的なVM操作への容易なアクセスを提供します。</p>
+<p>Web コンソールは、一般的な VM 操作への容易なアクセスを提供します。</p>
 </div>
 <div class="sect2">
-<h3 id="_vmアクションメニュー"><a class="anchor" href="#_vmアクションメニュー"></a>VMアクションメニュー</h3>
+<h3 id="_vm_アクションメニュー"><a class="anchor" href="#_vm_アクションメニュー"></a>VM アクションメニュー</h3>
 <div class="paragraph">
-<p>VM詳細ページまたはVirtualMachinesリストから、アクションメニューにアクセスします。</p>
+<p>VM 詳細ページまたは VirtualMachines リストから、アクションメニューにアクセスします。</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-actions-menu.png" alt="VMアクションのドロップダウンメニュー">
+<img src="_images/vm-actions-menu.png" alt="VM アクションのドロップダウンメニュー">
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vmの停止"><a class="anchor" href="#_vmの停止"></a>VMの停止</h3>
+<h3 id="_vm_の停止"><a class="anchor" href="#_vm_の停止"></a>VM の停止</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -694,7 +694,7 @@ oc get events -n &lt;your-namespace&gt; --field-selector involvedObject.name=&lt
 <p>メッセージが表示されたら、アクションを確定します。</p>
 </li>
 <li>
-<p>VMが正常にシャットダウンされます。</p>
+<p>VM が正常にシャットダウンされます。</p>
 </li>
 </ol>
 </div>
@@ -706,14 +706,14 @@ virtctl stop &lt;vm-name&gt;</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vmの再起動"><a class="anchor" href="#_vmの再起動"></a>VMの再起動</h3>
+<h3 id="_vm_の再起動"><a class="anchor" href="#_vm_の再起動"></a>VM の再起動</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
 <p><strong>Actions</strong> &#8594; <strong>Restart</strong> をクリックします。</p>
 </li>
 <li>
-<p>VMが正常に再起動します。</p>
+<p>VM が正常に再起動します。</p>
 </li>
 </ol>
 </div>
@@ -727,7 +727,7 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <div class="sect2">
 <h3 id="_一時停止と一時停止の解除"><a class="anchor" href="#_一時停止と一時停止の解除"></a>一時停止と一時停止の解除</h3>
 <div class="paragraph">
-<p>VMを一時停止すると、シャットダウンせずにその状態が凍結されます。</p>
+<p>VM を一時停止すると、シャットダウンせずにその状態が凍結されます。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -735,7 +735,7 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <p><strong>Actions</strong> &#8594; <strong>Pause</strong> をクリックします。</p>
 </li>
 <li>
-<p>VMの状態がメモリ内に保持されます。</p>
+<p>VM の状態がメモリ内に保持されます。</p>
 </li>
 <li>
 <p><strong>Actions</strong> &#8594; <strong>Unpause</strong> をクリックして再開します。</p>
@@ -749,21 +749,21 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-一時停止中のVMは、ノード上のメモリリソースを引き続き消費します。
+一時停止中の VM は、ノード上のメモリリソースを引き続き消費します。
 </td>
 </tr>
 </table>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vmの削除"><a class="anchor" href="#_vmの削除"></a>VMの削除</h3>
+<h3 id="_vm_の削除"><a class="anchor" href="#_vm_の削除"></a>VM の削除</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
 <p><strong>Actions</strong> &#8594; <strong>Delete</strong> をクリックします。</p>
 </li>
 <li>
-<p>関連付けられたディスク（PVC）を削除するかどうかを選択します。</p>
+<p>関連付けられたディスク (PVC) を削除するかどうかを選択します。</p>
 </li>
 <li>
 <p>削除を確定します。</p>
@@ -772,7 +772,7 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-delete-confirmation.png" alt="VM削除の確認ダイアログ">
+<img src="_images/vm-delete-confirmation.png" alt="VM 削除の確認ダイアログ">
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -782,7 +782,7 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-削除後もVMディスク（DataVolume）を保持するには、確認ダイアログに表示される <strong>Delete disk</strong> オプションのチェックを外します。これにより、後で新しいVMでそのディスクを再利用できます。
+削除後も VM ディスク (DataVolume) を保持するには、確認ダイアログに表示される <strong>Delete disk</strong> オプションのチェックを外します。これにより、後で新しい VM でそのディスクを再利用できます。
 </td>
 </tr>
 </table>
@@ -794,7 +794,7 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-ディスクを含めてVMを削除すると、元に戻すことはできません。必要に応じてバックアップがあることを確認してください。
+ディスクを含めて VM を削除すると、元に戻すことはできません。必要に応じてバックアップがあることを確認してください。
 </td>
 </tr>
 </table>
@@ -803,26 +803,26 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_7_vmの詳細とメトリクスの表示"><a class="anchor" href="#_ステップ_7_vmの詳細とメトリクスの表示"></a>ステップ 7: VMの詳細とメトリクスの表示</h2>
+<h2 id="_ステップ_7_vm_の詳細とメトリクスの表示"><a class="anchor" href="#_ステップ_7_vm_の詳細とメトリクスの表示"></a>ステップ 7: VM の詳細とメトリクスの表示</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VM詳細ページでは、監視および構成に関する情報を提供します。</p>
+<p>VM 詳細ページでは、監視および構成に関する情報を提供します。</p>
 </div>
 <div class="sect2">
-<h3 id="_overviewタブ"><a class="anchor" href="#_overviewタブ"></a>Overviewタブ</h3>
+<h3 id="_overview_タブ"><a class="anchor" href="#_overview_タブ"></a>Overview タブ</h3>
 <div class="paragraph">
 <p>一目で主要な情報を確認できます。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>VMのステータスと状態</p>
+<p>VM のステータスと状態</p>
 </li>
 <li>
-<p>IPアドレス（ゲストエージェントがインストールされている場合）</p>
+<p>IP アドレス (ゲストエージェントがインストールされている場合)</p>
 </li>
 <li>
-<p>CPUおよびメモリの使用率</p>
+<p>CPU およびメモリの使用率</p>
 </li>
 <li>
 <p>ブート順序とデバイス</p>
@@ -831,19 +831,19 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-overview-tab.png" alt="詳細が表示されたVMのOverviewタブ">
+<img src="_images/vm-overview-tab.png" alt="詳細が表示された VM の Overview タブ">
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_metricsタブ"><a class="anchor" href="#_metricsタブ"></a>Metricsタブ</h3>
+<h3 id="_metrics_タブ"><a class="anchor" href="#_metrics_タブ"></a>Metrics タブ</h3>
 <div class="paragraph">
 <p>リアルタイムのパフォーマンスメトリクスを表示します。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>時間経過に伴うCPU使用率</p>
+<p>時間経過に伴う CPU 使用率</p>
 </li>
 <li>
 <p>メモリ使用率</p>
@@ -852,13 +852,13 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <p>ネットワークスループット</p>
 </li>
 <li>
-<p>ストレージI/O</p>
+<p>ストレージ I/O</p>
 </li>
 </ul>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-metrics-tab.png" alt="グラフが表示されたVMのMetricsタブ">
+<img src="_images/vm-metrics-tab.png" alt="グラフが表示された VM の Metrics タブ">
 </div>
 </div>
 <div class="admonitionblock note">
@@ -868,16 +868,16 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-完全なメトリクスを表示するには、VM内にQEMUゲストエージェントがインストールされている必要があります。
+完全なメトリクスを表示するには、VM 内に QEMU guest agent がインストールされている必要があります。
 </td>
 </tr>
 </table>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_yamlタブ"><a class="anchor" href="#_yamlタブ"></a>YAMLタブ</h3>
+<h3 id="_yaml_タブ"><a class="anchor" href="#_yaml_タブ"></a>YAML タブ</h3>
 <div class="paragraph">
-<p>VM定義を直接表示および編集します。</p>
+<p>VM 定義を直接表示および編集します。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -885,7 +885,7 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <p><strong>YAML</strong> タブをクリックします。</p>
 </li>
 <li>
-<p>VirtualMachineマニフェストを確認または変更します。</p>
+<p>VirtualMachine マニフェストを確認または変更します。</p>
 </li>
 <li>
 <p><strong>Save</strong> をクリックして変更を適用します。</p>
@@ -894,7 +894,7 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-yaml-tab.png" alt="マニフェストエディタが表示されたVMのYAMLタブ">
+<img src="_images/vm-yaml-tab.png" alt="マニフェストエディタが表示された VM の YAML タブ">
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -904,7 +904,7 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<strong>Download</strong> ボタンをクリックして、YAMLファイルをダウンロードすることもできます。
+<strong>Download</strong> ボタンをクリックして、YAML ファイルをダウンロードすることもできます。
 </td>
 </tr>
 </table>
@@ -913,15 +913,15 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_クイック作成を使用したvmの作成"><a class="anchor" href="#_クイック作成を使用したvmの作成"></a>クイック作成を使用したVMの作成</h2>
+<h2 id="_クイック作成を使用した_vm_の作成"><a class="anchor" href="#_クイック作成を使用した_vm_の作成"></a>クイック作成を使用した VM の作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>デフォルト設定を使用してより迅速にVMを作成するには、クイック作成オプションを使用します。</p>
+<p>デフォルト設定を使用してより迅速に VM を作成するには、クイック作成オプションを使用します。</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>VirtualMachinesページから、<strong>Create</strong> &#8594; <strong>From template</strong> をクリックします。</p>
+<p>VirtualMachines ページから、<strong>Create</strong> &#8594; <strong>From template</strong> をクリックします。</p>
 </li>
 <li>
 <p>テンプレートを選択します。</p>
@@ -930,17 +930,17 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <p><strong>Customize VirtualMachine</strong> ではなく、<strong>Quick create VirtualMachine</strong> をクリックします。</p>
 </li>
 <li>
-<p>VMがデフォルト設定ですぐに作成されます。</p>
+<p>VM がデフォルト設定ですぐに作成されます。</p>
 </li>
 </ol>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/vm-quick-create.png" alt="Quick create VirtualMachineオプション">
+<img src="_images/vm-quick-create.png" alt="Quick create VirtualMachine オプション">
 </div>
 </div>
 <div class="paragraph">
-<p>これは以下の場合に便利です。</p>
+<p>この設定は、以下の場合に有用です。</p>
 </div>
 <div class="ulist">
 <ul>
@@ -966,25 +966,25 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>Webコンソールの仮想化セクションへの移動</p>
+<p>Web コンソールの仮想化セクションへの移動</p>
 </li>
 <li>
-<p>VMテンプレートの参照と選択</p>
+<p>VM テンプレートの参照と選択</p>
 </li>
 <li>
-<p>カスタマイズされた設定でのVM作成</p>
+<p>カスタマイズされた設定での VM 作成</p>
 </li>
 <li>
-<p>VMプロビジョニングの進捗状況の監視</p>
+<p>VM プロビジョニングの進捗状況の監視</p>
 </li>
 <li>
-<p>Webブラウザを通じたVMコンソールへのアクセス</p>
+<p>Web ブラウザを通じた VM コンソールへのアクセス</p>
 </li>
 <li>
-<p>基本的なVM操作（停止、起動、再起動、削除）の実行</p>
+<p>基本的な VM 操作 (停止、起動、再起動、削除) の実行</p>
 </li>
 <li>
-<p>VMの詳細とメトリクスの表示</p>
+<p>VM の詳細とメトリクスの表示</p>
 </li>
 </ul>
 </div>
@@ -996,13 +996,13 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="virtctl-basics.html" class="xref page">virtctl CLIの学習</a> - コマンドラインによるVM管理</p>
+<p><a href="virtctl-basics.html" class="xref page">virtctl CLI の学習</a> - コマンドラインによる VM 管理</p>
 </li>
 <li>
-<p><a href="../networking/static-ip-configuration.html" class="xref page">静的IPの構成</a> - VM用の静的IP構成</p>
+<p><a href="../networking/static-ip-configuration.html" class="xref page">静的 IP の設定</a> - VM 用の静的 IP 構成</p>
 </li>
 <li>
-<p><a href="../vm-configuration/remote-access-linux-vms.html" class="xref page">SSHアクセスのセットアップ</a> - SSH経由でのLinux VMへの接続</p>
+<p><a href="../vm-configuration/remote-access-linux-vms.html" class="xref page">SSH アクセスのセットアップ</a> - SSH 経由での Linux VM への接続</p>
 </li>
 </ul>
 </div>
@@ -1025,7 +1025,7 @@ virtctl restart &lt;vm-name&gt;</code></pre>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="default-storage-class.html">ストレージ設定</a></span>
-  <span class="next"><a href="vm-lifecycle-states.html">VMライフサイクル状態</a></span>
+  <span class="next"><a href="vm-lifecycle-states.html">VM ライフサイクル状態</a></span>
 </nav>
 </article>
   </div>
