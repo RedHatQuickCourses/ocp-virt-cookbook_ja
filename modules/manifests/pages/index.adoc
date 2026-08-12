@@ -1,7 +1,7 @@
 = YAML マニフェストライブラリ
 :navtitle: マニフェスト
 
-クックブックのチュートリアルで使用されるYAMLマニフェストのクイックリファレンスライブラリです。カテゴリごとに整理されています。
+クックブックのチュートリアルで使用される YAML マニフェストのクイックリファレンスライブラリです。カテゴリごとに整理されています。
 
 == クイックナビゲーション
 
@@ -11,24 +11,24 @@
 
 |<<Storage>>
 |7
-|LVM Operatorのインストールと設定
+|LVM Operator のインストールと設定
 
 |<<Networking>>
 |8
-|Localnet、UDN、ブリッジマッピングの設定
+|Localnet、UDN、Bridge mapping の設定
 
 |<<Virtual Machines>>
 |14
-|各種チュートリアルのVM例
+|各種チュートリアルの VM 例
 
 |<<Services>>
 |3
-|VMアクセス用のKubernetesサービス
+|VM アクセス用の Kubernetes サービス
 |===
 
 == Storage
 
-LVM Storage Operatorのインストールおよび設定用マニフェストです。
+LVM Storage Operator のインストールおよび設定用マニフェストです。
 
 [cols="2,1,3,2,1"]
 |===
@@ -36,50 +36,50 @@ LVM Storage Operatorのインストールおよび設定用マニフェストで
 
 |lvm-namespace
 |Namespace
-|openshift-lvm-storage名前空間の作成
+|openshift-lvm-storage namespace の作成
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvm-namespace.yaml[YAML]
 
 |lvm-operatorgroup
 |OperatorGroup
-|LVM Operatorのネームスペーススコープの定義
+|LVM Operator の namespace スコープの定義
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvm-operatorgroup.yaml[YAML]
 
 |lvm-subscription
 |Subscription
-|OperatorHubからのLVM Storage Operatorのインストール
+|OperatorHub からの LVM Storage Operator のインストール
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvm-subscription.yaml[YAML]
 
 |lvmcluster-with-wipe
 |LVMCluster
-|既存データを含むディスクに対してforceWipeを使用したLVMストレージの設定
+|既存データを含むディスクに対する forceWipe を使用した LVM ストレージの設定
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvmcluster-with-wipe.yaml[YAML]
 
 |lvmcluster-clean-disk
 |LVMCluster
-|クリーンな（新規）ディスクに対するLVMストレージの設定
+|クリーンな (新規) ディスクに対する LVM ストレージの設定
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvmcluster-clean-disk.yaml[YAML]
 
 |test-pvc
 |PVC
-|ストレージプロビジョニングを確認するためのテスト用PVC
+|ストレージプロビジョニングを確認するためのテスト用 PVC
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/test-pvc.yaml[YAML]
 
 |test-pod
 |Pod
-|PVCのマウントを確認するためのテスト用Pod
+|PVC のマウントを確認するためのテスト用 Pod
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/test-pod.yaml[YAML]
 |===
 
 == Networking
 
-localnet、UDN、およびブリッジマッピング用のネットワーク設定です。
+localnet、UDN、Bridge mapping 用のネットワーク設定です。
 
 [cols="2,1,3,2,1"]
 |===
@@ -87,56 +87,56 @@ localnet、UDN、およびブリッジマッピング用のネットワーク設
 
 |localnet-secondary-namespace
 |Namespace
-|localnetセカンダリネットワークVM用名前空間
+|localnet セカンダリネットワーク VM 用 namespace
 |xref:networking:localnet-secondary.adoc[]
 |xref:networking:attachment$localnet-secondary/localnet-secondary-namespace.yaml[YAML]
 
 |localnet-bridge-mapping-nncp
 |NNCP
-|localnetトポロジー向けにlocalnet1をbr-exブリッジにマッピング
+|localnet トポロジー向け localnet1 の br-ex bridge へのマッピング
 |xref:networking:localnet-secondary.adoc[]
 |xref:networking:attachment$localnet-secondary/localnet-bridge-mapping-nncp.yaml[YAML]
 
 |cudn-localnet
 |CUDN
-|localnetセカンダリネットワーク用ClusterUserDefinedNetwork
+|localnet セカンダリネットワーク用 ClusterUserDefinedNetwork
 |xref:networking:localnet-secondary.adoc[]
 |xref:networking:attachment$localnet-secondary/cudn-localnet.yaml[YAML]
 
 |localnet-vlan-namespace
 |Namespace
-|VLAN localnet VM用名前空間
+|VLAN localnet VM 用 namespace
 |xref:networking:localnet-vlan.adoc[]
 |xref:networking:attachment$localnet-vlan/localnet-vlan-namespace.yaml[YAML]
 
 |localnet-vlan-bridge-mapping-nncp
 |NNCP
-|VLANトラフィック向けにlocalnet-vlanをbr-exブリッジにマッピング
+|VLAN トラフィック向け localnet-vlan の br-ex bridge へのマッピング
 |xref:networking:localnet-vlan.adoc[]
 |xref:networking:attachment$localnet-vlan/localnet-vlan-bridge-mapping-nncp.yaml[YAML]
 
 |localnet-vlan-100-nad
 |NAD
-|VLAN 100 localnet用NetworkAttachmentDefinition
+|VLAN 100 localnet 用 NetworkAttachmentDefinition
 |xref:networking:localnet-vlan.adoc[]
 |xref:networking:attachment$localnet-vlan/localnet-vlan-100-nad.yaml[YAML]
 
 |udn-primary-namespace
 |Namespace
-|UDNプライマリネットワークラベル付き名前空間
+|UDN プライマリネットワークラベル付き namespace
 |xref:networking:udn-primary-networks.adoc[]
 |xref:networking:attachment$udn-primary-networks/udn-primary-namespace.yaml[YAML]
 
 |udn-primary
 |UDN
-|VMプライマリネットワーク用のレイヤー2 UserDefinedNetwork
+|VM プライマリネットワーク用の Layer 2 UserDefinedNetwork
 |xref:networking:udn-primary-networks.adoc[]
 |xref:networking:attachment$udn-primary-networks/udn-primary.yaml[YAML]
 |===
 
 == Virtual Machines
 
-さまざまな構成を示す、各種チュートリアルのVMマニフェストです。
+さまざまな構成を示す、各種チュートリアルの VM マニフェストです。
 
 [cols="2,1,3,2,1"]
 |===
@@ -144,86 +144,86 @@ localnet、UDN、およびブリッジマッピング用のネットワーク設
 
 |fedora-localnet-vm
 |VirtualMachine
-|localnetセカンダリネットワークを持つFedora VM
+|localnet セカンダリネットワークを持つ Fedora VM
 |xref:networking:localnet-secondary.adoc[]
 |xref:networking:attachment$localnet-secondary/fedora-localnet-vm.yaml[YAML]
 
 |fedora-vlan-vm
 |VirtualMachine
-|VLAN 100セカンダリネットワークを持つFedora VM
+|VLAN 100 セカンダリネットワークを持つ Fedora VM
 |xref:networking:localnet-vlan.adoc[]
 |xref:networking:attachment$localnet-vlan/fedora-vlan-vm.yaml[YAML]
 
 |fedora-vm-with-udn
 |VirtualMachine
-|UDNをプライマリネットワークとして使用するFedora VM
+|UDN をプライマリネットワークとして使用する Fedora VM
 |xref:networking:udn-primary-networks.adoc[]
 |xref:networking:attachment$udn-primary-networks/fedora-vm-with-udn.yaml[YAML]
 
 |fedora-dhcp-vm
 |VirtualMachine
-|DHCPネットワーキングを使用する基本的なFedora VM
+|DHCP ネットワーキングを使用する基本的な Fedora VM
 |xref:networking:static-ip-configuration.adoc[]
 |xref:networking:attachment$cloud-init-ip-configuration/fedora-dhcp-vm.yaml[YAML]
 
 |fedora-multi-network-vm
 |VirtualMachine
-|プライマリDHCP + セカンダリ静的IPを持つFedora VM
+|プライマリ DHCP + セカンダリ静的 IP を持つ Fedora VM
 |xref:networking:static-ip-configuration.adoc[]
 |xref:networking:attachment$static-ip-configuration/fedora-multi-network-vm.yaml[YAML]
 
 |fedora-vlan-static-ip-vm
 |VirtualMachine
-|VLANインターフェースと静的IPを持つFedora VM
+|VLAN インターフェースと静的 IP を持つ Fedora VM
 |xref:networking:static-ip-configuration.adoc[]
 |xref:networking:attachment$cloud-init-ip-configuration/fedora-vlan-static-ip-vm.yaml[YAML]
 
 |golden-image-base-vm
 |VirtualMachine
-|ゴールデンイメージ作成用のベースVM
+|ゴールデンイメージ作成用のベース VM
 |xref:vm-lifecycle:custom-golden-images.adoc[]
 |xref:vm-lifecycle:attachment$custom-golden-images/golden-image-base-vm.yaml[YAML]
 
 |webserver-vm-from-golden
 |VirtualMachine
-|ゴールデンイメージからデプロイされたVM
+|ゴールデンイメージからデプロイされた VM
 |xref:vm-lifecycle:custom-golden-images.adoc[]
 |xref:vm-lifecycle:attachment$custom-golden-images/webserver-vm-from-golden.yaml[YAML]
 
 |webserver-vm-2
 |VirtualMachine
-|ゴールデンイメージからデプロイされた2台目のVM
+|ゴールデンイメージからデプロイされた 2 台目の VM
 |xref:vm-lifecycle:custom-golden-images.adoc[]
 |xref:vm-lifecycle:attachment$custom-golden-images/webserver-vm-2.yaml[YAML]
 
 |fedora-access-vm
 |VirtualMachine
-|SSHアクセス用に設定されたFedora VM
+|SSH アクセス用に設定された Fedora VM
 |xref:vm-configuration:remote-access-linux-vms.adoc[]
 |xref:vm-configuration:attachment$remote-access-linux-vms/fedora-access-vm.yaml[YAML]
 
 |fedora-vlan-access-vm
 |VirtualMachine
-|直接SSHアクセスのためのVLANを持つFedora VM
+|直接 SSH アクセスのための VLAN を持つ Fedora VM
 |xref:vm-configuration:remote-access-linux-vms.adoc[]
 |xref:vm-configuration:attachment$remote-access-linux-vms/fedora-vlan-access-vm.yaml[YAML]
 
 |fedora-app-vm
 |VirtualMachine
-|内部DNSデモ用のFedora VM
+|内部 DNS デモ用の Fedora VM
 |xref:vm-configuration:internal-dns-for-vms.adoc[]
 |xref:vm-configuration:attachment$internal-dns-for-vms/fedora-app-vm.yaml[YAML]
 
 |golden-image-datasource
 |DataSource
-|ゴールデンイメージのPVCを指すDataSource
+|ゴールデンイメージの PVC を指す DataSource
 |xref:vm-lifecycle:custom-golden-images.adoc[]
 |xref:vm-lifecycle:attachment$custom-golden-images/golden-image-datasource.yaml[YAML]
 |===
 
 == Services
 
-VMアクセス用のKubernetesサービスです。
+VM アクセス用の Kubernetes サービスです。
 
 [cols="2,1,3,2,1"]
 |===
@@ -231,19 +231,19 @@ VMアクセス用のKubernetesサービスです。
 
 |fedora-vm-web-service
 |Service
-|VMのWebサーバーを公開するLoadBalancerサービス
+|VM の Web サーバーを公開する LoadBalancer サービス
 |xref:networking:udn-primary-networks.adoc[]
 |xref:networking:attachment$udn-primary-networks/fedora-vm-web-service.yaml[YAML]
 
 |ssh-nodeport-service
 |Service
-|VMへのSSHアクセス用NodePortサービス
+|VM への SSH アクセス用 NodePort サービス
 |xref:vm-configuration:remote-access-linux-vms.adoc[]
 |xref:vm-configuration:attachment$remote-access-linux-vms/ssh-nodeport-service.yaml[YAML]
 
 |headless-service
 |Service
-|内部DNS解決用のHeadlessサービス
+|内部 DNS 解決用の Headless サービス
 |xref:vm-configuration:internal-dns-for-vms.adoc[]
 |xref:vm-configuration:attachment$internal-dns-for-vms/headless-service.yaml[YAML]
 |===
@@ -252,7 +252,7 @@ VMアクセス用のKubernetesサービスです。
 
 === ダウンロードと適用
 
-. YAMLリンクをクリックしてマニフェストをダウンロードします。
+. YAML リンクをクリックしてマニフェストをダウンロードします。
 . お使いの環境に合わせて値をカスタマイズします。
 . `oc apply -f <filename>.yaml` を使用して適用します。
 

@@ -1,7 +1,7 @@
-= Cloud-init IP 設定トラブルシューティングガイド
-:navtitle: Cloud-init トラブルシューティング
+= cloud-init IP 設定トラブルシューティングガイド
+:navtitle: cloud-init トラブルシューティング
 
-本ガイドでは、OpenShift Virtualization における cloud-init を使用した IP アドレス設定に関する問題のトラブルシューティング手順、検証コマンド、および解決策を提供します。
+本ガイドでは、OpenShift Virtualization における cloud-init を使用した IP アドレス設定に関する問題のトラブルシューティング手順、検証コマンド、解決策を提供します。
 
 == 目次
 
@@ -34,7 +34,7 @@ oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.interfaces[*].ipAddres
 oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.guestOSInfo}'
 ----
 
-空の場合、Guest Agent は実行されていません（<<issue-1-guest-agent-not-running,Guest Agent の問題>> を参照）。
+空の場合、Guest Agent は実行されていません (<<issue-1-guest-agent-not-running,Guest Agent の問題>> を参照)。
 
 == cloud-init のデバッグ
 
@@ -128,7 +128,7 @@ curl http://<vm-ip>
 
 ==== 問題: DHCP 経由で VM が IP を取得できない
 
-**症状**:
+**事象**:
 
 [source,bash]
 ----
@@ -136,7 +136,7 @@ $ oc get vmi fedora-dhcp-vm -n vms -o jsonpath='{.status.interfaces[0].ipAddress
 # 空を返す、または IP が表示されない
 ----
 
-**診断**:
+**調査**:
 
 [source,bash,role=execute]
 ----
@@ -185,10 +185,10 @@ sudo journalctl -u NetworkManager --since "5 minutes ago"
 
 ==== 問題: cloud-init 内のインターフェース名が間違っている
 
-**症状**:
+**事象**:
 ネットワーク設定が適用されず、ログに「device eth0 not found」と表示される。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -204,8 +204,8 @@ ip link show
 
 . ゲスト OS 内の実際のインターフェース名を確認してください。最新の Linux ディストリビューション (RHEL 8+, Fedora, Ubuntu 16.04+) では、予測可能な命名規則が使用されます。
    * 最初のインターフェース: `enp1s0`
-   * 2番目のインターフェース: `enp2s0`
-   * 3番目のインターフェース: `enp3s0`
+   * 2 番目のインターフェース: `enp2s0`
+   * 3 番目のインターフェース: `enp3s0`
 . cloud-init の networkData を更新し、正しい名前を使用します:
 +
 [source,yaml]
@@ -221,10 +221,10 @@ networkData: |
 
 ==== 問題: 静的 IP が適用されない
 
-**症状**:
+**事象**:
 設定した静的 IP ではなく、VM が DHCP IP を取得してしまう。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -285,7 +285,7 @@ sudo nmcli connection up "Wired connection 1"
 
 ==== 問題: 静的 IP は適用されたが接続できない
 
-**症状**:
+**事象**:
 
 [source,bash]
 ----
@@ -297,7 +297,7 @@ ping 192.168.1.1
 # Network unreachable
 ----
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -326,10 +326,10 @@ ping -c 1 192.168.1.1
 
 ==== 問題: セカンダリインターフェースが設定されない
 
-**症状**:
+**事象**:
 プライマリインターフェースのみ IP を取得し、セカンダリインターフェースがダウンしているか未設定の状態。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -386,10 +386,10 @@ oc describe network-attachment-definition <nad-name> -n <namespace>
 
 ==== 問題: デフォルトルートの競合
 
-**症状**:
+**事象**:
 両方のインターフェースにデフォルトルートがあり、ルーティングの問題が発生している。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -442,10 +442,10 @@ enp2s0:
 
 ==== 問題: VLAN インターフェースが作成されない
 
-**症状**:
+**事象**:
 VLAN インターフェース (例: `enp2s0.100`) が存在しない。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -493,10 +493,10 @@ sudo nmcli connection add type vlan \
 
 ==== 問題: VLAN インターフェースに接続性がない
 
-**症状**:
+**事象**:
 VLAN インターフェースは存在するがネットワークに到達できない。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -536,10 +536,10 @@ oc get nncp -A
 
 ==== 問題: IPv6 アドレスが適用されない
 
-**症状**:
+**事象**:
 IPv4 のみ設定され、IPv6 アドレスがない。
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -580,7 +580,7 @@ cat /proc/sys/net/ipv6/conf/all/disable_ipv6
 
 ==== 問題: DNS が機能しない
 
-**症状**:
+**事象**:
 
 [source,bash]
 ----
@@ -592,7 +592,7 @@ ping google.com
 # Unknown host
 ----
 
-**診断**:
+**調査**:
 
 [source,bash]
 ----
@@ -635,7 +635,7 @@ networkData: |
 echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
 ----
 
-== 診断コマンド
+== 調査コマンド
 
 === ネットワークステータスの全確認
 
@@ -651,10 +651,10 @@ ip route show
 echo "=== DNS ==="
 cat /etc/resolv.conf
 
-echo "=== Cloud-init Status ==="
+echo "=== cloud-init Status ==="
 cloud-init status --long
 
-echo "=== Cloud-init Network Config ==="
+echo "=== cloud-init Network Config ==="
 sudo cat /var/lib/cloud/instance/network-config.txt
 
 echo "=== NetworkManager Connections ==="
@@ -710,21 +710,21 @@ VM 内の最新 Linux ディストリビューションは、PCI スロット位
 |===
 |ネットワーク接続順序 |インターフェース名 |一般的な用途
 
-|1番目 (デフォルト Pod ネットワーク)
+|1 番目 (デフォルト Pod ネットワーク)
 |`enp1s0`
 |プライマリネットワーク (DHCP)
 
-|2番目 (Multus/NAD)
+|2 番目 (Multus/NAD)
 |`enp2s0`
 |セカンダリネットワーク
 
-|3番目 (Multus/NAD)
+|3 番目 (Multus/NAD)
 |`enp3s0`
-|3番目のネットワーク
+|3 番目のネットワーク
 
-|4番目 (Multus/NAD)
+|4 番目 (Multus/NAD)
 |`enp4s0`
-|4番目のネットワーク
+|4 番目のネットワーク
 |===
 
 **ゲスト OS に表示されるインターフェース名を使用してください。最新の Linux ディストリビューション (RHEL 8+、Fedora、Ubuntu 16.04+) は、上記に示す enpXsY 形式を使用します。古いディストリビューションでは、eth0、eth1 などが使用される場合があります。**
@@ -761,7 +761,7 @@ networkData: |
 
 == 参考資料
 
-* link:https://cloudinit.readthedocs.io/en/latest/reference/network-config.html[Cloud-init ドキュメント - ネットワーク設定,window=_blank]
+* link:https://cloudinit.readthedocs.io/en/latest/reference/network-config.html[cloud-init ドキュメント - ネットワーク設定,window=_blank]
 * link:https://netplan.io/examples/[Netplan 設定例,window=_blank]
 * link:https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-about-vm-networking.html[OpenShift Virtualization ネットワーキング,window=_blank]
 * link:https://kubevirt.io/user-guide/virtual_machines/interfaces_and_networks/[KubeVirt ネットワーク設定,window=_blank]

@@ -9,6 +9,7 @@ content:
 asciidoc:
   attributes:
     page-pagination: true
+    build-date: '@'
 
 ui:
   bundle:

@@ -1,18 +1,18 @@
-= 異なるストレージクラスを使用したマルチディスクVMの構成
-:navtitle: マルチディスクVM
+= 異なるストレージクラスを使用したマルチディスク VM の構成
+:navtitle: マルチディスク VM
 
 == 概要
 
-本チュートリアルでは、それぞれ異なるストレージクラスを使用する複数のディスクを持つ仮想マシン（VM）を構成する方法を解説します。マルチディスク構成により、OSのブートディスクには高速なストレージを、データボリュームには低速で安価なストレージを使用するといった「ストレージのティアリング（階層化）」が可能になります。このパターンは、データベースのワークロード、アプリケーションサーバー、およびOSとアプリケーションデータを分離するあらゆるVMで一般的です。
+本チュートリアルでは、それぞれ異なるストレージクラスを使用する複数のディスクを持つ仮想マシン (VM) を構成する方法を解説します。マルチディスク構成により、OS のブートディスクには高速なストレージを、データボリュームには低速で安価なストレージを使用するといったストレージの階層化が可能になります。このパターンは、データベースのワークロード、アプリケーションサーバー、OS とアプリケーションデータを分離するあらゆる VM で一般的です。
 
-2つのディスクを持つVMを作成します。1つはデフォルトのStorageClassを使用するブートディスク、もう1つは2番目のStorageClassを使用するデータディスクです。その後、ゲストOS内で両方のディスクがアクセス可能であることを確認します。
+2 つのディスクを持つ VM を作成します。1 つは default StorageClass を使用するブートディスク、もう 1 つは 2 番目の StorageClass を使用するデータディスクです。その後、ゲスト OS 内で両方のディスクがアクセス可能であることを確認します。
 
 == 前提条件
 
-* **OpenShift 4.18以上**（OpenShift Virtualizationオペレーターがインストール済みであること）
+* **OpenShift 4.18 以上** (OpenShift Virtualization Operator がインストール済みであること)
 * **クラスター管理者アクセス** (`system:admin` または同等の権限)
 * **`oc` CLI** および **`virtctl` CLI** がインストール済みであること
-* **デフォルトのStorageClass** が構成済みであること (例: `lvms-vg1`)
+* **default StorageClass** が構成済みであること (例: `lvms-vg1`)
 
 テスト済みバージョン:
 ----
@@ -21,26 +21,26 @@ OpenShift 4.20, 4.21
 
 == ステップ 1: ディスクとボリュームのマッピングを理解する
 
-KubeVirtのVM仕様では、ディスクとボリュームは連携して動作します。
+KubeVirt の VM 仕様では、ディスクとボリュームは連携して動作します。
 
-* **`spec.template.spec.domain.devices.disks`**: 各ディスクがゲストOSにどのように提示されるか（バスの種類、ディスクの順序）を定義します。
-* **`spec.template.spec.volumes`**: 各ディスクのバックエンドストレージ（PVC、DataVolume、containerDisk、cloudInitNoCloud）を定義します。
+* **`spec.template.spec.domain.devices.disks`**: 各ディスクがゲスト OS にどのように提示されるか (バスの種類、ディスクの順序) を定義します。
+* **`spec.template.spec.volumes`**: 各ディスクのバックエンドストレージ (PVC、DataVolume、containerDisk、cloudInitNoCloud) を定義します。
 * 各ディスクの `name` は、対応するボリュームの `name` と一致する必要があります。
 
-ディスクは、定義された順序でゲストOS内部の `/dev/vda`, `/dev/vdb` などとして認識されます。
+ディスクは、定義された順序でゲスト OS 内部の `/dev/vda`, `/dev/vdb` などとして認識されます。
 
-== ステップ 2: 名前空間の作成
+== ステップ 2: namespace の作成
 
 [source,bash,role=execute]
 ----
 oc create namespace multi-disk-demo
 ----
 
-== ステップ 3: 2番目のStorageClassの作成（オプション）
+== ステップ 3: 2 番目の StorageClass の作成 (オプション)
 
-クラスターにStorageClassが1つしかない場合でも、両方のディスクに同じStorageClassを指定することで本チュートリアルを進めることは可能です。ただし、ストレージのティアリングを実演するために、2番目のStorageClassを作成します。
+クラスターに StorageClass が 1 つしかない場合でも、両方のディスクに同じ StorageClass を指定することで本チュートリアルを進めることは可能です。ただし、ストレージの階層化を実現するために、2 番目の StorageClass を作成します。
 
-LVMストレージを使用するクラスターでは、デフォルトの `lvms-vg1` StorageClassが既に存在します。本チュートリアルでは、異なるストレージ層をシミュレートするために、`Retain`（保持）リクレイムポリシーを持つ2番目のStorageClassを作成します。
+LVM ストレージを使用するクラスターでは、デフォルトの `lvms-vg1` StorageClass が既に存在します。本チュートリアルでは、異なるストレージ層をシミュレートするために、`Retain`(保持) reclaim policy を持つ 2 番目の StorageClass を作成します。
 
 xref:attachment$multi-disk-configuration/sc-data-retain.yaml[sc-data-retain.yaml をダウンロード]
 
@@ -58,7 +58,7 @@ allowVolumeExpansion: true
 EOF
 ----
 
-両方のStorageClassを確認します。
+両方の StorageClass を確認します。
 
 [source,bash,role=execute]
 ----
@@ -72,15 +72,15 @@ lvms-vg1 (default)   topolvm.io    Delete          WaitForFirstConsumer   true  
 lvms-vg1-retain      topolvm.io    Retain          WaitForFirstConsumer   true                   5s
 ----
 
-== ステップ 4: 複数のディスクを持つVMをデプロイする
+== ステップ 4: 複数のディスクを持つ VM をデプロイする
 
-3つのディスクを持つVMを作成します。
+3 つのディスクを持つ VM を作成します。
 
-* **rootdisk**: ブートディスク（30Gi、デフォルトのStorageClass）。Fedoraブートソースからクローンします。
-* **datadisk**: データディスク（10Gi、2番目のStorageClass）。空のボリュームとして作成します。
-* **cloudinitdisk**: Cloud-init構成ディスク。
+* **rootdisk**: ブートディスク (30Gi、default StorageClass)。Fedora ブートソースからクローンします。
+* **datadisk**: データディスク (10Gi、2 番目の StorageClass)。空のボリュームとして作成します。
+* **cloudinitdisk**: cloud-init 構成ディスク。
 
-警告: この例で使用されているcloud-initのパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードを使用するか、SSHキー認証を使用してください。
+WARNING: この例で使用されている cloud-init のパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードを使用するか、SSH キー認証を使用してください。
 
 xref:attachment$multi-disk-configuration/vm-multi-disk.yaml[vm-multi-disk.yaml をダウンロード]
 
@@ -167,22 +167,22 @@ EOF
 
 === 構成の重要な詳細
 
-* rootdisk上の **`bootOrder: 1`** は、VMがOSディスクから起動することを保証します。
-* rootdisk上の **`source.registry`** は、Fedoraのコンテナディスクイメージをプルします。
-* datadisk上の **`source.blank: {}`** は、空のフォーマットされていないボリュームを作成します。
+* rootdisk 上の **`bootOrder: 1`** は、VM が OS ディスクから起動することを保証します。
+* rootdisk 上の **`source.registry`** は、Fedora のコンテナディスクイメージを Pull します。
+* datadisk 上の **`source.blank: {}`** は、空のフォーマットされていないボリュームを作成します。
 * 各 `dataVolumeTemplates` エントリで、異なる `storageClassName` を指定できます。
-* `devices.disks` 内のディスク名は `volumes` 内のボリューム名と一致し、それがさらに `dataVolumeTemplates` のメタデータ名と一致している必要があります。
+* `devices.disks` 内のディスク名は `volumes` 内のボリューム名と一致し、それが `dataVolumeTemplates` のメタデータ名と一致している必要があります。
 
-== ステップ 5: VMとディスクを確認する
+== ステップ 5: VM とディスクを確認する
 
-両方のDataVolumeが完了し、VMが起動するまで待ちます。
+両方の DataVolume が完了し、VM が起動するまで待ちます。
 
 [source,bash,role=execute]
 ----
 oc get dv -n multi-disk-demo -w
 ----
 
-両方が `Succeeded` になったら、VMを確認します。
+両方が `Succeeded` になったら、VM を確認します。
 
 [source,bash,role=execute]
 ----
@@ -195,7 +195,7 @@ NAME            AGE   STATUS    READY
 multi-disk-vm   3m    Running   True
 ----
 
-PVCがそれぞれのStorageClassでバインドされていることを確認します。
+PVC がそれぞれの StorageClass でバインドされていることを確認します。
 
 [source,bash,role=execute]
 ----
@@ -209,9 +209,9 @@ multi-disk-rootdisk    Bound    pvc-xxxx     30Gi       RWO            lvms-vg1 
 multi-disk-datadisk    Bound    pvc-yyyy     10Gi       RWO            lvms-vg1-retain   3m
 ----
 
-== ステップ 6: VM内部でデータディスクをフォーマットしてマウントする
+== ステップ 6: VM 内部でデータディスクをフォーマットしてマウントする
 
-VMコンソールにアクセスします。
+VM コンソールにアクセスします。
 
 [source,bash,role=execute]
 ----
@@ -239,7 +239,7 @@ vdb    252:16   0   10G  0 disk
 vdc    252:32   0    1M  0 disk
 ----
 
-データディスクは `vdb`（10G、未フォーマット）として表示されます。これをXFSでフォーマットします。
+データディスクは `vdb`(10G、未フォーマット) として表示されます。これを XFS でフォーマットします。
 
 [source,bash]
 ----
@@ -292,7 +292,7 @@ sudo sh -c "echo '/dev/vdb /mnt/data xfs defaults 0 0' >> /etc/fstab"
 
 == ステップ 7: ストレージの分離を確認する
 
-各PVCが異なるStorageClassとPersistentVolumeを使用していることを確認します。
+各 PVC が異なる StorageClass と PersistentVolume を使用していることを確認します。
 
 [source,bash,role=execute]
 ----
@@ -304,9 +304,9 @@ oc get pvc multi-disk-rootdisk -n multi-disk-demo -o jsonpath='StorageClass: {.s
 oc get pvc multi-disk-datadisk -n multi-disk-demo -o jsonpath='StorageClass: {.spec.storageClassName}, Volume: {.spec.volumeName}, Capacity: {.status.capacity.storage}'
 ----
 
-これにより、各ディスクが独立してプロビジョニングされており、個別に管理（例：異なるバックアップポリシー、拡張スケジュール、リクレイム動作など）できることが確認できました。
+これにより、各ディスクが独立してプロビジョニングされており、個別に管理 (例：異なるバックアップポリシー、拡張スケジュール、リクレイム動作など) できることが確認できました。
 
-== マルチディスクVMのユースケース
+== マルチディスク VM のユースケース
 
 [cols="1,1,1",options="header"]
 |===
@@ -315,15 +315,15 @@ oc get pvc multi-disk-datadisk -n multi-disk-demo -o jsonpath='StorageClass: {.s
 | データディスク
 
 | データベースサーバー
-| 高速SSD (OS + バイナリ)
-| 大容量HDD (データファイル、ログ)
+| 高速 SSD (OS + バイナリ)
+| 大容量 HDD (データファイル、ログ)
 
 | アプリケーションサーバー
 | 標準ストレージ (OS)
-| 高速SSD (アプリケーションの状態)
+| 高速 SSD (アプリケーションの状態)
 
-| 開発用VM
-| 共有ストレージ (OSテンプレート)
+| 開発用 VM
+| 共有ストレージ (OS テンプレート)
 | ローカルストレージ (一時領域)
 
 | ロギング/監視
@@ -333,21 +333,21 @@ oc get pvc multi-disk-datadisk -n multi-disk-demo -o jsonpath='StorageClass: {.s
 
 == クリーンアップ
 
-名前空間を削除します。これにより、VM、PVC、DataVolumeが削除されます。
+namespace を削除します。これにより、VM、PVC、DataVolume が削除されます。
 
 [source,bash,role=execute]
 ----
 oc delete namespace multi-disk-demo
 ----
 
-2番目のStorageClassを削除します。
+2 番目の StorageClass を削除します。
 
 [source,bash,role=execute]
 ----
 oc delete storageclass lvms-vg1-retain
 ----
 
-`lvms-vg1-retain` ストレージクラスは `reclaimPolicy: Retain` を使用しているため、PVCが削除されても基盤となるPersistentVolumeは自動的に削除されません。`Released` 状態のPVがないか確認します。
+`lvms-vg1-retain` ストレージクラスは `reclaimPolicy: Retain` を使用しているため、PVC が削除されても基盤となる PersistentVolume は自動的に削除されません。`Released` 状態の PV がないか確認します。
 
 [source,bash,role=execute]
 ----
@@ -365,12 +365,12 @@ oc delete pv <pv-name>
 
 本チュートリアルでは、以下の方法を学びました。
 
-* 異なるStorageClassを使用して複数のディスクを持つVMを構成する
+* 異なる StorageClass を使用して複数のディスクを持つ VM を構成する
 * `dataVolumeTemplates` を使用して、各ディスクのストレージを個別に定義する
-* ブート順序を設定し、VMがどのディスクから起動するかを制御する
+* ブート順序を設定し、VM がどのディスクから起動するかを制御する
 * 追加ストレージ用の空のデータボリュームを作成する
-* ゲストOS内部で追加ディスクをフォーマットおよびマウントする
-* VMにおけるストレージの階層化パターンを理解する
+* ゲスト OS 内部で追加ディスクをフォーマットおよびマウントする
+* VM におけるストレージの階層化パターンを理解する
 
 == 参照
 

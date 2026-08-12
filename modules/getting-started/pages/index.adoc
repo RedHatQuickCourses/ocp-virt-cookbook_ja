@@ -1,4 +1,4 @@
-= はじめに
+= スタートガイド
 :navtitle:
 
 == 概要
@@ -26,25 +26,25 @@
 == セクション
 
 xref:prerequisites.adoc[]::
-OpenShift Virtualization を操作するための詳細な要件とセットアップ手順。
+OpenShift Virtualization を操作するための詳細な要件とセットアップ手順
 
 xref:install-openshift-virtualization.adoc[]::
-クラスターへの OpenShift Virtualization Operator のインストールと設定。
+クラスターへの OpenShift Virtualization Operator のインストールと設定
 
 xref:virtctl-basics.adoc[]::
-仮想マシンを管理するための重要な `virtctl` コマンドの学習。
+仮想マシンを管理するための重要な `virtctl` コマンドの学習
 
 xref:default-storage-class.adoc[]::
-仮想マシンのデプロイを簡素化するためのデフォルトストレージクラスの設定。
+仮想マシンのデプロイを簡素化するためのデフォルトストレージクラスの設定
 
 xref:create-vm-web-console.adoc[]::
-テンプレートを使用して、OpenShift Web コンソールから仮想マシンを作成。
+テンプレートを使用し、OpenShift Web コンソールから VM を作成
 
 xref:vm-lifecycle-states.adoc[]::
-効果的な VM 管理のための、VM ライフサイクル状態と基本操作の理解。
+効果的な VM 管理のための、VM ライフサイクル状態と基本操作の理解
 
 xref:cloud-init-fundamentals.adoc[]::
-cloud-init の基礎、実行ステージ、一般的なモジュール、および VirtualMachine マニフェストへの cloud-init 設定の埋め込み方法の学習。
+cloud-init の基礎、実行ステージ、一般的なモジュール、VirtualMachine マニフェストへの cloud-init 設定の埋め込み方法の学習
 
 == 次のステップ
 
