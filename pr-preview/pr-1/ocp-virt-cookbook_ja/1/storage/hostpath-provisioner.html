@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>HostPath Provisioner を使用したローカルストレージ :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="lvm-troubleshooting.html">
+    <link rel="next" href="creating-managing-storage-class.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ストレージ設定</a></li>
+    <li><a href="hostpath-provisioner.html">HostPath Provisioner</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">HostPath Provisioner を使用したローカルストレージ</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>HostPath Provisioner (HPP) は、OpenShift Virtualization ワークロードに対してローカルノードストレージを使用するシンプルな方法を提供します。HPP は OpenShift Virtualization Operator の一部として含まれており、ホストファイルシステムのディレクトリをバックエンドとする永続ボリューム (Persistent Volume) を作成します。</p>
+</div>
+<div class="sect2">
+<h3 id="_hostpath_provisioner_の使用場面"><a class="anchor" href="#_hostpath_provisioner_の使用場面"></a>HostPath Provisioner の使用場面</h3>
+<div class="paragraph">
+<p>HPP は以下のような場合に適しています。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>開発およびテスト環境</strong>: 複雑なストレージインフラを構築せずに素早くセットアップ可能</p>
+</li>
+<li>
+<p><strong>シングルノードクラスター</strong>: 分散ストレージが不要な環境</p>
+</li>
+<li>
+<p><strong>プロトタイピング</strong>: 本番環境向けのストレージを導入する前の迅速な反復作業</p>
+</li>
+<li>
+<p><strong>エッジデプロイメント</strong>: インフラ要件が最小限である環境</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_lvm_storage_との比較"><a class="anchor" href="#_lvm_storage_との比較"></a>LVM Storage との比較</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">機能</th>
+<th class="tableblock halign-left valign-top">HostPath Provisioner</th>
+<th class="tableblock halign-left valign-top">LVM Storage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">セットアップの複雑さ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">シンプル (ディレクトリベース)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">中程度 (専用ディスクが必要)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">シンプロビジョニング</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">なし</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">あり</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">スナップショット</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">なし</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">あり</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">容量効率</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">低い (フル割り当て)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">高い (シンプロビジョニング)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">マルチノードサポート</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">あり (ノードごとのストレージプール)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">あり</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">本番環境への適応性</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">開発/テスト推奨</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">本番環境対応</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>スナップショットやシンプロビジョニングなどの高度な機能を必要とする本番デプロイメントについては、<a href="lvm-operator.html" class="xref page">LVM Storage Operator</a> のチュートリアルを参照してください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_学習内容"><a class="anchor" href="#_学習内容"></a>学習内容</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>ローカルストレージ用の HostPathProvisioner の設定</p>
+</li>
+<li>
+<p>HPP 用の StorageClass の作成</p>
+</li>
+<li>
+<p>適切な権限を持つノードディレクトリの準備</p>
+</li>
+<li>
+<p>PVC の作成と VM での使用</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>検証済みバージョン:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>OpenShift 4.21+
+OpenShift Virtualization 4.21+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>OpenShift 4.21+</strong> (OpenShift Virtualization がインストール済みであること)</p>
+</li>
+<li>
+<p><strong>クラスター管理者アクセス</strong>: HostPathProvisioner および StorageClass リソースを作成するために必要</p>
+</li>
+<li>
+<p><strong>利用可能なローカルディスク容量</strong>: VM ストレージとして十分な容量が Worker Node にあること</p>
+</li>
+<li>
+<p><strong>oc CLI</strong>: インストールおよび設定済みであること</p>
+</li>
+<li>
+<p><strong>virtctl CLI</strong>: VM コンソールアクセスに必要</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>OpenShift Virtualization がインストールされていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n openshift-cnv | grep kubevirt</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Operator のバージョンが表示されれば成功です (バージョンは環境により異なります)。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>kubevirt-hyperconverged-operator.v4.x.x   OpenShift Virtualization   4.x.x   Succeeded</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_ホストディレクトリの準備"><a class="anchor" href="#_ステップ_1_ホストディレクトリの準備"></a>ステップ 1: ホストディレクトリの準備</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>HPP は、ボリュームを格納する各ノード上のディレクトリを必要とします。このディレクトリが存在し、適切な SELinux コンテキストを持っている必要があります。</p>
+</div>
+<div class="sect2">
+<h3 id="_オプション_a_machineconfig_の使用_本番環境で推奨"><a class="anchor" href="#_オプション_a_machineconfig_の使用_本番環境で推奨"></a>オプション A: MachineConfig の使用 (本番環境で推奨)</h3>
+<div class="paragraph">
+<p>MachineConfig を作成し、すべての Worker Node でディレクトリが存在し、再起動後も永続化されるようにします。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/hostpath-provisioner/hpp-machineconfig.yaml" class="xref attachment">hpp-machineconfig.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 50-hpp-directory
+  labels:
+    machineconfiguration.openshift.io/role: worker
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    systemd:
+      units:
+      - name: create-hpp-directory.service
+        enabled: true
+        contents: |
+          [Unit]
+          Description=Create HostPath Provisioner directory
+          Before=kubelet.service
+
+          [Service]
+          Type=oneshot
+          ExecStart=/bin/mkdir -p /var/hpvolumes
+          ExecStart=/bin/chcon -Rt container_file_t /var/hpvolumes
+          RemainAfterExit=yes
+
+          [Install]
+          WantedBy=multi-user.target
+EOF</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+MachineConfig を適用すると、Worker Node のローリング再起動がトリガーされます。すべてのノードが更新されるまで待機してから進んでください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>MachineConfig のロールアウトを監視します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get mcp worker</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>UPDATED</code> が <code>True</code>、<code>UPDATING</code> が <code>False</code> になるまで待ちます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINECOUNT
+worker   rendered-worker-abc123                             True      False      False      6              6</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_オプション_b_手動でのディレクトリ作成_クイックテスト用"><a class="anchor" href="#_オプション_b_手動でのディレクトリ作成_クイックテスト用"></a>オプション B: 手動でのディレクトリ作成 (クイックテスト用)</h3>
+<div class="paragraph">
+<p>クイックテストを行う場合は、各ノードで手動でディレクトリを作成します。</p>
+</div>
+<div class="paragraph">
+<p>まず、Worker Node のリストを取得します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nodes -l node-role.kubernetes.io/worker</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>次に、各 Worker Node に対して以下のコマンドを実行します (<code>&lt;worker-node-name&gt;</code> は実際のノード名に置き換えてください)。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;worker-node-name&gt; -- chroot /host mkdir -p /var/hpvolumes</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;worker-node-name&gt; -- chroot /host chcon -Rt container_file_t /var/hpvolumes</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+手動でのディレクトリ作成は、ノードの再起動後には永続化されません。永続的な設定には MachineConfig を使用してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ディレクトリ作成の確認"><a class="anchor" href="#_ディレクトリ作成の確認"></a>ディレクトリ作成の確認</h3>
+<div class="paragraph">
+<p>ディレクトリが存在し、適切な SELinux コンテキストが設定されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc debug node/&lt;worker-node-name&gt; -- chroot /host ls -laZ /var/hpvolumes</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">total 0
+drwxr-xr-x. 2 root root system_u:object_r:container_file_t:s0 6 Mar 19 10:00 .
+drwxr-xr-x. 22 root root system_u:object_r:var_t:s0          4096 Mar 19 10:00 ..</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>container_file_t</code> という SELinux コンテキストにより、コンテナはこのディレクトリに対して読み書きが可能になります。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_hostpathprovisioner_の作成"><a class="anchor" href="#_ステップ_2_hostpathprovisioner_の作成"></a>ステップ 2: HostPathProvisioner の作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>HostPathProvisioner カスタムリソースを作成して、CSI ドライバーを設定します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/hostpath-provisioner/hpp-hostpathprovisioner.yaml" class="xref attachment">hpp-hostpathprovisioner.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: hostpathprovisioner.kubevirt.io/v1beta1
+kind: HostPathProvisioner
+metadata:
+  name: hostpath-provisioner
+spec:
+  imagePullPolicy: IfNotPresent
+  storagePools:
+  - name: local
+    path: /var/hpvolumes
+  workload:
+    nodeSelector:
+      kubernetes.io/os: linux
+EOF</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_設定パラメーター"><a class="anchor" href="#_設定パラメーター"></a>設定パラメーター</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>storagePools</code></strong>: 1 つ以上のストレージプールを定義 (それぞれに固有の名前とパスを指定)</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>name</code>: StorageClass でこのプールを参照するために使用する識別子</p>
+</li>
+<li>
+<p><code>path</code>: ボリュームが作成されるホストノード上のディレクトリ</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong><code>workload.nodeSelector</code></strong>: HPP CSI Pod を実行するノードを制御</p>
+</li>
+<li>
+<p><strong><code>imagePullPolicy</code></strong>: コンテナイメージのプルポリシー</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hostpathprovisioner_の確認"><a class="anchor" href="#_hostpathprovisioner_の確認"></a>HostPathProvisioner の確認</h3>
+<div class="paragraph">
+<p>HostPathProvisioner のステータスを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get hostpathprovisioner hostpath-provisioner</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                   AGE
+hostpath-provisioner   30s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>CSI Pod が Worker Node で実行されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n openshift-cnv -l k8s-app=hostpath-provisioner</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例 (Worker Node ごとに 1 つの Pod):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                                           READY   STATUS    RESTARTS   AGE
+hostpath-provisioner-csi-xxxxx                 4/4     Running   0          2m
+hostpath-provisioner-csi-yyyyy                 4/4     Running   0          2m
+hostpath-provisioner-csi-zzzzz                 4/4     Running   0          2m</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_storageclass_の作成"><a class="anchor" href="#_ステップ_3_storageclass_の作成"></a>ステップ 3: StorageClass の作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>HostPath Provisioner を使用する StorageClass を作成します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/hostpath-provisioner/hpp-storageclass.yaml" class="xref attachment">hpp-storageclass.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: hostpath-csi
+provisioner: kubevirt.io.hostpath-provisioner
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  storagePool: local
+EOF</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_設定パラメーター_2"><a class="anchor" href="#_設定パラメーター_2"></a>設定パラメーター</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>provisioner</code></strong>: <code>kubevirt.io.hostpath-provisioner</code> である必要があります。</p>
+</li>
+<li>
+<p><strong><code>reclaimPolicy</code></strong>: <code>Delete</code> に設定すると、PVC が削除されたときに PV データも削除されます。データを保持するには <code>Retain</code> を使用します。</p>
+</li>
+<li>
+<p><strong><code>volumeBindingMode</code></strong>: <code>WaitForFirstConsumer</code> は、Pod が PVC を使用するまで PV の作成を遅延させ、正しいノード上にボリュームが作成されるようにします。</p>
+</li>
+<li>
+<p><strong><code>parameters.storagePool</code></strong>: HostPathProvisioner で定義されたストレージプール名を参照します。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_storageclass_の確認"><a class="anchor" href="#_storageclass_の確認"></a>StorageClass の確認</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get storageclass hostpath-csi</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME           PROVISIONER                        RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+hostpath-csi   kubevirt.io.hostpath-provisioner   Delete          WaitForFirstConsumer   false                  10s</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_オプション_default_storageclass_への設定"><a class="anchor" href="#_オプション_default_storageclass_への設定"></a>オプション: default StorageClass への設定</h3>
+<div class="paragraph">
+<p>HPP を default StorageClass に設定します (他のストレージがない開発/テストクラスターで有用です)。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc patch storageclass hostpath-csi -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+クラスター内には default StorageClass は 1 つだけであるべきです。他にデフォルトが存在する場合は、先にそのアノテーションを削除してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 既存の StorageClass からデフォルト設定を削除
+oc patch storageclass &lt;existing-default&gt; -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_ストレージプロビジョニングのテスト"><a class="anchor" href="#_ステップ_4_ストレージプロビジョニングのテスト"></a>ステップ 4: ストレージプロビジョニングのテスト</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>テスト用の PVC を作成し、HPP が機能していることを確認します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/hostpath-provisioner/hpp-test-pvc.yaml" class="xref attachment">hpp-test-pvc.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hpp-test-pvc
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: hostpath-csi
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>PVC のステータスを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc hpp-test-pvc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>WaitForFirstConsumer</code> の場合、PVC は Pod が使用するまで <code>Pending</code> 状態のままです。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME           STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+hpp-test-pvc   Pending                                      hostpath-csi   &lt;unset&gt;                 5s</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ボリュームのバインディングをトリガーするためにテスト Pod を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hpp-test-pod
+  namespace: default
+spec:
+  containers:
+  - name: test
+    image: registry.access.redhat.com/ubi9/ubi:latest
+    command: ["sleep", "3600"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: hpp-test-pvc
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>PVC がバインドされたことを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc hpp-test-pvc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+hpp-test-pvc   Bound    pvc-abc12345-6789-def0-1234-567890abcdef   5Gi        RWO            hostpath-csi   &lt;unset&gt;                 30s</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+HPP は、要求されたサイズではなく、ホストパス上の全利用可能容量を報告する場合があります。これは hostpath ベースのストレージにおける想定どおりの動作です。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>ボリュームへの書き込みテストを行います。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec hpp-test-pod -- sh -c "echo 'HPP Storage Test' &gt; /data/test.txt &amp;&amp; cat /data/test.txt"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">HPP Storage Test</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>テストリソースをクリーンアップします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete pod hpp-test-pod
+oc delete pvc hpp-test-pvc</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_仮想マシンでの使用"><a class="anchor" href="#_ステップ_5_仮想マシンでの使用"></a>ステップ 5: 仮想マシンでの使用</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>HPP ベースのストレージを使用する VM を作成します。</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+この例の cloud-init パスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSH キー認証を使用してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/hostpath-provisioner/hpp-test-vm.yaml" class="xref attachment">hpp-test-vm.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: hpp-test-vm
+  namespace: default
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: hpp-test-vm
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 1Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: hpp-test-vm-rootdisk
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: fedora
+            password: fedora
+            chpasswd:
+              expire: false
+  dataVolumeTemplates:
+  - metadata:
+      name: hpp-test-vm-rootdisk
+    spec:
+      storage:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: hostpath-csi
+      source:
+        registry:
+          url: docker://quay.io/containerdisks/fedora:latest
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM と DataVolume のステータスを監視します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># DataVolume のインポート進捗を確認
+oc get dv -n default hpp-test-vm-rootdisk -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>進行状況の例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME                    PHASE              PROGRESS   RESTARTS   AGE
+hpp-test-vm-rootdisk    ImportScheduled    N/A                   5s
+hpp-test-vm-rootdisk    ImportInProgress   0.00%                 10s
+hpp-test-vm-rootdisk    ImportInProgress   45.50%                30s
+hpp-test-vm-rootdisk    Succeeded          100.0%                1m</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM のステータスを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm hpp-test-vm
+oc get vmi hpp-test-vm</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME          AGE   STATUS    READY
+hpp-test-vm   2m    Running   True
+
+NAME          AGE   PHASE     IP             NODENAME   READY
+hpp-test-vm   2m    Running   10.x.x.x       workerXX   True</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM コンソールにアクセスします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console hpp-test-vm</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM リソースをクリーンアップします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete vm hpp-test-vm</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_pvc_が_pending_のままになる"><a class="anchor" href="#_pvc_が_pending_のままになる"></a>PVC が Pending のままになる</h3>
+<div class="paragraph">
+<p>Pod 作成後も PVC が Pending の場合:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># PVC イベントを確認
+oc describe pvc &lt;pvc-name&gt;
+
+# HPP Podのログを確認
+oc logs -n openshift-cnv -l k8s-app=hostpath-provisioner -c hostpath-provisioner</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>一般的な原因:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>ディレクトリが存在しない</strong>: 対象ノード上で <code>/var/hpvolumes</code> が存在することを確認してください。</p>
+</li>
+<li>
+<p><strong>SELinux コンテキストが不適切</strong>: <code>chcon -Rt container_file_t /var/hpvolumes</code> が適用されたか確認してください。</p>
+</li>
+<li>
+<p><strong>HPP Pod が実行されていない</strong>: HPP CSI Pod がすべての Worker Node で実行されていることを確認してください。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_権限拒否_permission_denied_エラー"><a class="anchor" href="#_権限拒否_permission_denied_エラー"></a>権限拒否 (Permission Denied) エラー</h3>
+<div class="paragraph">
+<p>ボリュームへの書き込み時に権限エラーが発生する場合:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ホスト上の SELinux コンテキストを確認
+oc debug node/&lt;worker-node-name&gt; -- chroot /host ls -laZ /var/hpvolumes
+
+# 必要に応じて SELinux コンテキストを再適用
+oc debug node/&lt;worker-node-name&gt; -- chroot /host chcon -Rt container_file_t /var/hpvolumes</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hpp_pod_が起動しない"><a class="anchor" href="#_hpp_pod_が起動しない"></a>HPP Pod が起動しない</h3>
+<div class="paragraph">
+<p>HostPathProvisioner のステータスとイベントを確認してください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe hostpathprovisioner hostpath-provisioner
+
+# openshift-cnv namespaceの問題を確認
+oc get events -n openshift-cnv --sort-by='.lastTimestamp' | tail -20</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ボリュームが期待したノードに作成されない"><a class="anchor" href="#_ボリュームが期待したノードに作成されない"></a>ボリュームが期待したノードに作成されない</h3>
+<div class="paragraph">
+<p><code>WaitForFirstConsumer</code> の場合、ボリュームは Pod がスケジュールされたノード上に作成されます。ノードの配置を制御したい場合:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># Podスペックに nodeSelector を追加
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: &lt;worker-node-name&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>クラスターから HPP を削除するには:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># StorageClass の削除
+oc delete storageclass hostpath-csi
+
+# HostPathProvisioner の削除
+oc delete hostpathprovisioner hostpath-provisioner
+
+# オプション: MachineConfig の削除 (ノードの再起動がトリガーされます)
+oc delete machineconfig 50-hpp-directory</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+HostPathProvisioner を削除しても、既存の PV は削除されません。すべてのデータをクリーンアップしたい場合は、先に PVC を削除してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>学習した内容:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift 上のローカルストレージ用 HostPath Provisioner の設定</p>
+</li>
+<li>
+<p>HPP 用のストレージプールと StorageClass の作成</p>
+</li>
+<li>
+<p>適切な SELinux コンテキストを持つノードディレクトリの準備</p>
+</li>
+<li>
+<p>Pod および VM での HPP ストレージの使用</p>
+</li>
+<li>
+<p>HPP に関する一般的な問題のトラブルシューティング</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>HPP は、開発およびテストに最適な、シンプルで軽量なストレージソリューションを提供します。高度な機能を必要とする本番ワークロードについては、<a href="lvm-operator.html" class="xref page">LVM Storage Operator</a> を検討してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="lvm-operator.html" class="xref page">LVM Storage Operator</a> - シンプロビジョニングとスナップショットを備えた本番環境対応のローカルストレージ</p>
+</li>
+<li>
+<p><a href="lvm-troubleshooting.html" class="xref page">LVM Storage のトラブルシューティング</a> - ストレージの問題診断</p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/virtualization/storage#virt-configuring-local-storage-with-hpp" target="_blank" rel="noopener">OpenShift Virtualization: Configuring Local Storage with HPP</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="lvm-troubleshooting.html">LVM のトラブルシューティング</a></span>
+  <span class="next"><a href="creating-managing-storage-class.html">StorageClass の作成と管理</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+  </body>
+</html>
