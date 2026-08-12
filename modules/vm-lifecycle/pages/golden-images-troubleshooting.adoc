@@ -1,7 +1,7 @@
 = ゴールデンイメージトラブルシューティングガイド
 :navtitle: ゴールデンイメージトラブルシューティング
 
-本ガイドでは、OpenShift Virtualization におけるカスタムOSイメージおよびゴールデンイメージの作成と使用に関連する問題についてのトラブルシューティング手順、確認コマンド、解決策を提供します。
+本ガイドでは、OpenShift Virtualization におけるカスタム OS イメージおよびゴールデンイメージの作成と使用に関連する問題についてのトラブルシューティング手順、確認コマンド、解決策を提供します。
 
 == 目次
 * <<クイックヘルスチェック>>
@@ -10,7 +10,7 @@
 
 == クイックヘルスチェック
 
-=== namespaceの確認
+=== namespace の確認
 [source,bash,role=execute]
 ----
 oc get namespace golden-images
@@ -49,7 +49,7 @@ oc get datasource -n golden-images
 
 == ステップ別詳細確認
 
-=== ステップ 1: ベースVM作成の検証
+=== ステップ 1: ベース VM 作成の検証
 
 ==== VM ステータスの確認
 [source,bash,role=execute]
@@ -72,8 +72,8 @@ oc get vmi base-fedora-vm -n golden-images -o yaml
 
 以下を確認してください:
 - `status.phase: Running`
-- `status.interfaces[].ipAddress` (VMにIPが割り当てられていること)
-- `status.guestOSInfo.id: fedora` (guest agentが実行されていること)
+- `status.interfaces[].ipAddress` (VM に IP が割り当てられていること)
+- `status.guestOSInfo.id: fedora` (guest agent が実行されていること)
 
 例:
 [source,yaml]
@@ -100,7 +100,7 @@ status:
   phase: Running
 ----
 
-==== ベースVMの DataVolume 確認
+==== ベース VM の DataVolume 確認
 [source,bash,role=execute]
 ----
 oc get dv base-fedora-vm-disk -n golden-images
@@ -113,13 +113,13 @@ NAME                  PHASE       PROGRESS   RESTARTS   AGE
 base-fedora-vm-disk   Succeeded   100.0%                5m
 ----
 
-==== ベースVM用 PVC の確認
+==== ベース VM 用 PVC の確認
 [source,bash,role=execute]
 ----
 oc get pvc base-fedora-vm-disk -n golden-images
 ----
 
-期待される出力には `Bound` ステータスと正しいStorage Classが表示されます:
+期待される出力には `Bound` ステータスと正しい Storage Class が表示されます:
 [source,text]
 ----
 NAME                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
@@ -135,7 +135,7 @@ virtctl console base-fedora-vm -n golden-images
 ----
 
 ==== ソフトウェアがインストールされているか確認
-VM内部にて:
+VM 内部にて:
 [source,bash]
 ----
 # For nginx
@@ -147,7 +147,7 @@ cat /etc/nginx/nginx.conf
 ls -la /usr/share/nginx/html/
 ----
 
-==== Cloud-init ログの確認 (使用している場合)
+==== cloud-init ログの確認 (使用している場合)
 [source,bash]
 ----
 cat /var/log/cloud-init.log
@@ -255,7 +255,7 @@ oc get dv webserver-vm-1-disk -n golden-images -o jsonpath='{.spec.sourceRef}'
 ----
 
 ==== VM 機能の確認
-VMのIPアドレスを取得します:
+VM の IP アドレスを取得します:
 [source,bash,role=execute]
 ----
 oc get vmi webserver-vm-1 webserver-vm-2 -n golden-images -o jsonpath='{range .items[*]}{.metadata.name}: {.status.interfaces[0].ipAddress}{"\n"}{end}'
@@ -268,7 +268,7 @@ webserver-vm-1: 10.128.0.169
 webserver-vm-2: 10.128.0.170
 ----
 
-別のPodから nginx をテストします:
+別の Pod から nginx をテストします:
 [source,bash,role=execute]
 ----
 oc run test-curl --image=curlimages/curl:latest --rm -it --restart=Never -- curl http://10.128.0.169
@@ -282,7 +282,7 @@ oc run test-curl --image=curlimages/curl:latest --rm -it --restart=Never -- curl
 oc get pvc -n golden-images
 ----
 
-効率的なクローンが実行されているため、すべてベースVMディスクから派生した複数のPVCを確認してください:
+効率的なクローンが実行されているため、すべてベース VM ディスクから派生した複数の PVC を確認してください:
 [source,text]
 ----
 NAME                   STATUS   VOLUME           CAPACITY   ACCESS MODES   STORAGECLASS   AGE
@@ -291,7 +291,7 @@ webserver-vm-1-disk    Bound    pvc-def456...    30Gi       RWO            lvms-
 webserver-vm-2-disk    Bound    pvc-ghi789...    30Gi       RWO            lvms-vg1       5m
 ----
 
-==== 実際のストレージ使用量の確認 (LVM使用時)
+==== 実際のストレージ使用量の確認 (LVM 使用時)
 [source,bash,role=execute]
 ----
 # Get the LVM thin pool usage
@@ -300,7 +300,7 @@ oc get lvmvolumegroup -n openshift-storage -o yaml | grep -A 10 status
 
 == 一般的な問題と解決策
 
-=== 問題 1: ベースVMの DataVolume が ImportInProgress で停止している
+=== 問題 1: ベース VM の DataVolume が ImportInProgress で停止している
 
 **事象**:
 [source,bash,role=execute]
@@ -370,7 +370,7 @@ oc get events -n golden-images --sort-by='.lastTimestamp' | grep -i error
 
 **一般的な原因**:
 - DataVolume が `PendingPopulation` または失敗状態
-- Storage Classの問題
+- Storage Class の問題
 - PVC バインディングの問題
 
 **解決策**:
@@ -382,7 +382,7 @@ oc get events -n golden-images --sort-by='.lastTimestamp' | grep -i error
 ----
 oc get storageclass
 ----
-. 指定されていない場合、デフォルト Storage Class を確認します:
+. 指定されていない場合、default StorageClass を確認します:
 +
 [source,bash,role=execute]
 ----
@@ -439,13 +439,13 @@ systemctl status nginx
 ----
 
 **一般的な原因**:
-- DataSource 作成前にベースVMがカスタマイズされていなかった
+- DataSource 作成前にベース VM がカスタマイズされていなかった
 - DataSource が間違った PVC を参照している
-- VMのクローンに失敗した
+- VM のクローンに失敗した
 
 **解決策**:
 
-. ベースVMにカスタマイズが含まれていることを確認します:
+. ベース VM にカスタマイズが含まれていることを確認します:
 +
 [source,bash,role=execute]
 ----

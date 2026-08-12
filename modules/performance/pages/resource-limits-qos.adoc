@@ -1,60 +1,60 @@
-= VM Resource LimitsとQoSの設定
-:navtitle: Resource limitsとQoS
+= VM Resource Limits と QoS の設定
+:navtitle: Resource limits と QoS
 
 == 概要
 
-このチュートリアルでは、OpenShift Virtualizationにおける仮想マシンのCPUおよびメモリのリソース requests、limits、QoS クラスの設定方法を解説します。適切なリソース管理を行うことで、リソースの枯渇を防ぎ、十分なVMパフォーマンスを確保し、効率的なマルチテナントクラスターの運用が可能になります。
+このチュートリアルでは、OpenShift Virtualization における仮想マシンの CPU およびメモリのリソース requests、limits、QoS クラスの設定方法を解説します。適切なリソース管理を行うことで、リソースの枯渇を防ぎ、十分な VM パフォーマンスを確保し、効率的なマルチテナントクラスターの運用が可能になります。
 
-KubeVirtがVMのリソース spec をコンテナレベルのrequestsとlimitsに変換する方法、KubernetesのQoS classをVMに適用する方法、ResourceQuotaやLimitRangeを使用してnamespaceレベルでガバナンスを強制する方法について学びます。
+KubeVirt が VM のリソース spec をコンテナレベルの requests と limits に変換する方法、Kubernetes の QoS class を VM に適用する方法、ResourceQuota や LimitRange を使用して namespace レベルでガバナンスを適用する方法について学びます。
 
 == 前提条件
 
-* **OpenShift 4.18以降**  (OpenShift Virtualization Operator がインストール済みであること) 
+* **OpenShift 4.18 以降**  (OpenShift Virtualization Operator がインストール済みであること) 
 * **クラスター管理者権限** (`system:admin` または同等の権限)
 * **`oc` CLI** および **`virtctl` CLI** がインストール済みであること
-* **デフォルト StorageClass** が設定済みであること (VMブートディスク用) 
+* **default StorageClass** が設定済みであること (VM ブートディスク用) 
 
 検証済みバージョン:
 ----
 OpenShift 4.20, 4.21
 ----
 
-== VMリソース管理の理解
+== VM リソース管理の理解
 
-OpenShift VirtualizationでVMを作成すると、KubeVirtはそのVMのリソース spec を、VMをホストする `virt-launcher` コンテナの requests と limits に変換します。このマッピングを理解することは、キャパシティプランニングにおいて不可欠です。
+OpenShift Virtualization で VM を作成すると、KubeVirt はその VM のリソース spec を、VM をホストする `virt-launcher` コンテナの requests と limits に変換します。このマッピングを理解することは、キャパシティプランニングにおいて不可欠です。
 
-=== CPU割り当て
+=== CPU 割り当て
 
-* デフォルトでは、コンテナはvCPUあたり `1/cpuAllocationRatio` のCPUをrequestします (`cpuAllocationRatio` のデフォルト値は10)。1 vCPUを持つVMは100mのCPUをリクエストします。
-* デフォルトではCPU limitsは設定されないため、キャパシティに余裕がある場合にVMはrequest値を超えてバーストできます。
-* VMに対してCPU limitsを手動で設定した場合、CPU requestは自動的に算出されず、requestはlimits値と同じ値になります。
-* vCPUの数は `sockets * cores * threads` として計算され、デフォルト値は1です。
+* デフォルトでは、コンテナは vCPU あたり `1/cpuAllocationRatio` の CPU を request します (`cpuAllocationRatio` のデフォルト値は 10)。1 vCPU を持つ VM は 100m の CPU をリクエストします。
+* デフォルトでは CPU limits は設定されないため、キャパシティに余裕がある場合に VM は request 値を超えてバーストできます。
+* VM に対して CPU limits を手動で設定した場合、CPU request は自動的に算出されず、request は limits 値と同じ値になります。
+* vCPU の数は `sockets * cores * threads` として計算され、デフォルト値は 1 です。
 
 === メモリ割り当て
 
-* VMは `spec.domain.memory.guest` または `spec.domain.resources.requests.memory` を介して必要なメモリを指定します。
-* KubeVirtは、ゲストメモリに (QEMU、ファームウェア、ハイパーバイザーコンポーネント用の) オーバーヘッドを追加し、コンテナMemory requestを形成します。
+* VM は `spec.domain.memory.guest` または `spec.domain.resources.requests.memory` を介して必要なメモリを指定します。
+* KubeVirt は、ゲストメモリに (QEMU、ファームウェア、ハイパーバイザーコンポーネント用の) オーバーヘッドを追加し、コンテナ Memory request を形成します。
 * デフォルトでは Memory limits は設定されません。
-* Memory limitsを設定する場合、オーバーヘッドを考慮して、ゲストメモリ値よりも少なくとも500 MiB または 2% 以上大きい値を設定する必要があります。
+* Memory limits を設定する場合、オーバーヘッドを考慮して、ゲストメモリ値よりも少なくとも 500 MiB または 2% 以上大きい値を設定する必要があります。
 
-警告: VMに Memory limits を設定すると、ゲストOSやハイパーバイザーが一時的にそのlimitsを超えた場合にVMがクラッシュする可能性があります。limitsの設定には注意し、ゲストメモリとオーバーヘッドの合計よりも高い値を設定してください。
+WARNING: VM に Memory limits を設定すると、ゲスト OS やハイパーバイザーが一時的にその limits を超えた場合に VM がクラッシュする可能性があります。limits の設定には注意し、ゲストメモリとオーバーヘッドの合計よりも高い値を設定してください。
 
-== ステップ 1: テスト用namespaceの作成
+== ステップ 1: テスト用 namespace の作成
 
 [source,bash,role=execute]
 ----
 oc create namespace resource-qos-demo
 ----
 
-== ステップ 2: 異なるQoS classを持つVMのデプロイ
+== ステップ 2: 異なる QoS class を持つ VM のデプロイ
 
-Kubernetesは、リソース構成に基づいてすべてのPodに3つのQoS classのうちの1つを割り当てます。VMはPod内で実行されるため、同じルールが適用されます。
+Kubernetes は、リソース構成に基づいてすべての Pod に 3 つの QoS class のうちの 1 つを割り当てます。VM は Pod 内で実行されるため、同じルールが適用されます。
 
 === Burstable QoS (デフォルト) 
 
-リソースのrequestsのみがあり、limitsがないVMはBurstable QoSを取得します。これはOpenShift Virtualization VMのデフォルトの動作です。
+リソースの requests のみがあり、limits がない VM は Burstable QoS を取得します。これは OpenShift Virtualization VM のデフォルトの動作です。
 
-警告: この例のcloud-initパスワードはデモ用です。本番環境では、常に強力で一意なパスワードまたはSSHキー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ用です。本番環境では、常に強力で一意なパスワードまたは SSH キー認証を使用してください。
 
 xref:attachment$resource-limits-qos/vm-burstable.yaml[vm-burstable.yaml をダウンロード]
 
@@ -109,7 +109,7 @@ EOF
 
 === Guaranteed QoS
 
-CPUとメモリの両方に対して、requestsとlimitsが等しいVMはGuaranteed QoSを取得します。これらのVMは最も高いスケジューリング優先度を持ち、メモリ圧迫時に最後に退避 (evict) されます。
+CPU とメモリの両方に対して、requests と limits が等しい VM は Guaranteed QoS を取得します。これらの VM は最も高いスケジューリング優先度を持ち、メモリ圧迫時に最後に退避 (evict) されます。
 
 xref:attachment$resource-limits-qos/vm-guaranteed.yaml[vm-guaranteed.yaml をダウンロード]
 
@@ -166,11 +166,11 @@ spec:
 EOF
 ----
 
-NOTE: Memory limits (1Gi) は、ハイパーバイザーのオーバーヘッドを考慮して、ゲストメモリ (512Mi) よりも十分に大きくする必要があります。limitsがゲストメモリに近すぎると、Podは拒否されます。
+NOTE: Memory limits (1Gi) は、ハイパーバイザーのオーバーヘッドを考慮して、ゲストメモリ (512Mi) よりも十分に大きくする必要があります。limits がゲストメモリに近すぎると、Pod は拒否されます。
 
 === BestEffort QoS
 
-リソースのrequestsやlimitsがないVMはBestEffort QoSを取得します。これらのVMは、リソースが逼迫した際に最初に 退避 (evict) されます。この構成は一般的に本番環境では推奨されません。
+リソースの requests や limits がない VM は BestEffort QoS を取得します。これらの VM は、リソースが逼迫した際に最初に退避 (evict) されます。この構成は一般的に本番環境では推奨されません。
 
 xref:attachment$resource-limits-qos/vm-besteffort.yaml[vm-besteffort.yaml をダウンロード]
 
@@ -220,9 +220,9 @@ spec:
 EOF
 ----
 
-== ステップ 3: QoS Classの検証
+== ステップ 3: QoS Class の検証
 
-VMの起動を待ちます：
+VM の起動を待ちます：
 
 [source,bash,role=execute]
 ----
@@ -237,9 +237,9 @@ vm-burstable     60s   Running   True
 vm-guaranteed    45s   Running   True
 ----
 
-各VMのPodに割り当てられたQoS classを確認します。
+各 VM の Pod に割り当てられた QoS class を確認します。
 
-Burstable VMの場合：
+Burstable VM の場合：
 
 [source,bash,role=execute]
 ----
@@ -251,7 +251,7 @@ oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-burstable -o jsonpath='
 Burstable
 ----
 
-Guaranteed VMの場合：
+Guaranteed VM の場合：
 
 [source,bash,role=execute]
 ----
@@ -263,7 +263,7 @@ oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-guaranteed -o jsonpath=
 Guaranteed
 ----
 
-BestEffort VMの場合：
+BestEffort VM の場合：
 
 [source,bash,role=execute]
 ----
@@ -275,34 +275,34 @@ oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-besteffort -o jsonpath=
 Burstable
 ----
 
-注記: `virt-launcher` コンテナのオーバーヘッドに対してKubeVirtが常に一定の基本となるResource requestsを追加するため、`vm-besteffort` であってもBestEffortではなくBurstableと表示されます。
+NOTE: `virt-launcher` コンテナのオーバーヘッドに対して KubeVirt が常に一定の基本となる Resource requests を追加するため、`vm-besteffort` であっても BestEffort ではなく Burstable と表示されます。
 
-`virt-launcher` Podの実際の詳細なリソース値を確認します。
+`virt-launcher` Pod の実際の詳細なリソース値を確認します。
 
-Burstable VMの場合：
+Burstable VM の場合：
 
 [source,bash,role=execute]
 ----
 oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-burstable -o yaml
 ----
 
-Guaranteed VMの場合：
+Guaranteed VM の場合：
 
 [source,bash,role=execute]
 ----
 oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-guaranteed -o yaml
 ----
 
-BestEffort VMの場合：
+BestEffort VM の場合：
 
 [source,bash,role=execute]
 ----
 oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-besteffort -o yaml
 ----
 
-== ステップ 4: ResourceQuotaの適用
+== ステップ 4: ResourceQuota の適用
 
-ResourceQuota は、namespace内のすべてのVMとPodにわたって合計の Resource limits を強制します。limits 付きの ResourceQuota が適用されると、KubeVirt は自動的に VM に Resource limits を設定します。
+ResourceQuota は、namespace 内のすべての VM と Pod にわたって合計の Resource limits を強制します。limits 付きの ResourceQuota が適用されると、KubeVirt は自動的に VM に Resource limits を設定します。
 
 xref:attachment$resource-limits-qos/resource-quota.yaml[resource-quota.yaml をダウンロード]
 
@@ -331,22 +331,22 @@ Quota を確認します：
 oc describe resourcequota vm-resource-quota -n resource-qos-demo
 ----
 
-出力には、namespaceの現在の使用量とハードlimitsが表示されます。このnamespaceで新しく作成されるVMには、quota に limits フィールドが含まれているため、自動的にCPU limits (1 vCPUあたり1) とMemory limits (requestsの2倍) が適用されます。
+出力には、namespace の現在の使用量とハード limits が表示されます。この namespace で新しく作成される VM には、quota が limits フィールドを含んでいるため、自動的に CPU limits (1 vCPU あたり 1) と Memory limits (requests の 2 倍) が適用されます。
 
 === 自動 Memory Limits Ratio のカスタマイズ
 
-デフォルトでは、自動Memory limitsはrequestsメモリの2倍に設定されます。これはnamespaceごとにカスタマイズ可能です：
+デフォルトでは、自動 Memory limits は requests メモリの 2 倍に設定されます。これは namespace ごとにカスタマイズ可能です：
 
 [source,bash,role=execute]
 ----
 oc label namespace resource-qos-demo alpha.kubevirt.io/auto-memory-limits-ratio=1.5
 ----
 
-これにより、namespace内のすべての新しいVMに対して、自動 Memory limits ratio が1.5倍に設定されます。
+これにより、namespace 内のすべての新しい VM に対して、自動 Memory limits ratio が 1.5 倍に設定されます。
 
-== ステップ 5: LimitRangeの適用
+== ステップ 5: LimitRange の適用
 
-LimitRangeは、namespace内のPodごとのデフォルト値および最大リソース値を設定し、すべてのVMが最小限のリソース割り当てを確実に受けられるようにします。
+LimitRange は、namespace 内の Pod ごとのデフォルト値および最大リソース値を設定し、すべての VM が最小限のリソース割り当てを確実に受けられるようにします。
 
 xref:attachment$resource-limits-qos/limit-range.yaml[limit-range.yaml をダウンロード]
 
@@ -390,18 +390,18 @@ EOF
 oc describe limitrange vm-limit-range -n resource-qos-demo
 ----
 
-このLimitRangeが適用されている状態では、Resource requestsやlimitsを指定していない新しいPod (VM用の `virt-launcher` Podを含む) には、デフォルト値が適用されます。
+この LimitRange が適用されている状態では、Resource requests や limits を指定していない新しい Pod (VM 用の `virt-launcher` Pod を含む) には、デフォルト値が適用されます。
 
 == ステップ 6: リソース使用状況の監視
 
-VM Podの実際のリソース消費量を確認します：
+VM Pod の実際のリソース消費量を確認します：
 
 [source,bash,role=execute]
 ----
 oc adm top pods -n resource-qos-demo
 ----
 
-各 `virt-launcher` Podの現在のCPUおよびメモリ使用量が表示されます。これらの値をrequestsおよびlimitsと比較することで、サイジング最適化可能な箇所を特定します。
+各 `virt-launcher` Pod の現在の CPU およびメモリ使用量が表示されます。これらの値を requests および limits と比較することで、サイジング最適化可能な箇所を特定します。
 
 Quota に対する namespace レベルのリソース消費量を確認します：
 
@@ -410,36 +410,36 @@ Quota に対する namespace レベルのリソース消費量を確認します
 oc describe resourcequota vm-resource-quota -n resource-qos-demo
 ----
 
-== QoS classのまとめ
+== QoS class のまとめ
 
 [cols="1,1,1,1",options="header"]
 |===
 | QoS class | 構成 | Eviction Priority | ユースケース
 
 | Guaranteed
-| CPUとメモリのrequests == limits
+| CPU とメモリの requests == limits
 | 最後に退避 (evict)
 | 本番データベース、重要なアプリケーション
 
 | Burstable
-| requestsが設定済み、limitsは未設定または異なる
-| BestEffortの後に退避 (evict)
-| 一般的なワークロード、開発用VM
+| requests が設定済み、limits は未設定または異なる
+| BestEffort の後に退避 (evict)
+| 一般的なワークロード、開発用 VM
 
 | BestEffort
-| requestsもlimitsも未設定
+| requests も limits も未設定
 | 最初に退避 (evict)
 | 一時的な、破棄可能なワークロード
 |===
 
 == サイジングの推奨事項
 
-* **新しいワークロードにはBurstableから始める**: Memory requestを予想される使用量に設定し、必要に応じてVMがバーストできるようにします。
-* **予測可能なパフォーマンスが必要で、退避 (evict) させたくない本番用VMにはGuaranteedを使用する**。
-* **Memory limitsは控えめに設定する**: ハイパーバイザーのオーバーヘッドとメモリスパイクを考慮して、ゲストメモリの少なくとも2倍に設定します。
-* **limitsする前に監視する**: 厳格なlimitsを設定する前に、`oc adm top pods` を使用して実際の使用量を観察します。
-* **namespaceレベルでResourceQuotaを使用する**: 特定のチームがすべてのクラスターリソースを消費するのを防ぎます。
-* **LimitRangeを使用して、すべてのVMに最小リソース割り当てと妥当なデフォルト設定を確保する**。
+* **新しいワークロードには Burstable から始める**: Memory request を予想される使用量に設定し、必要に応じて VM がバーストできるようにします。
+* **予測可能なパフォーマンスが必要で、退避 (evict) させたくない本番用 VM には Guaranteed を使用する**。
+* **Memory limits は控えめに設定する**: ハイパーバイザーのオーバーヘッドとメモリスパイクを考慮して、ゲストメモリの少なくとも 2 倍に設定します。
+* **limits を設定する前に監視する**: 厳格な limits を設定する前に、`oc adm top pods` を使用して実際の使用量を観察します。
+* **namespace レベルで ResourceQuota を使用する**: 特定のチームがすべてのクラスターリソースを消費するのを防ぎます。
+* **LimitRange を使用して、すべての VM に最小リソース割り当てと妥当なデフォルト設定を確保する**。
 
 == クリーンアップ
 
@@ -454,13 +454,13 @@ oc delete namespace resource-qos-demo
 
 このチュートリアルでは、以下の方法を学びました：
 
-* VMのCPUおよびメモリのrequestsとlimitsを設定する
-* KubeVirtがどのようにVMリソースをコンテナリソースにマッピングするかを理解する
-* Guaranteed、Burstable、BestEffort QoS classを持つVMをデプロイする
-* ResourceQuotaを適用してnamespaceレベルのリソースガバナンスを強制する
-* LimitRangeを適用してPodごとのデフォルト値と境界を設定する
-* VMのリソース使用量を監視し、割り当てを最適化する
-* namespaceごとに自動 Memory limits ratio をカスタマイズする
+* VM の CPU およびメモリの requests と limits を設定する
+* KubeVirt がどのように VM リソースをコンテナリソースにマッピングするかを理解する
+* Guaranteed、Burstable、BestEffort QoS class を持つ VM をデプロイする
+* ResourceQuota を適用して namespace レベルのリソースガバナンスを適用する
+* LimitRange を適用して Pod ごとのデフォルト値と境界を設定する
+* VM のリソース使用量を監視し、割り当てを最適化する
+* namespace ごとに自動 Memory limits ratio をカスタマイズする
 
 == 参照情報
 

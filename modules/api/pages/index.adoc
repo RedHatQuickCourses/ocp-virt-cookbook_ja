@@ -36,7 +36,7 @@ OpenShift Virtualization の API コンポーネントの概要です。
 == 次のステップ
 
 本モジュールを完了することで、OpenShift Virtualization との製品連携を開始するために十分な理解が得られるはずです。
-パートナー様の市場投入までの時間を短縮できるよう、他のベンダーによる連携で遭遇した注意点や落とし穴についても、このガイド内で言及するように努めています。
+エンジニアが市場投入までの時間を短縮できるよう、様々なベンダーによる連携で遭遇した注意点や落とし穴についても、このガイド内で言及するように努めています。
 
 == 参照
 * link:https://kubevirt.io/api-reference/main/index.html[KubeVirt API リファレンス,window=_blank]

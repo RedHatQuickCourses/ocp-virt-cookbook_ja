@@ -1,26 +1,26 @@
-= Localnetネットワーク用のOVS bridge作成のトラブルシューティング
-:navtitle: Localnetネットワークのトラブルシューティング
+= Localnet ネットワーク用の OVS bridge 作成のトラブルシューティング
+:navtitle: Localnet ネットワークのトラブルシューティング
 
 検証済みバージョン:
 ----
 OpenShift 4.20
 ----
 
-このガイドは、OpenShift Virtualization において、Localnet セカンダリネットワーク用の OVS (Open vSwitch) bridgeが正しく作成および構成されていることを確認するのに役立ちます。
+このガイドは、OpenShift Virtualization において、Localnet セカンダリネットワーク用の OVS (Open vSwitch) bridge が正しく作成および構成されていることを確認するのに役立ちます。
 
-== OVS bridgeとLinux bridgeの理解
+== OVS bridge と Linux bridge の理解
 
 **重要**: OVS bridge の動作は Linux bridge とは異なります。
 
-* **OVS bridge**は、`ovs-vsctl`コマンドを使用して確認できます。
-* **OVS bridge**は、`ip addr show`や`ip link show`では通常のネットワークインターフェースとして表示されない場合があります。
-* これは**正常かつ想定された動作**です。OVS bridgeは標準的なLinuxネットワークデバイスではなく、OVSデータベース内に存在するためです。
+* **OVS bridge**は、`ovs-vsctl` コマンドを使用して確認できます。
+* **OVS bridge**は、`ip addr show` や `ip link show` では通常のネットワークインターフェースとして表示されない場合があります。
+* これは**正常かつ想定された動作**です。OVS bridge は標準的な Linux ネットワークデバイスではなく、OVS データベース内に存在するためです。
 
 == 検証プロセス
 
 === ステップ 1: NodeNetworkConfigurationPolicy のステータス確認
 
-まず、NNCPが適用され、正常に構成されていることを確認します。
+まず、NNCP が適用され、正常に構成されていることを確認します。
 
 [source,bash,role=execute]
 ----
@@ -38,9 +38,9 @@ NAME               STATUS      REASON
 br-vlan-creation   Available   SuccessfullyConfigured
 ----
 
-=== ステップ 2: NNCPの詳細情報の取得
+=== ステップ 2: NNCP の詳細情報の取得
 
-NNCPの完全な構成とステータスを確認します。
+NNCP の完全な構成とステータスを確認します。
 
 [source,bash,role=execute]
 ----
@@ -70,7 +70,7 @@ status:
 
 === ステップ 3: OVS bridge の確認
 
-**これがOVS bridgeを確認するための正しい方法です:**
+**これが OVS bridge を確認するための正しい方法です:**
 
 [source,bash,role=execute]
 ----
@@ -93,11 +93,11 @@ br-vlan
 Removing debug pod ...
 ----
 
-このリストに `br-vlan` が表示されていれば、bridgeは正常に作成されています。
+このリストに `br-vlan` が表示されていれば、bridge は正常に作成されています。
 
-=== ステップ 4: bridge構成の詳細確認
+=== ステップ 4: bridge 構成の詳細確認
 
-OVS構成を確認して、bridgeポートとインターフェースを表示します。
+OVS 構成を確認して、bridge ポートとインターフェースを表示します。
 
 [source,bash,role=execute]
 ----
@@ -115,13 +115,13 @@ Bridge br-vlan
 
 **確認項目:**
 
-* bridge名 (`br-vlan`) が出力にあること
+* bridge 名 (`br-vlan`) が出力にあること
 * 物理インターフェース (例: `enp11s0f0np0`) がポートとしてリストされていること
 * 物理インターフェースのインターフェースタイプが `system` であること
 
 === ステップ 5: 物理インターフェースのステータス確認
 
-物理インターフェースがbridgeに接続されており、UP状態であることを確認します。
+物理インターフェースが bridge に接続されており、UP 状態であることを確認します。
 
 [source,bash,role=execute]
 ----
@@ -138,7 +138,7 @@ oc debug node/<node-name> -- chroot /host ip link show <interface-name>
 **確認項目:**
 
 * `UP,LOWER_UP` - インターフェースが動作可能であること
-* `master ovs-system` - インターフェースがOVSによって管理されていること
+* `master ovs-system` - インターフェースが OVS によって管理されていること
 * `state UP` - インターフェースの状態がアップしていること
 
 === ステップ 6: "ip addr show br-vlan" が失敗する理由
@@ -158,18 +158,18 @@ Device "br-vlan" does not exist.
 
 **理由:**
 
-* OVS bridgeは通常のLinuxネットワークデバイスとしてではなく、OVSデータベース内に存在するためです。
+* OVS bridge は通常の Linux ネットワークデバイスとしてではなく、OVS データベース内に存在するためです。
 * 内部インターフェースを持たない限り、標準の `ip` コマンド出力には表示されません。
-* これはbridgeの作成失敗を意味するものではありません。
+* これは bridge の作成失敗を意味するものではありません。
 * OVS bridge を確認する際は、必ず `ovs-vsctl` コマンドを使用してください。
 
 == よくある問題と解決策
 
-=== 問題 1: ovs-vsctl list-br に　bridge　が表示されない
+=== 問題 1: ovs-vsctl list-br に bridge が表示されない
 
 **事象:**
 
-* NNCPは `Available: True` を示しているが、bridgeが `ovs-vsctl list-br` に表示されない
+* NNCP は `Available: True` を示しているが、bridge が `ovs-vsctl list-br` に表示されない
 
 **トラブルシューティング:**
 
@@ -188,14 +188,14 @@ oc get nns -A
 **一般的な原因:**
 
 * 物理インターフェース名の不一致 (`ip link show` で確認)
-* ノード上でOVSが正しく実行されていない
-* NMState Operatorの問題
+* ノード上で OVS が正しく実行されていない
+* NMState Operator の問題
 
-=== 問題 2: 物理インターフェースがbridgeに接続されていない
+=== 問題 2: 物理インターフェースが bridge に接続されていない
 
 **事象:**
 
-* bridgeは存在するが、`ovs-vsctl show` でインターフェースがポートとして表示されない
+* bridge は存在するが、`ovs-vsctl show` でインターフェースがポートとして表示されない
 
 **トラブルシューティング:**
 
@@ -213,7 +213,7 @@ oc get nncp br-vlan-creation -o yaml | grep -A 5 "name: <interface-name>"
 
 **解決策:**
 
-. NNCP内の物理インターフェース名が正しいことを確認します。
+. NNCP 内の物理インターフェース名が正しいことを確認します。
 . インターフェースが別の bridge によって既に使用されていないか確認します。
 . インターフェースが存在し、ノードで使用可能であることを確認します。
 
@@ -221,7 +221,7 @@ oc get nncp br-vlan-creation -o yaml | grep -A 5 "name: <interface-name>"
 
 **事象:**
 
-* NNCPは成功しているが、bridgeが存在しない
+* NNCP は成功しているが、bridge が存在しない
 
 **トラブルシューティング:**
 
@@ -237,14 +237,14 @@ oc get nncp br-vlan-creation -o jsonpath='{.spec.nodeSelector}'
 **一般的な問題:**
 
 * Single Node OpenShift (SNO) ノードには `control-plane,master,worker` のロールがある
-* `node-role.kubernetes.io/worker: ""` セレクターを持つNNCPは引き続き一致する
-* NNCPステータスが "X/X nodes successfully configured" を示しているか確認する
+* `node-role.kubernetes.io/worker: ""` セレクターを持つ NNCP は引き続き一致する
+* NNCP ステータスが "X/X nodes successfully configured" を示しているか確認する
 
 === 問題 4: bridge は作成されたが機能していない
 
 **事象:**
 
-* bridgeは存在し、インターフェースも接続されているが、トラフィックが流れない
+* bridge は存在し、インターフェースも接続されているが、トラフィックが流れない
 
 **トラブルシューティング:**
 
@@ -266,16 +266,16 @@ oc debug node/<node-name> -- chroot /host ethtool <interface-name> | grep "Link 
 * スイッチポートが無効になっている、または構成が間違っている
 * インターフェースの速度/デュプレックスの不一致
 
-== Localnet用 bridge mapping の確認
+== Localnet 用 bridge mapping の確認
 
-OVS bridgeを作成した後、OVN-Kubernetesへのbridge mappingが正しく機能していることを確認する必要があります。
+OVS bridge を作成した後、OVN-Kubernetes への bridge mapping が正しく機能していることを確認する必要があります。
 
 === bridge mapping とは何か
 
-bridge mapping は、**論理ネットワーク名** (NetworkAttachmentDefinitionsで使用) を**物理　OVS bridge**に接続します。例えば:
+bridge mapping は、**論理ネットワーク名** (NetworkAttachmentDefinitions で使用) を**物理 OVS bridge**に接続します。例えば:
 
 * 論理名: `localnet-vlan`
-* 物理bridge: `br-vlan`
+* 物理 bridge: `br-vlan`
 * mapping: `localnet-vlan:br-vlan`
 
 === ステップ 1: bridge mapping の NNCP ステータス確認
@@ -343,10 +343,10 @@ oc debug node/<node-name> -- chroot /host ovs-vsctl get Open_vSwitch . external_
 **意味:**
 
 * `localnet-vlan:br-vlan` = カスタム mapping
-* `physnet:br-ex` = デフォルトのOpenShift mapping
+* `physnet:br-ex` = デフォルトの OpenShift mapping
 * 複数の mapping がある場合はカンマで区切られます
 
-=== ステップ 4: 全ての OVS External ID の確認
+=== ステップ 4: すべての OVS External ID の確認
 
 すべての OVS external ID を取得して、完全な構成を確認します:
 
@@ -363,7 +363,7 @@ external_ids        : {hostname=ocplab01, ovn-bridge-mappings="localnet-vlan:br-
 
 **確認事項:**
 
-* `ovn-bridge-mappings` にmappingが含まれていること
+* `ovn-bridge-mappings` に mapping が含まれていること
 * `hostname` がノードと一致すること
 * `ovn-encap-type=geneve` が存在すること
 
@@ -424,11 +424,11 @@ bridge mapping を介したトラフィックフローの理解:
 
 == bridge mapping の問題のトラブルシューティング
 
-=== 問題 1: bridge mapping が OVN のExternal ID にない
+=== 問題 1: bridge mapping が OVN の External ID にない
 
 **事象:**
 
-* NNCPは成功しているが、`ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings` に mapping が含まれていない
+* NNCP は成功しているが、`ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings` に mapping が含まれていない
 
 **トラブルシューティング:**
 
@@ -454,11 +454,11 @@ oc logs -n openshift-nmstate -l component=kubernetes-nmstate-handler
 
 bridge が存在することを確認した後、bridge mapping の NNCP を削除して再作成してください。
 
-=== 問題 2: mapping内のbridge名が間違っている
+=== 問題 2: mapping 内の bridge 名が間違っている
 
 **事象:**
 
-* bridge mapping は存在するが、間違ったbridge名を使用している
+* bridge mapping は存在するが、間違った bridge 名を使用している
 
 **検証:**
 
@@ -473,7 +473,7 @@ oc get nncp localnet-vlan-bridge-mapping -o jsonpath='{.spec.desiredState.ovn.br
 
 **解決策:**
 
-mappingNNCP内のbridge名が、実際のOVS bridge名と完全に一致していることを確認してください。
+mappingNNCP 内の bridge 名が、実際の OVS bridge 名と完全に一致していることを確認してください。
 
 === 問題 3: 論理名の不一致
 
@@ -518,18 +518,18 @@ oc debug node/<node-name> -- chroot /host ovs-vsctl get Open_vSwitch . external_
 
 **解決策:**
 
-各論理ネットワーク名がユニークであり、正しい bridge に mappingさ れていることを確認してください。OVN は最初の一致する mapping を使用します。
+各論理ネットワーク名がユニークであり、正しい bridge に mapping されていることを確認してください。OVN は最初の一致する mapping を使用します。
 
 == 完全な検証チェックリスト
 
-このチェックリストを使用して、OVS bridge と bridge mappingが 正しく構成されているかを確認してください:
+このチェックリストを使用して、OVS bridge と bridge mapping が 正しく構成されているかを確認してください:
 
-=== bridge作成
+=== bridge 作成
 
-* [ ] NNCPステータスが `Available: True` かつ `SuccessfullyConfigured` になっていること
-* [ ] NNCPメッセージがすべてのノードで正常に構成されたことを示していること
-* [ ] `ovs-vsctl list-br` にbridge名が含まれていること
-* [ ] `ovs-vsctl show` で物理インターフェースがポートとしてbridgeに表示されていること
+* [ ] NNCP ステータスが `Available: True` かつ `SuccessfullyConfigured` になっていること
+* [ ] NNCP メッセージがすべてのノードで正常に構成されたことを示していること
+* [ ] `ovs-vsctl list-br` に bridge 名が含まれていること
+* [ ] `ovs-vsctl show` で物理インターフェースがポートとして bridge に表示されていること
 * [ ] 物理インターフェースが `UP,LOWER_UP` ステータスであること
 * [ ] 物理インターフェースが `master ovs-system` であること
 * [ ] 物理リンクがキャリア状態であること (ケーブル接続済み)
@@ -538,7 +538,7 @@ oc debug node/<node-name> -- chroot /host ovs-vsctl get Open_vSwitch . external_
 === bridge mapping
 
 * [ ] bridge mapping NNCP が `Available: True` であること
-* [ ] `ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings` にmappingが含まれていること
+* [ ] `ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings` に mapping が含まれていること
 * [ ] mapping 形式が正しいこと: `logical-name:bridge-name`
 * [ ] 論理ネットワーク名が NetworkAttachmentDefinition (NAD) / CUDN で使用するものと一致していること
 * [ ] mapping 内の bridge 名が実際の OVS bridge と一致していること
@@ -554,7 +554,7 @@ oc debug node/<node-name> -- chroot /host ovs-vsctl get Open_vSwitch . external_
 oc debug node/<node-name> -- chroot /host systemctl status openvswitch
 ----
 
-=== OVSログの表示
+=== OVS ログの表示
 
 [source,bash,role=execute]
 ----
@@ -638,7 +638,7 @@ spec:
 
 === ステップ 3: 自動作成された NetworkAttachmentDefinition の確認
 
-CUDNは選択されたnamespace内に自動的にNetworkAttachmentDefinitionを作成します:
+CUDN は選択された namespace 内に自動的に NetworkAttachmentDefinition を作成します:
 
 [source,bash,role=execute]
 ----
@@ -657,9 +657,9 @@ vm-guests-vlan-dev    cudn-localnet-vlan-100   5m
 vm-guests-vlan-prod   cudn-localnet-vlan-100   5m
 ----
 
-=== ステップ 4: physicalNetworkName がbridge mappingと一致することを確認
+=== ステップ 4: physicalNetworkName が bridge mapping と一致することを確認
 
-CUDN内の `physicalNetworkName` は、bridge mapping内の論理ネットワーク名と一致する必要があります:
+CUDN 内の `physicalNetworkName` は、bridge mapping 内の論理ネットワーク名と一致する必要があります:
 
 [source,bash,role=execute]
 ----
@@ -675,9 +675,9 @@ oc debug node/<node-name> -- chroot /host ovs-vsctl get Open_vSwitch . external_
 
 **すべてが同じ名前 (例: `localnet-vlan`) を示す必要があります。**
 
-=== ステップ 5: namespaceを跨いだネットワーク可用性の確認
+=== ステップ 5: namespace を跨いだネットワーク可用性の確認
 
-異なるnamespaceのVMが両方ともCUDNを使用できるかテストします:
+異なる namespace の VM が両方とも CUDN を使用できるかテストします:
 
 [source,bash,role=execute]
 ----
@@ -688,12 +688,12 @@ oc get vmi -n vm-guests-vlan-prod -o jsonpath='{.items[*].status.interfaces[?(@.
 oc get vmi -n vm-guests-vlan-dev -o jsonpath='{.items[*].status.interfaces[?(@.name=="cudn_vlan_network")].ipAddress}'
 ----
 
-VMがCUDNネットワークに接続されていれば、両方ともIPアドレスが返されるはずです。
+VM が CUDN ネットワークに接続されていれば、両方とも IP アドレスが返されるはずです。
 
 === CUDN 固有のよくある問題
 
-. **選択したnamespaceにNADが作成されない**:
-   * **事象**: CUDNは存在するが、`oc get network-attachment-definitions -n <namespace>` に何も表示されない
+. **選択した namespace に NAD が作成されない**:
+   * **事象**: CUDN は存在するが、`oc get network-attachment-definitions -n <namespace>` に何も表示されない
    * **原因**: namespace セレクターが namespace ラベルと一致しない
    * **解決策**: namespace ラベルが CUDN セレクターと一致することを確認する
 +
@@ -706,9 +706,9 @@ oc get namespace <namespace-name> -o jsonpath='{.metadata.labels}'
 oc get clusteruserdefinednetwork <cudn-name> -o jsonpath='{.spec.namespaceSelector}'
 ----
 
-. **VMが "failed bridge mapping validation" で失敗する**:
+. **VM が "failed bridge mapping validation" で失敗する**:
    * **事象**: CUDN が存在するにもかかわらず、VM Pod が失敗する
-   * **原因**: CUDN 内の `physicalNetworkName` がbridge mappingの論理名と一致しない
+   * **原因**: CUDN 内の `physicalNetworkName` が bridge mapping の論理名と一致しない
    * **解決策**: 完全一致 (大文字小文字を区別) することを確認する
 +
 [source,bash,role=execute]
@@ -718,11 +718,11 @@ oc get clusteruserdefinednetwork <cudn-name> -o jsonpath='{.spec.network.localne
 oc get nncp <bridge-mapping-nncp> -o jsonpath='{.spec.desiredState.ovn.bridge-mappings[0].localnet}'
 ----
 
-. **IPAMモードの問題**:
-   * **事象**: VMが期待通りのIPアドレスを取得できない
-   * **原因**: IPAMモードの構成ミス、またはcloud-initが機能していない
-   * **cloud-init経由の固定IP**: CUDN で `ipam.mode: Disabled` に設定
-   * **OVN IPAMの場合**: `staticIPAMConfig` を含めて `ipam.mode: Static` に設定
+. **IPAM モードの問題**:
+   * **事象**: VM が期待通りの IP アドレスを取得できない
+   * **原因**: IPAM モードの構成ミス、または cloud-init が機能していない
+   * **cloud-init 経由の固定 IP**: CUDN で `ipam.mode: Disabled` に設定
+   * **OVN IPAM の場合**: `staticIPAMConfig` を含めて `ipam.mode: Static` に設定
    * **検証**:
 +
 [source,bash,role=execute]
@@ -739,36 +739,36 @@ virtctl console -n <namespace> <vm-name>
 
 === よくある問題
 
-. **VLANトラフィックがVMに到達しない**:
-   * 物理スイッチの構成がVLANタグ付けをサポートしているか確認
-   * ワーカーノード上のbridge mapping構成を確認
-   * VLAN IDがネットワークインフラと一致しているか確認
-   * 物理NICが接続されており、UP状態であることを確認
-   * OVS bridgeが物理インターフェースをポートとして含んでいるか確認
+. **VLAN トラフィックが VM に到達しない**:
+   * 物理スイッチの構成が VLAN タグ付けをサポートしているか確認
+   * Worker Node 上の bridge mapping 構成を確認
+   * VLAN ID がネットワークインフラと一致しているか確認
+   * 物理 NIC が接続されており、UP 状態であることを確認
+   * OVS bridge が物理インターフェースをポートとして含んでいるか確認
 
-. **IPアドレスの割り当て問題**:
-   * DHCPサーバーがVLANネットワーク上で使用可能か確認
+. **IP アドレスの割り当て問題**:
+   * DHCP サーバーが VLAN ネットワーク上で使用可能か確認
 
 . **ネットワーク接続の問題**:
-   * 物理ネットワークが構成済みのVLANをサポートしているか確認
-   * 物理ネットワークからVLANサブネットへの接続をテスト
+   * 物理ネットワークが構成済みの VLAN をサポートしているか確認
+   * 物理ネットワークから VLAN サブネットへの接続をテスト
    * 物理スイッチポートがトランクモードになっているか確認
 
-. **カスタムbridge作成の問題**:
-   * 注意: OVS bridgeは `ip addr show` に表示されません。代わりに `ovs-vsctl list-br` を使用してください。
+. **カスタム bridge 作成の問題**:
+   * 注意: OVS bridge は `ip addr show` に表示されません。代わりに `ovs-vsctl list-br` を使用してください。
    * 物理インターフェース名が正しいことを確認してください。
    * NMState Operator が正常に動作しているか確認してください。
 
-. **bridge mappingが機能しない**:
-   * mapping内のbridge名が作成済みのbridgeと一致しているか確認
-   * OVN bridge mappingを確認: `ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings`
-   * mapping内のlocalnet名がNAD構成と一致しているか確認
+. **bridge mapping が機能しない**:
+   * mapping 内の bridge 名が作成済みの bridge と一致しているか確認
+   * OVN bridge mapping を確認: `ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings`
+   * mapping 内の localnet 名が NAD 構成と一致しているか確認
 
 . **VM Pod が "failed bridge mapping validation" エラーで失敗する**:
    * **事象**: VM Pod が次のエラーで失敗する: `failed to find OVN bridge-mapping for network: "localnet-vlan-100"`
    * **原因**: NetworkAttachmentDefinition に `physicalNetworkName` パラメーターがない
    * **解決策**: NAD が bridge mapping の論理名と一致する `"physicalNetworkName": "localnet-vlan"` を含んでいるか確認する
-   * **検証**: NADを更新した後、`oc delete` と `oc apply` で再作成する
+   * **検証**: NAD を更新した後、`oc delete` と `oc apply` で再作成する
 
 === 検証コマンド
 
@@ -783,10 +783,10 @@ oc get nncp
 # bridge 作成ステータスを確認 (カスタムbridge使用時)
 oc get nncp br-vlan-creation -o yaml
 
-# ワーカーノード上のbridge mappingを確認
+# Worker Node 上のbridge mappingを確認
 oc get nncp localnet-vlan-bridge-mapping -o yaml
 
-# ワーカーノード上の物理インターフェースステータスを確認
+# Worker Node 上の物理インターフェースステータスを確認
 oc debug node/<worker-node-name> -- chroot /host ip link show ens224
 
 # OVS bridge構成を確認
@@ -814,9 +814,9 @@ oc logs -n openshift-nmstate -l app=kubernetes-nmstate-operator
 
 * OVS bridge と Linux bridge の違い、および `ip addr show` 出力に表示されない理由
 * `ovs-vsctl` を使用して、OVS bridge の作成、物理インターフェースの接続、bridge ポート構成を検証する方法
-* 論理ネットワーク名を物理 OVS bridge に接続する OVN bridge mappingを検証する方法
+* 論理ネットワーク名を物理 OVS bridge に接続する OVN bridge mapping を検証する方法
 * bridge の欠落、インターフェース接続の失敗、論理名の不一致など、一般的な問題をトラブルシューティングする方法
-* ClusterUserDefinedNetwork (CUDN) リソース、自動作成された NAD、namespaceを 跨いだネットワークの可用性を検証する方法
+* ClusterUserDefinedNetwork (CUDN) リソース、自動作成された NAD、namespace を 跨いだネットワークの可用性を検証する方法
 
 == 参照
 

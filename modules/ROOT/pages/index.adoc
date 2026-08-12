@@ -14,8 +14,8 @@ OpenShift を使い始めたばかりの方に向けて、すぐに役立つレ�
 このクックブックを効果的に活用するには、以下が必要です。
 
 * **クラスター**: OpenShift Virtualization Operator がインストールされた OpenShift 4.18 以降。
-* **ツール**: `oc`、`kubectl`、`virtctl`。（オプション: `kustomize`、`helm`、`ansible`）。
-* **知識**: YAML および CLI ワークフローの習熟（必須ではありませんが、強く推奨します）。Kubernetes/OpenShift の概念に関する基本的な理解。
+* **ツール**: `oc`、`kubectl`、`virtctl`。 (オプション: `kustomize`、`helm`、`ansible`)。
+* **知識**: YAML および CLI ワークフローの習熟 (必須ではありませんが、強く推奨します)。Kubernetes/OpenShift の概念に関する基本的な理解。
 
 環境を準備または検証するために、特にこの技術が初めての場合は、**xref:getting-started:index.adoc[]** の全モジュールを一通り確認してください。
 
@@ -41,7 +41,7 @@ OpenShift を使い始めたばかりの方に向けて、すぐに役立つレ�
 ** link:https://access.redhat.com/articles/7119411[アーキテクチャガイド,window=_blank]
 ** link:https://access.redhat.com/articles/7067871[アーキテクチャ例,window=_blank]
 * link:https://kubevirt.io/[KubeVirt プロジェクト,window=_blank]
-* link:https://cloudinit.readthedocs.io/[Cloud-init ドキュメント,window=_blank]
+* link:https://cloudinit.readthedocs.io/[cloud-init ドキュメント,window=_blank]
 * xref:appendix:glossary.adoc[用語集] - 主要な用語と定義
 
 == コントリビューション
@@ -50,14 +50,14 @@ OpenShift を使い始めたばかりの方に向けて、すぐに役立つレ�
 
 == クレジット
 
-このクックブックは、オリジナルの link:https://github.com/acmenezes/ocp-virt-onboarding-kit[OpenShift Virtualization Onboarding Kit,window=_blank] の優れた成果を基に構築されています。Alexandre Menezes、Andrea Perotti、Daphne Hoover、Josh Manning、Melvin Hillsman、Roshan Warrier、Yash Devan Oza、およびコミュニティの貢献に深く感謝いたします。
+このクックブックは、オリジナルの link:https://github.com/acmenezes/ocp-virt-onboarding-kit[OpenShift Virtualization Onboarding Kit,window=_blank] の優れた成果を基に構築されています。Alexandre Menezes、Andrea Perotti、Daphne Hoover、Josh Manning、Melvin Hillsman、Roshan Warrier、Yash Devan Oza、コミュニティの貢献に深く感謝いたします。
 
-コンテンツ作成、テスト、およびフィードバックを通じて、このリソースの形成を支援してくださったすべてのコントリビューターに心から感謝します。
+コンテンツ作成、テスト、フィードバックを通じて、このリソースの形成を支援してくださったすべてのコントリビューターに心から感謝します。
 
 == ライセンス
 
-このプロジェクトは link:https://github.com/RedHatQuickCourses/ocp-virt-cookbook/blob/main/LICENSE[MIT ライセンス,window=_blank] の下でライセンスされています。
+本プロジェクトは link:https://github.com/RedHatQuickCourses/ocp-virt-cookbook/blob/main/LICENSE[MIT ライセンス,window=_blank] のもとで公開されています。
 
 ---
 
-NOTE: このクックブックは、コンテンツ開発の加速とドキュメントの品質向上のために、AI ツールの支援を受けて作成されました。ただし、すべてのコンテンツは、技術的な正確さと実用性を確保するために、経験豊富な人間のエンジニアによって構築、編集、テスト、およびレビューされています。私たちは、あらゆる段階で人間の専門知識と監督を維持しつつ、使用ツールについて透明性を保つことを信条としています。
+NOTE: このクックブックは、コンテンツ開発の加速とドキュメントの品質向上のために、AI ツールの支援を受けて作成されました。ただし、すべてのコンテンツは、技術的な正確さと実用性を確保するために、経験豊富な人間のエンジニアによって構築、編集、テスト、レビューされています。私たちは、あらゆる段階で人間の専門知識と監督を維持しつつ、使用ツールについて透明性を保つことを信条としています。

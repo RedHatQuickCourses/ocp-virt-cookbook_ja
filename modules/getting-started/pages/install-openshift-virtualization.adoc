@@ -3,15 +3,15 @@
 
 == 概要
 
-このチュートリアルでは、OpenShift クラスター上でコンテナワークロードと並行して仮想マシンを実行できるようにする、OpenShift Virtualization Opertator のインストールおよび設定方法を説明します。OpenShift Virtualization は、アップストリームの KubeVirt プロジェクトをベースにしており、エンタープライズグレードの仮想化機能を提供します。
+このチュートリアルでは、OpenShift クラスター上でコンテナワークロードと並行して仮想マシンを実行できるようにする、OpenShift Virtualization Operator のインストールおよび設定方法を説明します。OpenShift Virtualization は、アップストリームの KubeVirt プロジェクトをベースにしており、エンタープライズグレードの仮想化機能を提供します。
 
-* <<Installing via Web Console>>
-* <<Installing via Command Line>>
+* <<Web コンソールを使用したインストール>>
+* <<コマンドラインを使用したインストール>>
 
 == 前提条件
 
 * **OpenShift 4.18+**: サポートされているプラットフォーム上でインストールおよび実行されていること
-* **クラスター管理者権限**: Opertator のインストールおよびクラスターリソースの設定に必要
+* **クラスター管理者権限**: Operator のインストールおよびクラスターリソースの設定に必要
 
 検証済みバージョン:
 ----
@@ -22,31 +22,31 @@ OpenShift 4.18, 4.19, 4.20, 4.21
 
 OpenShift Virtualization をインストールする前に、クラスターがハードウェア、オペレーティングシステム、ストレージ、ネットワークの要件を満たしていることを確認してください。
 
-CPU仕様、サポート対象プラットフォーム、ストレージに関する考慮事項、リソースオーバーヘッドなどの詳細な要件については、link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing#virt-preparing-cluster-for-virt_preparing-cluster-for-virt[OpenShift Virtualization用のクラスターの準備,window=_blank]を参照してください。
+CPU 仕様、サポート対象プラットフォーム、ストレージに関する考慮事項、リソースオーバーヘッドなどの詳細な要件については、link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing#virt-preparing-cluster-for-virt_preparing-cluster-for-virt[OpenShift Virtualization 用のクラスターの準備,window=_blank]を参照してください。
 
-TIP: ストレージ設定については、Opertator のインストール完了後に xref:default-storage-class.adoc[] を参照してください。
+TIP: ストレージ設定については、Operator のインストール完了後に xref:default-storage-class.adoc[] を参照してください。
 
-== Webコンソールを使用したインストール
+== Web コンソールを使用したインストール
 
 Web コンソールを使用すると、OpenShift Virtualization のインストールをガイド付きで実行できます。
 
 === ステップ 1: OperatorHub へのアクセス
 
-. `cluster-admin` 権限を持つユーザーとしてOpenShift Web コンソールにログインします。
+. `cluster-admin` 権限を持つユーザーとして OpenShift Web コンソールにログインします。
 . **Operators** -> **OperatorHub** に移動します。
 +
-image::install-1-software-catalog.png[OpenShift WebコンソールのOperatorHub]
+image::install-1-software-catalog.png[OpenShift Web コンソールの OperatorHub]
 
 . **Filter by keyword** フィールドに `Virtualization` と入力します。
 +
-image::install-2-find-openshift-virtualization.png[OperatorHubでOpenShift Virtualizationをフィルタリング]
+image::install-2-find-openshift-virtualization.png[OperatorHub で OpenShift Virtualization をフィルタリング]
 
-=== ステップ 2: Opertator のインストール
+=== ステップ 2: Operator のインストール
 
 . **Red Hat** ソースラベルが付いた **OpenShift Virtualization** タイルを選択します。
-. Opertator 情報を確認し、**Install** をクリックします。
+. Operator 情報を確認し、**Install** をクリックします。
 +
-image::install-3-click-install.png[インストールボタンが表示された OpenShift Virtualization Opertator の詳細]
+image::install-3-click-install.png[インストールボタンが表示された OpenShift Virtualization Operator の詳細]
 
 . Install Operator ページで、デフォルト設定のまま **Install** をクリックします。
 +
@@ -55,15 +55,15 @@ image::install-4-let-default-click-install.png[デフォルト設定の Install 
 IMPORTANT: 手動承認 (Manual approval) も利用可能ですが、サポートされていないバージョンの組み合わせを実行するリスクがあるため推奨されません。影響を完全に理解している場合にのみ、Manual を選択してください。
 
 [start=4]
-. Opertator のインストールが完了するまで待ちます。
+. Operator のインストールが完了するまで待ちます。
 +
-image::install-5-wait-for-install-ready.png[Opertator のインストール進行状況]
+image::install-5-wait-for-install-ready.png[Operator のインストール進行状況]
 
 === ステップ 3: HyperConverged リソースの作成
 
-. Opertator のインストールが完了したら、**Create HyperConverged** をクリックします。
+. Operator のインストールが完了したら、**Create HyperConverged** をクリックします。
 +
-image::install-6-create-hyperconverged.png[Opertator インストール後の Create HyperConverged ボタン]
+image::install-6-create-hyperconverged.png[Operator インストール後の Create HyperConverged ボタン]
 
 . デフォルト設定のまま、一番下までスクロールします。
 +
@@ -77,15 +77,15 @@ image::install-8-click-create.png[HyperConverged リソースの作成ボタン]
 
 すべての条件が成功と報告されるまで待ちます。HyperConverged リソースのステータスでデプロイの進行状況を確認できます。
 
-image::install-9-wait-for-conditions.png[デプロイ成功を示す　HyperConverged　条件]
+image::install-9-wait-for-conditions.png[デプロイ成功を示す HyperConverged 条件]
 
 完了すると、Operators リストにインストール済みとして表示されます。
 
-image::install-10-installed-operator.png[インストール済みの OpenShift Virtualization Opertator]
+image::install-10-installed-operator.png[インストール済みの OpenShift Virtualization Operator]
 
 == コマンドラインを使用したインストール
 
-自動デプロイやWebコンソールにアクセスできない環境では、CLI によるインストール方法を使用します。
+自動デプロイや Web コンソールにアクセスできない環境では、CLI によるインストール方法を使用します。
 
 === ステップ 1: Namespace、OperatorGroup、Subscription の作成
 
@@ -122,9 +122,9 @@ spec:
 EOF
 ----
 
-=== ステップ 2: Opertator インストールの確認
+=== ステップ 2: Operator インストールの確認
 
-Opertator がインストールされるのを待ち、ステータスを確認します。
+Operator がインストールされるのを待ち、ステータスを確認します。
 
 [source,bash,role=execute]
 ----
@@ -193,7 +193,7 @@ Upgradeable: True
 
 OpenShift Virtualization をクラスターから削除する必要がある場合は、以下の手順を順番に実行してください。アンインストールプロセスでは、すべての仮想化コンポーネントが安全に停止されるため数分かかります。
 
-IMPORTANT: Opertator のサブスクリプションを削除するだけでは、デプロイされたリソースは削除されません。すべてのコンポーネントを適切にクリーンアップするには、まず HyperConverged リソースを削除する必要があります。
+IMPORTANT: Operator のサブスクリプションを削除するだけでは、デプロイされたリソースは削除されません。すべてのコンポーネントを適切にクリーンアップするには、まず HyperConverged リソースを削除する必要があります。
 
 === ステップ 1: すべての仮想マシンの削除
 
@@ -229,7 +229,7 @@ oc get pods -n openshift-cnv -w
 
 すべての Pod が終了するまで待機してから次に進みます。
 
-=== ステップ 3: Opertator のサブスクリプションと CSV の削除
+=== ステップ 3: Operator のサブスクリプションと CSV の削除
 
 [source,bash,role=execute]
 ----
@@ -272,7 +272,7 @@ OpenShift Virtualization のインストールと設定が完了しました。�
 
 == 関連情報
 
-トラブルシューティング、高度な設定オプション、Single Node OpenShift（SNO）に関する考慮事項については、公式ドキュメントを参照してください。
+トラブルシューティング、高度な設定オプション、Single Node OpenShift (SNO) に関する考慮事項については、公式ドキュメントを参照してください。
 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing[OpenShift Virtualization インストールドキュメント,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/getting-started[OpenShift Virtualization 入門,window=_blank]

@@ -3,7 +3,7 @@
 
 == 概要
 
-本ガイドでは、OpenShift における LVM Storage Operator のトラブルシューティング手順を説明します。以下のコマンドを使用して、LVM ストレージのプロビジョニング、volume group、永続ボリューム要求 (PVC) に関する一般的な問題を診断・解決してください。
+本ガイドでは、OpenShift における LVM Storage Operator のトラブルシューティング手順を説明します。以下のコマンドを使用して、LVM ストレージのプロビジョニング、volume group、persistent volume claim に関する一般的な問題を調査・解決してください。
 
 == クイックヘルスチェック
 
@@ -32,8 +32,8 @@ oc debug node/<node-name> -- chroot /host lvs
 * LVMCluster: `STATUS: Ready`
 * Pods: すべて `Running` で再起動なし
 * StorageClass: `lvms-vg1` が存在
-* VG: volume groupが表示され、空き容量がある
-* LV: thin provisioning poolが表示され、データ/メタデータの使用率が低い
+* VG: volume group が表示され、空き容量がある
+* LV: thin provisioning pool が表示され、データ/メタデータの使用率が低い
 
 == コンポーネント別の検証コマンド
 
@@ -140,7 +140,7 @@ vg-manager-xxxxx                 1/1     Running   0          5m
 期待される Pod:
 
 * **lvms-operator**: 常に存在し、LVM ストレージのライフサイクルを管理します。
-* **vg-manager**: ノードごとに1つ存在し、そのノードのvolume groupを管理します。
+* **vg-manager**: ノードごとに 1 つ存在し、そのノードの volume group を管理します。
 * **topolvm-controller**: Single Node OpenShift (SNO) では存在しない場合があります。
 
 ==== Pod 詳細の確認
@@ -213,7 +213,7 @@ oc get storageclass lvms-vg1 -o jsonpath='{.metadata.annotations.storageclass\.k
 
 出力:
 
-* `true` - デフォルトの StorageClass です。
+* `true` - default StorageClass です。
 * 出力なし、または `false` - デフォルトではありません。
 
 ==== PersistentVolumes の確認
@@ -227,9 +227,9 @@ oc get pv
 oc get pv | grep topolvm
 ----
 
-=== volume groupの検証
+=== volume group の検証
 
-==== volume groupステータスの確認
+==== volume group ステータスの確認
 
 [source,bash,role=execute]
 ----
@@ -250,7 +250,7 @@ vg1    1   1   0 wz--n- 558.37g <55.84g
 * `VFree` が利用可能な空き容量を表示していること
 * `Attr` に `wz--n-` (書き込み可能、サイズ変更可能、正常) が含まれていること
 
-==== volume group詳細の確認
+==== volume group 詳細の確認
 
 [source,bash,role=execute]
 ----
@@ -288,9 +288,9 @@ VG UUID               abc123...
 * `VG Access: read/write`
 * `Free PE / Size` に空き容量が表示されている
 
-=== thin provisioning poolの検証
+=== thin provisioning pool の検証
 
-==== thin provisioning poolステータスの確認
+==== thin provisioning pool ステータスの確認
 
 [source,bash,role=execute]
 ----
@@ -315,7 +315,7 @@ thin-pool-1 vg1 twi-a-tz-- <502.04g             0.00   6.76
 
 Data% および Meta% のしきい値:
 
-* **Data%**: thin provisioning poolの使用量
+* **Data%**: thin provisioning pool の使用量
   ** `< 80%` - 正常
   ** `80-90%` - 注意深く監視
   ** `> 90%` - 拡張または整理を検討
@@ -323,7 +323,7 @@ Data% および Meta% のしきい値:
   ** `< 80%` - 正常
   ** `> 80%` - メタデータの拡張が必要な可能性がある
 
-==== thin provisioning poolの詳細確認
+==== thin provisioning pool の詳細確認
 
 [source,bash,role=execute]
 ----
@@ -373,7 +373,7 @@ oc debug node/<node-name> -- chroot /host lsblk /dev/sda
 oc debug node/<node-name> -- chroot /host mount | grep /dev/sda
 ----
 
-注記: デバイスがマウントされている場合、LVM ストレージとして使用できません。アンマウントするか、別のデバイスを選択してください。
+NOTE: デバイスがマウントされている場合、LVM ストレージとして使用できません。アンマウントするか、別のデバイスを選択してください。
 
 === ディスクおよびデバイス情報
 
@@ -427,14 +427,14 @@ oc debug node/<node-name> -- chroot /host ls -la /dev/disk/by-id/ | grep sda
 
 === 問題 1: LVMCluster が "NotReady" と表示される
 
-症状:
+事象:
 [source,text]
 ----
 NAME         STATUS
 lvmcluster   NotReady
 ----
 
-診断:
+調査:
 
 [source,bash,role=execute]
 ----
@@ -477,14 +477,14 @@ oc debug node/<node-name> -- chroot /host mount | grep /dev/sda
 
 解決策: デバイスをアンマウントするか、別のディスクを使用してください。
 
-=== 問題 2: volume groupが作成されない
+=== 問題 2: volume group が作成されない
 
-症状:
+事象:
 
-* LVMCluster は存在するが `vgs` にvolume groupが表示されない
+* LVMCluster は存在するが `vgs` に volume group が表示されない
 * デバイスが deviceClassStatuses に表示されない
 
-診断:
+調査:
 
 [source,bash,role=execute]
 ----
@@ -502,29 +502,29 @@ oc debug node/<node-name> -- chroot /host lsblk -o NAME,SIZE,TYPE,FSTYPE
 
 ==== デバイスが選択されていない
 
-* deviceSelector パスが実際のデバイスと一致していることを確認する
-* デバイスが除外されていないことを確認する (deviceClassStatuses.excluded を参照)
+* deviceSelector パスが実際のデバイスと一致していることを確認してください
+* デバイスが除外されていないことを確認してください (deviceClassStatuses.excluded を参照)
 
 ==== 権限の問題
 
-* vg-manager Pod に必要な権限があることを確認する
-* SELinux がアクセスをブロックしていないか確認する
+* vg-manager Pod に必要な権限があることを確認してください
+* SELinux がアクセスをブロックしていないか確認してください
 
 ==== デバイスのワイプ失敗
 
-* `forceWipeDevicesAndDestroyAllData: true` を設定する
-* 手動でデバイスをワイプし、Operator を再起動する
+* `forceWipeDevicesAndDestroyAllData: true` を設定してください
+* 手動でデバイスをワイプし、Operator を再起動してください
 
 === 問題 3: PVC が Pending のまま
 
-症状:
+事象:
 [source,text]
 ----
 NAME            STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
 test-pvc        Pending                                      lvms-vg1       5m
 ----
 
-診断:
+調査:
 
 [source,bash,role=execute]
 ----
@@ -553,9 +553,9 @@ oc debug node/<node-name> -- chroot /host vgs
 oc debug node/<node-name> -- chroot /host vgdisplay vg1 | grep "Free"
 ----
 
-解決策: 未使用の PV を削除するか、volume groupを拡張してください。
+解決策: 未使用の PV を削除するか、volume group を拡張してください。
 
-==== thin provisioning poolがいっぱい
+==== thin provisioning pool がいっぱい
 
 [source,bash,role=execute]
 ----
@@ -563,7 +563,7 @@ oc debug node/<node-name> -- chroot /host vgdisplay vg1 | grep "Free"
 oc debug node/<node-name> -- chroot /host lvs | grep thin-pool
 ----
 
-解決策: ボリュームを整理するか、thin provisioning poolサイズを増やしてください。
+解決策: ボリュームを整理するか、thin provisioning pool サイズを増やしてください。
 
 ==== ノードセレクターの不一致
 
@@ -574,16 +574,16 @@ oc get pod <pod-name> -o yaml | grep nodeSelector
 oc get lvmcluster lvmcluster -n openshift-lvm-storage -o yaml | grep -A 5 nodeSelector
 ----
 
-=== 問題 4: thin provisioning poolの Data% または Meta% が高い
+=== 問題 4: thin provisioning pool の Data% または Meta% が高い
 
-症状:
+事象:
 [source,text]
 ----
 LV          VG  Attr       LSize    Data%  Meta%
 thin-pool-1 vg1 twi-a-tz-- 502.04g  92.00  85.00
 ----
 
-診断:
+調査:
 
 [source,bash,role=execute]
 ----
@@ -610,7 +610,7 @@ oc get pvc --all-namespaces
 oc delete pvc <pvc-name> -n <namespace>
 ----
 
-==== thin provisioning poolを拡張する (VG に空きがある場合)
+==== thin provisioning pool を拡張する (VG に空きがある場合)
 
 [source,bash,role=execute]
 ----
@@ -627,12 +627,12 @@ LVMCluster を編集し、`overprovisionRatio` を減らしてください。
 
 === 問題 5: デバイスのワイプ失敗
 
-症状:
+事象:
 
 * LVMCluster は作成されたがデバイスが使用されていない
 * ログに "cannot wipe device" または "device busy" と表示される
 
-診断:
+調査:
 
 [source,bash,role=execute]
 ----
@@ -659,14 +659,14 @@ forceWipeDevicesAndDestroyAllData: true
 
 === 問題 6: vg-manager Pod が CrashLooping になる
 
-症状:
+事象:
 [source,text]
 ----
 NAME             READY   STATUS             RESTARTS   AGE
 vg-manager-xxx   0/1     CrashLoopBackOff   5          3m
 ----
 
-診断:
+調査:
 
 [source,bash,role=execute]
 ----
@@ -699,12 +699,12 @@ oc describe node <node-name>
 
 === 問題 7: StorageClass がデフォルトではない
 
-症状:
+事象:
 
 * storageClassName を明示しない PVC がバインドに失敗する
 * 警告: "no default deviceClass was specified"
 
-診断:
+調査:
 
 [source,bash,role=execute]
 ----
@@ -735,9 +735,9 @@ oc edit lvmcluster lvmcluster -n openshift-lvm-storage
   default: true
 ----
 
-== 診断スクリプト
+== 調査スクリプト
 
-LVM ストレージの問題を迅速に診断するために、以下をシェルスクリプトとして保存してください。
+LVM ストレージの問題を迅速に調査するために、以下をシェルスクリプトとして保存してください。
 
 [source,bash,role=execute]
 ----
@@ -792,11 +792,11 @@ echo "=== End of Diagnostic Report ==="
 
 本ガイドでは、以下のことを学習しました。
 
-* LVMCluster、Pod、StorageClass、volume group、thin provisioning poolを検証するクイックヘルスチェックの実行方法
-* LVMCluster の NotReady、volume groupの欠損、Pending のままの PVC など、一般的な問題の診断方法
+* LVMCluster、Pod、StorageClass、volume group、thin provisioning pool を検証するクイックヘルスチェックの実行方法
+* LVMCluster の NotReady、volume group の欠損、Pending のままの PVC など、一般的な問題の調査方法
 * `vgs`、`lvs`、および `pvs` コマンドを使用して、volume group、thin provisioning pool、物理ボリュームの状態を確認する方法
 * デバイスのワイプ失敗、vg-manager の CrashLoopBackOff、StorageClass のデフォルト設定のトラブルシューティング方法
-* 診断スクリプトを使用して、LVM ストレージの健全性情報を迅速に収集する方法
+* 調査スクリプトを使用して、LVM ストレージの健全性情報を迅速に収集する方法
 
 == 参照
 

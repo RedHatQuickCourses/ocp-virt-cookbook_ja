@@ -3,70 +3,70 @@
 
 == 概要
 
-本モジュールでは、OpenShift Virtualizationのストレージ設定について学習します。これには、LVM Storage Operator、HostPath Provisioner、ストレージの問題のトラブルシューティングが含まれます。
+本モジュールでは、OpenShift Virtualization のストレージ設定について学習します。これには、LVM Storage Operator、HostPath Provisioner、ストレージの問題のトラブルシューティングが含まれます。
 
-仮想マシン（VM）はディスクやデータ用に永続ストレージを必要とするため、適切なストレージ設定はVMのデプロイにおいて不可欠です。
+仮想マシン (VM) はディスクやデータ用に永続ストレージを必要とするため、適切なストレージ設定は VM のデプロイにおいて不可欠です。
 
 == 学習目標
 
 このセクションでは、以下の内容を学習します。
 
-* ローカルディスクストレージ向けのLVM Storage Operatorのインストールおよび設定方法
-* シンプルなローカルストレージ向けのHostPath Provisionerの設定方法
-* 自動プロビジョニングのためのデフォルトStorage Classの設定方法
+* ローカルディスクストレージ向けの LVM Storage Operator のインストールおよび設定方法
+* シンプルなローカルストレージ向けの HostPath Provisioner の設定方法
+* 自動プロビジョニングのための default StorageClass の設定方法
 * 一般的なストレージの問題のトラブルシューティング方法
-* OpenShift Virtualizationにおけるストレージ設定のベストプラクティス
+* OpenShift Virtualization におけるストレージ設定のベストプラクティス
 
-== OpenShift Virtualizationのストレージオプション
+== OpenShift Virtualization のストレージオプション
 
-OpenShift Virtualizationは、さまざまなストレージバックエンドをサポートしています。
+OpenShift Virtualization は、さまざまなストレージバックエンドをサポートしています。
 
-* **LVM Storage**: Logical Volume Managerを使用したローカルディスクストレージ（本モジュールで解説）
-* **HostPath Provisioner**: シンプルなローカルストレージのプロビジョニング（本モジュールで解説）
+* **LVM Storage**: Logical Volume Manager を使用したローカルディスクストレージ (本モジュールで解説)
+* **HostPath Provisioner**: シンプルなローカルストレージのプロビジョニング (本モジュールで解説)
 * **Ceph/ODF**: 分散ブロックストレージおよびファイルストレージ
 * **NFS**: ネットワーク接続ストレージ
-* **外部ストレージプロバイダー**: AWS EBS、Azure Diskなど
+* **外部ストレージプロバイダー**: AWS EBS、Azure Disk など
 
-本モジュールでは、Single Node OpenShift (SNO) やベアメタル環境に最適な、ローカルストレージのシナリオ向けのLVM StorageとHostPath Provisionerについて解説します。
+本モジュールでは、Single Node OpenShift (SNO) やベアメタル環境に最適な、ローカルストレージのシナリオ向けの LVM Storage と HostPath Provisioner について解説します。
 
 == 前提条件
 
 このセクションのチュートリアルを進める前に、以下が用意されていることを確認してください。
 
-* OpenShift 4.18以降のクラスター
+* OpenShift 4.18 以降のクラスター
 * クラスター管理者権限
-* クラスターノード上の少なくとも1つの予備ローカルディスク
-* Linuxのストレージ概念（LVM、ブロックデバイス）に関する基本的な知識
+* クラスターノード上の少なくとも 1 つの予備ローカルディスク
+* Linux のストレージ概念 (LVM、ブロックデバイス) に関する基本的な知識
 
 == 各セクション
 
 xref:lvm-operator.adoc[]::
-ローカルディスクを使用してLVM Storage Operatorをインストールおよび設定するためのステップバイステップガイドです。
+ローカルディスクを使用して LVM Storage Operator をインストールおよび設定するためのステップバイステップガイドです。
 
 xref:lvm-troubleshooting.adoc[]::
-LVMストレージの問題を診断および解決するためのトラブルシューティングガイドです。
+LVM ストレージの問題を診断および解決するためのトラブルシューティングガイドです。
 
 xref:hostpath-provisioner.adoc[]::
-開発、テスト、シングルノードクラスターのシナリオ向けに、HostPath Provisionerを使用してローカルストレージを設定します。
+開発、テスト、シングルノードクラスターのシナリオ向けに、HostPath Provisioner を使用したローカルストレージの設定ガイドです。
 xref:multi-disk-configuration.adoc[]::
-ストレージの階層化のために、異なるStorageClassを使用して複数のディスクを持つVMを設定します。
+異なる StorageClass を使用して複数のディスクを持つ VM の設定ガイドです。
 
 == デフォルトストレージクラスの重要性
 
-デフォルトストレージクラスの設定は、OpenShift Virtualizationにとって非常に重要です。
+デフォルトストレージクラスの設定は、OpenShift Virtualization にとって非常に重要です。
 
-* **ブートソースイメージ**: DataSource OSイメージにはデフォルトのストレージクラスが必要です
-* **自動プロビジョニング**: ストレージを明示的に指定しなくてもVMを作成できます
-* **テンプレートのサポート**: VMテンプレートがすぐに使用できます
+* **ブートソースイメージ**: DataSource OS イメージにはデフォルトのストレージクラスが必要です
+* **自動プロビジョニング**: ストレージを明示的に指定しなくても VM を作成できます
+* **テンプレートのサポート**: VM テンプレートがすぐに使用できます
 * **運用管理の簡素化**: クラスター全体で一貫したストレージプロビジョニングが可能になります
 
-詳細については、LVM Operatorガイドの xref:lvm-operator.adoc#_step_5_set_default_storageclass[Step 5: Set Default StorageClass] を参照してください。
+詳細については、LVM Operator ガイドの xref:lvm-operator.adoc#_step_5_set_default_storageclass[Step 5: Set Default StorageClass] を参照してください。
 
 == 次のステップ
 
 このモジュールを完了すると、以下の準備が整います。
 
-* VMの xref:networking:index.adoc[ネットワークの設定]
+* VM の xref:networking:index.adoc[ネットワークの設定]
 * 仮想マシンの作成と設定
 
 == 関連情報

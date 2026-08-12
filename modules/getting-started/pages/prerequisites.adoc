@@ -17,7 +17,7 @@
 実行するタスクに応じて、適切なアクセスレベルが必要になります。
 
 * **Cluster Admin**: Operator のインストール、ストレージ構成、ネットワーク構成の実行が可能
-* **Namespace Admin**: 特定のネームスペース内の VM を管理することが可能
+* **Namespace Admin**: 特定の namespace 内の VM を管理することが可能
 * **Developer**: 適切な RBAC 権限があれば、VM の作成および管理が可能
 
 == 必要な CLI ツール

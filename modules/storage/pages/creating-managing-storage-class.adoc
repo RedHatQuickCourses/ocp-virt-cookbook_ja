@@ -3,7 +3,7 @@
 
 == 概要
 
-本チュートリアルでは、OpenShift Container Platform (OCP) における StorageClass について解説します。このガイドでは、ストレージプロビジョニングの標準である Container Storage Interface (CSI) が採用されている OCP 4.x (OCPv4 と略されることが多い) に焦点を当てます。これらの概念は、StorageClassによって仮想マシンのディスクがどのようにプロビジョニングされるかが決定される OpenShift Virtualization (CNV) にも直接適用されます。StorageClassの詳細については、OpenShift の公式ドキュメントである https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage_apis/storageclass-storage-k8s-io-v1[storage class api] および https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage/using-container-storage-interface-csi[Container Storage Interface] を参照してください。
+本チュートリアルでは、OpenShift Container Platform (OCP) における StorageClass について解説します。このガイドでは、ストレージプロビジョニングの標準である Container Storage Interface (CSI) が採用されている OCP 4.x (OCPv4 と略されることが多い) に焦点を当てます。これらの概念は、StorageClass によって仮想マシンのディスクがどのようにプロビジョニングされるかが決定される OpenShift Virtualization (CNV) にも直接適用されます。StorageClass の詳細については、OpenShift の公式ドキュメントである https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage_apis/storageclass-storage-k8s-io-v1[storage class api] および https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage/using-container-storage-interface-csi[Container Storage Interface] を参照してください。
 
 == StorageClass の基礎
 OpenShift における StorageClass (SC) は、クラスターで利用可能なストレージの「クラス」を記述するものです。これにより、管理者は基盤となるインフラストラクチャの詳細をユーザーに意識させることなく、さまざまなストレージ階層 (例: "fast-ssd", "cheap-hdd") を定義できます。
@@ -43,7 +43,7 @@ B. Retain
 *  復旧: 管理者が手動でデータをクリーンアップするか、PV を削除してスペースを再利用する必要があります。
 *  使用例: データベースや、誤削除を防止しなければならない重要な本番データなど。
 
-== デフォルト StorageClass を設定する
+== default StorageClass を設定する
 特定の StorageClass をデフォルトとしてマークできます。ユーザーが storageClassName を指定せずに PVC を作成した場合、このクラスが使用されます。
 コマンド:
 [source,bash,role=execute]
@@ -98,10 +98,10 @@ parameters:
   "csi.storage.k8s.io/fstype": "xfs"
 
 ----
-注記: これは参考用のStorageClass例です。LVMS オペレーターを使用する場合は自動的に生成されます。
+NOTE: これは参考用の StorageClass 例です。LVMS Operatorを使用する場合は自動的に生成されます。
 
 シナリオ C: NFS (共有ストレージ / RWX)
-NFS CSI Driver オペレーターまたは外部の NFS プロビジョナーが必要です。
+NFS CSI Driver Operatorまたは外部の NFS プロビジョナーが必要です。
 
 [source,yaml]
 ----
@@ -168,7 +168,7 @@ OpenShift ドキュメント: https://docs.redhat.com/en/documentation/openshift
 
 * **問題 3:** "Provisioner not found"
   ** 原因: provisioner: で指定された CSI ドライバーがインストールされていないか、クラッシュしている。
-  ** 解決策: 関連するネームスペース (例: openshift-cluster-csi-drivers) 内のストレージオペレーター Pod を確認してください。
+  ** 解決策: 関連する namespace (例: openshift-cluster-csi-drivers) 内のストレージ Operator Pod を確認してください。
 
 * **問題 4:** ボリュームのサイズ変更に失敗する
   ** 原因: StorageClass で allowVolumeExpansion が false に設定されている。
@@ -181,7 +181,7 @@ OpenShift ドキュメント: https://docs.redhat.com/en/documentation/openshift
 
 * OpenShift における StorageClass の役割と、動的プロビジョニングのためのストレージ階層の定義方法
 * Provisioner、ReclaimPolicy、VolumeBindingMode、VolumeExpansion などの主要な StorageClass パラメーター
-* `Immediate` と `WaitForFirstConsumer` のBolume Vinding Modesの違いと、それぞれの使い分け
+* `Immediate` と `WaitForFirstConsumer` の Volume Binding Modes の違いと、それぞれの使い分け
 * AWS EBS、Local LVM、NFS ストレージバックエンド用の StorageClass 定義の作成方法
 * PVC が Pending で止まる、トポロジーの不一致、ボリュームのサイズ変更失敗など、よくあるトラブルシューティングのシナリオ
 

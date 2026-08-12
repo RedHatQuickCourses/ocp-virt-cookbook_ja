@@ -1,21 +1,21 @@
-= OpenShift Virtualization VM のための Cloud-init 基礎
+= OpenShift Virtualization VM のための cloud-init 基礎
 
-:navtitle: Cloud-init 基礎
+:navtitle: cloud-init 基礎
 
 == 概要
 
-Cloud-initは、仮想マシンの初回起動時の初期化を自動化するための業界標準ツールです。
-OpenShift Virtualizationでは、ほぼすべてのVMがCloud-initを使用して、ユーザー設定、パスワード設定、SSHキーの注入、パッケージのインストール、ネットワークアドレスの割り当てを行います。
-本チュートリアルでは、Cloud-initの動作原理、KubeVirtによるVMへのCloud-initデータの配信方法、VirtualMachineマニフェストへのCloud-init設定の埋め込み方法について解説します。
+cloud-init は、仮想マシンの初回起動時の初期化を自動化するための業界標準ツールです。
+OpenShift Virtualization では、ほぼすべての VM が cloud-init を使用して、ユーザー設定、パスワード設定、SSH キーの注入、パッケージのインストール、ネットワークアドレスの割り当てを行います。
+本チュートリアルでは、cloud-init の動作原理、KubeVirt による VM への cloud-init データの配信方法、VirtualMachine マニフェストへの cloud-init 設定の埋め込み方法について解説します。
 
 === 学習内容
 
-* Cloud-initとは何か、なぜVMの自動化に重要なのか
-* 3つのCloud-initデータタイプ：userData、networkData、metadata
-* KubeVirtがNoCloudデータソースを介したCloud-initデータのVMへの配信
-* ユーザー作成、パッケージインストール、スクリプト実行のための一般的なcloud-configモジュール
-* VirtualMachineマニフェストにCloud-initを埋め込む2つのパターン（インライン記述とSecret参照）
-* Cloud-initが正常に実行されたことを確認する方法
+* cloud-init とは何か、なぜ VM の自動化に重要なのか
+* 3 つの cloud-init データタイプ：userData、networkData、metadata
+* KubeVirt が NoCloud データソースを介した cloud-init データの VM への配信
+* ユーザー作成、パッケージインストール、スクリプト実行のための一般的な cloud-config モジュール
+* VirtualMachine マニフェストに cloud-init を埋め込む 2 つのパターン (インライン記述と Secret 参照)
+* cloud-init が正常に実行されたことを確認する方法
 
 検証済みバージョン：
 [source,text]
@@ -25,34 +25,34 @@ OpenShift 4.18+
 
 == 前提条件
 
-* OpenShift VirtualizationがインストールされたOpenShift 4.18以上
-* `oc` および `virtctl` CLIツールがインストールされていること（xref:virtctl-basics.adoc[]を参照）
-* YAML構文の基礎知識
-* VM作成の経験（xref:create-vm-web-console.adoc[]を参照）
+* OpenShift Virtualization がインストールされた OpenShift 4.18 以上
+* `oc` および `virtctl` CLI ツールがインストールされていること (xref:virtctl-basics.adoc[]を参照)
+* YAML 構文の基礎知識
+* VM 作成の経験 (xref:create-vm-web-console.adoc[]を参照)
 
-== Cloud-initとは？
+== cloud-init とは？
 
-Cloud-initは、仮想マシンの初回起動時にゲストOS内で実行されるオープンソースフレームワークです。
-外部ソースから設定データを読み込み、ユーザーアカウントの作成、SSHアクセスの設定、パッケージのインストール、設定ファイルの書き込み、スクリプトの実行など、本来手動で行う必要のあるタスクを自動化するために使用されます。
+cloud-init は、仮想マシンの初回起動時にゲスト OS 内で実行されるオープンソースフレームワークです。
+外部ソースから設定データを読み込み、ユーザーアカウントの作成、SSH アクセスの設定、パッケージのインストール、設定ファイルの書き込み、スクリプトの実行など、本来手動で行う必要のあるタスクを自動化するために使用されます。
 
-Cloud-initは、Fedora、RHEL、CentOS、Ubuntu、Debianなど、ほとんどのLinuxディストリビューションでサポートされています。
-これは、AWS、Azure、GCPなどの主要なクラウドプラットフォームや、OpenShift Virtualizationの基盤であるKubeVirtを含む仮想化プラットフォーム全体で標準的な初期化メカニズムとなっています。
+cloud-init は、Fedora、RHEL、CentOS、Ubuntu、Debian など、ほとんどの Linux ディストリビューションでサポートされています。
+これは、AWS、Azure、GCP などの主要なクラウドプラットフォームや、OpenShift Virtualization の基盤である KubeVirt を含む仮想化プラットフォーム全体で標準的な初期化メカニズムとなっています。
 
-注意: Cloud-initはデフォルトではVMの初回起動時にのみ実行されます。インスタンスデータが明示的にクリアされない限り、2回目以降の再起動ではCloud-initはスキップされます。
+NOTE: cloud-init はデフォルトでは VM の初回起動時にのみ実行されます。インスタンスデータが明示的にクリアされない限り、2 回目以降の再起動では cloud-init はスキップされます。
 
-== KubeVirtによるCloud-initの配信
+== KubeVirt による cloud-init の配信
 
-従来のクラウド環境では、VMはメタデータサービス（`169.254.169.254` のHTTPエンドポイント）からCloud-initデータを取得します。
-KubeVirtは、*NoCloudデータソース*と呼ばれる異なるアプローチを採用しています。
+従来のクラウド環境では、VM はメタデータサービス (`169.254.169.254` の HTTP エンドポイント) から cloud-init データを取得します。
+KubeVirt は、*NoCloud データソース*と呼ばれる異なるアプローチを採用しています。
 
-NoCloudを使用する場合、KubeVirtは以下の動作を行います。
+NoCloud を使用する場合、KubeVirt は以下の動作を行います。
 
-. VirtualMachineマニフェスト（または参照されたSecret）からCloud-initデータを読み取る
-. データをISOイメージとしてフォーマットされた仮想ディスクにパッケージ化する
-. virtioデバイスを介してディスクをVMに接続する
-. ゲストOS内のCloud-initがそのディスクを検出し、データを読み取って設定を適用する
+. VirtualMachine マニフェスト (または参照された Secret) から cloud-init データを読み取る
+. データを ISO イメージとしてフォーマットされた仮想ディスクにパッケージ化する
+. virtio デバイスを介してディスクを VM に接続する
+. ゲスト OS 内の cloud-init がそのディスクを検出し、データを読み取って設定を適用する
 
-つまり、Cloud-initの設定はKubernetesリソース内に完結しており、外部のメタデータサービスは不要です。
+つまり、cloud-init の設定は Kubernetes リソース内に完結しており、外部のメタデータサービスは不要です。
 
 [source,yaml]
 ----
@@ -70,15 +70,15 @@ spec:
                 lock_passwd: false
                 plain_text_passwd: changeme
 ----
-<1> `cloudInitNoCloud` ボリュームタイプを指定することで、KubeVirtにNoCloudデータソースディスクを作成するよう指示。
+<1> `cloudInitNoCloud` ボリュームタイプを指定することで、KubeVirt に NoCloud データソースディスクを作成するよう指示。
 
-== Cloud-initのデータタイプ
+== cloud-init のデータタイプ
 
-Cloud-initは3種類の構成データを受け入れます。KubeVirtでは、これらは `cloudInitNoCloud` ボリューム下のフィールドに対応します。
+cloud-init は 3 種類の構成データを受け入れます。KubeVirt では、これらは `cloudInitNoCloud` ボリューム下のフィールドに対応します。
 
 === userData (cloud-config)
 
-主要な構成チャネルです。userDataには *cloud-config* ドキュメントが含まれます。これは `#cloud-config` ヘッダーで始まるYAMLファイルです。ここでユーザー、パッケージ、スクリプト、ファイル、VMのほとんどのカスタマイズを定義します。
+主要な構成チャネルです。userData には *cloud-config* ドキュメントが含まれます。これは `#cloud-config` ヘッダーで始まる YAML ファイルです。ここでユーザー、パッケージ、スクリプト、ファイル、VM のほとんどのカスタマイズを定義します。
 
 [source,yaml]
 ----
@@ -97,13 +97,13 @@ cloudInitNoCloud:
       - tmux
 ----
 
-重要: 1行目の `#cloud-config` ヘッダーは必須です。これがないと、Cloud-initはデータをcloud-configドキュメントとして認識せず、処理を黙ってスキップします。
+重要: 1 行目の `#cloud-config` ヘッダーは必須です。これがないと、cloud-init はデータを cloud-config ドキュメントとして認識せず、処理を黙ってスキップします。
 
 === networkData (network-config v2)
 
-VMインターフェース用のネットワーク設定です。Netplan互換の *network-config version 2* 形式を使用します。静的IP、カスタムDNS、マルチインターフェース設定が必要な場合に使用します。
+VM インターフェース用のネットワーク設定です。Netplan 互換の *network-config version 2* 形式を使用します。静的 IP、カスタム DNS、マルチインターフェース設定が必要な場合に使用します。
 
-シンプルなDHCP設定の例：
+シンプルな DHCP 設定の例：
 
 [source,yaml]
 ----
@@ -115,7 +115,7 @@ cloudInitNoCloud:
         dhcp4: true
 ----
 
-DNSとルートを指定した静的IP設定の例：
+DNS とルートを指定した静的 IP 設定の例：
 
 [source,yaml]
 ----
@@ -136,12 +136,12 @@ cloudInitNoCloud:
           - to: 10.0.0.0/8
             via: 192.168.1.254           # <4>
 ----
-<1> CIDR表記でのサブネットマスク付きの静的IPアドレス
-<2> DNSリゾルバのアドレス
-<3> ルートとして定義されたデフォルトゲートウェイ（`gateway4` は非推奨）
+<1> CIDR 表記でのサブネットマスク付きの静的 IP アドレス
+<2> DNS リゾルバのアドレス
+<3> ルートとして定義されたデフォルトゲートウェイ (`gateway4` は非推奨)
 <4> 特定のゲートウェイ経由で `10.0.0.0/8` ネットワークに到達するための追加ルート
 
-インターフェース名が予測できない場合に備え、名前の代わりにMACアドレスでインターフェースを指定することも可能です。
+インターフェース名が予測できない場合に備え、名前の代わりに MAC アドレスでインターフェースを指定することも可能です。
 
 [source,yaml]
 ----
@@ -159,13 +159,13 @@ cloudInitNoCloud:
             via: 192.168.1.1
 ----
 
-NOTE: KubeVirt VMでは、最初のインターフェースは通常 `enp1s0`、2番目は `enp2s0` となります。これらの名前はNetworkAttachmentDefinitionの順序ではなく、VirtualMachine Spec でインターフェースが定義された順序に対応します。
+NOTE: KubeVirt VM では、最初のインターフェースは通常 `enp1s0`、2 番目は `enp2s0` となります。これらの名前は NetworkAttachmentDefinition の順序ではなく、VirtualMachine Spec でインターフェースが定義された順序に対応します。
 
-マルチインターフェース設定やVLAN、高度なシナリオについては、xref:networking:static-ip-configuration.adoc[静的IP設定]を参照してください。
+マルチインターフェース設定や VLAN、高度なシナリオについては、xref:networking:static-ip-configuration.adoc[静的 IP 設定]を参照してください。
 
 === metadata
 
-`instance-id` や `local-hostname` などのVMインスタンスメタデータです。多くの場合、KubeVirtはVirtualMachineリソースからメタデータを自動的に生成するため、手動で設定する必要はほとんどありません。
+`instance-id` や `local-hostname` などの VM インスタンスメタデータです。多くの場合、KubeVirt は VirtualMachine リソースからメタデータを自動的に生成するため、手動で設定する必要はほとんどありません。
 
 [source,yaml]
 ----
@@ -175,11 +175,11 @@ cloudInitNoCloud:
     local-hostname: my-vm
 ----
 
-TIP: ホスト名のみを設定したい場合は、カスタムメタデータを提供するのではなく、userData内の `hostname` モジュールを使用してください。
+TIP: ホスト名のみを設定したい場合は、カスタムメタデータを提供するのではなく、userData 内の `hostname` モジュールを使用してください。
 
-== Cloud-initの実行ステージ
+== cloud-init の実行ステージ
 
-Cloud-initは起動プロセス中に5つのステージで実行されます。これらのステージを理解すると、設定がいつ反映されるかを予測するのに役立ちます。
+cloud-init は起動プロセス中に 5 つのステージで実行されます。これらのステージを理解すると、設定がいつ反映されるかを予測するのに役立ちます。
 
 [cols="1,2,2",options="header"]
 |===
@@ -187,30 +187,30 @@ Cloud-initは起動プロセス中に5つのステージで実行されます。
 
 |Generator
 |非常に早い起動時 (systemd generator)
-|Cloud-initを実行するかどうかを判断
+|cloud-init を実行するかどうかを判断
 
 |Local
 |ネットワークが立ち上がる前
-|networkDataからネットワーク設定を適用
+|networkData からネットワーク設定を適用
 
 |Network
 |ネットワークが利用可能になった後
 |残りのデータソース情報を取得し、ホスト名を設定
 
 |Config
-|Networkステージの後
-|設定モジュールの実行：ユーザー作成、ファイル書き込み、SSHキーのインストール
+|Network ステージの後
+|設定モジュールの実行：ユーザー作成、ファイル書き込み、SSH キーのインストール
 
 |Final
 |起動の終了付近
 |`runcmd` コマンドの実行、パッケージのインストール、最終スクリプトの実行
 |===
 
-この順序により、ネットワーク設定（networkData）はユーザー設定（userDataモジュール）よりも先に適用されます。`runcmd` で指定されたコマンドは、他のすべてのモジュールが完了した後に最後に実行されます。
+この順序により、ネットワーク設定 (networkData) はユーザー設定 (userData モジュール) よりも先に適用されます。`runcmd` で指定されたコマンドは、他のすべてのモジュールが完了した後に最後に実行されます。
 
-== 一般的なCloud-configモジュール
+== 一般的な Cloud-config モジュール
 
-以下のモジュールは、最も一般的なVM初期化タスクをカバーしています。各例は `#cloud-config` userDataドキュメントの該当セクションを示しています。
+以下のモジュールは、最も一般的な VM 初期化タスクをカバーしています。各例は `#cloud-config` userData ドキュメントの該当セクションを示しています。
 
 === ユーザー作成とパスワード設定
 
@@ -226,7 +226,7 @@ user:
     - ssh-ed25519 AAAA...key-data... user@workstation
 ----
 
-`user` キーはデフォルトユーザーを設定します。パスワードログインを許可するには `lock_passwd: false` と `plain_text_passwd` を設定します。最上位レベルで `ssh_pwauth: true` を追加すると、SSHでのパスワード認証が有効になります（多くのクラウドイメージではデフォルトで無効になっています）。
+`user` キーはデフォルトユーザーを設定します。パスワードログインを許可するには `lock_passwd: false` と `plain_text_passwd` を設定します。最上位レベルで `ssh_pwauth: true` を追加すると、SSH でのパスワード認証が有効になります (多くのクラウドイメージではデフォルトで無効になっています)。
 
 デフォルト以外の追加ユーザーを作成するには、`users` リストを使用します。
 
@@ -256,7 +256,7 @@ packages:
   - python3
 ----
 
-NOTE: パッケージのインストールは *final* ステージで実行されます。VMはパッケージのインストール完了前であっても、コンソールからアクセス可能です。
+NOTE: パッケージのインストールは *final* ステージで実行されます。VM はパッケージのインストール完了前であっても、コンソールからアクセス可能です。
 
 === コマンドの実行
 
@@ -268,7 +268,7 @@ runcmd:
   - echo "VM initialized at $(date)" >> /var/log/vm-init.log
 ----
 
-コマンドは *final* ステージ中に順番に実行されます。各エントリは文字列（`/bin/sh` 経由で実行）またはリスト（直接実行）にできます。
+コマンドは *final* ステージ中に順番に実行されます。各エントリは文字列 (`/bin/sh` 経由で実行) またはリスト (直接実行) にできます。
 
 === ファイルの書き込み
 
@@ -291,13 +291,13 @@ write_files:
 
 TIP: `write_files` によって書き込まれたファイルは *config* ステージ中に作成されるため、`runcmd` が実行される前に存在します。これにより、設定ファイルを安全に書き込んでから、それに依存するサービスを `runcmd` で開始できます。
 
-== VirtualMachineマニフェストへのCloud-init埋め込み
+== VirtualMachine マニフェストへの cloud-init 埋め込み
 
-VirtualMachineにCloud-initデータを提供するには2つのパターンがあります。
+VirtualMachine に cloud-init データを提供するには 2 つのパターンがあります。
 
 === インライン記述 (cloudInitNoCloud)
 
-最も簡単な方法は、Cloud-initデータをVirtualMachineマニフェストに直接埋め込む方法です。
+最も簡単な方法は、cloud-init データを VirtualMachine マニフェストに直接埋め込む方法です。
 
 xref:attachment$minimal-cloud-init-vm.yaml[minimal-cloud-init-vm.yaml をダウンロード]
 
@@ -357,7 +357,7 @@ spec:
                 - vim
                 - git
               runcmd:
-                - echo "Cloud-init complete" > /tmp/cloud-init-done
+                - echo "cloud-init complete" > /tmp/cloud-init-done
           name: cloudinitdisk
   dataVolumeTemplates:
     - metadata:
@@ -372,18 +372,18 @@ spec:
             requests:
               storage: 30Gi
 ----
-<1> `cloudInitNoCloud` ボリュームタイプがNoCloudデータソースディスクを作成します。
-<2> `userData` フィールドに `#cloud-config` で始まるcloud-config YAMLを含めます。
+<1> `cloudInitNoCloud` ボリュームタイプが NoCloud データソースディスクを作成します。
+<2> `userData` フィールドに `#cloud-config` で始まる cloud-config YAML を含めます。
 
-このパターンは小規模な設定に適しています。大規模な設定や機密情報を含む場合は、Secret参照を使用してください。
+このパターンは小規模な設定に適しています。大規模な設定や機密情報を含む場合は、Secret 参照を使用してください。
 
-=== Secret参照
+=== Secret 参照
 
-複雑な設定や、パスワードやトークンなどの機密値がCloud-initに含まれる場合は、Kubernetes Secretにデータを格納し、VirtualMachineからSecretを参照します。
+複雑な設定や、パスワードやトークンなどの機密値が cloud-init に含まれる場合は、Kubernetes Secret にデータを格納し、VirtualMachine から Secret を参照します。
 
 xref:attachment$cloud-init-secret-vm.yaml[cloud-init-secret-vm.yaml をダウンロード]
 
-まず、Secretを作成します。
+まず、Secret を作成します。
 
 [source,bash,role=execute]
 ----
@@ -409,7 +409,7 @@ packages:
   -n demo
 ----
 
-次に、VirtualMachineマニフェストから参照します。
+次に、VirtualMachine マニフェストから参照します。
 
 [source,yaml]
 ----
@@ -419,20 +419,20 @@ volumes:
         name: my-vm-cloud-init         # <1>
     name: cloudinitdisk
 ----
-<1> KubeVirtはSecretから `userdata` キーを読み取り、それをCloud-initのuserDataとして提供します。
+<1> KubeVirt は Secret から `userdata` キーを読み取り、それを cloud-init の userData として提供します。
 
-== Cloud-initの実行確認
+== cloud-init の実行確認
 
-VMが起動した後、Cloud-initの設定処理が成功したかを確認します。
+VM が起動した後、cloud-init の設定処理が成功したかを確認します。
 
-VMコンソールにアクセスします。
+VM コンソールにアクセスします。
 
 [source,bash,role=execute]
 ----
 virtctl console fedora-cloud-init-demo -n demo
 ----
 
-Cloud-initの状態を確認します。
+cloud-init の状態を確認します。
 
 [source,bash,role=execute]
 ----
@@ -450,37 +450,37 @@ detail:
 DataSourceNoCloud [seed=/dev/vdb]
 ----
 
-Cloud-initがエラーを報告している場合は、ログを確認します。
+cloud-init がエラーを報告している場合は、ログを確認します。
 
 [source,bash,role=execute]
 ----
 cat /var/log/cloud-init.log | tail -50
 ----
 
-詳細な診断手順や一般的な問題の解決策については、xref:networking:cloud-init-troubleshooting.adoc[Cloud-initのトラブルシューティング]を参照してください。
+詳細な診断手順や一般的な問題の解決策については、xref:networking:cloud-init-troubleshooting.adoc[cloud-init のトラブルシューティング]を参照してください。
 
 == よくある間違い
 
 *`#cloud-config` ヘッダーの欠落*::
-userDataの1行目は、正確に `#cloud-config` である必要があります。これがないと、Cloud-initはエラーメッセージを出さずにuserDataブロック全体を無視します。
+userData の 1 行目は、正確に `#cloud-config` である必要があります。これがないと、cloud-init はエラーメッセージを出さずに userData ブロック全体を無視します。
 
-*YAMLのインデントエラー*::
-Cloud-configはYAMLです。インデントの不整合（タブとスペースの混在、ネストの深さ間違い）は解析失敗の原因となります。VM内で `cloud-init devel schema --config-file /path/to/config.yaml` を使用して構文を検証してください。
+*YAML のインデントエラー*::
+Cloud-config は YAML です。インデントの不整合 (タブとスペースの混在、ネストの深さ間違い) は解析失敗の原因となります。VM 内で `cloud-init devel schema --config-file /path/to/config.yaml` を使用して構文を検証してください。
 
-*ネットワーク設定をuserDataに記述*::
-ネットワークインターフェースの設定は `userData` ではなく `networkData` に記述します。userData内にnetwork-config v2のYAMLを配置しても反映されません。
+*ネットワーク設定を userData に記述*::
+ネットワークインターフェースの設定は `userData` ではなく `networkData` に記述します。userData 内に network-config v2 の YAML を配置しても反映されません。
 
-*再起動時にCloud-initが再実行されるという期待*::
-Cloud-initは初回起動時に一度だけ実行されます。再実行させるには、`cloud-init clean` を実行してから再起動する必要があります。
+*再起動時に cloud-init が再実行されるという期待*::
+cloud-init は初回起動時に一度だけ実行されます。再実行させるには、`cloud-init clean` を実行してから再起動する必要があります。
 
 *Secret キー名の間違い*::
-`secretRef` を使用する場合、Secretは `userdata` という名前のキー（すべて小文字）を持つ必要があります。`userData` や `user-data` という名前のキーは検出されません。
+`secretRef` を使用する場合、Secret は `userdata` という名前のキー (すべて小文字) を持つ必要があります。`userData` や `user-data` という名前のキーは検出されません。
 
 == Windows VM の場合：Sysprep
 
-Cloud-initはLinux専用のツールです。Windows VMの場合、OpenShift Virtualizationは *Sysprep* をサポートしています。これはMicrosoft System Preparationツールのことで、初回起動時の同様のカスタマイズ（ホスト名、管理者パスワード、ドメイン参加、無人セットアップ）を実行します。
+cloud-init は Linux 専用のツールです。Windows VM の場合、OpenShift Virtualization は *Sysprep* をサポートしています。これは Microsoft System Preparation ツールのことで、初回起動時の同様のカスタマイズ (ホスト名、管理者パスワード、ドメイン参加、無人セットアップ) を実行します。
 
-Windows VMの設定については、xref:vm-configuration:remote-access-windows-vms.adoc[Windows VMへのリモートアクセス]を参照してください。
+Windows VM の設定については、xref:vm-configuration:remote-access-windows-vms.adoc[Windows VM へのリモートアクセス]を参照してください。
 
 == クリーンアップ
 
@@ -498,18 +498,18 @@ oc delete namespace demo
 
 本チュートリアルでは以下の内容を学びました。
 
-* Cloud-initは標準のLinux VM初期化フレームワークであり、初回起動時に自動的に設定を行う
-* KubeVirtはNoCloudデータソースを介してCloud-initデータを配信し、VMに接続されたvirtioディスクとしてパッケージ化する
-* 3つのデータタイプ：userData（ユーザー・パッケージ・スクリプト用のcloud-config）、networkData（network-config v2）、metadata（インスタンス識別子）
-* Cloud-initはステージ順に実行される：ネットワーク設定が最初、次にユーザー/ファイル設定、最後にコマンドとパッケージ
-* 2つのマニフェストパターン：シンプルな構成にはインライン `cloudInitNoCloud`、複雑なデータや機密データにはSecret参照
+* cloud-init は標準の Linux VM 初期化フレームワークであり、初回起動時に自動的に設定を行う
+* KubeVirt は NoCloud データソースを介して cloud-init データを配信し、VM に接続された virtio ディスクとしてパッケージ化する
+* 3 つのデータタイプ：userData (ユーザー・パッケージ・スクリプト用の cloud-config)、networkData (network-config v2)、metadata (インスタンス識別子)
+* cloud-init はステージ順に実行される：ネットワーク設定が最初、次にユーザー/ファイル設定、最後にコマンドとパッケージ
+* 2 つのマニフェストパターン：シンプルな構成にはインライン `cloudInitNoCloud`、複雑なデータや機密データには Secret 参照
 * `cloud-init status --long` および `/var/log/cloud-init.log` を使用した検証
 
 == 関連項目
 
-* xref:networking:static-ip-configuration.adoc[] - Cloud-initによる静的IP、DHCP、マルチインターフェース、VLANの詳細解説
-* xref:networking:cloud-init-troubleshooting.adoc[] - Cloud-initの問題に対する診断手順と解決策
-* xref:vm-configuration:remote-access-windows-vms.adoc[] - SysprepによるWindows VMの設定
-* link:https://cloudinit.readthedocs.io/en/latest/[Cloud-init 公式ドキュメント,window=_blank]
-* link:https://cloudinit.readthedocs.io/en/latest/reference/modules.html[Cloud-init モジュールリファレンス,window=_blank]
+* xref:networking:static-ip-configuration.adoc[] - cloud-init による静的 IP、DHCP、マルチインターフェース、VLAN の詳細解説
+* xref:networking:cloud-init-troubleshooting.adoc[] - cloud-init の問題に対する診断手順と解決策
+* xref:vm-configuration:remote-access-windows-vms.adoc[] - Sysprep による Windows VM の設定
+* link:https://cloudinit.readthedocs.io/en/latest/[cloud-init 公式ドキュメント,window=_blank]
+* link:https://cloudinit.readthedocs.io/en/latest/reference/modules.html[cloud-init モジュールリファレンス,window=_blank]
 * link:https://kubevirt.io/user-guide/virtual_machines/disks_and_volumes/#cloudinitnocloud[KubeVirt cloudInitNoCloud ドキュメント,window=_blank]

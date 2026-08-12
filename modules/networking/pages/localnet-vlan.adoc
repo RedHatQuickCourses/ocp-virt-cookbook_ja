@@ -1,15 +1,15 @@
-= OpenShift VirtualizationにおけるNetworkAttachmentDefinitionを使用したVLAN対応localnetセカンダリネットワークの構成
-:navtitle: NADを使用したVLAN対応localnetセカンダリネットワーク
+= OpenShift Virtualization における NetworkAttachmentDefinition を使用した VLAN 対応の localnet セカンダリネットワークの構成
+:navtitle: NAD を使用した VLAN 対応の localnet セカンダリネットワーク
 
-本チュートリアルでは、OpenShift Virtualizationにおいて、NetworkAttachmentDefinition (NAD) を使用してVLANタグ付けを行うlocalnetセカンダリネットワークを構成する方法を解説します。このアプローチでは、VLANセグメンテーションを伴う物理ネットワークインフラへの直接アクセスが提供され、Podネットワークの接続性を維持したまま、仮想マシン (VM) が特定のVLANタグ付きネットワークと通信できるようになります。これは、既存のVLANベースのネットワークと統合する場合や、ネットワークセグメンテーションが必要な場合に最適です。
+本チュートリアルでは、OpenShift Virtualization において、NetworkAttachmentDefinition (NAD) を使用して VLAN タグ付けを行う localnet セカンダリネットワークを構成する方法を解説します。このアプローチでは、VLAN セグメンテーションを伴う物理ネットワークインフラへの直接アクセスが提供され、Pod ネットワークの接続性を維持したまま、仮想マシン (VM) が特定の VLAN タグ付きネットワークと通信できるようになります。これは、既存の VLAN ベースのネットワークと統合する場合や、ネットワークセグメンテーションが必要な場合に最適です。
 
 == 前提条件
 
 * **NMState Operator**: クラスター内にインストールされ、実行中であること
-* **NMState CR**: Operatorが実行された後にnmstateインスタンスが作成されていること
-* **ワーカーノード**: bridge mappingがワーカーノードに適用されること
-* **VLANインフラストラクチャ**: 物理ネットワークインフラがVLANタグ付けをサポートしていること
-* **スイッチ設定**: OpenShiftワーカーノードに接続されている物理スイッチポートが、複数のVLANタグ付きトラフィックストリームを処理するために**トランクモード**で構成されていること
+* **NMState CR**: Operator が実行された後に nmstate インスタンスが作成されていること
+* **Worker Node**: bridge mapping が Worker Node に適用されること
+* **VLAN インフラストラクチャ**: 物理ネットワークインフラが VLAN タグ付けをサポートしていること
+* **スイッチ設定**: OpenShift Worker Node に接続されている物理スイッチポートが、複数の VLAN タグ付きトラフィックストリームを処理するために**トランクモード**で構成されていること
 
 検証済みバージョン:
 ----
@@ -20,15 +20,15 @@ OpenShift 4.19
 
 === 物理スイッチの設定: トランクモード
 
-OpenShiftワーカーノードに接続されている物理スイッチポートは、localnet VLAN構成を正しく機能させるために**トランクモードで構成されている必要があります**:
+OpenShift Worker Node に接続されている物理スイッチポートは、localnet VLAN 構成を正しく機能させるために**トランクモードで構成されている必要があります**:
 
-* **トランクモード**: スイッチポートが複数のVLANのトラフィックを運ぶことを許可します
-* **VLANタグ付け**: 各VLANは一意のVLAN ID（例: 100, 200, 300）によって識別されます
-* **複数のネットワーク**: 複数のVLANベースのセカンダリネットワークをサポートするために不可欠です
+* **トランクモード**: スイッチポートが複数の VLAN のトラフィックを運ぶことを許可します
+* **VLAN タグ付け**: 各 VLAN は一意の VLAN ID (例: 100, 200, 300) によって識別されます
+* **複数のネットワーク**: 複数の VLAN ベースのセカンダリネットワークをサポートするために不可欠です
 
-== 手順 1: VMのnamespaceの作成
+== 手順 1: VM の namespace の作成
 
-VLAN構成対応のlocalnetセカンダリネットワークを使用するVM用のnamespaceを作成します。
+VLAN 構成対応の localnet セカンダリネットワークを使用する VM 用の namespace を作成します。
 
 xref:attachment$localnet-vlan/localnet-vlan-namespace.yaml[localnet-vlan-namespace.yaml をダウンロード]
 
@@ -42,9 +42,9 @@ metadata:
 EOF
 ----
 
-== 手順 2: bridge mappingの構成
+== 手順 2: bridge mapping の構成
 
-論理ネットワークインターフェース名 `localnet-vlan` をワーカーノード上の `br-ex` ブリッジインターフェースに接続するbridge mappingを構成します。このマッピングにより、OVN-Kubernetesに対してどの物理ブリッジインターフェースがVLANサポート付きのlocalnetトラフィックを処理するかを通知し、基盤となる物理ネットワークインフラ経由でVMがVLANタグ付き外部ネットワークにアクセスできるようにします。
+論理ネットワークインターフェース名 `localnet-vlan` を Worker Node 上の `br-ex` ブリッジインターフェースに接続する bridge mapping を構成します。このマッピングにより、OVN-Kubernetes に対してどの物理ブリッジインターフェースが VLAN サポート付きの localnet トラフィックを処理するかを通知し、基盤となる物理ネットワークインフラ経由で VM が VLAN タグ付き外部ネットワークにアクセスできるようにします。
 
 xref:attachment$localnet-vlan/localnet-vlan-bridge-mapping-nncp.yaml[localnet-vlan-bridge-mapping-nncp.yaml をダウンロード]
 
@@ -67,9 +67,9 @@ spec:
 EOF
 ----
 
-== 手順 3: VLAN対応NetworkAttachmentDefinitionの作成
+== 手順 3: VLAN 対応の NetworkAttachmentDefinition の作成
 
-セカンダリネットワーク接続用に、VLANタグ付けを伴うlocalnetトポロジーを構成するNetworkAttachmentDefinitionを作成します。
+セカンダリネットワーク接続用に、VLAN タグ付けを伴う localnet トポロジーを構成する NetworkAttachmentDefinition を作成します。
 
 xref:attachment$localnet-vlan/localnet-vlan-100-nad.yaml[localnet-vlan-100-nad.yaml をダウンロード]
 
@@ -98,17 +98,17 @@ EOF
 
 **構成の詳細**:
 
-* `physicalNetworkName: "localnet-vlan"`: このNetworkAttachmentDefinition (NAD) をNNCPで構成されたbridge mappingにリンクします（bridge-mappings内の `localnet` 名と一致させる必要があります）
-* `vlanID: 100`: ネットワークセグメンテーション用にVLANタグ100を指定します
-* `subnets`: OVN-Kubernetes IPAM用のIPサブネット範囲を定義します
-* `excludeSubnets`: ゲートウェイIPが割り当てられないように除外します（通常はルーター/ゲートウェイ用に予約されます）
-* `topology: "localnet"`: 物理ネットワークへの直接アクセスのためにlocalnetトポロジーを使用します
+* `physicalNetworkName: "localnet-vlan"`: この NetworkAttachmentDefinition (NAD) を NNCP で構成された bridge mapping にリンクします (bridge-mappings 内の `localnet` 名と一致させる必要があります)
+* `vlanID: 100`: ネットワークセグメンテーション用に VLAN タグ 100 を指定します
+* `subnets`: OVN-Kubernetes IPAM 用の IP サブネット範囲を定義します
+* `excludeSubnets`: ゲートウェイ IP が割り当てられないように除外します (通常はルーター/ゲートウェイ用に予約されます)
+* `topology: "localnet"`: 物理ネットワークへの直接アクセスのために localnet トポロジーを使用します
 
-== 手順 4: VLANネットワーク接続を備えたVMのデプロイ
+== 手順 4: VLAN ネットワーク接続を備えた VM のデプロイ
 
-PodネットワークとVLANタグ付きlocalnetセカンダリネットワークの両方に接続するVMを作成します。
+Pod ネットワークと VLAN タグ付き localnet セカンダリネットワークの両方に接続する VM を作成します。
 
-WARNING: この例のcloud-initパスワードはデモ目的のみのものです。本番環境では、常に強力で一意なパスワード、またはSSHキー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、常に強力で一意なパスワード、または SSH キー認証を使用してください。
 
 xref:attachment$localnet-vlan/fedora-vlan-vm.yaml[fedora-vlan-vm.yaml をダウンロード]
 
@@ -190,9 +190,9 @@ spec:
 EOF
 ----
 
-== 手順 5: VLANネットワーク接続の確認
+== 手順 5: VLAN ネットワーク接続の確認
 
-VMコンソールにアクセスし、VLAN構成によるデュアルネットワーク接続を確認します。
+VM コンソールにアクセスし、VLAN 構成によるデュアルネットワーク接続を確認します。
 
 [source,bash,role=execute]
 ----
@@ -206,7 +206,7 @@ oc get vmi -n vm-guests-vlan
 virtctl console -n vm-guests-vlan fedora-vlan-vm
 ----
 
-VMコンソール内で、VLANネットワーク構成を確認します:
+VM コンソール内で、VLAN ネットワーク構成を確認します:
 
 [source,bash,role=execute]
 ----
@@ -239,17 +239,17 @@ sudo tcpdump -i enp2s0 -nn vlan 100
 
 === 一般的な問題
 
-. **VMまでVLANトラフィックが到達しない**:
-   * 物理スイッチ構成がVLANタグ付けをサポートしているか確認する
-   * ワーカーノードのbridge mapping構成を確認する
-   * VLAN IDがネットワークインフラと一致していることを確認する
+. **VM まで VLAN トラフィックが到達しない**:
+   * 物理スイッチ構成が VLAN タグ付けをサポートしているか確認する
+   * Worker Node の bridge mapping 構成を確認する
+   * VLAN ID がネットワークインフラと一致していることを確認する
 
-. **IPアドレスの割り当て問題**:
-   * VLANネットワーク上でDHCPサーバーが利用可能であることを確認する
+. **IP アドレスの割り当て問題**:
+   * VLAN ネットワーク上で DHCP サーバーが利用可能であることを確認する
 
 . **ネットワーク接続の問題**:
-   * 物理ネットワークが構成されたVLANをサポートしていることを確認する
-   * 物理ネットワークからVLANサブネットへの接続をテストする
+   * 物理ネットワークが構成された VLAN をサポートしていることを確認する
+   * 物理ネットワークから VLAN サブネットへの接続をテストする
 
 === 確認コマンド
 
@@ -272,13 +272,13 @@ oc logs -n openshift-ovn-kubernetes -l app=ovnkube-node
 
 本チュートリアルでは、以下の内容を学習しました:
 
-* ワーカーノード上で `NodeNetworkConfigurationPolicy` を使用して、VLANサポートを備えたbridge mappingを構成する方法
-* localnetトポロジー、VLANタグ付け、およびOVN-Kubernetes IPAMを備えた `NetworkAttachmentDefinition` を作成する方法
-* VLANタグ付きトラフィックをサポートするために物理スイッチポートをトランクモードで構成する必要がある理由
-* PodネットワークとVLANタグ付きlocalnetを組み合わせたデュアルネットワーク接続を備えたVMをデプロイする方法
-* VLANネットワーク構成を検証し、一般的なVLAN接続の問題をトラブルシューティングする方法
+* Worker Node 上で `NodeNetworkConfigurationPolicy` を使用して、VLAN サポートを備えた bridge mapping を構成する方法
+* localnet トポロジー、VLAN タグ付け、および OVN-Kubernetes IPAM を備えた `NetworkAttachmentDefinition` を作成する方法
+* VLAN タグ付きトラフィックをサポートするために物理スイッチポートをトランクモードで構成する必要がある理由
+* Pod ネットワークと VLAN タグ付き localnet を組み合わせたデュアルネットワーク接続を備えた VM をデプロイする方法
+* VLAN ネットワーク構成を検証し、一般的な VLAN 接続の問題をトラブルシューティングする方法
 
 == 参照
 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/understanding-multiple-networks[OpenShift - 複数のネットワークの理解,window=_blank]
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/virtualization/networking#virt-creating-secondary-localnet-udn_virt-connecting-vm-to-secondary-udn[OCP Virtualization用localnetトポロジーの構成,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/virtualization/networking#virt-creating-secondary-localnet-udn_virt-connecting-vm-to-secondary-udn[OCP Virtualization 用 localnet トポロジーの構成,window=_blank]

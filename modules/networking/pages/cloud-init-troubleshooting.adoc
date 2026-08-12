@@ -1,5 +1,5 @@
-= Cloud-init IP 設定トラブルシューティングガイド
-:navtitle: Cloud-init トラブルシューティング
+= cloud-init IP 設定トラブルシューティングガイド
+:navtitle: cloud-init トラブルシューティング
 
 本ガイドでは、OpenShift Virtualization における cloud-init を使用した IP アドレス設定に関する問題のトラブルシューティング手順、検証コマンド、解決策を提供します。
 
@@ -34,7 +34,7 @@ oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.interfaces[*].ipAddres
 oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.guestOSInfo}'
 ----
 
-空の場合、Guest Agent は実行されていません（<<issue-1-guest-agent-not-running,Guest Agent の問題>> を参照）。
+空の場合、Guest Agent は実行されていません (<<issue-1-guest-agent-not-running,Guest Agent の問題>> を参照)。
 
 == cloud-init のデバッグ
 
@@ -204,8 +204,8 @@ ip link show
 
 . ゲスト OS 内の実際のインターフェース名を確認してください。最新の Linux ディストリビューション (RHEL 8+, Fedora, Ubuntu 16.04+) では、予測可能な命名規則が使用されます。
    * 最初のインターフェース: `enp1s0`
-   * 2番目のインターフェース: `enp2s0`
-   * 3番目のインターフェース: `enp3s0`
+   * 2 番目のインターフェース: `enp2s0`
+   * 3 番目のインターフェース: `enp3s0`
 . cloud-init の networkData を更新し、正しい名前を使用します:
 +
 [source,yaml]
@@ -651,10 +651,10 @@ ip route show
 echo "=== DNS ==="
 cat /etc/resolv.conf
 
-echo "=== Cloud-init Status ==="
+echo "=== cloud-init Status ==="
 cloud-init status --long
 
-echo "=== Cloud-init Network Config ==="
+echo "=== cloud-init Network Config ==="
 sudo cat /var/lib/cloud/instance/network-config.txt
 
 echo "=== NetworkManager Connections ==="
@@ -710,21 +710,21 @@ VM 内の最新 Linux ディストリビューションは、PCI スロット位
 |===
 |ネットワーク接続順序 |インターフェース名 |一般的な用途
 
-|1番目 (デフォルト Pod ネットワーク)
+|1 番目 (デフォルト Pod ネットワーク)
 |`enp1s0`
 |プライマリネットワーク (DHCP)
 
-|2番目 (Multus/NAD)
+|2 番目 (Multus/NAD)
 |`enp2s0`
 |セカンダリネットワーク
 
-|3番目 (Multus/NAD)
+|3 番目 (Multus/NAD)
 |`enp3s0`
-|3番目のネットワーク
+|3 番目のネットワーク
 
-|4番目 (Multus/NAD)
+|4 番目 (Multus/NAD)
 |`enp4s0`
-|4番目のネットワーク
+|4 番目のネットワーク
 |===
 
 **ゲスト OS に表示されるインターフェース名を使用してください。最新の Linux ディストリビューション (RHEL 8+、Fedora、Ubuntu 16.04+) は、上記に示す enpXsY 形式を使用します。古いディストリビューションでは、eth0、eth1 などが使用される場合があります。**
@@ -761,7 +761,7 @@ networkData: |
 
 == 参考資料
 
-* link:https://cloudinit.readthedocs.io/en/latest/reference/network-config.html[Cloud-init ドキュメント - ネットワーク設定,window=_blank]
+* link:https://cloudinit.readthedocs.io/en/latest/reference/network-config.html[cloud-init ドキュメント - ネットワーク設定,window=_blank]
 * link:https://netplan.io/examples/[Netplan 設定例,window=_blank]
 * link:https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-about-vm-networking.html[OpenShift Virtualization ネットワーキング,window=_blank]
 * link:https://kubevirt.io/user-guide/virtual_machines/interfaces_and_networks/[KubeVirt ネットワーク設定,window=_blank]

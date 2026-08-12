@@ -110,3 +110,7 @@ dist
 # Ruby / Bundler (used by PDF generation)
 .bundle/
 Gemfile.lock
+
+# Claude Code
+.claude/
+CLAUDE.md

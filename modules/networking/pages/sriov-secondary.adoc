@@ -7,7 +7,7 @@ OpenShift 4.21
 ----
 
 SR-IOV (Single Root I/O Virtualization) を使用すると、単一の物理ネットワークアダプターが複数の仮想機能 (VF) を提供できるようになり、それらを直接仮想マシン (VM) にパススルーできます。
-ソフトウェアベースのネットワーキング (OVN overlay や Linux bridge) とは異なり、SR-IOV はホストのネットワークスタックを完全にバイパスするため、VM は物理環境に限りなくに近いネットワークパフォーマンスを得ることができます。
+ソフトウェアベースのネットワーキング (OVN overlay や Linux bridge) とは異なり、SR-IOV はホストのネットワークスタックを完全にバイパスするため、VM は物理環境に限りなく近いネットワークパフォーマンスを得ることができます。
 このため、SR-IOV はネットワーク機能 (NFV)、リアルタイムデータ処理、大規模データ転送など、高スループットや低レイテンシ、あるいはその両方が求められるワークロードにとって最適な選択肢となります。
 
 本番環境では、SR-IOV の物理ポートは通常、単一のケーブルで複数の VLAN を伝送する VLAN トランクとして構成されます。
@@ -18,21 +18,21 @@ SR-IOV (Single Root I/O Virtualization) を使用すると、単一の物理ネ�
 
 == 前提条件
 
-* OpenShift Virtualization Operatorがインストールされた OpenShift 4.18+ クラスター (4.21 で検証済み)
+* OpenShift Virtualization Operator がインストールされた OpenShift 4.18+ クラスター (4.21 で検証済み)
 * クラスターに SR-IOV Network Operator がインストールされていること
-* ワーカーノードに SR-IOV 対応ネットワークアダプターが少なくとも 1 つ搭載されていること (Intel X710、XXV710、E810、Mellanox ConnectX-4/5/6 ファミリー)
+* Worker Node に SR-IOV 対応ネットワークアダプターが少なくとも 1 つ搭載されていること (Intel X710、XXV710、E810、Mellanox ConnectX-4/5/6 ファミリー)
 * BIOS/UEFI で IOMMU (Intel VT-d または AMD-Vi) が有効になっていること
 * 物理スイッチポートが、VLAN 100 および 200 (または選択した VLAN ID) を伝送する VLAN トランクとして構成されていること
 * クラスター管理者権限
 * `oc` CLI がインストールされていること
 
-警告: SR-IOV の設定を変更すると、物理 NIC 上の仮想機能の数が変更されます。
+WARNING: SR-IOV の設定を変更すると、物理 NIC 上の仮想機能の数が変更されます。
 アダプターやドライバーによっては、Machine Config Operator を介して SR-IOV Network Operator が管理するノードの再起動が必要になる場合があります。
 本番環境のノードに対して、計画的に実施してください。
 
 == ステップ 1: SR-IOV Operator の準備状況の確認
 
-OperatorHub から SR-IOV Network Operator をインストールした後、その ClusterServiceVersion が `Succeeded` と報告され、すべてのOperator Pod が実行中であることを確認します。
+OperatorHub から SR-IOV Network Operator をインストールした後、その ClusterServiceVersion が `Succeeded` と報告され、すべての Operator Pod が実行中であることを確認します。
 
 [source,bash,role=execute]
 ----
@@ -54,7 +54,7 @@ oc get pods -n openshift-sriov-network-operator
 ----
 
 Operator、webhook、injector Pod が `Running` 状態になっているはずです。
-SR-IOV 対応ハードウェアを持つ各ワーカーノード上には、`sriov-network-config-daemon` Pod も表示されるはずです。
+SR-IOV 対応ハードウェアを持つ各 Worker Node 上には、`sriov-network-config-daemon` Pod も表示されるはずです。
 
 == ステップ 2: SR-IOV 対応デバイスの検出
 
@@ -145,7 +145,7 @@ EOF
 
 IMPORTANT: このポリシーを適用すると、SR-IOV 設定デーモンがトリガーされ、ノード上の VF が構成されます。
 ドライバーによっては、ノードのドレイン (drain) および再起動が必要になる場合があります。
-Operatorが Machine Config Operator を介してこれを自動的に処理しますが、ノードは一時的に利用できなくなります。
+Operator が Machine Config Operator を介してこれを自動的に処理しますが、ノードは一時的に利用できなくなります。
 
 ポリシーの適用状況を監視します:
 
@@ -254,7 +254,7 @@ EOF
 主要なフィールド:
 
 * `vlan` -- このネットワークを使用する VF に割り当てられる 802.1Q VLAN ID。NIC がハードウェアレベルでタグの付与・削除を処理するため、ゲスト OS はインターフェース上でタグなしのトラフィックのみを認識します。
-* `networkNamespace` -- NAD が作成されるnamespace。この namespace 内の VM が参照できます。
+* `networkNamespace` -- NAD が作成される namespace。この namespace 内の VM が参照できます。
 * `resourceName` -- `SriovNetworkNodePolicy` の `resourceName` と一致する必要があります。両方のネットワークが同じ VF プールを共有します。
 * `spoofChk: "off"` および `trust: "on"` -- ゲスト OS が独自の MAC アドレスと IP アドレスを管理する VM ワークロードに推奨されます。
 
@@ -278,7 +278,7 @@ sriov-net-mgmt   5s
 クラスター接続用の Pod ネットワーク、VLAN 100 上のデータプレーン SR-IOV インターフェース、VLAN 200 上の管理プレーン SR-IOV インターフェースという 3 つのネットワークインターフェースを持つ VM を作成します。
 これは、ネットワーク機能が異なるトラフィックタイプに対して分離されたプレーンを必要とする、本番環境のパターンを模倣したものです。
 
-警告: この例の cloud-init パスワードはデモ目的専用です。
+WARNING: この例の cloud-init パスワードはデモ目的専用です。
 本番環境では、常に SSH キー認証または強力なパスワードを使用してください。
 
 xref:attachment$sriov-secondary/fedora-sriov-vm.yaml[fedora-sriov-vm.yaml をダウンロード]
@@ -417,7 +417,7 @@ ip link show
 * `enp7s0` -- 最初の SR-IOV VF (データプレーン、VLAN 100)
 * `enp8s0` -- 2 番目の SR-IOV VF (管理プレーン、VLAN 200)
 
-注記: ゲスト内のインターフェース名は、PCI バス/スロットの順序に基づいて `udev` によって割り当てられるため、環境によって異なる場合があります。
+NOTE: ゲスト内のインターフェース名は、PCI バス/スロットの順序に基づいて `udev` によって割り当てられるため、環境によって異なる場合があります。
 `ip link show` を使用して、どれが SR-IOV VF であるかを識別してください (virtio インターフェースとは異なる Mellanox または Intel のハードウェアアドレスが表示されます)。
 
 === IP アドレスの割り当てと接続テスト
@@ -469,7 +469,7 @@ enp8s0           UP             10.200.0.10/24
 本番環境では、以下のいずれかの永続的な代替手段を使用してください:
 
 * **DHCP** -- 各 VLAN に DHCP サーバーをデプロイし、NetworkManager を介してゲストに自動的にアドレスを取得させます。
-* **Cloud-init** -- VM の cloud-init ボリュームに `networkData` セクションを追加して、初回起動時に固定 IP を設定します。詳細は xref:static-ip-configuration.adoc[] を参照してください。
+* **cloud-init** -- VM の cloud-init ボリュームに `networkData` セクションを追加して、初回起動時に固定 IP を設定します。詳細は xref:static-ip-configuration.adoc[] を参照してください。
 * **NetworkManager 接続ファイル** -- cloud-init の `write_files` を使用して、起動時に NetworkManager がアクティブにする `.nmconnection` ファイルを作成します。
 
 === VLAN 分離のテスト
@@ -514,7 +514,7 @@ ping -c 3 -I enp8s0 10.200.0.1
 === VM 内で SR-IOV インターフェースが表示されない
 
 * `SriovNetwork` の `resourceName` が `SriovNetworkNodePolicy` の `resourceName` と一致しているか確認します。
-* 両方の NAD が正しいnamespaceに存在することを確認します: `oc get net-attach-def -n sriov-demo`。
+* 両方の NAD が正しい namespace に存在することを確認します: `oc get net-attach-def -n sriov-demo`。
 * virt-launcher Pod のリソース割り当てを調査します: `oc describe pod -n sriov-demo -l app=fedora-sriov-vm`。
 
 === SR-IOV インターフェースのリンクがアップしない

@@ -52,7 +52,7 @@ OpenShift Virtualization は、この宣言型 API を仮想化固有のオブ�
 == 仮想化 API [[virtualization_apis]]
 
 === VirtualMachines [[virtual_machines]]
-VirtualMachine は API オブジェクト (厳密には Kubernetes カスタムリソース) であり、OpenShift Virtualization において実行されていない VirtualMachine を表現します。
+VirtualMachine は OpenShift Virtualizationにおいて、仮想マシンを表すAPIオブジェクト（厳密にはKubernetesカスタムリソース）です。
 
 VirtualMachine には VirtualMachineInstance (次セクションで解説) のテンプレートが含まれており、Status の一部として実行状態を反映します。
 
@@ -60,7 +60,7 @@ VirtualMachine には `spec` 内に VM の詳細を定義する多数のフィ�
 
 * `instanceType` - VirtualMachine に使用する <<instance_types,インスタンスタイプ>> 名 (RAM と CPU の割り当て量でサイズ指定されます) 。
 * `volumes` - 仮想ディスクとして VM に接続されるボリュームのリスト。このフィールドは https://kubevirt.io/user-guide/storage/disks_and_volumes/#volumes[複数のボリュームタイプ,window=_blank] をサポートしていますが、`dataVolume` と `persistentVolumeClaims` が最も一般的です。
-** `dataVolume` - この VM 用にプロビジョニングされる <<data_volumes,DataVolume(s)>> の名前を示します。作成される DataVolume(s) は `dataVolumeTemplates` セクション内で定義されます。
+** `dataVolume` - この VM 用にプロビジョニングされる <<data_volumes,DataVolume (s)>> の名前を示します。作成される DataVolume (s) は `dataVolumeTemplates` セクション内で定義されます。
 ** `persistentVolumeClaim` - <<persistent_volume_claim,PersistentVolumeClaim>> をディスクとして VM に接続します。
 * `networks` - VM に接続されたインターフェースにバインドされる <<networks,networks>> のリスト。空のフィールドの場合、デフォルトで標準の Pod/VM ネットワークが使用されます。
 * `interfaces` - VM に接続されたネットワーク <<interfaces,interfaces>> のリスト。インターフェースは仮想化された NIC と考えることができ、Pod/VM を特定のネットワークに接続するために使用されます。
@@ -71,7 +71,7 @@ VirtualMachine の実行状態は、通常 `spec.runStrategy` フィールドを
 * **Always** - 電源オン状態がデフォルトとなり、何らかの理由で (手動シャットダウンやクラッシュなどを問わず) 停止した場合に VM が再起動します。
 * **RerunOnFailure** - Always と同様ですが、VM がクラッシュした場合のみ再起動し、正常にシャットダウンされた場合 (スケジュールやゲスト内からの手動シャットダウンなど) は再起動しません。
 * **Once** - VM は一度だけ起動され、クラッシュしたか手動でシャットダウンされたかに関わらず、二度と起動されません。
-* **Manual** - 実行状態は自動管理されず、VM のステータスサブサブリソースに対して POST された電源コマンドにのみ応答します。
+* **Manual** - 実行状態は自動管理されず、VM のステータスサブリソースに対して POST された電源コマンドにのみ応答します。
 * **Halted** - `spec.runStrategy` が変更されるか、VM に対して `start` コマンドが発行されるまで VM をシャットダウン状態にします (このトピックについては後述) 。
 
 NOTE: `spec.running` フィールドは非推奨となっており、`spec.runStrategy` フィールドと相互排他です。
@@ -80,11 +80,11 @@ NOTE: `spec.running` フィールドは非推奨となっており、`spec.runSt
 
 これらの各コマンドが発行された場合、その発行先である VirtualMachine の `runStrategy` に影響を与える可能性があります。各ケースは以下の通りです。
 
-* **start** - VM を起動し、`Halted` run strategyを `Always` に戻します。これは `RerunOnFailure` や `Manual` run strategyには影響しません。
-* **restart** - 実行中の VM を再起動しますが、run strategyには影響しません。これは `Halted` VM に対しては何もしません。
-* **stop** - VM を停止し、`Always` run strategyを `Halted` に戻します。これは `RerunOnFailure` や `Manual` run strategyには影響しません。
+* **start** - VM を起動し、`Halted` run strategy を `Always` に戻します。これは `RerunOnFailure` や `Manual` run strategy には影響しません。
+* **restart** - 実行中の VM を再起動しますが、run strategy には影響しません。これは `Halted` VM に対しては何もしません。
+* **stop** - VM を停止し、`Always` run strategy を `Halted` に戻します。これは `RerunOnFailure` や `Manual` run strategy には影響しません。
 
-API レベルでは、`Manual` run strategyを持つ VM に対して電源コマンドが発行されると、以下のように `stateChangeRequests[]` リストが VirtualMachine ステータスサブリソースに追加されます。
+API レベルでは、`Manual` run strategy を持つ VM に対して電源コマンドが発行されると、以下のように `stateChangeRequests[]` リストが VirtualMachine ステータスサブリソースに追加されます。
 
 [source,yaml]
 ----
@@ -99,8 +99,8 @@ status:
 VirtualMachine に対して API アクションを実行する場合、VM `status` に現在の実行状態を反映するいくつかの異なるフィールドがあります。
 
 * **status.printableStatus** - VM の電源状態を確認するための最もシンプルなフィールドで、`Running` (起動済み/準備完了)、`Starting` (処理中/起動中)、`Stopped` 状態を反映します。
-* **status.runStrategy** - アクティブなrun strategyを反映します。`spec.runStrategy` フィールドと同様の `Always`、`RerunOnFailure`、`Once`、`Manual`、`Halted` といった値を反映します。
-* **status.conditions["type": "Ready"]** - `conditions` は以下のフィールドを含むオブジェクトのリストを指定します: `type` - 文字列値 (このケースでは `Ready`)、`status` - ブール値、`Reason` および `Message` - それぞれ任意で指定するreason codeと詳細説明。
+* **status.runStrategy** - アクティブな run strategy を反映します。`spec.runStrategy` フィールドと同様の `Always`、`RerunOnFailure`、`Once`、`Manual`、`Halted` といった値を反映します。
+* **status.conditions["type": "Ready"]** - `conditions` は以下のフィールドを含むオブジェクトのリストを指定します: `type` - 文字列値 (このケースでは `Ready`)、`status` - ブール値、`Reason` および `Message` - それぞれ任意で指定する reason code と詳細説明。
 「まだ準備ができていない」状態の例は以下の通りです。
 
 [source,yaml]
@@ -138,7 +138,7 @@ VM が再度起動されると、VM の yaml/json で定義されたテンプレ
 
 他のクラウドプラットフォームと同様に、OpenShift Virtualization では CPU およびメモリリソースは名前付きのインスタンスタイプに基づいて決定されます。
 これらのインスタンスタイプは、目的や機能セットに応じてアルファベットごとにグループ分けされており、世代ごとに番号が振られています (例: u1) 。
-各グループには、リソース割り当てによってスケールされた T シャツサイズ (small、medium、large、xlarge、2xlarge など) のインスタンスタイプの選択が含まれており、サイズはインスタンスのあるアルファベットと数字の後に続きます (例: u1.xlarge) 。
+各グループには、リソース割り当てによってスケールされた T シャツサイズ (small、medium、large、xlarge、2xlarge など) のインスタンスタイプの選択が含まれており、サイズはインスタンスタイプのアルファベットと数字の後に続きます (例: u1.xlarge) 。
 各インスタンスグループのスケーリング比率は、想定される用途 (メモリ集約型 vs CPU 集約型) によって異なります。
 
 OpenShift Virtualization では、以下のデフォルトインスタンスタイプが利用可能です。
@@ -183,8 +183,8 @@ VirtualMachineClusterInstanceTypes は以下のフィールド spec をサポー
 ** **tag** - 設定ドライブを介してゲストに公開する指定のタグおよび仮想インターフェースアドレス
 * **memory** (必須) - このインスタンスタイプのメモリ関連の設定を定義
 ** **guest** (必須) - ゲスト OS に公開するメモリの単位付き文字列値 (`"4096Mi"` や `"6Gi"` など)
-** **hugepages** - 通常のメモリの代わりに VMI 用のHugepageを使用できるようにします。
-*** **pageSize** - Hugepageサイズを指定。amd64 アーキテクチャの有効なサイズは `1Gi` および `2Mi`
+** **hugepages** - 通常のメモリの代わりに VMI 用の Hugepage を使用できるようにします。
+*** **pageSize** - Hugepage サイズを指定。amd64 アーキテクチャの有効なサイズは `1Gi` および `2Mi`
 ** **maxGuest** - ゲスト内部で表示される最大メモリ量を指定。`maxGuest` と `guest` の差分が、ホットプラグ可能なメモリ量
 ** **overcommitPercent** - オーバーコミットされるゲストメモリの割合、または virt-launcher Pod で必要とされるメモリの削減率。デフォルトは `0`
 * **nodeSelector** - このインスタンスタイプを動かしたいノードをスケジュールするために使用される Kubernetes selector label
@@ -192,7 +192,7 @@ VirtualMachineClusterInstanceTypes は以下のフィールド spec をサポー
 
 === VirtualMachineInstanceTypes [[vm_instance_types]]
 
-VirtualMachineInstanceType は VirtualMachineClusterInstanceType と同様ですが、クラスタースコープではなくnamespaceスコープです。これは、通常の (クラスター管理者ではない) ユーザーが独自のカスタムインスタンスタイプを定義し、アクセス権のあるproject/namespace内でのみ利用できるようにする場合に便利です。
+VirtualMachineInstanceType は VirtualMachineClusterInstanceType と同様ですが、クラスタースコープではなく namespace スコープです。これは、通常の (クラスター管理者ではない) ユーザーが独自のカスタムインスタンスタイプを定義し、アクセス権のある project/namespace 内でのみ利用できるようにする場合に便利です。
 
 IMPORTANT: `spec.instancetype` フィールドは OpenShift Virtualization Web コンソールで必須であり、`spec.template.spec.domain.cpu` または `spec.template.spec.domain.memory` が設定されている場合は設定できないため、CPU とメモリの設定を手動で指定するのではなく、VirtualMachine に使用するインスタンスタイプを選択または定義する必要があります。これは、インスタンスタイプが VM 起動時に VirtualMachineInstance の後者 2 つのフィールドを補完するために使用されるためです。
 
@@ -225,7 +225,7 @@ NOTE: VirtualMachinePreference spec で VM に BIOS ファームウェアを指�
 === PreferredCPUTopology [[preferred_cpu_topology]]
 
 VirtualMachinePreferences のもう 1 つの便利な機能は、VirtualMachineInstanceType で定義された vCPU 数がゲスト OS にどのように提示されるか (CPU トポロジー) を調整できることです。
-これは、CPU ソケット、コア、スレッド数が vCPU 数全体にどのように配分するかを制御するもので、ゲスト内部から VM が CPU トポロジーをどう認識するか (見え方) の点に限定されます。ホスト側のCPUソケット、コア、スレッドの物理的な割り当てとは一切関係ありません。
+これは、CPU ソケット、コア、スレッド数が vCPU 数全体にどのように配分するかを制御するもので、ゲスト内部から VM が CPU トポロジーをどう認識するか (見え方) の点に限定されます。ホスト側の CPU ソケット、コア、スレッドの物理的な割り当てとは一切関係ありません。
 
 preferredCPUTopology にはいくつかの異なる設定があります。
 
@@ -233,7 +233,7 @@ preferredCPUTopology にはいくつかの異なる設定があります。
 * **cores** - vCPU はゲスト OS にコアとして提示されます
 * **threads** - vCPU はゲスト OS にスレッドとして提示されます
 * **spread** - vCPU はデフォルトでソケットとコアに分散されますが、`spreadOptions` を設定することでチューニング可能です (下記参照)
-* **any** - vCPU はソケットとしてゲスト OS に割り当てられ、vCPU の割り当てはすべてこの設定の要件となります (関連するインスタンスタイプなしで優先順位を定義するために使用されます) 
+* **any** - vCPU はソケットとしてゲスト OS に割り当てられます。また、vCPU の割り当ては preference (特定のインスタンスタイプに関連付けずに優先順位を定義するために使用されるもの) によって指定する必要があります。 
 
 === vCPU SpreadOptions [[vcpu_spread_options]]
 
@@ -346,10 +346,10 @@ spec:
 * ロードバランシングと (内部的な) IP アドレスの安定性のために Kubernetes サービスを使用できる
 * サポートされているプラットフォーム上で OpenShift Route や LoadBalancer サービスを使用して外部に公開できる
 
-デフォルトネットワークの欠点はわずかですが、注目に値します。
+デフォルトネットワークにはいくつかの制限事項があります。
 
-* VM が使用するマスカレード IP アドレスは、外部からルーティングできない
-* 外部ネットワークには接続できず、同じproject/namespace内のサービスを使用しない限り、他のノード上の Pod にも接続できない
+* VM が使用する masquerade IP アドレスは、外部からルーティングできない
+* 外部ネットワークには接続できず、同じ project/namespace 内のサービスを使用しない限り、他のノード上の Pod にも接続できない
 * VLAN をサポートしていない
 * 一部のプラットフォーム (AWS) では、LoadBalancer サービスが混合モード (TCP と UDP 同時) のポートフォワーディングをサポートしていない
 
@@ -363,15 +363,15 @@ Multus は仲介役として機能し、複数の CNI プラグインを同時�
 これらのプラグインは以下の通りです。
 
 * **bridge** - 同じノードで実行されている Pod 間のネットワークスイッチとして機能し、外部ネットワークへの接続用にホストネットワークインターフェースにリンクできます。
-* **host-device** - ホストネットワークインターフェースを Pod ネットワークnamespaceに移動させ、インターフェースを root network namespaceから消滅させます。
+* **host-device** - ホストネットワークインターフェースを Pod ネットワーク namespace に移動させ、移動元の root network namespace からは当該インターフェースが見えなくなります。
 * **ipvlan** - ネットワーク上の Pod が MAC アドレスを共有します。これは、セキュリティ制限 (VPC ネットワーク) によりポートあたりの MAC アドレス数や未知の MAC アドレスが制限されている場合に使用されます。
 * **macvlan** - ネットワーク上の各 Pod が独自の MAC アドレスを持ち、従来のネットワーク接続に準拠します。
 * **SR-IOV** - single root I/O virtualization は、単一の物理デバイスを複数の Pod で共有するために使用されますが、この機能をサポートするホストデバイスが必要です。
 
-OpenShift (および Kubernetes) では、Multus は NetworkAttachmentDefinition という名前のカスタムリソースタイプを使用します。これは、特定のproject/namespaceに対してサポートされているプラグインのいずれかを使用してネットワークを定義するために使用されます。
+OpenShift (および Kubernetes) では、Multus は NetworkAttachmentDefinition という名前のカスタムリソースタイプを使用します。これは、特定の project/namespace に対してサポートされているプラグインのいずれかを使用してネットワークを定義するために使用されます。
 
 あるいは、OpenShift (Kubernetes ではない) では `cluster` Network リソースを編集して `spec.additionalNetworks[]` を定義することもでき、
-これにより、目的のproject/namespaceに NetworkAttachmentDefinition が自動的に作成されます。
+これにより、目的の project/namespace に NetworkAttachmentDefinition が自動的に作成されます。
 これは、クラスター全体で NetworkAttachmentDefinition を一元管理するためのポイントとして便利です。
 
 === NMState Operator [[nmstate_operator]]
@@ -419,7 +419,7 @@ OpenShift と Kubernetes の初期の頃は、ホスト (または SAN / NAS) �
 OpenShift Virtualization では、<<data_sources,DataSources>> と <<data_volumes,DataVolumes>> を使用して kubernetes ネイティブな PV および PVC を抽象化しており、
 それらが VirtualMachines で使用される主要なストレージリソースとなっています。
 
-StorageClasses に依存して空のボリュームをプロビジョニングすることに加えて、PersistentVolumeClaim オブジェクトの `dataSource` フィールドを使用することで、(後述の) VolumeSnapshot からデータを事前入力した PVC を作成できます。
+StorageClasses に依存して空のボリュームをプロビジョニングすることに加えて、PersistentVolumeClaim オブジェクトの `dataSource` フィールドを使用することで、 (後述の) VolumeSnapshot からデータを事前入力した PVC を作成できます。
 既存の PVC を `dataSource` としてリストした新しい PVC を作成することで、PVC のクローン作成も可能です。
 
 === VolumeSnapshots [[volume_snapshots]]
@@ -474,13 +474,13 @@ DataSource `spec` 内でサポートされているフィールドは 1 つだ�
 * **source** - `pvc` または `snapshot` フィールドのみをサポート (これらは相互排他)
 ** **pvc** または **snapshot** - データソースが PersistentVolumeClaim か VolumeSnapshot かに応じて、ここにある適切なサブフィールドを使用
 *** **name** - pvc または snapshot の名前
-*** **namespace** - pvc または snapshot が存在するnamespace
+*** **namespace** - pvc または snapshot が存在する namespace
 
 === VirtualMachineSnapshots [[virtual_machine_snapshots]]
 
 VirtualMachineSnapshot は、特定の VM に接続されているすべてのディスク/ボリュームの状態の特定の時点でのコピーです。
 
-VirtualMachineSnapshot が作成されると、接続されている各ディスクに対して個別の VolumeSnapshot が目的のnamespaceに作成され、
+VirtualMachineSnapshot が作成されると、接続されている各ディスクに対して個別の VolumeSnapshot が目的の namespace に作成され、
 スナップショット処理が完了すると VirtualMachineSnapshot オブジェクトは最終的に完了した Status で更新されます。
 
 VirtualMachineSnapshot オブジェクトは `source` VM 参照を受け入れ、オプションで `1m`、`3600s`、`1h30m` などの時間単位サフィックスや `-1h` などの符号付き値を持つ `failureDeadline` を受け入れます。
@@ -515,8 +515,8 @@ VM またはテンプレートのメタデータ (`labels` および/または `
 
 そのような変更に使用されるオブジェクトフィールドを以下に示します (すべてのフィールドは「オプション」です) 。
 
-* **labelFilters** - ソース VM からどのlabel (`metadata.labels` から) をクローン VM にコピーするか、またはコピー「しない」かを定義するために使用されます
-* **annotationFilters** - ソース VM からどのannotation (`metadata.annotations` から) を VM クローンにコピーするか、またはコピーしないかを定義するために使用されます
+* **labelFilters** - ソース VM からどの label (`metadata.labels` から) をクローン VM にコピーするか、またはコピー「しない」かを定義するために使用されます
+* **annotationFilters** - ソース VM からどの annotation (`metadata.annotations` から) を VM クローンにコピーするか、またはコピーしないかを定義するために使用されます
 * **template** - VM / VMI `template` のメタデータフィルターを定義するために使用され、トップレベルと同じ 2 つのフィルターをサポートします。
 ** **labelFilters** - ソース VM の `template.metadata.labels` からクローン VM に指定の label をコピーまたは除外するために使用されます
 ** **annotationFilters** - ソース VM の `template.metadata.annotations` からクローン VM に指定の annotation をコピー/除外するために使用されます
@@ -646,11 +646,11 @@ OpenShift Virtualization は、異なるクラスターや別の仮想化プラ�
 VM ディスクイメージは OS、アプリケーション、データを含んでおり、サイズが非常に大きくなる可能性があるため、エクスポートの主要な懸念事項です。
 OpenShift API サーバーに過負荷をかけずにクラスター外へのイメージ転送をサポートするために、プロキシサーバーが利用されます。これは、接続された Ingress、Route、NodePort を持つサービスを使用してインターネットに公開する必要があります。
 
-NOTE: Ingress や Route を使用する代わりに `virtctl port-forward` を使用してexport proxy server に接続することもできます。
+NOTE: Ingress や Route を使用する代わりに `virtctl port-forward` を使用して export proxy server に接続することもできます。
 
 === Export Tokens [[export_tokens]]
 
-VM ディスクにアクセスするユーザーを認証するために、VM と同じnamespace 内の export tokenを作成する必要があります。
+VM ディスクにアクセスするユーザーを認証するために、VM と同じ namespace 内の export token を作成する必要があります。
 これは、トークン文字列を保存する K8s シークレットを作成することで行われます。トークンは、export proxy endpoint にアクセスする際にヘッダー (`x-kubevirt-export-token`) として渡されます。
 
 NOTE: 推奨されるトークン文字列は、長さが 12 文字以上の英数字の値です。
@@ -673,11 +673,11 @@ stringData:
 
 VirtualMachineExport オブジェクトを作成することで、任意の VirtualMachine、VirtualMachineSnapshot、PersistentVolumeClaim をエクスポートできます。
 
-export tokenシークレットの名前を含む `tokenSecretRef` を定義し、上記の `source` タイプのいずれかを定義する必要があります。
+export token シークレットの名前を含む `tokenSecretRef` を定義し、上記の `source` タイプのいずれかを定義する必要があります。
 
 VirtualMachine をエクスポートすると VM の yaml マニフェストに加え、VM に関連付けられている PVC、DataVolumes、MemoryDump volume がエクスポートされますが、VirtualMachineSnapshot や PVC をエクスポートしても VM マニフェストは提供されません。
 
-エクスポートされたアーティファクトには、VirtualMachineExport の `status` ブロックを表示し、提供された URL を使用して準備ができ次第エクスポートされた VM イメージ、ファイル、アーカイブをダウンロードすることでアクセスできます。
+エクスポートされたアーティファクトにアクセスするには、VirtualMachineExport の `status` ブロックを確認し、準備が整った後に提供されるURLを使用して、エクスポートされたVMイメージ、ファイル、アーカイブをダウンロードします。
 
 ダウンロード用に 4 つのフォーマットが提供されています。
 
@@ -707,7 +707,7 @@ spec:
     name: virtual-machine-example
 ----
 <1> 定義されている VirtualMachineExport オブジェクトの名前
-<2> export tokenを含むシークレットの名前
+<2> export token を含むシークレットの名前
 <3> ソースは、特定のグループ/バージョンおよび kind への名前付き参照
 
 サポートされているソースタイプは以下の通りです。

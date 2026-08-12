@@ -51,13 +51,13 @@ NAME                       READY   STATUS    RESTARTS   AGE
 virt-launcher-<vm>-xxxxx   3/3     Running   0          5m
 ----
 
-=== guest agentのステータス確認
+=== guest agent のステータス確認
 [source,bash,role=execute]
 ----
 oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.guestOSInfo.id}'
 ----
 
-空の場合、guest agentは実行されていません。注: 基本的なアクセス方法 (コンソール、VNC、SSH、ポートフォワード、NodePort、LoadBalancer、セカンダリネットワーク) にはguest agentは必須ではありません。guest agentはゲスト OS の詳細情報を提供したり、動的な SSH キー注入のような機能を有効にしたりするために使用されます。
+空の場合、guest agent は実行されていません。注: 基本的なアクセス方法 (コンソール、VNC、SSH、ポートフォワード、NodePort、LoadBalancer、セカンダリネットワーク) には guest agent は必須ではありません。guest agent はゲスト OS の詳細情報を提供したり、動的な SSH キー注入のような機能を有効にしたりするために使用されます。
 
 == メソッド 1: コンソールアクセス
 
@@ -168,7 +168,7 @@ virtctl console my-vm -n my-namespace
 
 **解決策**:
 
-警告: この例の cloud-init パスワードはデモ目的のみです。本番環境では常に強力でユニークなパスワードを使用するか、SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的のみです。本番環境では常に強力でユニークなパスワードを使用するか、SSH キー認証を使用してください。
 
 . クラウドイメージの場合、cloud-init を使用してパスワードを設定します:
 +
@@ -473,7 +473,7 @@ oc describe svc my-vm-ssh -n my-namespace
 
 **解決策**:
 
-. Service Selectorにユニークなラベルを使用します:
+. Service Selector にユニークなラベルを使用します:
 +
 [source,yaml]
 ----
@@ -601,7 +601,7 @@ lsof -i :2222
 **一般的な原因**:
 - ローカルポートが既に使用されている
 - VMI が実行されていない
-- NetworkPolicyがポートフォワードをブロックしている
+- NetworkPolicy がポートフォワードをブロックしている
 
 **解決策**:
 
@@ -791,13 +791,13 @@ oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces}' | jq
 ----
 
 **一般的な原因**:
-- NAD が同じ名前空間に存在しない
+- NAD が同じ namespace に存在しない
 - VM spec にセカンダリネットワークインターフェースが欠落している
 - Multus CNI が動作していない
 
 **解決策**:
 
-. NAD が正しい名前空間にあるか確認します:
+. NAD が正しい namespace にあるか確認します:
 +
 [source,bash,role=execute]
 ----
@@ -937,7 +937,7 @@ Need access to VM?
 * link:https://kubevirt.io/user-guide/operations/virtctl_client_tool/[Virtctl CLI Reference,window=_blank]
 * link:https://kubernetes.io/docs/concepts/services-networking/service/[Kubernetes Services,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/ingress_and_load_balancing/load-balancing-with-metallb[MetalLB,window=_blank]
-* xref:networking:cloud-init-troubleshooting.adoc[Cloud-init IP Configuration Troubleshooting]
+* xref:networking:cloud-init-troubleshooting.adoc[cloud-init IP Configuration Troubleshooting]
 * xref:networking:ovs-bridge-troubleshooting.adoc[OVS Bridge Verification]
 
 == テスト例: ocplab01 クラスター
@@ -963,7 +963,7 @@ $ oc get vmi fedora-access-vm -n vm-access-test -o jsonpath='{.status.interfaces
 ]
 ----
 
-guest agentのステータス:
+guest agent のステータス:
 [source,bash]
 ----
 $ oc get vmi fedora-access-vm -n vm-access-test -o jsonpath='{.status.guestOSInfo}' | jq
@@ -978,4 +978,4 @@ $ oc get vmi fedora-access-vm -n vm-access-test -o jsonpath='{.status.guestOSInf
 }
 ----
 
-これにより、VM がアクセス可能であり、guest agentが動作していることが確認できました。guest agentは追加の OS 情報を提供しますが、SSH ベースのアクセス方法には必須ではありません。
+これにより、VM がアクセス可能であり、guest agent が動作していることが確認できました。guest agent は追加の OS 情報を提供しますが、SSH ベースのアクセス方法には必須ではありません。

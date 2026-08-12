@@ -1,81 +1,81 @@
 = リアルタイム仮想マシン
-:navtitle: リアルタイムVM
+:navtitle: リアルタイム VM
 
 == 概要
 
-本チュートリアルでは、OpenShift Virtualizationでリアルタイム仮想マシンを構成する方法を解説します。リアルタイムVMは、5G RAN (vDU/vCU)、産業用制御システム、金融の取引処理 (tick-to-trade)、高頻度テレメトリなど、厳格で境界の定められたレイテンシー要件を持つワークロード向けに設計されています。
+本チュートリアルでは、OpenShift Virtualization でリアルタイム仮想マシンを構成する方法を解説します。リアルタイム VM は、5G RAN (vDU/vCU)、産業用制御システム、金融の取引処理 (tick-to-trade)、高頻度テレメトリなど、厳密に上限が定められたレイテンシー要件を持つワークロード向けに設計されています。
 
-共有CPUホスト上の標準的なVMでは、数十ミリ秒のスケジューリングレイテンシーのスパイクが発生することがあります。適切に構成されたリアルタイムVMは、複数のチューニング層を組み合わせることで、最悪の場合のレイテンシーを数マイクロ秒の範囲まで低減します。
+共有 CPU ホスト上の標準的な VM では、数十ミリ秒のスケジューリングレイテンシーのスパイクが発生することがあります。適切に構成されたリアルタイム VM は、複数のチューニング層を組み合わせることで、最悪の場合のレイテンシーを数マイクロ秒の範囲まで低減します。
 
 [cols="2,3,2",options="header"]
 |===
 |構成レイヤー |排除されるジッターのソース |設定場所
 
-|専用CPUの配置
-|他ワークロードによるCPU steal
-|VMスペック (`dedicatedCpuPlacement`)
+|専用 CPU の配置
+|他ワークロードによる CPU steal
+|VM スペック (`dedicatedCpuPlacement`)
 
 |エミュレーターのスレッド分離
-|vCPUコア上のQEMUのハウスキーピング
-|VMスペック (`isolateEmulatorThread`)
+|vCPU コア上の QEMU のハウスキーピング
+|VM スペック (`isolateEmulatorThread`)
 
-|NUMAパススルー
-|NUMA間メモリアクセスのレイテンシー
-|VMスペック (`guestMappingPassthrough`)
+|NUMA パススルー
+|NUMA 間メモリアクセスのレイテンシー
+|VM スペック (`guestMappingPassthrough`)
 
 |Hugepages
-|TLBミスおよびページテーブルウォーク
-|VMスペック (`memory.hugepages`)
+|TLB ミスおよびページテーブルウォーク
+|VM スペック (`memory.hugepages`)
 
-|ホストのRTカーネル
+|ホストの RT カーネル
 |カーネルプリエンプションの遅延、タイマージッター
 |PerformanceProfile (`realTimeKernel`)
 
-|ホストのCPU分離
-|IRQおよびカーネルスレッドの干渉
+|ホストの CPU 分離
+|IRQ およびカーネルスレッドの干渉
 |PerformanceProfile (`cpu.isolated`)
 
-|ゲストのRTスケジューリング
-|ゲストvCPUのスケジューリング優先度
-|VMスペック (`cpu.realtime`)
+|ゲストの RT スケジューリング
+|ゲスト vCPU のスケジューリング優先度
+|VM スペック (`cpu.realtime`)
 
 |バルーン/グラフィックスの無効化
 |不要なデバイス割り込み
-|VMスペック (`autoattachMemBalloon: false`)
+|VM スペック (`autoattachMemBalloon: false`)
 |===
 
-本チュートリアルは、パフォーマンスシリーズの3番目のチュートリアルです。xref:cpu-pinning.adoc[専用CPUの配置]およびxref:numa-hugepages.adoc[NUMA/Hugepages]のチュートリアルに基づいています。
+本チュートリアルは、パフォーマンスシリーズの 3 番目のチュートリアルです。xref:cpu-pinning.adoc[専用 CPU の配置]および xref:numa-hugepages.adoc[NUMA/Hugepages]のチュートリアルに基づいています。
 
 == 前提条件
 
-* OpenShift Virtualization Operator がインストールされたOpenShift 4.18以上 (4.21で検証済み) 
+* OpenShift Virtualization Operator がインストールされた OpenShift 4.18 以上 (4.21 で検証済み) 
 * クラスター管理者アクセス権 (`system:admin` または同等の権限) 
-* `oc` および `virtctl` CLIのインストール
-* 少なくとも8つの物理CPUコアと16GiのRAMを備えたワーカーノード
-* CPU Manager static policy が有効であること (xref:cpu-pinning.adoc[専用CPUの配置]チュートリアルを参照) 
-* HubepagesとNUMAトポロジーに関する知識 (xref:numa-hugepages.adoc[NUMAとHugepages]チュートリアルを参照) 
-* Node Tuning Operator がインストールされていること (OpenShiftにデフォルトで含まれています) 
+* `oc` および `virtctl` CLI のインストール
+* 少なくとも 8 つの物理 CPU コアと 16Gi の RAM を備えた Worker Node
+* CPU Manager static policy が有効であること (xref:cpu-pinning.adoc[専用 CPU の配置]チュートリアルを参照) 
+* Hugepages と NUMA トポロジーに関する知識 (xref:numa-hugepages.adoc[NUMA と Hugepages]チュートリアルを参照) 
+* Node Tuning Operator がインストールされていること (OpenShift にデフォルトで含まれています) 
 
 == リアルタイム要件の理解
 
-仮想化におけるリアルタイムとは、平均応答速度が最も速いことではなく、*最悪の場合のレイテンシーが一定の範囲に収まっていること*を意味します。リアルタイムVMは、負荷がかかっている状態であっても、特定の操作が決定論的な時間枠内で完了することを保証します。
+仮想化におけるリアルタイムとは、平均応答速度が最も速いことではなく、*最悪の場合のレイテンシーが一定の範囲に収まっていること*を意味します。リアルタイム VM は、負荷がかかっている状態であっても、特定の操作が決定論的な時間枠内で完了することを保証します。
 
-これを実現するには、ホストカーネル、ハイパーバイザー、ゲストカーネル、アプリケーションというスタック全体を通じて、無制限のジッターの原因をすべて排除する必要があります。概要の構成表は、各VMスペックのフィールドと、それが対応する特定のジッターソースを示しています。
+これを実現するには、ホストカーネル、ハイパーバイザー、ゲストカーネル、アプリケーションというスタック全体を通じて、無制限のジッターの原因をすべて排除する必要があります。概要の構成表は、各 VM スペックのフィールドと、それが対応する特定のジッターソースを示しています。
 
-IMPORTANT: リアルタイムVMは、最も脆弱なレイヤーと同程度の性能しか発揮できません。単一のレイヤーでも省略すると (例：RTカーネルを使用するがCPU分離を行わない)、ジッターの原因が残存し、目的が果たせなくなります。
+IMPORTANT: リアルタイム VM は、最もチューニングが不十分なレイヤーと同程度の性能しか発揮できません。単一のレイヤーでも省略すると (例：RT カーネルを使用するが CPU 分離を行わない)、ジッターの原因が残存し、目的が果たせなくなります。
 
-== ステップ 1: リアルタイム用MachineConfigPoolの準備
+== ステップ 1: リアルタイム用 MachineConfigPool の準備
 
-リアルタイムノードには専用のMachineConfigPoolが必要です。これにより、他のノードに影響を与えることなく、PerformanceProfileによってRTカーネル、CPU分離、Hubepages構成を適用できます。
+リアルタイムノードには専用の MachineConfigPool が必要です。これにより、他のノードに影響を与えることなく、PerformanceProfile によって RT カーネル、CPU 分離、Hugepages 構成を適用できます。
 
-まず、対象のワーカーノードに `worker-rt` ロールを付与します。
+まず、対象の Worker Node に `worker-rt` ロールを付与します。
 
 [source,bash,role=execute]
 ----
 oc label node <node-name> node-role.kubernetes.io/worker-rt=
 ----
 
-`worker` ロールと `worker-rt` ロールの両方を持つノードを選択するMachineConfigPoolを作成します。
+`worker` ロールと `worker-rt` ロールの両方を持つノードを選択する MachineConfigPool を作成します。
 
 [source,bash,role=execute]
 ----
@@ -114,17 +114,17 @@ NAME        CONFIG   UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINE
 worker-rt            True      False      False      1              1
 ----
 
-== ステップ 2: PerformanceProfileの適用
+== ステップ 2: PerformanceProfile の適用
 
-PerformanceProfileリソースは、Node Tuning Operator を構成し、以下の操作を行います。
+PerformanceProfile リソースは、Node Tuning Operator を構成し、以下の操作を行います。
 
 * リアルタイムカーネル (`kernel-rt`) のインストール
-* ワークロード用のCPU 2-7の分離 (カーネルスレッドやIRQのスケジューリングを禁止) 
-* システムサービス用のCPU 0-1の予約
-* 4 x 1GiHubepagesの事前割り当て
+* ワークロード用の CPU 2-7 の分離 (カーネルスレッドや IRQ のスケジューリングを禁止) 
+* システムサービス用の CPU 0-1 の予約
+* 4 x 1GiHugepages の事前割り当て
 * レイテンシーを最小化するカーネル起動パラメーターの適用
 
-xref:attachment$realtime-vms/performance-profile.yaml[performance-profile.yamlをダウンロード]
+xref:attachment$realtime-vms/performance-profile.yaml[performance-profile.yaml をダウンロード]
 
 [source,bash,role=execute]
 ----
@@ -158,13 +158,13 @@ spec:
 EOF
 ----
 
-NOTE: Single Node OpenShift (SNO) の場合は、ステップ1のMachineConfigPool作成をスキップしてください。代わりに、`nodeSelector` を `node-role.kubernetes.io/master: ""` に、`machineConfigPoolSelector` を `pools.operator.machineconfiguration.openshift.io/master: ""` に設定して、既存のマスタープールを直接ターゲットにします。`machineConfigPoolSelector` は、内部で使用される `machineConfigSelector` ではなく、MCP自体の `metadata.labels` にあるラベルと一致させる必要があります。VMマニフェストの `nodeSelector` でそのラベルを使用するため、ステップ1の `worker-rt` ラベル (`oc label node <node-name> node-role.kubernetes.io/worker-rt=`) を付与しておく必要があります。
+NOTE: Single Node OpenShift (SNO) の場合は、ステップ 1 の MachineConfigPool 作成をスキップしてください。代わりに、`nodeSelector` を `node-role.kubernetes.io/master: ""` に、`machineConfigPoolSelector` を `pools.operator.machineconfiguration.openshift.io/master: ""` に設定して、既存のマスタープールを直接ターゲットにします。`machineConfigPoolSelector` は、内部で使用される `machineConfigSelector` ではなく、MCP 自体の `metadata.labels` にあるラベルと一致させる必要があります。VM マニフェストの `nodeSelector` でそのラベルを使用するため、ステップ 1 の `worker-rt` ラベル (`oc label node <node-name> node-role.kubernetes.io/worker-rt=`) を付与しておく必要があります。
 
-IMPORTANT: PerformanceProfile APIでは、HubepagesサイズにIEC単位 (`1Gi`, `2Mi`) ではなくSI単位 (`1G`, `2M`) を使用します。これは、VMスペックで使用されるKubernetesリソース構文 (`1Gi`, `2Mi`) とは異なります。
+IMPORTANT: PerformanceProfile API では、Hugepages サイズに IEC 単位 (`1Gi`, `2Mi`) ではなく SI 単位 (`1G`, `2M`) を使用します。これは、VM スペックで使用される Kubernetes リソース構文 (`1Gi`, `2Mi`) とは異なります。
 
-PerformanceProfileは、基礎となる複数のリソースを生成します。それらは `Tuned` プロファイル、カーネル引数用の `MachineConfig`、CPU Manager 設定用の `KubeletConfig` です。その後、Machine Config Operator がターゲットノードを再起動します。
+PerformanceProfile は、基礎となる複数のリソースを生成します。それらは `Tuned` プロファイル、カーネル引数用の `MachineConfig`、CPU Manager 設定用の `KubeletConfig` です。その後、Machine Config Operator がターゲットノードを再起動します。
 
-WARNING: PerformanceProfileを適用すると、RTカーネルのインストールとカーネルパラメーターの適用のため、ターゲットノードが再起動されます。影響を受けるノードのダウンタイムを計画してください。
+WARNING: PerformanceProfile を適用すると、RT カーネルのインストールとカーネルパラメーターの適用のため、ターゲットノードが再起動されます。影響を受けるノードのダウンタイムを計画してください。
 
 ロールアウトを監視します。
 
@@ -173,14 +173,14 @@ WARNING: PerformanceProfileを適用すると、RTカーネルのインストー
 oc get mcp worker-rt -w
 ----
 
-SNOの場合は、代わりに `master` プールを監視します。
+SNO の場合は、代わりに `master` プールを監視します。
 
 [source,bash,role=execute]
 ----
 oc get mcp master -w
 ----
 
-`UPDATED` が `True` になり、`READYMACHINECOUNT` が `MACHINECOUNT` と一致するまで待ちます。ノードがRTカーネルをダウンロードし、再起動し、クラスターに再参加するため、10-20分かかる場合があります。MCPは再起動完了後も `UPDATING: True` 状態のままになることがありますが、これはノードが構成の調整を完了し、クラスターに準備完了を報告している間です。ロールアウトが完全に完了するまで先に進まないでください。
+`UPDATED` が `True` になり、`READYMACHINECOUNT` が `MACHINECOUNT` と一致するまで待ちます。ノードが RT カーネルをダウンロードし、再起動し、クラスターに再参加するため、10-20 分かかる場合があります。MCP は再起動完了後も `UPDATING: True` 状態のままになることがありますが、これはノードが構成の調整を完了し、クラスターに準備完了を報告している間です。ロールアウトが完全に完了するまで先に進まないでください。
 
 === カーネルパラメーターの理解
 
@@ -189,7 +189,7 @@ oc get mcp master -w
 |パラメーター |目的
 
 |`nmi_watchdog=0`
-|定期的な割り込みを削減するために、NMIウォッチドッグタイマーを無効化
+|定期的な割り込みを削減するために、NMI ウォッチドッグタイマーを無効化
 
 |`audit=0`
 |監査に伴う遅延を回避するため、カーネル監査機能を無効化
@@ -198,20 +198,20 @@ oc get mcp master -w
 |割り込み処理削減のため、マシンチェック例外ロギングを無効化
 
 |`processor.max_cstate=1`
-|CPUが深いスリープ状態 (C-states > C1) になるのを防ぎ、ウェイクアップレイテンシを回避
+|CPU が深いスリープ状態 (C-states > C1) になるのを防ぎ、ウェイクアップレイテンシを回避
 
 |`idle=poll`
-|アイドル状態のCPUに対して停止 (halt) の代わりにポーリングを使用し、消費電力と引き換えにウェイクアップレイテンシを短縮
+|アイドル状態の CPU に対して停止 (halt) の代わりにポーリングを使用し、消費電力と引き換えにウェイクアップレイテンシを短縮
 
 |`intel_idle.max_cstate=0`
-|IntelのC-stateドライバーを無効化し、`processor.max_cstate` を補完
+|Intel の C-state ドライバーを無効化し、`processor.max_cstate` を補完
 |===
 
-NOTE: これらのパラメーターは、電力と遅延の間でアグレッシブなトレードオフを伴います。RTノード上のCPUは、アイドル時であっても最大電力を消費します。レイテンシーの影響を受けやすいワークロード専用のノードにのみ適用してください。
+NOTE: これらのパラメーターは、電力と遅延の間でアグレッシブなトレードオフを伴います。RT ノード上の CPU は、アイドル時であっても最大電力を消費します。レイテンシーの影響を受けやすいワークロード専用のノードにのみ適用してください。
 
-== ステップ 3: RTノードが準備完了であることの確認
+== ステップ 3: RT ノードが準備完了であることの確認
 
-MachineConfigPoolのロールアウトが完了したら、ノード構成を確認します。
+MachineConfigPool のロールアウトが完了したら、ノード構成を確認します。
 
 カーネルバージョンを確認します。
 
@@ -233,7 +233,7 @@ chroot /host uname -r
 5.14.0-427.55.1.el9_4.x86_64+rt
 ----
 
-カーネル起動パラメーターを確認して、CPU分離が構成されていることを確認します。
+カーネル起動パラメーターを確認して、CPU 分離が構成されていることを確認します。
 
 [source,bash,role=execute]
 ----
@@ -246,36 +246,36 @@ chroot /host cat /proc/cmdline | grep -o 'isolcpus=managed_irq,[^ ]*'
 isolcpus=managed_irq,2-7
 ----
 
-分離されたCPUで tick-less (nohz) モードがアクティブであることを確認します。
+分離された CPU で tick-less (nohz) モードがアクティブであることを確認します。
 
 [source,bash,role=execute]
 ----
 chroot /host cat /sys/devices/system/cpu/nohz_full
 ----
 
-想定される出力 (PerformanceProfileの `cpu.isolated` と一致):
+想定される出力 (PerformanceProfile の `cpu.isolated` と一致):
 
 ----
 2-7
 ----
 
-デフォルトのIRQアフィニティマスクを確認します。
+デフォルトの IRQ アフィニティマスクを確認します。
 
 [source,bash,role=execute]
 ----
 chroot /host cat /proc/irq/default_smp_affinity
 ----
 
-`managed_irq` モードでは、デフォルトのアフィニティマスクがすべてのCPUを表示する可能性があります。IRQステアリングは静的なアフィニティマスクではなく、Tunedによって生成された `irqbalance` ヒントによって動的に処理されます。
+`managed_irq` モードでは、デフォルトのアフィニティマスクがすべての CPU を表示する可能性があります。IRQ ステアリングは静的なアフィニティマスクではなく、Tuned によって生成された `irqbalance` ヒントによって動的に処理されます。
 
-Hubepagesの割り当てを確認します。
+Hugepages の割り当てを確認します。
 
 [source,bash,role=execute]
 ----
 chroot /host grep -i hugepages /proc/meminfo
 ----
 
-`HugePages_Total` が要求された数 (1Giページの場合は4) と一致することを確認します。
+`HugePages_Total` が要求された数 (1Gi ページの場合は 4) と一致することを確認します。
 
 `kubevirt.io/realtime` ラベルが存在することを確認します。
 
@@ -289,7 +289,7 @@ exit
 oc get node <node-name> -L kubevirt.io/realtime
 ----
 
-KubeVirtは、`kernel.sched_rt_runtime_us` が -1 (無制限のRTスケジューリング) に設定されているノードに自動的にラベルを付けます。ラベルがない場合は、設定を確認してください。
+KubeVirt は、`kernel.sched_rt_runtime_us` が -1 (無制限の RT スケジューリング) に設定されているノードに自動的にラベルを付けます。ラベルがない場合は、設定を確認してください。
 
 [source,bash,role=execute]
 ----
@@ -302,32 +302,32 @@ oc debug node/<node-name> -- chroot /host sysctl kernel.sched_rt_runtime_us
 kernel.sched_rt_runtime_us = -1
 ----
 
-== ステップ 4: Namespaceの作成
+== ステップ 4: Namespace の作成
 
 [source,bash,role=execute]
 ----
 oc create namespace realtime-demo
 ----
 
-== ステップ 5: リアルタイムVMのデプロイ
+== ステップ 5: リアルタイム VM のデプロイ
 
-以下のVMマニフェストは、すべてのリアルタイムチューニングレイヤーを組み合わせています。ここでは標準的なFedoraコンテナディスクを使用します。リアルタイムカーネルを備えた専用のRTゲストイメージを使用するのが最良の結果を得られますが、標準イメージでもホスト側の構成を実証および検証するには十分です。
+以下の VM マニフェストは、すべてのリアルタイムチューニングレイヤーを組み合わせています。ここでは標準的な Fedora コンテナディスクを使用します。リアルタイムカーネルを備えた専用の RT ゲストイメージを使用することで最良の結果が得られますが、標準イメージでもホスト側の構成を実証および検証するには十分です。
 
 主要な構成フィールド：
 
-* `cpu.model: host-passthrough` -- マスキングせずにすべてのホストCPU機能をゲストに公開
-* `cpu.dedicatedCpuPlacement: true` -- vCPUを分離された物理CPUに固定
-* `cpu.isolateEmulatorThread: true` -- QEMUエミュレータースレッド専用のCPUを予約
-* `cpu.ioThreadsPolicy: auto` -- I/Oスレッドをエミュレータースレッドと同じCPUに配置
-* `cpu.numa.guestMappingPassthrough: {}` -- ホストのNUMAトポロジーをゲストに渡す
-* `cpu.realtime.mask: "0"` -- vCPU 0をSCHED_FIFOスケジューリング用に構成。vCPU 1はハウスキーピングタスク用にデフォルトスケジューラのまま維持
-* `memory.hugepages.pageSize: 1Gi` -- 1GiHubepagesプールからメモリを割り当て
+* `cpu.model: host-passthrough` -- マスキングせずにすべてのホスト CPU 機能をゲストに公開
+* `cpu.dedicatedCpuPlacement: true` -- vCPU を分離された物理 CPU に固定
+* `cpu.isolateEmulatorThread: true` -- QEMU エミュレータースレッド専用の CPU を予約
+* `cpu.ioThreadsPolicy: auto` -- I/O スレッドをエミュレータースレッドと同じ CPU に配置
+* `cpu.numa.guestMappingPassthrough: {}` -- ホストの NUMA トポロジーをゲストに渡す
+* `cpu.realtime.mask: "0"` -- vCPU 0 を SCHED_FIFO スケジューリング用に構成。vCPU 1 はハウスキーピングタスク用にデフォルトスケジューラーのまま維持
+* `memory.hugepages.pageSize: 1Gi` -- 1GiHugepages プールからメモリを割り当て
 * `autoattachMemBalloon: false` -- メモリ管理割り込みを回避するためにバルーンデバイスを無効化
 * `autoattachGraphicsDevice: false` -- 割り込みソースを減らすためにグラフィックスデバイスを無効化
 
-WARNING: この例のcloud-initパスワードはデモンストレーション専用です。本番環境では、SSHキー認証または強力で固有のパスワードを使用してください。
+WARNING: この例の cloud-init パスワードはデモンストレーション専用です。本番環境では、SSH キー認証または強力で固有のパスワードを使用してください。
 
-xref:attachment$realtime-vms/vm-realtime.yaml[vm-realtime.yamlをダウンロード]
+xref:attachment$realtime-vms/vm-realtime.yaml[vm-realtime.yaml をダウンロード]
 
 [source,bash,role=execute]
 ----
@@ -401,7 +401,7 @@ spec:
 EOF
 ----
 
-VMがRunningステータスになるまで待ちます。
+VM が Running ステータスになるまで待ちます。
 
 [source,bash,role=execute]
 ----
@@ -415,13 +415,13 @@ NAME          AGE   STATUS    READY
 vm-realtime   90s   Running   True
 ----
 
-NOTE: VMは `kubevirt.io/realtime` および `cpumanager=true` ラベルが付いたノードにのみスケジュールされます。KubeVirtはVMスペックで `realtime` が指定されると、これらのセレクターを自動的に追加します。VMが `Scheduling` 状態のままになる場合は、ターゲットノードが両方のラベルを持っていることを確認してください。
+NOTE: VM は `kubevirt.io/realtime` および `cpumanager=true` ラベルが付いたノードにのみスケジュールされます。KubeVirt は VM スペックで `realtime` が指定されると、これらのセレクターを自動的に追加します。VM が `Scheduling` 状態のままになる場合は、ターゲットノードが両方のラベルを持っていることを確認してください。
 
 == ステップ 6: ホスト上でのリアルタイムチューニングの検証
 
 === CPU pinning の検証
 
-VMが実行されているノードを検索します。
+VM が実行されているノードを検索します。
 
 [source,bash,role=execute]
 ----
@@ -435,25 +435,25 @@ oc get vmi vm-realtime -n realtime-demo -o wide
 oc debug node/<node-name>
 ----
 
-CPU Manager の状態を確認し、どの物理CPUが割り当てられているかを確認します。
+CPU Manager の状態を確認し、どの物理 CPU が割り当てられているかを確認します。
 
 [source,bash,role=execute]
 ----
 chroot /host cat /var/lib/kubelet/cpu_manager_state
 ----
 
-`entries` マップには、2つのvCPU IDと1つのエミュレータースレッド用CPU (合計3つ) を持つ `compute` コンテナが表示されるはずです。割り当てられたすべてのCPUは、分離された範囲 (PerformanceProfileに従って2-7) 内にある必要があります。
+`entries` マップには、2 つの vCPU ID と 1 つのエミュレータースレッド用 CPU (合計 3 つ) を持つ `compute` コンテナが表示されるはずです。割り当てられたすべての CPU は、分離された範囲 (PerformanceProfile に従って 2-7) 内にある必要があります。
 
-=== Hubepagesの検証
+=== Hugepages の検証
 
 [source,bash,role=execute]
 ----
 chroot /host grep HugePages /proc/meminfo
 ----
 
-`HugePages_Free` は、VMによって消費された分 (1GiHubepagesを使用する2Gi VMの場合は2ページ) だけ `HugePages_Total` よりも少なくなっているはずです。
+`HugePages_Free` は、VM によって消費された分 (1GiHugepages を使用する 2Gi VM の場合は 2 ページ) だけ `HugePages_Total` よりも少なくなっているはずです。
 
-IMPORTANT: `guestMappingPassthrough` を使用する場合、vCPUがスケジュールされている各NUMAノードでHubepagesが利用可能である必要があります。PerformanceProfileがHubepagesをNUMAノード間で均等に分散している場合、単一ノードの割り当て分を超えるメモリを要求すると、割り当てに失敗します。VMのメモリ要求は、NUMAノードごとのHubepages割り当て以下に抑えてください。
+IMPORTANT: `guestMappingPassthrough` を使用する場合、vCPU がスケジュールされている各 NUMA ノードで Hugepages が利用可能である必要があります。PerformanceProfile が Hugepages を NUMA ノード間で均等に分散している場合、単一ノードの割り当て分を超えるメモリを要求すると、割り当てに失敗します。VM のメモリ要求は、NUMA ノードごとの Hugepages 割り当て以下に抑えてください。
 
 デバッグシェルを終了します。
 
@@ -462,9 +462,9 @@ IMPORTANT: `guestMappingPassthrough` を使用する場合、vCPUがスケジュ
 exit
 ----
 
-== ステップ 7: VM内でのリアルタイム構成の検証
+== ステップ 7: VM 内でのリアルタイム構成の検証
 
-VMコンソールに接続します。
+VM コンソールに接続します。
 
 [source,bash,role=execute]
 ----
@@ -480,9 +480,9 @@ virtctl console vm-realtime -n realtime-demo
 uname -r
 ----
 
-ゲストが標準カーネル (`rt` サフィックスなし) を実行している場合でも、vCPUのホストレベルではリアルタイムスケジューリングがアクティブになっています。ゲストRTカーネルを使用すると、ゲスト内でのプリエンプション保証が追加されるため、本番ワークロードには推奨されます。
+ゲストが標準カーネル (`rt` サフィックスなし) を実行している場合でも、vCPU のホストレベルではリアルタイムスケジューリングがアクティブになっています。ゲスト RT カーネルを使用すると、ゲスト内でのプリエンプション保証が追加されるため、本番ワークロードには推奨されます。
 
-=== CPU数の確認
+=== CPU 数の確認
 
 [source,bash,role=execute]
 ----
@@ -502,21 +502,21 @@ Socket(s):               1
 
 `Ctrl+]` を押してゲストコンソールから切断します。
 
-ホストレベルのリアルタイムスケジューリングは、QEMU vCPUスレッド上でKubeVirtによって構成されます。これはホストのデバッグセッションから確認できます。VMのノードでデバッグセッションを開きます。
+ホストレベルのリアルタイムスケジューリングは、QEMU vCPU スレッド上で KubeVirt によって構成されます。これはホストのデバッグセッションから確認できます。VM のノードでデバッグセッションを開きます。
 
 [source,bash,role=execute]
 ----
 oc debug node/<node-name>
 ----
 
-QEMUプロセスIDを検索します。
+QEMU プロセス ID を検索します。
 
 [source,bash,role=execute]
 ----
 chroot /host pgrep qemu-kvm
 ----
 
-前のコマンドで取得したPIDを `<qemu-pid>` に置き換え、そのプロセスのすべてのスレッドを、スケジューリングポリシーと優先度とともにリストします。
+前のコマンドで取得した PID を `<qemu-pid>` に置き換え、そのプロセスのすべてのスレッドを、スケジューリングポリシーと優先度とともにリストします。
 
 [source,bash,role=execute]
 ----
@@ -535,7 +535,7 @@ chroot /host ps -T -o tid,cls,rtprio,comm -p <qemu-pid>
   70943  TS      - CPU 1/KVM
 ----
 
-`CLS` 列はスケジューリングクラスを示します (`SCHED_FIFO` は `FF`、`SCHED_OTHER` は `TS`) 。`RTPRIO` 列はリアルタイム優先度を示します。スレッド `CPU 0/KVM` は優先度 `1` の `FF` を示しており、`realtime.mask: "0"` で指定された通りに `SCHED_FIFO` でスケジュールされていることが確認できます。スレッド `CPU 1/KVM` は `TS` を示しており、ハウスキーピングタスク用にはデフォルトスケジューラが維持されていることがわかります。
+`CLS` 列はスケジューリングクラスを示します (`SCHED_FIFO` は `FF`、`SCHED_OTHER` は `TS`) 。`RTPRIO` 列はリアルタイム優先度を示します。スレッド `CPU 0/KVM` は優先度 `1` の `FF` を示しており、`realtime.mask: "0"` で指定された通りに `SCHED_FIFO` でスケジュールされていることが確認できます。スレッド `CPU 1/KVM` は `TS` を示しており、ハウスキーピングタスク用にはデフォルトスケジューラーが維持されていることがわかります。
 
 デバッグシェルを終了します。
 
@@ -548,7 +548,7 @@ exit
 
 適切なレイテンシーベースラインを取得するには、`cyclictest` が標準的なツールです。これはリアルタイムスレッドの最悪値のウェイクアップレイテンシを測定します。
 
-VMコンソールに接続します。
+VM コンソールに接続します。
 
 [source,bash,role=execute]
 ----
@@ -562,7 +562,7 @@ virtctl console vm-realtime -n realtime-demo
 sudo dnf install -y realtime-tests
 ----
 
-短いcyclictestを実行し、3スレッドのレイテンシーを60秒間測定します。
+短い cyclictest を実行し、3 スレッドのレイテンシーを 60 秒間測定します。
 
 [source,bash,role=execute]
 ----
@@ -579,17 +579,17 @@ T: 0 ( 1597) P:80 I:200 C: 156868 Min:      3 Act:    5 Avg:  191 Max:    9501
 T: 1 ( 1598) P:80 I:200 C: 277750 Min:      3 Act:    7 Avg:   36 Max:    1406
 ----
 
-`Max` 列はマイクロ秒単位の最悪値の遅延を示します。標準 (非RT) ゲストカーネルの場合、ゲスト内部のスケジューリングはプリエンプションフリーではないため、数百から数千マイクロ秒の最大レイテンシーが予想されます。RTカーネルを実行する専用のゲストイメージを使用すると、最大レイテンシーは数十マイクロ秒まで低下します。
+`Max` 列はマイクロ秒単位の最悪値の遅延を示します。標準 (非 RT) ゲストカーネルの場合、ゲスト内部のスケジューリングはプリエンプションフリーではないため、数百から数千マイクロ秒の最大レイテンシーが予想されます。RT カーネルを実行する専用のゲストイメージを使用すると、最大レイテンシーは数十マイクロ秒まで低下します。
 
-NOTE: RTワーカーノードと最適化されたゲストイメージを備えた完全にチューニングされたOpenShift Virtualizationデプロイメントでは、Red Hatのベンチマークにおいて54-55マイクロ秒の最大遅延が実現されています。詳細については、link:https://www.redhat.com/en/blog/benchmark-latency-openshift[Benchmarking Red Hat OpenShift Virtualization for latency-sensitive workloads,window=_blank] を参照してください。
+NOTE: RT Worker Node と最適化されたゲストイメージを備えた完全にチューニングされた OpenShift Virtualization デプロイメントでは、Red Hat のベンチマークにおいて 54-55 マイクロ秒の最大遅延が実現されています。詳細については、link:https://www.redhat.com/en/blog/benchmark-latency-openshift[Benchmarking Red Hat OpenShift Virtualization for latency-sensitive workloads,window=_blank] を参照してください。
 
-IMPORTANT: 遅延の結果は、ハードウェア、BIOS設定、ワークロードに基づいて大きく変動します。これらの数値は例示です。*必ず独自のベースラインを確立し、ワークロードのレイテンシー予算と比較してください。*
+IMPORTANT: 遅延の結果は、ハードウェア、BIOS 設定、ワークロードに基づいて大きく変動します。これらの数値は例示です。*必ず独自のベースラインを確立し、ワークロードのレイテンシー予算と比較してください。*
 
 `Ctrl+]` を押してコンソールから切断します。
 
 == トラブルシューティング
 
-=== VMのスケジュール失敗：リアルタイム対応ノードがない
+=== VM のスケジュール失敗：リアルタイム対応ノードがない
 
 ターゲットノードに `kubevirt.io/realtime` ラベルがあることを確認します。
 
@@ -598,11 +598,11 @@ IMPORTANT: 遅延の結果は、ハードウェア、BIOS設定、ワークロ�
 oc get nodes -L kubevirt.io/realtime
 ----
 
-ラベルがない場合は、RTカーネルがインストールされ、`kernel.sched_rt_runtime_us` が -1 であることを確認します。PerformanceProfileはこれを自動的に設定しますが、MachineConfigPoolのロールアウトが完了していない場合、設定が適用されていない可能性があります。
+ラベルがない場合は、RT カーネルがインストールされ、`kernel.sched_rt_runtime_us` が -1 であることを確認します。PerformanceProfile はこれを自動的に設定しますが、MachineConfigPool のロールアウトが完了していない場合、設定が適用されていない可能性があります。
 
-=== PerformanceProfileが処理中で停止するか、ノードが異常 (Degraded) 状態になる
+=== PerformanceProfile が処理中で停止するか、ノードが異常 (Degraded) 状態になる
 
-MachineConfigPoolのステータスを確認します。
+MachineConfigPool のステータスを確認します。
 
 [source,bash,role=execute]
 ----
@@ -621,53 +621,53 @@ oc describe mcp worker-rt
 oc logs -n openshift-machine-config-operator -l k8s-app=machine-config-daemon --tail=50
 ----
 
-一般的な原因：RTカーネルRPM用のディスク容量不足、または競合するMachineConfig
+一般的な原因：RT カーネル RPM 用のディスク容量不足、または競合する MachineConfig
 
-=== cyclictestでの高い最大遅延
+=== cyclictest での高い最大遅延
 
-`cyclictest` で100マイクロ秒を超える最大遅延が表示される場合：
+`cyclictest` で 100 マイクロ秒を超える最大遅延が表示される場合：
 
-* QEMU vCPUスレッドが `SCHED_FIFO` で実行されていることを確認します (ステップ7を参照) 。
-* 分離されたCPUがIRQを受信していないことを確認します。RTノードで以下を確認してください。
+* QEMU vCPU スレッドが `SCHED_FIFO` で実行されていることを確認します (ステップ 7 を参照) 。
+* 分離された CPU が IRQ を受信していないことを確認します。RT ノードで以下を確認してください。
 
 [source,bash,role=execute]
 ----
 oc debug node/<node-name> -- chroot /host cat /proc/interrupts
 ----
 
-分離されたCPU (2〜7列) は、ほとんどのIRQラインで最小またはゼロの割り込みカウントを示すはずです。
+分離された CPU (2〜7 列) は、ほとんどの IRQ ラインで最小またはゼロの割り込みカウントを示すはずです。
 
-* BIOS設定が最適化されていることを確認します。必要に応じてハイパースレッディングを無効にし、C1よりも深いCステートを無効にし、パフォーマンスモードを有効にします。
-* 最良の結果を得るには、ゲストRTカーネルを使用してください。
+* BIOS 設定が最適化されていることを確認します。必要に応じてハイパースレッディングを無効にし、C1 よりも深い C ステートを無効にし、パフォーマンスモードを有効にします。
+* 最良の結果を得るには、ゲスト RT カーネルを使用してください。
 
-=== VMが「insufficient hugepages (Hubepages不足) 」で失敗する
+=== VM が「insufficient hugepages (Hugepages 不足) 」で失敗する
 
-PerformanceProfileはHubepagesを割り当てますが、既存の VM や Pod がそれらを消費している可能性があります。利用可能なHubepagesを確認します。
+PerformanceProfile は Hugepages を割り当てますが、既存の VM や Pod がそれらを消費している可能性があります。利用可能な Hugepages を確認します。
 
 [source,bash,role=execute]
 ----
 oc get node <node-name> -o jsonpath='{.status.allocatable.hugepages-1Gi}{"\n"}'
 ----
 
-不足している場合は、他のHubepagesを消費するワークロードを停止するか、PerformanceProfileの `pages.count` を増やしてください。
+不足している場合は、他の Hugepages を消費するワークロードを停止するか、PerformanceProfile の `pages.count` を増やしてください。
 
 == クリーンアップ
 
-VMとNamespaceを削除します。
+VM と Namespace を削除します。
 
 [source,bash,role=execute]
 ----
 oc delete namespace realtime-demo
 ----
 
-PerformanceProfileを削除して、RTカーネルとCPU分離を元に戻します。
+PerformanceProfile を削除して、RT カーネルと CPU 分離を元に戻します。
 
 [source,bash,role=execute]
 ----
 oc delete performanceprofile realtime-workers
 ----
 
-MachineConfigPoolを削除します。
+MachineConfigPool を削除します。
 
 [source,bash,role=execute]
 ----
@@ -681,25 +681,25 @@ oc delete mcp worker-rt
 oc label node <node-name> node-role.kubernetes.io/worker-rt-
 ----
 
-WARNING: PerformanceProfileとMachineConfigPoolを削除すると、ノードを標準カーネルに戻すための再起動がトリガーされます。ロールアウトが完了するまで `worker` MachineConfigPoolを監視してください。
+WARNING: PerformanceProfile と MachineConfigPool を削除すると、ノードを標準カーネルに戻すための再起動がトリガーされます。ロールアウトが完了するまで `worker` MachineConfigPool を監視してください。
 
 == まとめ
 
 本チュートリアルでは、以下の方法を学びました。
 
-* リアルタイムワーカーノード専用のMachineConfigPoolを作成する方法
-* PerformanceProfileを適用してRTカーネルをインストールし、CPUを分離し、Hubepagesを予約する方法
-* RTノードの準備状態を確認する方法: カーネルバージョン、分離CPU、Hubepages割り当て、`kubevirt.io/realtime` ラベル
-* 遅延低減設定のフルスタックを備えたリアルタイムVMをデプロイする方法
-* ホスト上でCPU pinning、Hubepagesバックアップ、SCHED_FIFOスケジューリングを検証する方法
+* リアルタイム Worker Node 専用の MachineConfigPool を作成する方法
+* PerformanceProfile を適用して RT カーネルをインストールし、CPU を分離し、Hugepages を予約する方法
+* RT ノードの準備状態を確認する方法: カーネルバージョン、分離 CPU、Hugepages 割り当て、`kubevirt.io/realtime` ラベル
+* 遅延低減設定のフルスタックを備えたリアルタイム VM をデプロイする方法
+* ホスト上で CPU pinning、Hugepages バックアップ、SCHED_FIFO スケジューリングを検証する方法
 * `cyclictest` を使用して遅延を測定し、ベースラインを作成する方法
 * 各構成レイヤーが特定のジッターソースを排除する役割を理解すること
 
 == 参照資料
 
-* xref:cpu-pinning.adoc[専用CPUの配置] -- 前提条件：CPU Manager static policyと専用vCPU
-* xref:numa-hugepages.adoc[NUMAとHugepages] -- 前提条件：Hubepagesの予約とNUMAパススルー
-* xref:resource-limits-qos.adoc[VMリソース制限とQoS] -- Guaranteed QoSの要件
+* xref:cpu-pinning.adoc[専用 CPU の配置] -- 前提条件：CPU Manager static policy と専用 vCPU
+* xref:numa-hugepages.adoc[NUMA と Hugepages] -- 前提条件：Hugepages の予約と NUMA パススルー
+* xref:resource-limits-qos.adoc[VM リソース制限と QoS] -- Guaranteed QoS の要件
 * link:https://kubevirt.io/user-guide/compute/numa/#running-real-time-workloads[KubeVirt Real-Time Workloads,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/scalability_and_performance/cnf-tuning-low-latency-nodes-with-perf-profile[Tuning Nodes for Low Latency - OpenShift Documentation,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/scalability_and_performance/cnf-provisioning-low-latency-workloads[Provisioning Real-Time Workloads - OpenShift Documentation,window=_blank]

@@ -2,7 +2,7 @@
 :navtitle: VM Ingress および Routes
 == 概要
 
-このチュートリアルでは、OpenShift Virtualization VM で実行されているアプリケーションを、OpenShift Routes および Service を使用して外部クライアントに公開する方法を説明します。Web サーバーを実行する VM をデプロイし、内部からアクセスするための ClusterIP Serviceを作成し、オプションの TLS 終端を備えた OpenShift Route を通じて外部に公開します。
+このチュートリアルでは、OpenShift Virtualization VM で実行されているアプリケーションを、OpenShift Routes および Service を使用して外部クライアントに公開する方法を説明します。Web サーバーを実行する VM をデプロイし、内部からアクセスするための ClusterIP Service を作成し、オプションの TLS 終端を備えた OpenShift Route を通じて外部に公開します。
 
 このアプローチでは、コンテナワークロードを提供するために使用されるものと同じ OpenShift Ingress インフラストラクチャを使用するため、VM と Pod の両方に対して一貫した外部アクセスモデルを提供できます。
 
@@ -11,7 +11,7 @@
 * **OpenShift 4.18+** (OpenShift Virtualization Operator がインストールされていること)
 * **クラスター管理者権限** (`system:admin` または同等の権限)
 * **`oc` CLI** および **`virtctl` CLI** がインストールされていること
-* **デフォルトの StorageClass** が設定されていること
+* **default StorageClass** が設定されていること
 * **Ingress Controller** が実行されていること (OpenShift インストール時にデフォルトで設定)
 
 テスト済みバージョン:
@@ -97,7 +97,7 @@ spec:
 EOF
 ----
 
-`spec.template.metadata.labels` の `app: web-vm` ラベルは virt-launcher Pod に引き継がれ、Serviceがそれを選択できるようになります。
+`spec.template.metadata.labels` の `app: web-vm` ラベルは virt-launcher Pod に引き継がれ、Service がそれを選択できるようになります。
 
 VM の起動を待機します。
 
@@ -176,7 +176,7 @@ NAME         ENDPOINTS          AGE
 web-vm-svc   10.128.x.x:80      5s
 ----
 
-エンドポイントの IP は VM の Pod IP と一致しており、Serviceが VM に正しくルーティングされていることを確認できます。
+エンドポイントの IP は VM の Pod IP と一致しており、Service が VM に正しくルーティングされていることを確認できます。
 
 クラスター内からの内部接続をテストします。
 
@@ -290,10 +290,10 @@ NOTE: パススルーでは、VM 内のアプリケーションがターゲッ�
 OpenShift Route を介して公開された VM のトラフィックフローは以下の通りです。
 
 . 外部クライアントが Route ホスト名に対して HTTPS リクエストを送信します。
-. OpenShift Ingress Controller (HAProxy ROuter) が TLS を終端します (エッジ終端の場合)。
+. OpenShift Ingress Controller (HAProxy Router) が TLS を終端します (エッジ終端の場合)。
 . Router は、リクエストを ClusterIP Service のポート 80 に転送します。
 . Service は、トラフィックを virt-launcher Pod の IP ポート 80 にルーティングします。
-. virt-launcher Pod 内で、リクエストは masquerade ネットワークインターフェイスを介して VM の Nginx プロセスに到達します。
+. virt-launcher Pod 内で、リクエストは masquerade ネットワークインターフェースを介して VM の Nginx プロセスに到達します。
 
 これはコンテナワークロードが公開される仕組みと同一です。
 

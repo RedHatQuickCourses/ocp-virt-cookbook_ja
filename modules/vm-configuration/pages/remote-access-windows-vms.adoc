@@ -142,8 +142,8 @@ oc apply -f rdp-service.yaml
 
 ===== NodePort サービスの場合:
 
-. Serviceを見つけて、割り当てられた **NodePort** (例: `31234`) をメモします。
-. ワーカーノードの外部 IP を取得します。
+. Service を見つけて、割り当てられた **NodePort** (例: `31234`) をメモします。
+. Worker Node の外部 IP を取得します。
 +
 [source,bash,role=execute]
 ----

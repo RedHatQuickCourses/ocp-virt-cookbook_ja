@@ -85,7 +85,7 @@ rhel9-server-tiny                             Template for Red Hat Enterprise Li
 ...
 ----
 
-`openshift` projectから `rhel9-server-medium` テンプレートのソースを取得します (出力形式として `-o yaml` を使用) 。
+`openshift` project から `rhel9-server-medium` テンプレートのソースを取得します (出力形式として `-o yaml` を使用) 。
 
 [source,bash,role=execute]
 ----
@@ -269,9 +269,9 @@ parameters:
 
 各パラメーターの詳細を以下に示します。
 
-* **`NAME`** - テンプレートから作成された VM に一意の名前を生成する場所です。文字クラス (`[a-z0-9]` はシェルや正規表現スタイルと一致) と、VM 名の後半部分を構成するために使用されるカウント (`{16}`) に注目してください。
+* **`NAME`** - テンプレートから作成された VM に一意の名前を生成する場所です。文字クラス (`[a-z0-9]` はシェルや正規表現スタイルと一致) と、VM 名の後半部分を構成するために使用されるカウント (`pass:[{16}]`) に注目してください。
 * **`DATA_SOURCE_NAME`** - VM をクローンする際の `DataSource` (ゴールデンイメージ) の名前。
-* **`DATA_SOURCE_NAMESPACE`** - `DataSource` が存在するnamespace。すべてのデフォルトイメージは `openshift-virtualization-os-images` projectに存在します。
+* **`DATA_SOURCE_NAMESPACE`** - `DataSource` が存在する namespace。すべてのデフォルトイメージは `openshift-virtualization-os-images` project に存在します。
 * **`CLOUD_USER_PASSWORD`** - デフォルトの cloud-user のパスワードが生成される場所。`NAME` パラメーターと同様に、文字クラスとカウント (4 つの英数字のランダムな文字で構成される 3 つのグループ、ダッシュ区切り) に注目してください。
 
 [NOTE]
@@ -301,7 +301,7 @@ oc process -f rhel9-server.template.yaml -o yaml
 
 このセクションでは、CLI を使用してテンプレートから `VirtualMachine` をデプロイする方法を説明します。これは、`oc process` コマンドの出力を `oc create` (または `oc apply`) にパイプすることで実行できます。
 
-まず、RHEL 9 `VirtualMachine` を格納するためのproject (namespace) を作成します。
+まず、RHEL 9 `VirtualMachine` を格納するための project (namespace) を作成します。
 
 [source,bash,role=execute]
 ----
@@ -353,7 +353,7 @@ VM に接続するには、CLI からのコンソールアクセスについて�
 
 このセクションでは、カスタマイズのために前の `rhel9` テンプレートのコピーを作成し、カスタムテンプレートにいくつかの変更を加えます。
 
-<<step_2_deploying_template,ステップ 2>> で作成したproject/namespace内で作業を継続します。
+<<step_2_deploying_template,ステップ 2>> で作成した project/namespace 内で作業を継続します。
 
 [source,bash,role=execute]
 ----
@@ -607,17 +607,17 @@ virtctl console $RHEL9_CUSTOM_VM
 
 [NOTE]
 ====
-* OpenShift Virtualization コンソールからクラスター全体でテンプレートを利用できるようにするには、クラスター管理者として `openshift` projectにテンプレートを作成してください。
+* OpenShift Virtualization コンソールからクラスター全体でテンプレートを利用できるようにするには、クラスター管理者として `openshift` project にテンプレートを作成してください。
 ====
 
-クリーンアップ後の混乱を避けるため、現在の kube context を別のnamespace (ここでは `default` を使用していますが、他の OpenShift projectやnamespaceでも構いません) に切り替えます。
+クリーンアップ後の混乱を避けるため、現在の kube context を別の namespace (ここでは `default` を使用していますが、他の OpenShift project や namespace でも構いません) に切り替えます。
 
 [source,bash,role=execute]
 ----
 oc project default
 ----
 
-最後に、クリーンアップはnamespaceを削除するだけで完了です。
+最後に、クリーンアップは namespace を削除するだけで完了です。
 
 [source,bash,role=execute]
 ----

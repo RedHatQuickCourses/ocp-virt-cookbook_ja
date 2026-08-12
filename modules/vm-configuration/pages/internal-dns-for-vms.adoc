@@ -1,38 +1,38 @@
-= 仮想マシンの内部DNS解決
-:navtitle: VMの内部DNS
+= 仮想マシンの内部 DNS 解決
+:navtitle: VM の内部 DNS
 
 == 概要
 
-本チュートリアルでは、OpenShift Virtualizationにおいて、クラスター内通信のために仮想マシンを安定したDNS名で探索可能にする方法を説明します。Kubernetes Serviceを使用してVMのDNSベースのサービス探索を有効にし、IPアドレスをハードコードすることなくPodからVMへ、またVMからVMへの通信を実現する方法を学びます。
+本チュートリアルでは、OpenShift Virtualization において、クラスター内通信のために仮想マシンを安定した DNS 名で探索可能にする方法を説明します。Kubernetes Service を使用して VM の DNS ベースのサービス探索を有効にし、IP アドレスをハードコードすることなく Pod から VM へ、また VM から VM への通信を実現する方法を学びます。
 
 == 学習目標
 
-* Kubernetes Serviceを使用してVMを公開する方法
-* VMのDNS解決をテストする方法
-* OpenShift VirtualizationでVMのDNSクエリがどのように解決されるか
+* Kubernetes Service を使用して VM を公開する方法
+* VM の DNS 解決をテストする方法
+* OpenShift Virtualization で VM の DNS クエリがどのように解決されるか
 
 == 前提条件
 
 * OpenShift Virtualization Operator がインストールされた OpenShift 4.18 以降
-* インストール済みのCLIツール: `oc`、`virtctl`
-* Kubernetes ServiceとDNSに関する基本的な知識
+* インストール済みの CLI ツール: `oc`、`virtctl`
+* Kubernetes Service と DNS に関する基本的な知識
 
-== パート1: デプロイ、公開、テスト
+== パート 1: デプロイ、公開、テスト
 
-=== ステップ 1: namespaceの作成
+=== ステップ 1: namespace の作成
 
-このチュートリアル用の専用namespaceを作成します。
+このチュートリアル用の専用 namespace を作成します。
 
 [source,bash,role=execute]
 ----
 oc new-project myapp
 ----
 
-=== ステップ 2: Fedora VMのデプロイ
+=== ステップ 2: Fedora VM のデプロイ
 
-Fedora VMをデプロイします。
+Fedora VM をデプロイします。
 
-WARNING: この例のcloud-initパスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードまたはSSHキー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードまたは SSH キー認証を使用してください。
 
 xref:attachment$internal-dns-for-vms/fedora-app-vm.yaml[fedora-app-vm.yaml をダウンロード]
 
@@ -99,18 +99,18 @@ spec:
 EOF
 ----
 
-VMが実行状態になるまで待ちます。
+VM が実行状態になるまで待ちます。
 
 [source,bash]
 ----
 watch 'oc get vm,vmi,dv -n myapp'
 ----
 
-VMが `Running` かつ `Ready: True` になるまで待ち、完了したら `Ctrl+C` を押します。
+VM が `Running` かつ `Ready: True` になるまで待ち、完了したら `Ctrl+C` を押します。
 
-=== ステップ 3: VM用Serviceの作成
+=== ステップ 3: VM 用 Service の作成
 
-VMをターゲットにする Headless Serviceを作成します。
+VM をターゲットにする Headless Service を作成します。
 
 xref:attachment$internal-dns-for-vms/headless-service.yaml[headless-service.yaml をダウンロード]
 
@@ -134,7 +134,7 @@ spec:
 EOF
 ----
 
-ServiceとEndpointSliceを確認します。
+Service と EndpointSlice を確認します。
 
 [source,bash,role=execute]
 ----
@@ -144,13 +144,13 @@ oc get endpointslice -n myapp -l kubernetes.io/service-name=myapp-service
 
 期待される出力:
 
-Serviceは `TYPE: ClusterIP` で `CLUSTER-IP: None` (headless service)) と表示されるはずです。
+Service は `TYPE: ClusterIP` で `CLUSTER-IP: None` (headless service)) と表示されるはずです。
 
-EndpointSliceのENDPOINTS列には、VMのPod IPアドレスが表示されるはずです。
+EndpointSlice の ENDPOINTS 列には、VM の Pod IP アドレスが表示されるはずです。
 
-=== ステップ 4: DNS解決と接続性のテスト
+=== ステップ 4: DNS 解決と接続性のテスト
 
-DNS解決と接続性をテストするためにデバッグ用Podを作成します。
+DNS 解決と接続性をテストするためにデバッグ用 Pod を作成します。
 
 [source,bash,role=execute]
 ----
@@ -189,15 +189,15 @@ oc delete pod debug-dns -n myapp
 
 期待される結果:
 
-* DNS解決によってVMのPod IPアドレスが返されます (例: `10.128.0.169 myapp-service.myapp.svc.cluster.local`) 
+* DNS 解決によって VM の Pod IP アドレスが返されます (例: `10.128.0.169 myapp-service.myapp.svc.cluster.local`) 
 
-これは、ServiceのDNS名がVMのIPアドレスに正しく解決されていることを確認するものです。
+これは、Service の DNS 名が VM の IP アドレスに正しく解決されていることを確認するものです。
 
-== パート2: 仕組みの理解
+== パート 2: 仕組みの理解
 
-=== DNS解決フロー
+=== DNS 解決フロー
 
-PodまたはVMがServiceをDNS名でクエリする場合、以下のフローが発生します。
+Pod または VM が Service を DNS 名でクエリする場合、以下のフローが発生します。
 
 [source,text]
 ----
@@ -244,45 +244,45 @@ PodまたはVMがServiceをDNS名でクエリする場合、以下のフロー�
 
 === 解説
 
-**ステップ 1: DNSクエリの開始**
+**ステップ 1: DNS クエリの開始**
 
-クライアント (他のVMやPod) が `myapp-service.myapp.svc.cluster.local` に接続する必要があります。クライアントがDNSクエリを開始します。
+クライアント (他の VM や Pod) が `myapp-service.myapp.svc.cluster.local` に接続する必要があります。クライアントが DNS クエリを開始します。
 
-**ステップ 2: CoreDNSへのクエリ送信**
+**ステップ 2: CoreDNS へのクエリ送信**
 
-クライアントは `/etc/resolv.conf` ファイルを読み取り、そこに記載されているクラスターDNSサービス (通常は `172.30.0.10`) にDNSクエリを送信します。
+クライアントは `/etc/resolv.conf` ファイルを読み取り、そこに記載されているクラスター DNS サービス (通常は `172.30.0.10`) に DNS クエリを送信します。
 
-**ステップ 3: CoreDNSによるServiceレコードの参照**
+**ステップ 3: CoreDNS による Service レコードの参照**
 
-CoreDNSはクラスター内のすべてのKubernetes Serviceのデータベースを保持しています。CoreDNSは `myapp` namespaceの `myapp-service` というServiceを検索します。
+CoreDNS はクラスター内のすべての Kubernetes Service のデータベースを保持しています。CoreDNS は `myapp` namespace の `myapp-service` という Service を検索します。
 
-**ステップ 4: ServiceがVMのPod IPを返却**
+**ステップ 4: Service が VM の Pod IP を返却**
 
-Serviceが Headless (`clusterIP: None`) であるため、CoreDNSはEndpointSliceからVMのPodの実際のIPアドレスを返します。通常のClusterIP Serviceの場合は、代わりにServiceの仮想IPが返されます。
+Service が Headless (`clusterIP: None`) であるため、CoreDNS は EndpointSlice から VM の Pod の実際の IP アドレスを返します。通常の ClusterIP Service の場合は、代わりに Service の仮想 IP が返されます。
 
 **ステップ 5: 接続の確立**
 
-クライアントはIPアドレスを受け取り、そのVMへの直接接続を確立します。
+クライアントは IP アドレスを受け取り、その VM への直接接続を確立します。
 
 === 主要なポイント
 
-* **DNSにはServiceが必要**: 仮想マシンはCoreDNSに自動的には登録されません。Kubernetes ServiceのみがDNSレコードを作成します。
+* **DNS には Service が必要**: 仮想マシンは CoreDNS に自動的には登録されません。Kubernetes Service のみが DNS レコードを作成します。
 
-* **VM名はDNS名ではない**: VMの `metadata.name` はKubernetesのリソース識別子であり、DNS名ではありません。ネットワークアクセスには使用できません。
+* **VM 名は DNS 名ではない**: VM の `metadata.name` は Kubernetes のリソース識別子であり、DNS 名ではありません。ネットワークアクセスには使用できません。
 
-* **Service名がDNS名になる**: Serviceの `metadata.name` が、`<service-name>.<namespace>.svc.cluster.local` としてCoreDNSに登録されます。
+* **Service 名が DNS 名になる**: Service の `metadata.name` が、`<service-name>.<namespace>.svc.cluster.local` として CoreDNS に登録されます。
 
-* **Headless ServiceはVMのIPを返す**: Headless Service (`clusterIP: None`) はVMのPod IPを直接返すため、VM間での直接通信が可能になります。
+* **Headless Service は VM の IP を返す**: Headless Service (`clusterIP: None`) は VM の Pod IP を直接返すため、VM 間での直接通信が可能になります。
 
-* **通常のServiceは負荷分散を提供する**: 通常のClusterIP Serviceは安定した仮想IPを提供し、複数のVM間でトラフィックを分散できます。
+* **通常の Service は負荷分散を提供する**: 通常の ClusterIP Service は安定した仮想 IP を提供し、複数の VM 間でトラフィックを分散できます。
 
-* **検索ドメインにより短い名前が使用可能**: `/etc/resolv.conf` の `search` ドメインにより、同じnamespace内のServiceにアクセスする際、完全修飾ドメイン名 (FQDN) の代わりに `myapp-service` のような短い名前を使用できます。
+* **検索ドメインにより短い名前が使用可能**: `/etc/resolv.conf` の `search` ドメインにより、同じ namespace 内の Service にアクセスする際、完全修飾ドメイン名 (FQDN) の代わりに `myapp-service` のような短い名前を使用できます。
 
-== パート3: 参考情報
+== パート 3: 参考情報
 
 === 確認コマンド
 
-**ServiceおよびEndpointSliceの確認:**
+**Service および EndpointSlice の確認:**
 
 [source,bash,role=execute]
 ----
@@ -296,7 +296,7 @@ oc get endpointslice -n myapp -l kubernetes.io/service-name=myapp-service
 oc describe svc myapp-service -n myapp
 ----
 
-**DNS解決と接続性のテスト:**
+**DNS 解決と接続性のテスト:**
 
 [source,bash,role=execute]
 ----
@@ -334,7 +334,7 @@ oc exec -n myapp debug-dns -- getent hosts myapp-service.myapp.svc.cluster.local
 oc delete pod debug-dns -n myapp
 ----
 
-**VMラベルの確認:**
+**VM ラベルの確認:**
 
 [source,bash,role=execute]
 ----
@@ -345,7 +345,7 @@ oc get svc myapp-service -n myapp -o jsonpath='{.spec.selector}'
 
 === 一般的な問題
 
-**問題: DNS解決で結果が返されない**
+**問題: DNS 解決で結果が返されない**
 
 **調査:**
 
@@ -357,17 +357,17 @@ oc get endpointslice -n myapp -l kubernetes.io/service-name=myapp-service
 
 **一般的な原因:**
 
-* ServiceのセレクターがVMのラベルと一致していない
-* VMが実行されていない (EndpointSliceにエントリがない)
-* namespaceが間違っている
+* Service のセレクターが VM のラベルと一致していない
+* VM が実行されていない (EndpointSlice にエントリがない)
+* namespace が間違っている
 
 **解決策:**
 
-1. ServiceのセレクターがVMの `kubevirt.io/domain` ラベルと完全に一致しているか確認する
-2. VMが実行中であることを確認する: `oc get vmi -n myapp`
-3. ServiceとVMの両方が同じnamespaceにあることを確認する
+1. Service のセレクターが VM の `kubevirt.io/domain` ラベルと完全に一致しているか確認する
+2. VM が実行中であることを確認する: `oc get vmi -n myapp`
+3. Service と VM の両方が同じ namespace にあることを確認する
 
-**問題: namespaceをまたいだDNS解決が失敗する**
+**問題: namespace をまたいだ DNS 解決が失敗する**
 
 **調査:**
 
@@ -410,31 +410,31 @@ oc delete pod debug-cross-ns -n test-namespace
 
 **一般的な原因:**
 
-* FQDNではなく短い名前を使用している
-* NetworkPolicyによってnamespaceをまたぐトラフィックがブロックされている
+* FQDN ではなく短い名前を使用している
+* NetworkPolicy によって namespace をまたぐトラフィックがブロックされている
 
 **解決策:**
 
-1. namespaceをまたぐ場合は常にFQDNを使用する: `<service>.<namespace>.svc.cluster.local`
-2. 制限的なNetworkPolicyが設定されていないか確認する
+1. namespace をまたぐ場合は常に FQDN を使用する: `<service>.<namespace>.svc.cluster.local`
+2. 制限的な NetworkPolicy が設定されていないか確認する
 
 === その他のリソース
 
 * link:https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/[Kubernetes DNS for Services and Pods,window=_blank]
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-accessing-vm-internal-fqdn[内部FQDNを使用したVMへのアクセス - OpenShift Virtualization,window=_blank]
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-accessing-vm-secondary-network-fqdn[クラスターFQDNを使用したセカンダリネットワーク上のVMへのアクセス - OpenShift Virtualization,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-accessing-vm-internal-fqdn[内部 FQDN を使用した VM へのアクセス - OpenShift Virtualization,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-accessing-vm-secondary-network-fqdn[クラスター FQDN を使用したセカンダリネットワーク上の VM へのアクセス - OpenShift Virtualization,window=_blank]
 
 == まとめ
 
 本チュートリアルでは、以下の内容を学習しました。
 
-* DNSベースの探索のために、Headless Kubernetes Serviceを通じてVMを公開する方法
-* クラスター内でCoreDNSがService名をVMのPod IPアドレスに解決する方法
-* Headless Service (直接VM IP) とClusterIP Service (負荷分散付きの仮想IP) の違い
-* FQDN形式の `getent hosts` を使用してデバッグ用PodからDNS解決をテストする方法
-* DNSにServiceが必要な理由や、検索ドメインにより短い名前の解決が可能になる仕組みなどの重要な概念
+* DNS ベースの探索のために、Headless Kubernetes Service を通じて VM を公開する方法
+* クラスター内で CoreDNS が Service 名を VM の Pod IP アドレスに解決する方法
+* Headless Service (直接 VM IP) と ClusterIP Service (負荷分散付きの仮想 IP) の違い
+* FQDN 形式の `getent hosts` を使用してデバッグ用 Pod から DNS 解決をテストする方法
+* DNS に Service が必要な理由や、検索ドメインにより短い名前の解決が可能になる仕組みなどの重要な概念
 
 == 関連項目
 
-* xref:networking:static-ip-configuration.adoc[静的IP構成]
-* xref:remote-access-linux-vms.adoc[Linux VMへのリモートアクセス]
+* xref:networking:static-ip-configuration.adoc[静的 IP 構成]
+* xref:remote-access-linux-vms.adoc[Linux VM へのリモートアクセス]

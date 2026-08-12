@@ -1,15 +1,15 @@
-= OpenShift VirtualizationにおけるClusterUserDefinedNetworkを使用したVLAN対応Localnetセカンダリネットワークの構成
-:navtitle: CUDNを使用したVLAN対応localnetセカンダリネットワーク
+= OpenShift Virtualization における ClusterUserDefinedNetwork を使用した VLAN 対応の Localnet セカンダリネットワークの構成
+:navtitle: CUDN を使用した VLAN 対応の localnet セカンダリネットワーク
 
-本チュートリアルでは、OpenShift Virtualizationにおいて、ClusterUserDefinedNetwork (CUDN) を使用してVLANタグ付けを行うLocalnetセカンダリネットワークを構成する方法を解説します。このアプローチでは、物理ネットワークインフラへの直接アクセスと、複数のnamespaceにまたがるVLANセグメンテーションを提供し、Podネットワークの接続性を維持したまま、仮想マシン (VM) が特定のVLANタグ付きネットワークと通信できるようにします。CUDNは一元的な管理とnamespace間のネットワーク可用性を提供するため、一貫したVLANベースのネットワークインフラを必要とするエンタープライズ環境に最適です。
+本チュートリアルでは、OpenShift Virtualization において、ClusterUserDefinedNetwork (CUDN) を使用して VLAN タグ付けを行う Localnet セカンダリネットワークを構成する方法を解説します。このアプローチでは、物理ネットワークインフラへの直接アクセスと、複数の namespace にまたがる VLAN セグメンテーションを提供し、Pod ネットワークの接続性を維持したまま、仮想マシン (VM) が特定の VLAN タグ付きネットワークと通信できるようにします。CUDN は一元的な管理と namespace 間のネットワーク可用性を提供するため、一貫した VLAN ベースのネットワークインフラを必要とするエンタープライズ環境に最適です。
 
 == 前提条件
 
 * **NMState Operator**: クラスター内にインストールされ、実行されていること
-* **NMState CR**: Operatorが実行された後に、nmstateインスタンスが作成されていること
-* **ワーカーノード**: bridge mappingはワーカーノードに適用されること
-* **VLANインフラストラクチャ**: 物理ネットワークインフラがVLANタグ付けをサポートしていること
-* **スイッチ構成**: OpenShiftワーカーノードに接続された物理スイッチポートが、複数のVLANタグ付きトラフィックストリームを処理するために**トランクモード**で構成されていること
+* **NMState CR**: Operator が実行された後に、nmstate インスタンスが作成されていること
+* **Worker Node**: bridge mapping は Worker Node に適用されること
+* **VLAN インフラストラクチャ**: 物理ネットワークインフラが VLAN タグ付けをサポートしていること
+* **スイッチ構成**: OpenShift Worker Node に接続された物理スイッチポートが、複数の VLAN タグ付きトラフィックストリームを処理するために**トランクモード**で構成されていること
 
 検証済みバージョン:
 ----
@@ -20,15 +20,15 @@ OpenShift 4.19
 
 === 物理スイッチ構成: トランクモード (TRUNK MODE)
 
-Localnet VLAN構成が正しく機能するためには、OpenShiftワーカーノードに接続された物理スイッチポートを**トランクモードで構成する必要があります**:
+Localnet VLAN 構成が正しく機能するためには、OpenShift Worker Node に接続された物理スイッチポートを**トランクモードで構成する必要があります**:
 
-* **トランクモード**: スイッチポートが複数のVLANのトラフィックを伝送できるようにする
-* **VLANタグ付け**: 各VLANは一意のVLAN ID (例: 100, 200, 300) によって識別される
-* **マルチネットワーク**: 複数のVLANベースのセカンダリネットワークをサポートするために不可欠
+* **トランクモード**: スイッチポートが複数の VLAN のトラフィックを伝送できるようにする
+* **VLAN タグ付け**: 各 VLAN は一意の VLAN ID (例: 100, 200, 300) によって識別される
+* **マルチネットワーク**: 複数の VLAN ベースのセカンダリネットワークをサポートするために不可欠
 
-== ステップ 1: VM namespaceの作成
+== ステップ 1: VM namespace の作成
 
-VLAN構成のLocalnetセカンダリネットワークを使用するVM用のnamespaceを作成します。ClusterUserDefinedNetwork (CUDN) を使用すると、同一のネットワークを複数のnamespaceで利用可能にできます。
+VLAN 構成の Localnet セカンダリネットワークを使用する VM 用の namespace を作成します。ClusterUserDefinedNetwork (CUDN) を使用すると、同一のネットワークを複数の namespace で利用可能にできます。
 
 [source,bash,role=execute]
 ----
@@ -49,9 +49,9 @@ metadata:
 EOF
 ----
 
-== ステップ 2: 追加NIC上へのカスタムOVSブリッジの作成
+== ステップ 2: 追加 NIC 上へのカスタム OVS ブリッジの作成
 
-まず、プライマリクラスターネットワークからVLANトラフィックを分離するために、追加の物理ネットワークインターフェース (NIC) 上にカスタムOVSブリッジを作成します。
+まず、プライマリクラスターネットワークから VLAN トラフィックを分離するために、追加の物理ネットワークインターフェース (NIC) 上にカスタム OVS ブリッジを作成します。
 
 [source,bash,role=execute]
 ----
@@ -83,7 +83,7 @@ spec:
 EOF
 ----
 
-注記: `enp11s0f0np0` は、使用する追加の物理インターフェース名に置き換えてください。利用可能なインターフェースは、以下のコマンドを実行して確認できます。
+NOTE: `enp11s0f0np0` は、使用する追加の物理インターフェース名に置き換えてください。利用可能なインターフェースは、以下のコマンドを実行して確認できます。
 
 [source,bash,role=execute]
 ----
@@ -98,9 +98,9 @@ oc get nncp br-vlan-creation
 # Expected output: STATUS: Available
 ----
 
-== ステップ 3: bridge mappingの構成
+== ステップ 3: bridge mapping の構成
 
-論理ネットワークインターフェース名 `localnet-vlan` をワーカーノード上の `br-vlan` OVSブリッジに接続するbridge mappingを構成します。このマッピングにより、どの物理ブリッジインターフェースがVLANサポート付きのLocalnetトラフィックを処理するかをOVN-Kubernetesに伝えます。
+論理ネットワークインターフェース名 `localnet-vlan` を Worker Node 上の `br-vlan` OVS ブリッジに接続する bridge mapping を構成します。このマッピングにより、どの物理ブリッジインターフェースが VLAN サポート付きの Localnet トラフィックを処理するかを OVN-Kubernetes に伝えます。
 
 [source,bash,role=execute]
 ----
@@ -121,9 +121,9 @@ spec:
 EOF
 ----
 
-== ステップ 4: VLAN対応ClusterUserDefinedNetworkの作成
+== ステップ 4: VLAN 対応の ClusterUserDefinedNetwork 作成
 
-複数のnamespaceにまたがるセカンダリネットワーク接続のために、VLANタグ付けを伴うLocalnetトポロジーを構成するClusterUserDefinedNetworkを作成します。
+複数の namespace にまたがるセカンダリネットワーク接続のために、VLAN タグ付けを伴う Localnet トポロジーを構成する ClusterUserDefinedNetwork を作成します。
 
 [source,bash,role=execute]
 ----
@@ -151,19 +151,18 @@ EOF
 
 **構成の詳細**:
 
-* `vlanID: 100`: ネットワークセグメンテーション用にVLANタグ100を指定
-* `physicalNetworkName`: bridge mappingの論理ネットワークインターフェース名 (`localnet-vlan`) を参照
-* `role: Secondary`: セカンダリネットワークとして定義 (VMはPodネットワークをプライマリとして保持)
-* `namespaceSelector`: このネットワークを使用できるnamespaceを定義
-* **IPAM Disabled**: IPアドレスはcloud-init (静的) または外部DHCPサーバーを介して構成する必要がある
+* `vlanID: 100`: ネットワークセグメンテーション用に VLAN タグ 100 を指定
+* `physicalNetworkName`: bridge mapping の論理ネットワークインターフェース名 (`localnet-vlan`) を参照
+* `role: Secondary`: セカンダリネットワークとして定義 (VM は Pod ネットワークをプライマリとして保持)
+* `namespaceSelector`: このネットワークを使用できる namespace を定義
+* **IPAM Disabled**: IP アドレスは cloud-init (静的) または外部 DHCP サーバーを介して構成する必要がある
 
-== ステップ 5: VLANネットワーク接続と静的IPを持つVMのデプロイ
+== ステップ 5: VLAN ネットワーク接続と静的 IP を持つ VM のデプロイ
 
-構成済みのnamespaceの1つに、PodネットワークとVLANタグ付きLocalnetセカンダリネットワークの両方に接続するVMを作成します。
+構成済みの namespace の 1 つに、Pod ネットワークと VLAN タグ付き Localnet セカンダリネットワークの両方に接続する VM を作成します。
 
-警告: 本例のcloud-initパスワードはデモ目的のみです。本番環境では必ず強力で一意のパスワードを使用するか、SSH鍵認証を使用してください。
+WARNING: 本例の cloud-init パスワードはデモ目的のみです。本番環境では必ず強力で一意のパスワードを使用するか、SSH 鍵認証を使用してください。
 
-[source,yaml]
 [source,bash,role=execute]
 ----
 oc apply -f - <<EOF
@@ -253,9 +252,9 @@ spec:
 EOF
 ----
 
-== ステップ 6: 2つ目のnamespaceへのVMのデプロイ
+== ステップ 6: 2 つ目の namespace への VM のデプロイ
 
-異なる静的IPを使用して同じCUDNを利用し、2つ目のnamespaceにVMを作成することで、namespace間でのネットワーク可用性を実証します。
+異なる静的 IP を使用して同じ CUDN を利用し、2 つ目の namespace に VM を作成することで、namespace 間でのネットワーク可用性を実証します。
 
 [source,bash,role=execute]
 ----
@@ -346,9 +345,9 @@ spec:
 EOF
 ----
 
-== ステップ 7: VLANネットワーク接続の確認
+== ステップ 7: VLAN ネットワーク接続の確認
 
-VMコンソールにアクセスし、namespace間でのVLAN構成を含むデュアルネットワーク接続を確認します。
+VM コンソールにアクセスし、namespace 間での VLAN 構成を含むデュアルネットワーク接続を確認します。
 
 [source,bash,role=execute]
 ----
@@ -367,7 +366,7 @@ virtctl console -n vm-guests-vlan-prod fedora-cudn-vlan-vm
 virtctl console -n vm-guests-vlan-dev fedora-cudn-vlan-vm-dev
 ----
 
-各VMコンソール内で、VLANネットワーク構成を確認します。
+各 VM コンソール内で、VLAN ネットワーク構成を確認します。
 
 [source,bash]
 ----
@@ -399,9 +398,9 @@ ping 192.168.100.20
 sudo tcpdump -i enp2s0 -nn vlan 100
 ----
 
-== ステップ 8: namespace間接続のテスト
+== ステップ 8: namespace 間接続のテスト
 
-異なるnamespaceにあるVMが、共有されたCUDN VLANネットワーク上で通信できることを確認します。
+異なる namespace にある VM が、共有された CUDN VLAN ネットワーク上で通信できることを確認します。
 
 [source,bash]
 ----
@@ -418,41 +417,41 @@ curl 192.168.100.10:8080
 
 == トラブルシューティング
 
-OVSブリッジおよびbridge mappingのトラブルシューティング (CUDN固有の確認手順を含む) については、xref:ovs-bridge-troubleshooting.adoc#_clusteruserdefinednetwork_cudn_verification[OVSブリッジ検証トラブルシューティングガイド]を参照してください。
+OVS ブリッジおよび bridge mapping のトラブルシューティング (CUDN 固有の確認手順を含む) については、xref:ovs-bridge-troubleshooting.adoc#_clusteruserdefinednetwork_cudn_verification[OVS ブリッジ検証トラブルシューティングガイド]を参照してください。
 
 === 一般的な問題
 
-==== VLANトラフィックがVMに到達しない
+==== VLAN トラフィックが VM に到達しない
 
-* 物理スイッチの構成がVLANタグ付けをサポートしているか確認
-* ワーカーノード上のbridge mapping構成を確認
-* VLAN IDがネットワークインフラと一致していることを確認
-* カスタムOVSブリッジ (`br-vlan`) が作成されているか確認: `oc get nncp br-vlan-creation`
+* 物理スイッチの構成が VLAN タグ付けをサポートしているか確認
+* Worker Node 上の bridge mapping 構成を確認
+* VLAN ID がネットワークインフラと一致していることを確認
+* カスタム OVS ブリッジ (`br-vlan`) が作成されているか確認: `oc get nncp br-vlan-creation`
 * 物理インターフェースがブリッジに接続されているか確認
 
-==== IPアドレス割り当ての問題
+==== IP アドレス割り当ての問題
 
-* cloud-initのnetworkDataで静的IPが正しく構成されているか確認
-* インターフェース名が一致しているか確認 (2番目のインターフェースにはenp2s0など)
-* VM内のcloud-initログを確認: `cat /var/log/cloud-init.log`
+* cloud-init の networkData で静的 IP が正しく構成されているか確認
+* インターフェース名が一致しているか確認 (2 番目のインターフェースには enp2s0 など)
+* VM 内の cloud-init ログを確認: `cat /var/log/cloud-init.log`
 
 ==== ネットワーク接続の問題
 
-* 物理ネットワークが構成されたVLANをサポートしているか確認
-* 物理ネットワークからVLANサブネットへの接続性をテスト
+* 物理ネットワークが構成された VLAN をサポートしているか確認
+* 物理ネットワークから VLAN サブネットへの接続性をテスト
 * 物理スイッチポートがトランクモードであることを確認
 
-==== namespace間の問題
+==== namespace 間の問題
 
-* CUDN構成のnamespaceセレクターを確認
-* 両方のnamespaceがvalues配列にリストされているか確認
-* ターゲットnamespaceでNADが自動作成されているか確認
+* CUDN 構成の namespace セレクターを確認
+* 両方の namespace が values 配列にリストされているか確認
+* ターゲット namespace で NAD が自動作成されているか確認
 
-==== CUDN固有の問題
+==== CUDN 固有の問題
 
-* CUDNの `physicalNetworkName` がbridge mappingの論理名 (`localnet-vlan`) と一致しているか確認
-* 選択されたnamespaceでCUDNによって作成されたNADを確認: `oc get network-attachment-definitions -A | grep cudn-localnet-vlan-100`
-* IPAMモードが正しく設定されているか確認 (cloud-init経由の静的IPの場合は `Disabled`)
+* CUDN の `physicalNetworkName` が bridge mapping の論理名 (`localnet-vlan`) と一致しているか確認
+* 選択された namespace で CUDN によって作成された NAD を確認: `oc get network-attachment-definitions -A | grep cudn-localnet-vlan-100`
+* IPAM モードが正しく設定されているか確認 (cloud-init 経由の静的 IP の場合は `Disabled`)
 
 === 確認コマンド
 
@@ -475,26 +474,26 @@ oc logs -n openshift-ovn-kubernetes -l app=ovnkube-node
 oc get network-attachment-definitions -A | grep cudn-localnet-vlan-100
 ----
 
-== CUDNとNetworkAttachmentDefinitionの比較
+== CUDN と NetworkAttachmentDefinition の比較
 
 |===
 | 機能 | CUDN | NetworkAttachmentDefinition
 
 | **スコープ**
-| クラスター全体、複数のnamespace
-| namespace固有
+| クラスター全体、複数の namespace
+| namespace 固有
 
 | **管理**
 | 一元的な構成
-| namespaceごとの構成
+| namespace ごとの構成
 
-| **VLANサポート**
-| ネイティブなvlanIDパラメーター
-| ネイティブなvlanIDパラメーター
+| **VLAN サポート**
+| ネイティブな vlanID パラメーター
+| ネイティブな vlanID パラメーター
 
-| **IP管理**
-| 静的/Disabledモード
-| IPAM経由の静的/DHCP
+| **IP 管理**
+| 静的/Disabled モード
+| IPAM 経由の静的/DHCP
 
 | **ユースケース**
 | エンタープライズ、一貫したネットワーク
@@ -505,13 +504,13 @@ oc get network-attachment-definitions -A | grep cudn-localnet-vlan-100
 
 本チュートリアルでは、以下の内容を学習しました。
 
-* 追加の物理NIC上にカスタムOVSブリッジを作成し、VLANトラフィック用のbridge mappingを構成する方法
-* 複数のnamespaceにまたがるVLANタグ付きの `ClusterUserDefinedNetwork` を作成する方法
-* CUDN VLANセカンダリネットワーク上で、cloud-initを使用して静的IPアドレスを持つVMをデプロイする方法
-* 同じCUDN VLANネットワークを共有するVM間で、namespace間の接続性を確認する方法
-* VLANベースのネットワークにおけるCUDNとNetworkAttachmentDefinitionのアプローチの違い
+* 追加の物理 NIC 上にカスタム OVS ブリッジを作成し、VLAN トラフィック用の bridge mapping を構成する方法
+* 複数の namespace にまたがる VLAN タグ付きの `ClusterUserDefinedNetwork` を作成する方法
+* CUDN VLAN セカンダリネットワーク上で、cloud-init を使用して静的 IP アドレスを持つ VM をデプロイする方法
+* 同じ CUDN VLAN ネットワークを共有する VM 間で、namespace 間の接続性を確認する方法
+* VLAN ベースのネットワークにおける CUDN と NetworkAttachmentDefinition のアプローチの違い
 
 == 参照
 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/understanding-multiple-networks[OpenShift - 複数のネットワークの理解 (英語),window=_blank]
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/virtualization/networking#virt-creating-secondary-localnet-cudn_virt-connecting-vm-to-secondary-cudn[ClusterUserDefinedNetworkの構成 (英語),window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/virtualization/networking#virt-creating-secondary-localnet-cudn_virt-connecting-vm-to-secondary-cudn[ClusterUserDefinedNetwork の構成 (英語),window=_blank]

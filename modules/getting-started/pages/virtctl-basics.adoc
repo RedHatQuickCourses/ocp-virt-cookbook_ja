@@ -3,7 +3,7 @@
 
 == 概要
 
-virtctl CLI ツールは、OpenShift Virtualization で仮想マシン（VM）を管理するためのコマンドを提供します。本ガイドでは、基本的な VM 操作について説明します。
+virtctl CLI ツールは、OpenShift Virtualization で仮想マシン (VM) を管理するためのコマンドを提供します。本ガイドでは、基本的な VM 操作について説明します。
 
 検証済みバージョン:
 ----
@@ -71,7 +71,7 @@ NAMESPACE   NAME            AGE   STATUS    READY
 myapp       fedora-app-vm   13d   Running   True
 ----
 
-IP アドレスやノード配置などの詳細情報を含む、実行中の VM インスタンス（VMI）を表示するには以下を実行します。
+IP アドレスやノード配置などの詳細情報を含む、実行中の VM インスタンス (VMI) を表示するには以下を実行します。
 
 [source,bash,role=execute]
 ----
@@ -122,7 +122,7 @@ virtctl vnc fedora-app-vm -n myapp
 
 === VM 情報の取得
 
-VM の詳細を取得します（VM に QEMU guest agent がインストールされている必要があります）。
+VM の詳細を取得します (VM に QEMU guest agent がインストールされている必要があります)。
 
 [source,bash,role=execute]
 ----
@@ -156,7 +156,7 @@ virtctl guestosinfo fedora-app-vm -n myapp
 virtctl fslist fedora-app-vm -n myapp
 ----
 
-出力例（マウントされたファイルシステムと使用状況を表示）:
+出力例 (マウントされたファイルシステムと使用状況を表示):
 
 [source,json]
 ----
@@ -197,7 +197,7 @@ virtctl userlist fedora-app-vm -n myapp
 
 `virtctl scp` を使用して VM との間でファイルをコピーします。これには VM で SSH が実行されている必要があり、以下のいずれかの認証方法が必要です。
 
-* **SSH キー**（推奨）: 公開鍵が VM の `~/.ssh/authorized_keys` に存在すること
+* **SSH キー** (推奨): 公開鍵が VM の `~/.ssh/authorized_keys` に存在すること
 * **パスワード**: VM の SSH でパスワード認証が有効になっていること
 
 [source,bash,role=execute]
@@ -306,7 +306,7 @@ oc get vmi fedora-app-vm -n myapp
 
 == ベストプラクティス
 
-* 混乱を避けるため、`-n` で**常に名前空間を指定する**
+* 混乱を避けるため、`-n` で**常に namespace を指定する**
 * **最初のセットアップにはコンソールを使用**し、定期的なアクセスには SSH を使用する
 * すべての VM にフル機能を利用するための **guest agent をインストールする**
 * VM ステータスには `oc` を、VM 操作には `virtctl` を使用する
