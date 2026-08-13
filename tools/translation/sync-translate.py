@@ -36,6 +36,7 @@ import shutil
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
@@ -149,6 +150,10 @@ def _validate_provider(
     return ("litellm", _litellm, model, api_base)
 
 
+_THREAD_POOL = ThreadPoolExecutor(max_workers=1)
+_AI_TIMEOUT = 120  # seconds
+
+
 def _call_ai(
     provider_info: tuple[str, object, str, str | None], prompt: str
 ) -> str | None:
@@ -157,36 +162,47 @@ def _call_ai(
     Returns translated text, or ``None`` on failure.
     """
     provider_name, client, model, api_base = provider_info
+
+    def _do_call() -> str:
+        if provider_name == "gemini":
+            resp = client.models.generate_content(
+                model=model, contents=prompt,
+            )
+            return resp.text
+        if provider_name == "claude":
+            msg = client.messages.create(
+                model=model,
+                max_tokens=4096,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return msg.content[0].text
+        # litellm
+        kwargs: dict = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 8192,
+            "timeout": _AI_TIMEOUT,
+        }
+        if api_base:
+            kwargs["api_base"] = api_base
+            kwargs["api_key"] = os.environ.get(
+                "LITELLM_API_KEY",
+                os.environ.get("OPENAI_API_KEY",
+                               os.environ.get("DASHSCOPE_API_KEY", "")),
+            )
+        resp = client.completion(**kwargs)
+        return resp.choices[0].message.content
+
     for attempt in range(3):
         try:
-            if provider_name == "gemini":
-                resp = client.models.generate_content(
-                    model=model, contents=prompt,
-                )
-                return resp.text
-            if provider_name == "claude":
-                msg = client.messages.create(
-                    model=model,
-                    max_tokens=4096,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                return msg.content[0].text
-            # litellm
-            kwargs: dict = {
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 8192,
-                "timeout": 120,
-            }
-            if api_base:
-                kwargs["api_base"] = api_base
-                kwargs["api_key"] = os.environ.get(
-                    "LITELLM_API_KEY",
-                    os.environ.get("OPENAI_API_KEY",
-                                   os.environ.get("DASHSCOPE_API_KEY", "")),
-                )
-            resp = client.completion(**kwargs)
-            return resp.choices[0].message.content
+            future = _THREAD_POOL.submit(_do_call)
+            return future.result(timeout=_AI_TIMEOUT)
+        except FuturesTimeoutError:
+            print(
+                f"    Timeout ({_AI_TIMEOUT}s), retrying... (attempt {attempt + 1}/3)",
+                file=sys.stderr, flush=True,
+            )
+            time.sleep(2 ** (attempt + 1))
         except Exception as exc:  # noqa: BLE001
             err = str(exc).lower()
             retryable = ("rate", "429", "quota", "resource",
@@ -196,13 +212,13 @@ def _call_ai(
                 wait = 2 ** (attempt + 1)
                 print(
                     f"    Retryable error, retrying in {wait}s... ({type(exc).__name__})",
-                    file=sys.stderr,
+                    file=sys.stderr, flush=True,
                 )
                 time.sleep(wait)
             else:
-                print(f"    API error: {exc}", file=sys.stderr)
+                print(f"    API error: {exc}", file=sys.stderr, flush=True)
                 return None
-    print("    Failed after 3 retries", file=sys.stderr)
+    print("    Failed after 3 retries", file=sys.stderr, flush=True)
     return None
 
 
