@@ -33,7 +33,7 @@ import datetime
 import os
 import re
 import shutil
-import signal
+import multiprocessing
 import subprocess
 import sys
 import time
@@ -153,43 +153,28 @@ def _validate_provider(
 _AI_TIMEOUT = 120  # seconds
 
 
-class _AITimeoutError(Exception):
-    pass
-
-
-def _alarm_handler(signum, frame):
-    raise _AITimeoutError(f"API call timed out after {_AI_TIMEOUT}s")
-
-
-def _call_ai(
-    provider_info: tuple[str, object, str, str | None], prompt: str
-) -> str | None:
-    """Call the AI provider with retry (max 3, exponential backoff).
-
-    Returns translated text, or ``None`` on failure.
-    Uses signal.alarm to enforce a hard timeout that interrupts blocked I/O.
-    """
-    provider_name, client, model, api_base = provider_info
-    for attempt in range(3):
-        old_handler = signal.signal(signal.SIGALRM, _alarm_handler)
-        try:
-            signal.alarm(_AI_TIMEOUT)
-            if provider_name == "gemini":
-                resp = client.models.generate_content(
-                    model=model, contents=prompt,
-                )
-                signal.alarm(0)
-                return resp.text
-            if provider_name == "claude":
-                msg = client.messages.create(
-                    model=model,
-                    max_tokens=4096,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                signal.alarm(0)
-                return msg.content[0].text
-            # litellm
-            kwargs: dict = {
+def _ai_worker(conn, provider_name, model, api_key, api_base, prompt):
+    """Run in a child process so the parent can kill it on timeout."""
+    try:
+        if provider_name == "gemini":
+            from google import genai
+            client = genai.Client(api_key=api_key)
+            resp = client.models.generate_content(
+                model=model, contents=prompt,
+            )
+            conn.send(("ok", resp.text))
+        elif provider_name == "claude":
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key)
+            msg = client.messages.create(
+                model=model,
+                max_tokens=4096,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            conn.send(("ok", msg.content[0].text))
+        else:
+            import litellm
+            kwargs = {
                 "model": model,
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": 8192,
@@ -197,40 +182,73 @@ def _call_ai(
             }
             if api_base:
                 kwargs["api_base"] = api_base
-                kwargs["api_key"] = os.environ.get(
-                    "LITELLM_API_KEY",
-                    os.environ.get("OPENAI_API_KEY",
-                                   os.environ.get("DASHSCOPE_API_KEY", "")),
-                )
-            resp = client.completion(**kwargs)
-            signal.alarm(0)
-            return resp.choices[0].message.content
-        except _AITimeoutError:
-            signal.alarm(0)
-            print(
-                f"    Timeout ({_AI_TIMEOUT}s), retrying... (attempt {attempt + 1}/3)",
-                file=sys.stderr, flush=True,
-            )
-            time.sleep(2 ** (attempt + 1))
-        except Exception as exc:  # noqa: BLE001
-            signal.alarm(0)
-            err = str(exc).lower()
+                kwargs["api_key"] = api_key
+            resp = litellm.completion(**kwargs)
+            conn.send(("ok", resp.choices[0].message.content))
+    except Exception as exc:
+        conn.send(("error", str(exc), type(exc).__name__))
+    finally:
+        conn.close()
+
+
+def _call_ai(
+    provider_info: tuple[str, object, str, str | None], prompt: str
+) -> str | None:
+    """Call the AI provider in a subprocess with hard timeout.
+
+    Returns translated text, or ``None`` on failure.
+    """
+    provider_name, _client, model, api_base = provider_info
+
+    if provider_name == "gemini":
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+    elif provider_name == "claude":
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    else:
+        api_key = os.environ.get(
+            "LITELLM_API_KEY",
+            os.environ.get("OPENAI_API_KEY",
+                           os.environ.get("DASHSCOPE_API_KEY", "")),
+        )
+
+    for attempt in range(3):
+        parent_conn, child_conn = multiprocessing.Pipe()
+        proc = multiprocessing.Process(
+            target=_ai_worker,
+            args=(child_conn, provider_name, model, api_key, api_base, prompt),
+        )
+        proc.start()
+        if parent_conn.poll(timeout=_AI_TIMEOUT):
+            result = parent_conn.recv()
+            proc.join(timeout=5)
+            if result[0] == "ok":
+                return result[1]
+            # error from child
+            err = result[1].lower()
+            exc_name = result[2] if len(result) > 2 else "Exception"
             retryable = ("rate", "429", "quota", "resource",
                          "connection", "timeout", "deadline",
                          "503", "500", "overloaded", "internal")
             if any(k in err for k in retryable):
                 wait = 2 ** (attempt + 1)
                 print(
-                    f"    Retryable error, retrying in {wait}s... ({type(exc).__name__})",
+                    f"    Retryable error, retrying in {wait}s... ({exc_name})",
                     file=sys.stderr, flush=True,
                 )
                 time.sleep(wait)
             else:
-                print(f"    API error: {exc}", file=sys.stderr, flush=True)
+                print(f"    API error: {result[1]}", file=sys.stderr, flush=True)
                 return None
-        finally:
-            signal.alarm(0)
-            signal.signal(signal.SIGALRM, old_handler)
+        else:
+            # timeout — kill the subprocess
+            proc.kill()
+            proc.join(timeout=5)
+            print(
+                f"    Timeout ({_AI_TIMEOUT}s), retrying... (attempt {attempt + 1}/3)",
+                file=sys.stderr, flush=True,
+            )
+            time.sleep(2 ** (attempt + 1))
+        parent_conn.close()
     print("    Failed after 3 retries", file=sys.stderr, flush=True)
     return None
 
