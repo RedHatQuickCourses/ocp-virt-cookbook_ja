@@ -1,0 +1,55 @@
+= Getting Started
+:navtitle:
+
+== Overview
+
+This module covers the essential tools and basic configuration needed to start working with OpenShift Virtualization. Whether you're new to OpenShift Virtualization or looking to refresh your knowledge, these guides will help you get up and running quickly.
+
+== What You'll Learn
+
+In this section, you will learn:
+
+* Prerequisites and required tools for working with OpenShift Virtualization
+* Basic usage of the virtctl command-line tool for managing virtual machines
+* How to configure default storage for virtual machine deployments
+* Cloud-init fundamentals and VM initialization patterns
+
+== Prerequisites
+
+Before proceeding with the tutorials in this section, ensure you have:
+
+* An OpenShift 4.18+ cluster with OpenShift Virtualization operator installed
+* Cluster admin access or appropriate RBAC permissions
+* CLI tools installed: `oc`, `kubectl`, `virtctl`
+* Basic understanding of Kubernetes/OpenShift concepts
+
+== Sections
+
+xref:prerequisites.adoc[]::
+Detailed requirements and setup instructions for working with OpenShift Virtualization.
+
+xref:install-openshift-virtualization.adoc[]::
+Install and configure the OpenShift Virtualization operator on your cluster.
+
+xref:virtctl-basics.adoc[]::
+Learn the essential virtctl commands for managing virtual machines.
+
+xref:default-storage-class.adoc[]::
+Configure a default storage class for simplified VM deployment.
+
+xref:create-vm-web-console.adoc[]::
+Create virtual machines from the OpenShift web console using templates.
+
+xref:vm-lifecycle-states.adoc[]::
+Understand VM lifecycle states and basic operations for effective VM management.
+
+xref:cloud-init-fundamentals.adoc[]::
+Learn cloud-init fundamentals, execution stages, common modules, and how to embed cloud-init configuration in VirtualMachine manifests.
+
+== Next Steps
+
+After completing this module, you'll be ready to explore:
+
+* xref:storage:index.adoc[Storage Configuration] - Deep dive into storage options
+* xref:networking:index.adoc[Networking Configuration] - Network setup for VMs
+* xref:networking:cloud-init-troubleshooting.adoc[Cloud-init Troubleshooting] - Diagnostic procedures for cloud-init issues

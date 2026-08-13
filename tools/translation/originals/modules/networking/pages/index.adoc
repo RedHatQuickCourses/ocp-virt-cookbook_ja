@@ -1,0 +1,102 @@
+= Networking Configuration
+:navtitle:
+
+== Overview
+
+This module covers networking configuration for OpenShift Virtualization, including User Defined Networks (UDN), localnet and layer 2 topologies, VLANs, and Linux bridges. Proper network configuration is essential for integrating virtual machines with existing infrastructure and enabling communication between VMs and external systems.
+
+== What You'll Learn
+
+In this section, you will learn:
+
+* How to configure static IP addresses using cloud-init, DHCP reservations, and guest agents
+* How to troubleshoot cloud-init IP configuration issues
+* How to configure Layer 2 primary networks using User Defined Networks (UDN)
+* How to set up localnet secondary networks for external connectivity
+* How to configure VLAN tagging for network segregation
+* How to create and use Layer 2 secondary networks for physical abstraction
+* How to use Linux bridges for VM networking
+* How to configure SR-IOV for hardware-accelerated VM networking via PCI passthrough
+* How to verify OVS bridge configurations
+* Network topology patterns and use cases
+
+== Network Topology Options
+
+OpenShift Virtualization supports several network topology options:
+
+* **User Defined Networks (UDN)**: Custom Layer 2 networks with namespace isolation
+* **Localnet**: Direct access to physical network infrastructure
+* **Layer 2**: Cluster-wide Layer 2 overlay networks abstracted from the physical network
+* **Linux Bridges**: Traditional bridge networking for VMs
+* **SR-IOV**: Hardware-accelerated networking with PCI passthrough for high-performance workloads
+* **OVN-Kubernetes Overlay**: Cluster default networking with pod connectivity
+
+== Prerequisites
+
+Before proceeding with the tutorials in this section, ensure you have:
+
+* OpenShift 4.19+ cluster with OpenShift Virtualization installed
+* NMState operator installed for physical network configuration
+* Understanding of basic networking concepts (subnets, VLANs, bridges)
+* Cluster admin access for network configuration
+
+== Sections
+
+xref:static-ip-configuration.adoc[]::
+Configure static IP addresses for virtual machines using cloud-init, DHCP reservations, QEMU guest agent, or Sysprep for Windows VMs.
+
+xref:cloud-init-troubleshooting.adoc[]::
+Troubleshooting guide for cloud-init IP configuration issues, including diagnostic commands and common problem solutions.
+
+xref:udn-primary-networks.adoc[]::
+Configure Layer 2 primary networks using User Defined Networks for complete network control.
+
+xref:localnet-secondary.adoc[]::
+Set up localnet secondary networks with ClusterUserDefinedNetwork for external connectivity.
+
+xref:localnet-vlan.adoc[]::
+Configure localnet secondary networks with VLAN tagging using NetworkAttachmentDefinition.
+
+xref:cudn-localnet-vlan.adoc[]::
+Configure localnet secondary networks with VLAN tagging using ClusterUserDefinedNetwork for cross-namespace availability.
+
+xref:layer2-secondary.adoc[]::
+Set up Layer 2 secondary networks for cluster-wide VM connectivity abstracted from the physical network.
+
+xref:linux-bridges.adoc[]::
+Create Linux bridge secondary networks for direct VM connectivity to physical network infrastructure.
+
+xref:sriov-secondary.adoc[]::
+Configure SR-IOV secondary networks for near-native network performance through PCI passthrough of Virtual Functions directly into VMs.
+
+xref:ovs-bridge-troubleshooting.adoc[]::
+Diagnose and resolve OVS bridge creation issues for localnet networks.
+
+xref:vm-ingress-routes.adoc[]::
+Expose VM HTTP and HTTPS services through OpenShift Ingress routes.
+
+
+=== Primary vs Secondary Networks
+
+* **Primary Networks**: Replace the pod network, complete network control
+* **Secondary Networks**: Add additional interfaces while keeping pod network
+
+=== Physical Network Integration
+
+For localnet and Linux bridge topologies:
+
+* Requires physical network interface access on worker nodes
+* May need VLAN trunk configuration on physical switches
+* Bridge mappings connect logical network names to physical interfaces
+
+== Next Steps
+
+After completing this module, you'll be ready to:
+
+* Deploy production VMs with appropriate network topologies
+* Troubleshoot network connectivity issues
+
+== See Also
+
+* xref:vm-configuration:internal-dns-for-vms.adoc[Internal DNS for VMs] - Configure internal cluster DNS resolution for VMs
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking[OpenShift Virtualization Networking,window=_blank]

@@ -1,0 +1,1221 @@
+# 翻訳同期管理ツール 仕様書
+
+## 1. 目的と前提条件
+
+### 1.1 目的
+
+upstream リポジトリ (`RedHatQuickCourses/ocp-virt-cookbook`) の英語コンテンツが更新された際に、日本語翻訳リポジトリ側で **どのファイルのどのブロック (段落) を更新すべきか** を自動検知し、翻訳の反映漏れを防止する。
+
+### 1.2 方式概要
+
+- upstream を第2 git remote として追加し、英語コンテンツの最新状態を常にローカルに保持する
+- 翻訳時点の英語原文を **スナップショット** として `tools/translation/originals/` に保存する
+- スナップショットと upstream の現在の英語を **ブロック単位** で比較し、変更を検知する
+- 変更があったブロックを **不変アンカー照合** で日本語ファイル内の該当行にマッピングする
+- 翻訳状況は **マニフェスト JSON** でブロック単位に管理する
+
+### 1.3 運用ルール
+
+翻訳者は以下のルールを遵守する:
+
+1. **段落の統合禁止** — 英語の2段落を日本語の1段落にまとめない
+2. **段落の分割禁止** — 英語の1段落を日本語の複数段落に分けない
+3. **セクション・段落の並べ替え禁止** — 英語と同じ順序を維持する
+4. **全ブロック一括反映** — `sync-check.py` で変更が検知されたファイルは、全ての `outdated` / `new` ブロックを翻訳に反映してから `sync-mark.py` でマークする。部分的なマークは行わない
+
+ルール 1-3 により、英語スナップショットと日本語ファイルのブロック構造が 1:1 で対応し、位置ベースの照合が確実に機能する。ルール 4 により、スナップショットとマニフェストの整合性が常に保たれる。
+
+### 1.4 前提条件
+
+- Python 3.9 以上 (標準ライブラリのみ使用)
+- upstream remote が設定されていること:
+  ```bash
+  git remote add upstream https://github.com/RedHatQuickCourses/ocp-virt-cookbook.git
+  git fetch upstream
+  ```
+
+---
+
+## 2. ブロック解析アルゴリズム
+
+### 2.1 ブロックの定義
+
+**ブロック** とは、AsciiDoc ファイル内の意味的に独立した最小単位である。ファイルはブロックの線形シーケンスとして解析される。空行はブロック区切りとして扱い、ブロック自体には含めない。
+
+### 2.2 ブロック種別
+
+| ブロック種別 | 開始パターン | 終了条件 | 翻訳対象 |
+|---|---|---|---|
+| `document_header` | 1行目の `= タイトル` | 連続する `:attr:` 行の末尾まで | タイトルと一部属性値 |
+| `section_header` | `^={2,5}\s` | 単一行 | 見出しテキスト |
+| `prose` | 他の種別に該当しない非空行 | 空行または他の種別の開始 | 全文 |
+| `code_block` | `[source,...]\n----` または単独の `----` | 対応する `----` 閉じデリミタ | 不変 (翻訳しない) |
+| `literal_block` | `....` | 対応する `....` 閉じデリミタ | 不変 |
+| `admonition_inline` | `^(NOTE\|WARNING\|IMPORTANT\|CAUTION\|TIP): ` | 空行 | 本文 (キーワードは不変) |
+| `example_block` | `[NOTE]\n====` 等、または単独の `====` | 対応する `====` 閉じデリミタ | 内容 (アドモニションキーワードは不変) |
+| `table` | `\|===` | 対応する `\|===` 閉じデリミタ | セル内容 |
+| `list_item` | `^(\*+\|\.+)\s` または `^.+::` | 空行または同レベル以上の次リスト項目 | テキスト部分 |
+| `block_title` | `^\.[A-Za-z　-鿿]` (`.` + 非空白、`....` ではない) | 単一行 | 全文 |
+| `block_attribute` | `^\[.*\]$` (source/cols 等の属性行) | 単一行 | 不変 |
+| `attribute_entry` | `^:[a-zA-Z].*:` | 単一行 | 値のみ (キーは不変) |
+
+### 2.3 グルーピングルール
+
+- **block_attribute 行** (`[source,yaml]`, `[cols="1,2"]`, `[NOTE]`, `[IMPORTANT]` 等) は、直後のデリミタブロック (code_block, table, example_block 等) と **一体のブロック** として扱う。単独ブロックにはしない。
+- **block_title 行** (`.期待される出力` 等) も同様に、直後のブロックの一部として扱う。
+- **リスト継続** (`+` 単独行) は、前のリスト項目ブロックに含める。`+` に続くコードブロック等も同じリスト項目ブロックの一部とする。
+
+### 2.4 解析ステートマシン
+
+```
+状態: NORMAL
+  行を読む:
+    空行               → 現在のブロックを確定、NORMAL のまま
+    ^={1,5} テキスト   → 現在のブロックを確定、section_header を確定
+    ^[source,...]      → block_attribute を蓄積、EXPECT_DELIMITED へ
+    ^[NOTE] 等         → block_attribute を蓄積、EXPECT_DELIMITED へ
+    ^----\s*$          → IN_CODE_BLOCK へ (block_attribute があれば付与)
+    ^....\s*$          → IN_LITERAL_BLOCK へ
+    ^====\s*$          → IN_EXAMPLE_BLOCK へ (block_attribute があれば付与)
+    ^|===\s*$          → IN_TABLE へ (block_attribute があれば付与)
+    ^[cols=...]        → block_attribute を蓄積、EXPECT_TABLE へ
+    ^\[.*\]$ (上記以外)→ block_attribute を蓄積、EXPECT_DELIMITED へ
+    ^NOTE: 等          → admonition_inline ブロック開始、NORMAL のまま
+    ^.テキスト         → block_title を蓄積、EXPECT_TITLED_BLOCK へ
+    その他             → prose または list_item ブロックに蓄積
+
+状態: IN_CODE_BLOCK
+  ^----\s*$ (対応する閉じ) → ブロック確定、NORMAL へ
+  その他                   → code_block に蓄積
+
+状態: IN_LITERAL_BLOCK
+  ^....\s*$ (対応する閉じ) → ブロック確定、NORMAL へ
+  その他                   → literal_block に蓄積
+
+状態: IN_EXAMPLE_BLOCK
+  ^====\s*$ (対応する閉じ) → ブロック確定、NORMAL へ
+  その他                   → example_block に蓄積
+
+状態: IN_TABLE
+  ^|===\s*$ (閉じ)        → ブロック確定、NORMAL へ
+  その他                   → table に蓄積
+
+状態: EXPECT_DELIMITED
+  ^----\s*$            → IN_CODE_BLOCK へ (蓄積済み block_attribute を付与)
+  ^====\s*$            → IN_EXAMPLE_BLOCK へ (蓄積済み block_attribute を付与)
+  ^.テキスト            → block_title も蓄積、EXPECT_DELIMITED のまま
+  その他                → block_attribute を単独ブロックとして確定、行を再処理
+
+状態: EXPECT_TITLED_BLOCK
+  ^----\s*$            → IN_CODE_BLOCK へ (蓄積済み block_title を付与)
+  ^====\s*$            → IN_EXAMPLE_BLOCK へ (蓄積済み block_title を付与)
+  ^....\s*$            → IN_LITERAL_BLOCK へ (蓄積済み block_title を付与)
+  ^|===\s*$            → IN_TABLE へ (蓄積済み block_title を付与)
+  ^[source,...] 等     → block_attribute も蓄積、EXPECT_DELIMITED へ
+  ^[NOTE] 等           → block_attribute も蓄積、EXPECT_DELIMITED へ
+  ^\[.*\]$ (上記以外)  → block_attribute も蓄積、EXPECT_DELIMITED へ
+  その他                → block_title を単独ブロックとして確定、行を再処理
+```
+
+**注意**: デリミタ行 (`----`, `....`, `====`, `|===`) は末尾に空白文字が付いていても有効なデリミタとして扱う (`\s*$`)。upstream のファイルに末尾空白付きデリミタが存在するケースが確認されている (例: `creating-managing-storage-class.adoc` L82)。
+
+### 2.5 このリポジトリで確認されたパターンへの対応
+
+| パターン | 出現例 | 処理 |
+|---|---|---|
+| ラベルなし `----` ブロック | `cpu-pinning.adoc` L85-88 | `code_block` として扱う (block_attribute なし) |
+| `<<EOF` ヒアドキュメント内の YAML | `cpu-pinning.adoc` L59-74 | `----` 内部は解析しない。全体が1つの code_block |
+| `.期待される出力` ブロックタイトル | `static-ip-configuration.adoc` L276 | block_title として直後のブロックに付与 |
+| 定義リスト (`xref:...[]::`) | `getting-started/pages/index.adoc` L28-47 | `list_item` として処理 |
+| `[cols=...,options="header"]` テーブル | `cpu-pinning.adoc` L29-40 | block_attribute + table を一体ブロック化 |
+| 番号付きリスト (`. テキスト`) | `performance/pages/index.adoc` L42-45 | `list_item` (`.` の後に空白で判定) |
+| `[IMPORTANT]` / `[NOTE]` + `====` ブロック | `linux-bridges.adoc` L49-54, `api-component-overview.adoc` L533-537 | block_attribute + example_block を一体ブロック化。`====` は `^====\s*$` で判定 (テキスト付きの `==== 見出し` はセクションヘッダー) |
+| block_attribute + block_title + `====` ブロック | `layer2-secondary.adoc` L184-202 | block_attribute (`[NOTE]`) + block_title + example_block を一体ブロック化 |
+| `[#anchor-id]` ショートハンドアンカー | `installing-qemu-guest-agent.adoc` (14箇所), `hotplug-volumes-interfaces.adoc` (2箇所) 等 | block_attribute として蓄積。直後がデリミタブロックでなければ単独ブロックとして確定 |
+| `[[anchor-id]]` スタンドアロンアンカー | `lvm-operator.adoc` L287, `dual-stack-vms.adoc` L391 | 同上。`^\[.*\]$` にマッチするため block_attribute として処理 |
+| `[start=N]` リスト継続属性 | `install-openshift-virtualization.adoc` L146 | 同上。直後のリスト項目に対する属性 |
+
+---
+
+## 3. ブロック ID 体系
+
+### 3.1 設計方針
+
+ブロック ID は **行番号に依存せず**、ファイル内容から決定論的に生成する。軽微な編集 (誤字修正等) で ID が変化しないようにする。
+
+### 3.2 ID 構成
+
+```
+<section_path>/<block_type>/<ordinal>
+```
+
+- **section_path**: ブロックを囲むセクション見出しの階層パス。アンカー ID (`[[anchor_id]]`) があればそれを使用し、なければ見出しテキストの slug 化した文字列を使用する。最初のセクション見出し以前のブロックは `_root` とする。
+- **block_type**: 2.2 で定義した種別名
+- **ordinal**: 同一セクション内で同一種別のブロックの出現順序 (0始まり)
+
+### 3.3 具体例
+
+`modules/performance/pages/cpu-pinning.adoc` の場合:
+
+```
+_root/document_header/0           ← L1-2: "= 仮想マシン向けの専用 CPU 配置" + ":navtitle:"
+概要/prose/0                      ← L6-8: 概要の第1-2段落
+前提条件/list_item/0              ← L12: "* OpenShift Virtualization..."
+前提条件/list_item/1              ← L13: "* クラスター管理者..."
+...
+専用-cpu-配置の理解/prose/0        ← L20-22: 説明段落
+専用-cpu-配置の理解/prose/1        ← L24-27: 要件リスト前の段落
+専用-cpu-配置の理解/table/0        ← L29-40: 比較テーブル
+ステップ-1-cpu-manager.../code_block/0  ← L48-51: 最初のコマンド
+ステップ-1-cpu-manager.../admonition_inline/0  ← L53: NOTE:
+```
+
+### 3.4 slug 化ルール
+
+セクション見出しテキスト (英語または日本語) を ID に変換する際のルール:
+
+1. `[[anchor_id]]` がある場合はそれをそのまま使用 (最優先)
+2. ない場合、見出しテキストから:
+   - 先頭の `=` 記号とスペースを除去
+   - 全角英数字を半角に変換
+   - 小文字化
+   - 空白を `-` に置換
+   - `[a-z0-9぀-鿿-]` 以外の文字を除去
+   - 50文字で切り詰め
+
+### 3.5 安定性の特性
+
+| 変更内容 | ID への影響 |
+|---|---|
+| ブロック内の文章修正 | 影響なし (ID はブロックの位置と種別で決まる) |
+| 同一種別のブロック追加 | 追加位置以降の ordinal がずれる |
+| セクション見出し変更 | そのセクション内の全 ID が変わる |
+| 異なる種別のブロック追加 | 影響なし (ordinal は種別ごと) |
+
+ordinal のずれは `sync-check.py` がハッシュ比較で検知するため、実運用上の問題にはならない (後述のセクション 7.2 参照)。
+
+---
+
+## 4. ハッシュ計算
+
+### 4.1 対象
+
+各ブロックの **全行の生テキスト** をハッシュ対象とする。block_attribute や block_title がグルーピングされている場合は、それらの行も含める。
+
+### 4.2 正規化
+
+```python
+def compute_block_hash(lines: list[str]) -> str:
+    normalized = "\n".join(line.rstrip() for line in lines)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
+```
+
+- 各行の末尾空白を除去
+- 改行 (`\n`) で結合
+- SHA-256 の先頭16文字 (64bit) を使用
+- 約10,000ブロック規模での衝突確率は無視できる水準 (~1/10^14)
+
+### 4.3 ハッシュ対象外
+
+- ブロック間の空行 (構造的区切りであり内容ではない)
+- ブロック ID そのもの
+- ファイルパスや行番号などのメタ情報
+
+---
+
+## 5. 不変アンカー照合アルゴリズム
+
+### 5.1 目的
+
+英語スナップショットのブロックと日本語ファイルのブロックを対応づけ、変更があった英語ブロックに対応する **日本語側の行番号** を特定する。
+
+### 5.2 不変アンカーの定義
+
+英語と日本語の間で **内容が同一または構造的に同一** な要素:
+
+| 要素 | 不変部分 | フィンガープリント |
+|---|---|---|
+| セクション見出し | `=` レベル + `[[anchor_id]]` (あれば) | `("section", level, anchor_id_or_None)` |
+| コードブロック | 全内容 (コードは翻訳しない) | `("code", content_hash[:16])` |
+| block_attribute | `[source,yaml]` 等の全文 | `("attr", raw_text)` |
+| admonition キーワード | `NOTE:`, `WARNING:` 等 | `("admonition", keyword)` |
+| テーブル構造 | `[cols=...]` 属性 + `\|===` デリミタ | `("table", cols_attr)` |
+
+### 5.3 照合アルゴリズム
+
+#### パス1: アンカーベースの対応づけ
+
+1. 英語スナップショットと日本語ファイルをそれぞれブロック列に解析する
+2. 各ブロックから不変フィンガープリントを抽出する (不変要素を持たないブロックは `None`)
+3. 両ファイルのフィンガープリント列に対して **最長共通部分列 (LCS)** を計算する (`difflib.SequenceMatcher` を使用)
+4. LCS で一致したペアが、英語ブロックインデックスと日本語ブロックインデックスの対応を確立する
+
+#### パス2: ギャップ内の位置照合
+
+一致したアンカーペア間の「ギャップ」(= アンカーでないブロック群) を、出現順序で 1:1 に対応づける。
+
+```
+EN: [anchor_A] [prose_1] [prose_2] [anchor_B]
+JA: [anchor_A] [prose_1'] [prose_2'] [anchor_B]
+                ↓            ↓
+           位置で対応     位置で対応
+```
+
+ギャップ内の英語ブロック数と日本語ブロック数が異なる場合は **構造不一致** としてフラグを立てる (→ `validate-structure.py` の守備範囲)。
+
+### 5.4 アンカー密度
+
+このリポジトリのチュートリアルページでは、コードブロックとセクション見出しが平均 5-15 行ごとに出現する。アンカー間のギャップには通常 1-3 個の散文ブロックしか含まれないため、位置照合の信頼性は非常に高い。
+
+インデックスページはコードブロックが少ないが、定義リストの xref パスやセクション見出しがアンカーとして機能する。
+
+---
+
+## 6. マニフェスト JSON スキーマ
+
+### 6.1 ファイル位置
+
+```
+tools/translation/manifest.json
+```
+
+リポジトリ全体で単一のマニフェストファイルを使用する。Git で追跡する。
+
+### 6.2 スキーマ
+
+```json
+{
+  "version": 1,
+  "upstream_remote": "upstream",
+  "upstream_branch": "main",
+  "files": {
+    "<relative_path>": {
+      "upstream_path": "<upstream側の相対パス>",
+      "upstream_commit": "<upstream リポジトリの Git コミット SHA — 最後に sync-check.py でチェックした時点の upstream/main HEAD>",
+      "initialized_at": "<ISO 8601 タイムスタンプ>",
+      "blocks": {
+        "<block_id>": {
+          "type": "<ブロック種別>",
+          "en_hash": "<英語原文のハッシュ (16文字)>",
+          "status": "synced | outdated | new | removed",
+          "synced_at": "<ISO 8601 タイムスタンプ>"
+        }
+      }
+    }
+  }
+}
+```
+
+### 6.3 ステータス値
+
+| ステータス | 意味 |
+|---|---|
+| `synced` | 日本語翻訳が現在の英語原文に対応済み |
+| `outdated` | upstream で英語が変更されたが、日本語に未反映 |
+| `new` | upstream で追加されたブロック (初回翻訳時には存在しなかった) |
+| `removed` | upstream でブロックが削除された |
+
+### 6.4 設計上の決定事項
+
+- **日本語のハッシュは保存しない**: 本システムは「upstream の英語変更を検知する」ことが目的であり、日本語側の変更追跡は git で行う。
+- **ブロック ID が辞書キー**: O(1) ルックアップを実現する。
+- **JSON のキーはソート順で出力**: `json.dump(data, sort_keys=True, indent=2)` により、git diff でのノイズを最小化する。
+
+### 6.5 具体例
+
+```json
+{
+  "version": 1,
+  "upstream_remote": "upstream",
+  "upstream_branch": "main",
+  "files": {
+    "modules/performance/pages/cpu-pinning.adoc": {
+      "upstream_path": "modules/performance/pages/cpu-pinning.adoc",
+      "upstream_commit": "f764df28a1b2c3d4e5f67890abcdef1234567890",
+      "initialized_at": "2026-08-12T10:30:00Z",
+      "blocks": {
+        "_root/document_header/0": {
+          "type": "document_header",
+          "en_hash": "a1b2c3d4e5f67890",
+          "status": "synced",
+          "synced_at": "2026-08-12T10:30:00Z"
+        },
+        "gaiyou/prose/0": {
+          "type": "prose",
+          "en_hash": "b2c3d4e5f6789012",
+          "status": "outdated",
+          "synced_at": "2026-08-12T10:30:00Z"
+        },
+        "suteppu-1.../code_block/0": {
+          "type": "code_block",
+          "en_hash": "c3d4e5f678901234",
+          "status": "synced",
+          "synced_at": "2026-08-12T10:30:00Z"
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## 7. スクリプト仕様
+
+全スクリプトは以下の共通規約に従う:
+
+- shebang: `#!/usr/bin/env python3`
+- モジュール docstring を日本語で記述
+- `argparse` + `RawDescriptionHelpFormatter` + `__doc__` を description に使用
+- 位置引数 `paths` (`nargs="*"`, デフォルト `["modules"]`)
+- `--dry-run` フラグ (`action="store_true"`)
+- ファイル収集: `_collect_files()` (`glob.glob` + `**/*.adoc`)
+- 標準ライブラリのみ使用
+- 出力形式: `<ファイル>: <サマリー>` + 最終行にトータル集計
+
+### 7.1 `sync-init.py` — スナップショット + マニフェスト初期化
+
+#### 用途
+
+日本語ファイルを翻訳同期管理の対象として登録する。upstream の英語原文を取得し、スナップショットとして保存し、ブロックハッシュを計算してマニフェストに登録する。
+
+#### 使い方
+
+```bash
+# 特定ファイルの初期化
+python3 tools/translation/sync-init.py modules/networking/pages/linux-bridges.adoc
+
+# ディレクトリ内の全 .adoc を初期化
+python3 tools/translation/sync-init.py modules/networking/
+
+# 全モジュールを初期化 (デフォルト)
+python3 tools/translation/sync-init.py
+
+# プレビュー
+python3 tools/translation/sync-init.py --dry-run
+```
+
+#### 引数
+
+| 引数 | 説明 |
+|---|---|
+| `paths` (位置, `nargs="*"`) | 日本語ファイルまたはディレクトリ。デフォルト: `["modules"]` |
+| `--dry-run` | 変更せずに結果を表示 |
+| `--force` | 既にマニフェストに存在するファイルも再初期化 |
+| `--upstream-ref` | upstream の git ref。デフォルト: `upstream/main` |
+
+#### 処理フロー
+
+1. 指定された日本語 `.adoc` ファイルを収集
+2. 各ファイルについて:
+   a. upstream パスを決定 (同一相対パス)
+   b. `git show <ref>:<path>` で英語原文を取得
+   c. upstream にファイルが存在しなければ警告してスキップ
+   d. マニフェストに既存かつ `--force` なしなら警告してスキップ
+   e. 英語原文を `tools/translation/originals/<相対パス>` にコピー
+   f. 英語原文をブロック解析し、各ブロックのハッシュを計算
+   g. マニフェストにエントリを作成 (全ブロック `status: "synced"`)
+   h. `git rev-parse <ref>` で upstream コミット SHA を記録
+3. マニフェストを書き出し
+
+#### 出力例
+
+```
+modules/networking/pages/linux-bridges.adoc: initialized (47 blocks)
+modules/networking/pages/index.adoc: initialized (23 blocks)
+
+2 files initialized, 70 blocks tracked
+```
+
+#### エラー処理
+
+- upstream remote が未設定の場合: `Error: remote 'upstream' not found. Run: git remote add upstream https://github.com/RedHatQuickCourses/ocp-virt-cookbook.git`
+- upstream ref が解決できない場合: エラー終了
+- `modules/` 配下でないパスが指定された場合: 警告してスキップ
+
+### 7.2 `sync-check.py` — upstream 変更検知
+
+#### 用途
+
+スナップショットと upstream の現在の英語を比較し、変更があったブロックを検知する。変更ブロックを不変アンカー照合で日本語ファイルの行番号にマッピングして報告する。
+
+#### 使い方
+
+```bash
+# 全ファイルをチェック
+python3 tools/translation/sync-check.py
+
+# 特定のモジュールのみ
+python3 tools/translation/sync-check.py modules/networking/
+
+# upstream を先にフェッチしてからチェック
+python3 tools/translation/sync-check.py --fetch
+
+# ブロック単位の英語 diff を表示
+python3 tools/translation/sync-check.py --verbose
+```
+
+#### 引数
+
+| 引数 | 説明 |
+|---|---|
+| `paths` (位置, `nargs="*"`) | チェック範囲。デフォルト: `["modules"]` |
+| `--fetch` | チェック前に `git fetch upstream` を実行 |
+| `--verbose` | 変更ブロックの英語 diff を表示 |
+| `--dry-run` | マニフェストのステータスを更新しない (レポートのみ) |
+| `--upstream-ref` | デフォルト: `upstream/main` |
+
+#### 処理フロー
+
+1. マニフェストを読み込み
+2. 指定パスに該当する管理対象ファイルを処理:
+   a. スナップショットを `tools/translation/originals/<path>` から読み込み
+   b. 現在の upstream 英語を `git show <ref>:<path>` で取得
+   c. upstream にファイルが存在しない場合: "upstream で削除" と報告
+   d. 両方をブロック解析
+   e. ブロック ID でスナップショットと upstream のブロックを照合
+   f. 各ブロックの upstream ハッシュを計算し、マニフェストの `en_hash` と比較
+   g. ハッシュが異なるブロック → `outdated` にマーク
+   h. upstream にあるがマニフェストにないブロック → `new` で追加
+   i. マニフェストにあるが upstream にないブロック → `removed` にマーク
+3. 変更ブロックについて、不変アンカー照合を実行し日本語ファイルの行番号を特定
+4. 管理対象外の upstream ファイル (未翻訳) も別セクションで報告
+5. `--dry-run` でなければマニフェストを更新 (ステータスのみ。ハッシュとスナップショットは `sync-mark.py` が更新する)
+
+#### 出力例 (デフォルト)
+
+```
+modules/networking/pages/linux-bridges.adoc: 3 outdated, 1 new
+  OUTDATED  overview/prose/0                   (ja: L43-46)
+  OUTDATED  create-net-attach-def/prose/2      (ja: L125-129)
+  OUTDATED  create-net-attach-def/code_block/1 (ja: L148-167)
+  NEW       test-secondary-network/prose/3     (ja: mapping not available)
+
+modules/storage/pages/lvm-operator.adoc: synced
+
+1 file with changes, 1 file synced
+3 blocks outdated, 1 block new
+```
+
+#### 出力例 (--verbose)
+
+上記に加え、各 OUTDATED ブロックに英語 diff を追加:
+
+```
+  OUTDATED  overview/prose/0  (ja: L43-46)
+    --- snapshot
+    +++ upstream
+    @@ -1,3 +1,4 @@
+     The first step is to define a Linux bridge on the cluster nodes
+    -using a `NodeNetworkConfigurationPolicy` (`nncp`).
+    +using a `NodeNetworkConfigurationPolicy` (`nncp`). This resource
+    +is cluster-scoped, meaning it does not reside in any namespace.
+```
+
+#### エラー処理
+
+- マニフェスト未作成: `Error: manifest.json not found. Run sync-init.py first.`
+- マニフェストにないファイル: "untracked" セクションに表示
+
+### 7.3 `sync-mark.py` — 翻訳反映済みマーク
+
+#### 用途
+
+翻訳者が日本語テキストを更新した後、該当ブロックを「反映済み」としてマークする。マニフェストのハッシュとスナップショットを現在の upstream に更新する。
+
+#### 使い方
+
+```bash
+# ファイル内の全 outdated/new ブロックをマーク
+python3 tools/translation/sync-mark.py modules/networking/pages/linux-bridges.adoc
+
+# 特定ブロックのみマーク
+python3 tools/translation/sync-mark.py modules/networking/pages/linux-bridges.adoc \
+  --blocks "overview/prose/0" "create-net-attach-def/prose/2"
+
+# 全管理対象ファイルの全ブロックをマーク
+python3 tools/translation/sync-mark.py --all
+
+# プレビュー
+python3 tools/translation/sync-mark.py --dry-run
+```
+
+#### 引数
+
+| 引数 | 説明 |
+|---|---|
+| `paths` (位置, `nargs="*"`) | 対象ファイル。デフォルト: `["modules"]` |
+| `--blocks` | マークする特定のブロック ID リスト (省略時は全 outdated/new ブロック) |
+| `--all` | 全管理対象ファイルを対象にする |
+| `--dry-run` | 変更せずに結果を表示 |
+
+#### 処理フロー
+
+1. 各対象ファイルについて:
+   a. 現在の upstream 英語を `git show upstream/main:<path>` で取得
+   b. ブロック解析し、新しいハッシュを計算
+   c. ファイル内の全 `outdated` / `new` ブロックについて:
+      - `en_hash` を新しいハッシュに更新
+      - `synced_at` を現在時刻に更新
+      - `status` を `synced` に設定
+      - `removed` ステータスのブロックはマニフェストから削除
+   d. 全ブロックが `synced` であることを確認し、スナップショットファイルを現在の upstream 内容で上書き
+   e. `upstream_commit` を現在の `upstream/main` HEAD に更新
+2. マニフェストを書き出し
+
+#### 出力例
+
+```
+modules/networking/pages/linux-bridges.adoc: 3 blocks marked synced
+  SYNCED  overview/prose/0
+  SYNCED  create-net-attach-def/prose/2
+  SYNCED  create-net-attach-def/code_block/1
+
+1 file updated, 3 blocks synced
+```
+
+### 7.4 `sync-translate.py` — AI による自動翻訳
+
+#### 用途
+
+`sync-check.py` で検知された `outdated` / `new` ブロックを AI API (Gemini または Claude) で自動翻訳し、日本語ファイルに直接適用する。翻訳作業は main ブランチから作成した新規ローカルブランチ上で行い、人間がレビューできる状態で停止する（`git add` / `git commit` / `git push` は行わない）。
+
+#### 使い方
+
+```bash
+# 全管理対象ファイルの outdated/new ブロックを翻訳 (デフォルト: Gemini)
+python3 tools/translation/sync-translate.py
+
+# Claude API を使用
+python3 tools/translation/sync-translate.py --provider claude
+
+# LiteLLM を使用 (任意のモデルを指定可能)
+python3 tools/translation/sync-translate.py --provider litellm --model qwen/qwen3-235b-a22b
+
+# dry-run (翻訳結果を表示するが適用しない、ブランチも作成しない)
+python3 tools/translation/sync-translate.py --dry-run
+
+# 既存の書式整形ツールも自動実行
+python3 tools/translation/sync-translate.py --format
+
+# ブランチ名を指定
+python3 tools/translation/sync-translate.py --branch translate/2026-08-12
+
+# Claude API でモデルを指定
+python3 tools/translation/sync-translate.py --provider claude --model claude-sonnet-5
+
+# LiteLLM 経由で任意のプロバイダーのモデルを使用
+python3 tools/translation/sync-translate.py --provider litellm --model openai/gpt-4o
+```
+
+#### 引数
+
+| 引数 | 説明 |
+|---|---|
+| `--dry-run` | 翻訳結果を stdout に表示するが、ファイルへの書き込み・ブランチ作成・`sync-mark.py` の実行を行わない |
+| `--format` | 翻訳適用後に `add-jp-lat-spaces.py` と `convert-fullwidth-parens.py` を自動実行 |
+| `--provider` | 翻訳 API プロバイダー。`gemini`、`claude`、`litellm` のいずれか。デフォルト: `gemini` |
+| `--model` | AI モデル。デフォルト: provider が `gemini` の場合 `gemini-2.5-pro`、`claude` の場合 `claude-sonnet-5`。`litellm` の場合は必須 (デフォルトなし) |
+| `--branch` | 作成するブランチ名。デフォルト: `translate/<YYYY-MM-DD>` (実行日) |
+
+#### 前提条件
+
+- 使用するプロバイダーに応じた Python パッケージと API キーが設定されていること (以下の手順を参照)
+- 作業ディレクトリがクリーンであること (`git status` で未コミットの変更がないこと)
+
+##### プロバイダー別セットアップ
+
+| | Gemini (デフォルト) | Claude | LiteLLM |
+|---|---|---|---|
+| パッケージ | `pip install google-genai` | `pip install anthropic` | `pip install litellm` |
+| 環境変数 | `GEMINI_API_KEY` | `ANTHROPIC_API_KEY` | 使用するプロバイダーに応じた環境変数 (後述) |
+| デフォルトモデル | `gemini-2.5-pro` | `claude-sonnet-5` | なし (`--model` 必須) |
+| 推奨用途 | コスト重視 | 翻訳品質重視 | 任意のプロバイダー/モデルを統一 API で利用 |
+
+##### Gemini API キーの設定
+
+1. [Google AI Studio](https://aistudio.google.com/apikey) にアクセスし、API キーを発行する
+2. 環境変数に設定する:
+   ```bash
+   export GEMINI_API_KEY="your-api-key-here"
+   ```
+3. 永続化する場合はシェルの設定ファイル (`~/.zshrc`, `~/.bashrc` 等) に追記する
+
+##### Claude API キーの設定
+
+1. [Anthropic Console](https://console.anthropic.com/) にアクセスし、API キーを発行する
+2. 環境変数に設定する:
+   ```bash
+   export ANTHROPIC_API_KEY="your-api-key-here"
+   ```
+3. 永続化する場合はシェルの設定ファイル (`~/.zshrc`, `~/.bashrc` 等) に追記する
+
+##### LiteLLM の設定
+
+[LiteLLM](https://docs.litellm.ai/) は OpenAI 互換の統一 API を提供するプロキシライブラリで、100 以上のプロバイダー (OpenAI, Qwen, Mistral, Cohere 等) に対応する。`--provider litellm` を指定すると、LiteLLM 経由で任意のモデルを利用できる。
+
+1. パッケージをインストール:
+   ```bash
+   pip install litellm
+   ```
+2. 使用するモデルのプロバイダーに応じた API キーを環境変数に設定する。例:
+   ```bash
+   # Qwen (DashScope) の場合
+   export DASHSCOPE_API_KEY="your-api-key-here"
+
+   # OpenAI の場合
+   export OPENAI_API_KEY="your-api-key-here"
+
+   # Mistral の場合
+   export MISTRAL_API_KEY="your-api-key-here"
+   ```
+3. `--model` にはLiteLLM のモデル名形式 (`<provider>/<model-name>`) を指定する:
+   ```bash
+   python3 tools/translation/sync-translate.py --provider litellm --model qwen/qwen3-235b-a22b
+   ```
+
+対応プロバイダーと環境変数の一覧は [LiteLLM Providers](https://docs.litellm.ai/docs/providers) を参照。
+
+**注意**: 本スクリプトのみ外部パッケージ (`google-genai`、`anthropic`、または `litellm`) に依存する。他のスクリプトは標準ライブラリのみで動作する。
+
+#### 処理フロー
+
+1. 作業ディレクトリがクリーンであることを確認 (未コミットの変更があればエラー終了)
+2. main ブランチから新規ローカルブランチを作成し切り替え (`git switch -c <branch> main`)
+3. `sync-check.py` を内部的に呼び出し、マニフェストのステータスを最新の upstream と照合して更新する (`git fetch upstream` も自動実行)。マニフェストの更新は新ブランチ上で行われるため、翻訳結果と共にレビュー対象となる
+4. **upstream 新規ファイル・モジュールの検出と自動登録**: upstream に存在するが日本語リポジトリに存在しない `.adoc` ファイルおよびモジュールディレクトリを検出する。新規モジュールの場合はディレクトリ構造の作成、`nav.adoc` のコピー・翻訳、`antora.yml` への追加を行う (9.15 参照)。各ページファイルは `sync-init.py` を内部的に呼び出して管理対象に登録し、全ブロックを AI API で翻訳して日本語ファイルとして新規作成する (後述の「新規ファイル翻訳」参照)。対応する `attachments/` および `images/` も upstream からコピーする
+5. **upstream で削除されたファイル・モジュールの削除**: upstream に対応するファイルが存在しない管理対象ファイルを検出し、日本語ファイル、マニフェストエントリ、スナップショットを削除する (9.4 参照)。モジュール全体が削除された場合はディレクトリごと削除し `antora.yml` からも除去する (9.15 参照)。upstream に一度も存在しなかった日本語独自ファイルも同様に削除する (9.12 参照)
+6. マニフェストを読み込み、`outdated` / `new` / `removed` ブロックを持つファイルを特定
+7. 各ファイルについて:
+   a. スナップショット英語 (`originals/<path>`) を読み込み
+   b. 現在の upstream 英語を `git show upstream/main:<path>` で取得
+   c. 現在の日本語ファイルを読み込み
+   d. 不変アンカー照合で英語スナップショットと日本語ブロックを対応づけ
+   d2. 構造不一致の自動修正: スナップショット英語に存在するが日本語に対応ブロックがないもの (AI 翻訳時の欠損) はスナップショットを参考に翻訳して挿入する。逆に日本語にあるがスナップショットに対応しないブロック (AI 翻訳時の余剰) は削除する。修正後、再度アンカー照合を行い 1:1 対応を確立する
+   e. コードブロック修正: ステータスに関わらず、日本語ファイル内のコードブロック (`code_block`, `literal_block`) の内容がスナップショット英語と異なる場合、upstream 原文で上書きする (AI API は呼び出さない)
+   f. `outdated` ブロック (コードブロック以外): AI API (`--provider` で指定) で翻訳を生成し、日本語ファイル内の該当ブロックを置換 (後述のプロンプト設計参照)
+   g. `new` ブロック (コードブロック以外): AI API で翻訳を生成し、日本語ファイル内の適切な位置に挿入。コードブロックの場合は upstream 原文をそのまま挿入
+   h. `removed` ブロック: 日本語ファイルから該当ブロックを削除
+   i. 画像ファイルの同期: upstream のページが参照する画像 (`image::`) のうち、日本語リポジトリに存在しないものを `git show upstream/main:<path>` で取得してコピーする。upstream で削除された画像 (日本語側に存在するが upstream に存在しない) は削除する
+   j. attachments/images の更新同期: 処理対象ファイルが属するモジュールの `attachments/` および `images/` 配下の既存ファイルを upstream と比較し、内容が異なるファイルを upstream で上書きする (9.11 参照)
+   k. 日本語ファイルを書き出し
+8. **nav.adoc の同期**: 各モジュールの `nav.adoc` を upstream と比較し、差分を反映する。新規ページへの xref 行を追加し、削除されたページの xref 行を削除する。xref の表示テキスト (`[]` 内) がある場合は AI API で翻訳する
+9. **antora.yml の同期**: upstream の `antora.yml` と比較し、`nav` セクションに新規モジュールの追加・削除を反映する。`name` フィールドなどリポジトリ固有の値は変更しない
+10. `--format` 指定時は書式整形ツールを実行
+11. `sync-mark.py` を内部的に呼び出してマニフェストとスナップショットを更新 (`removed` ブロックはマニフェストから除去)
+12. 完了メッセージを表示 (レビュー手順のガイドを含む)
+
+**注意**: ステップ 12 の後、`git add` / `git commit` / `git push` は一切行わない。翻訳結果はワーキングツリー上の未ステージ変更として残る。翻訳者が `git diff` でレビューした後、手動でコミット・プッシュする。
+
+#### プロンプト設計
+
+##### `outdated` ブロック用プロンプト
+
+```
+あなたは技術文書の翻訳者です。OpenShift Virtualization に関する英語ドキュメントの日本語翻訳を更新してください。
+
+## ルール
+- AsciiDoc の構文 (マークアップ、xref、コードブロック参照、リンク等) はそのまま維持すること
+- 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は英語のまま残すこと
+- 既存の日本語翻訳のスタイルと文体を維持すること
+- 翻訳文のみを出力し、説明や注記は付けないこと
+
+## セクション: {section_title}
+
+## 旧英語 (翻訳元):
+{old_english_block}
+
+## 新英語 (更新後):
+{new_english_block}
+
+## 現在の日本語翻訳:
+{current_japanese_block}
+
+## 指示:
+旧英語から新英語への変更点を、現在の日本語翻訳に反映してください。変更がない部分はそのまま維持してください。
+```
+
+##### `new` ブロック用プロンプト
+
+```
+あなたは技術文書の翻訳者です。OpenShift Virtualization に関する英語ドキュメントを日本語に翻訳してください。
+
+## ルール
+- AsciiDoc の構文 (マークアップ、xref、コードブロック参照、リンク等) はそのまま維持すること
+- 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は英語のまま残すこと
+- 以下の前後のブロックの文体に合わせること
+- 翻訳文のみを出力し、説明や注記は付けないこと
+
+## セクション: {section_title}
+
+## 前のブロック (文体参考):
+{previous_japanese_block}
+
+## 翻訳対象の英語:
+{new_english_block}
+
+## 後のブロック (文体参考):
+{next_japanese_block}
+```
+
+##### コードブロックの扱い
+
+コードブロック (`code_block`, `literal_block`) は翻訳対象外であり、upstream の英語原文をそのまま使用する。以下のルールで処理する:
+
+- `outdated` の場合: 現在の upstream の内容で日本語ファイル内のコードブロックを上書きする。AI API は呼び出さない。
+- `synced` の場合でも、日本語ファイル内のコードブロック内容がスナップショット英語と不一致であれば (AI 翻訳時にコメントが翻訳されたケース等)、スナップショットの英語原文で上書きする。
+- `new` の場合: upstream の英語原文をそのまま挿入する。AI API は呼び出さない。
+
+**背景**: 既存の AI 一括翻訳で、コードブロック内の YAML/bash コメント (例: `# Change to:` → `# 変更:`) が翻訳されているファイルが11件確認されている。この修正ロジックにより、初回実行時にこれらが自動的に英語原文に戻される。
+
+##### 新規ファイル翻訳 (処理フロー ステップ 4)
+
+upstream に存在するが日本語リポジトリに存在しないファイルは、ファイル全体を翻訳して新規作成する。処理手順:
+
+1. `sync-init.py` を内部的に呼び出し、スナップショットとマニフェストに登録
+2. upstream 英語ファイルをブロック解析
+3. 各ブロックを種別に応じて処理:
+   - コードブロック / block_attribute: 英語原文をそのままコピー
+   - セクション見出し / 散文 / リスト / テーブル等: AI API で翻訳
+4. 翻訳結果を日本語ファイルとして `modules/<module>/pages/` に書き出し
+5. 対応する `attachments/` および `images/` 配下のファイルも upstream からコピー
+
+```
+あなたは技術文書の翻訳者です。OpenShift Virtualization に関する英語ドキュメントを日本語に翻訳してください。
+
+## ルール
+- AsciiDoc の構文 (マークアップ、xref、コードブロック参照、リンク等) はそのまま維持すること
+- 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は英語のまま残すこと
+- 翻訳文のみを出力し、説明や注記は付けないこと
+- 自然な日本語で、技術的に正確な翻訳を行うこと
+
+## 翻訳対象の英語:
+{english_block}
+```
+
+#### 出力例
+
+```
+CHECKED     sync-check.py executed (fetched upstream, 1 file with changes)
+BRANCH      Created branch 'translate/2026-08-13' from main
+
+NEW FILE    modules/agentic-vm-management/pages/index.adoc (32 blocks translated)
+NEW FILE    modules/agentic-vm-management/pages/getting-started.adoc (48 blocks translated)
+  ...
+COPIED      modules/agentic-vm-management/attachments/getting-started/mcps.json
+DELETED     modules/LABENV/pages/index.adoc (no upstream counterpart)
+
+modules/networking/pages/linux-bridges.adoc:
+  TRANSLATED  overview/prose/0  (outdated → synced)
+  TRANSLATED  create-net-attach-def/prose/2  (outdated → synced)
+  COPIED      create-net-attach-def/code_block/1  (code block updated)
+  TRANSLATED  test-secondary-network/prose/3  (new → synced)
+  REMOVED     deprecated-section/prose/0  (removed from upstream)
+  RESTORED    step-3/code_block/2  (code block comment was translated, restored to English)
+
+IMAGE SYNC  modules/networking/images/layer2-secondary-topology.png: copied from upstream
+IMAGE SYNC  modules/performance/images/performance-tuning-ladder.svg: copied from upstream
+  ...
+ASSET SYNC  modules/networking/attachments/linux-bridges/bridge-demo-vm.yaml: updated from upstream
+ASSET SYNC  modules/networking/attachments/linux-bridges/linux-bridge-nad.yaml: updated from upstream
+  ... (17 attachment files updated)
+NAV SYNC    modules/getting-started/nav.adoc: +4 xref lines added
+NAV SYNC    modules/networking/nav.adoc: +3 xref lines added
+NAV SYNC    modules/agentic-vm-management/nav.adoc: created (new module)
+ANTORA      antora.yml: +1 module added (agentic-vm-management)
+FORMATTED   add-jp-lat-spaces.py applied
+FORMATTED   convert-fullwidth-parens.py applied
+MARKED      sync-mark.py executed
+
+24 new files translated, 1 file updated, 3 blocks translated, 1 code block copied, 1 block removed, 1 code block restored, 16 images copied, 17 attachments updated
+
+Review your changes:
+  git diff
+  git diff --stat
+When satisfied, commit and push manually.
+```
+
+#### エラー処理
+
+- 作業ディレクトリがクリーンでない: `Error: Working directory has uncommitted changes. Commit or stash them first.`
+- ブランチが既に存在: `Error: Branch 'translate/2026-08-12' already exists. Use --branch to specify a different name.`
+- API キー未設定: `Error: GEMINI_API_KEY environment variable not set` (Gemini) / `Error: ANTHROPIC_API_KEY environment variable not set` (Claude) / `Error: Required API key not set for model '<model>'. See: https://docs.litellm.ai/docs/providers` (LiteLLM)
+- パッケージ未インストール: `Error: google-genai package not found. Run: pip install google-genai` (Gemini) / `Error: anthropic package not found. Run: pip install anthropic` (Claude) / `Error: litellm package not found. Run: pip install litellm` (LiteLLM)
+- `--model` 未指定 (LiteLLM): `Error: --model is required when using --provider litellm`
+- API レート制限: リトライ (最大3回、指数バックオフ)
+- API エラー: 該当ブロックをスキップし、スキップされたブロックの一覧を最後に表示。スキップがあった場合は `sync-mark.py` を実行しない
+- マニフェスト未作成: `Error: manifest.json not found. Run sync-init.py first.`
+- 変更対象ブロックなし: `No outdated or new blocks found. Nothing to translate.`
+
+### 7.5 `sync-status.py` — 翻訳カバレッジダッシュボード
+
+#### 用途
+
+翻訳状況の全体ダッシュボードを表示する。管理対象ファイルのステータスサマリー、未翻訳ファイルの一覧を出力する。
+
+#### 使い方
+
+```bash
+# フルダッシュボード
+python3 tools/translation/sync-status.py
+
+# サマリーのみ
+python3 tools/translation/sync-status.py --summary
+```
+
+#### 引数
+
+| 引数 | 説明 |
+|---|---|
+| `paths` (位置, `nargs="*"`) | 範囲。デフォルト: `["modules"]` |
+| `--summary` | ファイル単位の集計のみ表示 (ブロック詳細なし) |
+| `--upstream-ref` | デフォルト: `upstream/main` |
+
+#### 処理フロー
+
+1. マニフェストを読み込み
+2. `git ls-tree -r --name-only <ref> modules/` で upstream の全 `.adoc` ページファイルを列挙
+3. 各ファイルを分類:
+   - **管理対象 & 全同期済み**: マニフェストに存在し、全ブロックが `synced`
+   - **管理対象 & 変更あり**: マニフェストに存在し、`outdated` または `new` のブロックあり
+   - **未管理**: マニフェストに存在しない (未翻訳)
+4. 集計を出力
+
+#### 出力例
+
+```
+=== Translation Status ===
+
+管理対象ファイル:      53 / 77 upstream files (68.8%)
+全同期済み:           47
+変更あり:              6
+  modules/networking/pages/linux-bridges.adoc          3 outdated, 1 new
+  modules/storage/pages/lvm-operator.adoc              1 outdated
+  modules/vm-lifecycle/pages/cloning-vms.adoc          2 outdated
+  modules/performance/pages/cpu-pinning.adoc           1 outdated
+  modules/getting-started/pages/prerequisites.adoc     5 outdated
+  modules/api/pages/api-component-overview.adoc        1 new
+
+未翻訳 upstream ファイル:  24
+  modules/agentic-vm-management/pages/index.adoc
+  modules/agentic-vm-management/pages/getting-started.adoc
+  ...
+
+Total blocks: 2,847 synced / 2,860 tracked (99.5%)
+```
+
+### 7.6 `validate-structure.py` — 構造一致バリデーション
+
+#### 用途
+
+英語スナップショットと日本語ファイルのブロック構造が 1:1 で対応していることを検証する。運用ルール (段落の統合・分割・並べ替え禁止) の違反を検出する。
+
+#### 使い方
+
+```bash
+# 全管理対象ファイルを検証
+python3 tools/translation/validate-structure.py
+
+# 特定ファイルのみ
+python3 tools/translation/validate-structure.py modules/networking/pages/linux-bridges.adoc
+
+# CI用: 違反があれば非ゼロ終了
+python3 tools/translation/validate-structure.py --strict
+```
+
+#### 引数
+
+| 引数 | 説明 |
+|---|---|
+| `paths` (位置, `nargs="*"`) | 範囲。デフォルト: `["modules"]` |
+| `--strict` | 違反があれば終了コード 1 で終了 (CI 用) |
+
+#### 処理フロー
+
+1. 各管理対象ファイルについて:
+   a. スナップショット英語を `tools/translation/originals/<path>` から読み込み
+   b. 日本語ファイルを `modules/` から読み込み
+   c. 両方をブロック解析
+   d. セクションごとにブロック種別の数を比較:
+      - 一致すれば OK
+      - 不一致なら WARNING (どのセクションで何が何個ずれているか)
+   e. セクション見出しの順序と階層レベルが一致するか検証
+   f. コードブロックの内容が同一か検証 (コードは翻訳しないため)
+2. 結果を出力
+
+#### 出力例
+
+```
+modules/networking/pages/linux-bridges.adoc: OK (47 blocks)
+
+modules/storage/pages/lvm-operator.adoc: 2 violations
+  WARNING  section "prerequisites": EN has 3 prose, JA has 4
+           (ja: L15-28 -- paragraph may have been split)
+  WARNING  section "step-2": code_block/1 content differs
+           (ja: L89 -- code block may have been modified)
+
+1 file with violations, 1 file OK
+```
+
+---
+
+## 8. ディレクトリ構成
+
+```
+tools/translation/
+  README.md                          # 既存 — 同期ツールの使い方を追記
+  SYNC-SPEC.md                       # 本仕様書
+  add-jp-lat-spaces.py               # 既存
+  convert-fullwidth-parens.py         # 既存
+  sync-init.py                       # 新規
+  sync-check.py                      # 新規
+  sync-translate.py                  # 新規 (要 google-genai / anthropic / litellm パッケージ)
+  sync-mark.py                       # 新規
+  sync-status.py                     # 新規
+  validate-structure.py              # 新規
+  manifest.json                      # 新規 (自動生成、Git 管理)
+  _lib/                              # 新規 — 共有ライブラリ
+    __init__.py
+    block_parser.py                  # ブロック解析 (セクション2)
+    manifest.py                      # マニフェスト読み書き (セクション6)
+    anchor_matching.py               # 不変アンカー照合 (セクション5)
+    git_utils.py                     # Git 操作
+    common.py                        # _collect_files(), 出力ヘルパー
+  originals/                         # 新規 — スナップショットディレクトリ (Git 管理)
+    modules/
+      networking/pages/*.adoc        # 英語原文のコピー
+      storage/pages/*.adoc
+      performance/pages/*.adoc
+      ...
+```
+
+### 8.1 Git 管理対象
+
+| ファイル/ディレクトリ | Git 管理 | 理由 |
+|---|---|---|
+| `manifest.json` | 対象 | 翻訳状況の唯一の情報源。変更履歴が意味を持つ |
+| `originals/` | 対象 | diff の基準。upstream remote なしでもツールが動作可能にする |
+| `_lib/` | 対象 | 共有ライブラリ |
+| 5つのスクリプト | 対象 | ツール本体 |
+
+---
+
+## 9. エッジケース
+
+### 9.1 upstream でセクションが追加された場合
+
+- `sync-check.py` が新しいブロック ID を `new` ステータスで検出
+- 翻訳者はセクションを翻訳して追加した後、`sync-mark.py` でマーク
+- 既存セクション内のブロック ordinal には影響しない (セクションスコープで独立)
+
+### 9.2 upstream でセクションが削除された場合
+
+- `sync-check.py` がマニフェスト上のブロックを `removed` ステータスにマーク
+- `sync-translate.py` が日本語ファイルから該当ブロックを自動的に削除する
+- `sync-mark.py` (内部実行) により、`removed` ブロックがマニフェストから除去される
+
+### 9.3 upstream でファイルが追加された場合
+
+- `sync-translate.py` が自動的に検出し、以下を実行する:
+  1. `sync-init.py` を内部的に呼び出してスナップショットとマニフェストに登録
+  2. 全ブロックを AI API で翻訳し、日本語ファイルとして新規作成
+  3. 対応する `attachments/` および `images/` 配下のファイルも upstream からコピー
+  4. 該当モジュールの `nav.adoc` に xref 行を追加 (upstream の nav.adoc に合わせる)
+- 以降は既存ファイルと同様に管理対象として追跡される
+- 新規モジュールの追加は 9.15 を参照
+
+### 9.4 upstream でファイルが削除された場合
+
+- `sync-translate.py` が自動的に検出し、以下を実行する:
+  1. 日本語ファイルを削除
+  2. マニフェストから該当ファイルのエントリを除去
+  3. スナップショット (`originals/` 配下) の対応ファイルを削除
+  4. 該当モジュールの `nav.adoc` から対応する xref 行を削除
+  5. 対応する `attachments/` および `images/` のうち、他のページから参照されていないファイルを削除
+- モジュール全体の削除は 9.15 を参照
+
+### 9.5 upstream でファイルがリネームされた場合
+
+- ツールからは「旧ファイル削除 (9.4) + 新ファイル追加 (9.3)」として自動処理される
+- 旧ファイルの翻訳は再利用されない (新ファイルとして全ブロックを新規翻訳する)
+
+### 9.6 upstream でセクション見出しが変更された場合
+
+- ブロック ID が変更される (セクションパスが変わるため)
+- `sync-check.py` では旧 ID のブロックが `removed`、新 ID のブロックが `new` として報告される
+- `sync-translate.py` は以下の順序で自動処理する:
+  1. `removed` と `new` のペアを不変アンカー照合で突き合わせる。旧セクション配下のコードブロックや block_attribute などの不変要素が新セクション配下と一致する場合、**セクション見出しのリネーム** と判定する
+  2. リネームと判定された場合: セクション見出しのみ AI API で翻訳し、配下のブロックは既存の日本語翻訳をそのまま維持する (無駄な再翻訳を回避)
+  3. リネームと判定されなかった場合 (配下ブロック構造が大きく異なる): `removed` ブロックを削除し、`new` ブロックを通常通り新規翻訳する
+
+**具体例**: `getting-started/index.adoc` で `== What You'll Learn` → `== What You Will Learn` + `== Learning Path` が追加されたケース。`What You'll Learn` 配下のブロックが `What You Will Learn` 配下と一致すれば、見出しのみ翻訳し配下は流用する。`Learning Path` は新セクションとして新規翻訳する。
+
+### 9.7 コードブロックが upstream で変更された場合
+
+- コードブロックは不変 (翻訳しない) なので、ハッシュ変更は英語・日本語両方に影響
+- `sync-check.py` が `outdated` として報告
+- `sync-translate.py` が upstream の内容で日本語ファイルのコードブロックを自動的に上書きする (AI API は呼び出さない)
+- 既存翻訳で AI がコードブロック内のコメントを翻訳していたケース (例: `# Change to:` → `# 変更:`) も、`sync-translate.py` の実行時にステータスに関わらず英語原文に自動修正される (11ファイルで確認済み)
+- `validate-structure.py` もコードブロック内容の不一致を検出する
+
+### 9.8 部分更新 (ファイル内の一部ブロックのみ翻訳反映)
+
+- 運用ルール (セクション 1.3 ルール 4) により、部分更新は行わない
+- `sync-check.py` で変更が検知されたファイルは、全 `outdated` / `new` ブロックを翻訳に反映した上で `sync-mark.py` を実行する
+- これにより `sync-mark.py` は常にファイル内の全ブロックを `synced` に更新し、スナップショットも最新の upstream に一括更新する
+- `sync-mark.py --blocks` オプションは残すが、運用上は使用しない (デバッグ・例外対応用)
+
+### 9.9 マニフェスト未作成状態での各スクリプト実行
+
+- `sync-init.py`: マニフェストを新規作成 (`version: 1`, `files: {}`)
+- `sync-check.py`: エラー終了 (`manifest.json not found`)
+- `sync-mark.py`: エラー終了 (`manifest.json not found`)
+- `sync-status.py`: マニフェストなしでも動作し、全ファイルを "未翻訳" として表示
+- `validate-structure.py`: マニフェストなしの場合はスナップショットも存在しないためエラー終了
+
+### 9.10 `nav.adoc` ファイル
+
+- ナビゲーションファイルはリスト項目 (xref) のみで構成される単純な構造
+- 通常のページファイルと同様に管理対象にできる
+- ブロック種別は `list_item` が主体
+
+### 9.11 `attachments/` および `images/` 配下のファイル
+
+これらのファイルは翻訳対象ではなく、upstream と同一であるべき。`sync-translate.py` が以下のタイミングで自動的に同期する:
+
+- **新規ファイル翻訳時 (ステップ 4)**: 新規ページに対応する `attachments/` および `images/` を upstream からコピー
+- **既存ファイル処理時 (ステップ 7i)**: upstream の変更でページに `image::` 参照が追加された場合、参照先の画像ファイルを upstream からコピー。upstream で削除された画像は日本語側からも削除
+- **既存 attachments/images の更新同期 (ステップ 7j)**: 管理対象モジュール内の既存 `attachments/` および `images/` ファイルを upstream と比較し、内容が異なるファイルを upstream の内容で上書きする。upstream で削除されたファイルは日本語側からも削除する
+- **モジュール削除時 (ステップ 5)**: モジュールディレクトリごと削除する際に `attachments/` および `images/` も含めて削除
+
+### 9.12 日本語リポジトリ独自ファイル
+
+upstream に対応するファイルが存在しない日本語ファイルは、翻訳対象ではないため削除する。
+
+- `sync-translate.py` 実行時 (処理フロー ステップ 5) に、日本語リポジトリの `modules/` 配下にある `.adoc` ファイルのうち、upstream に対応するファイルが存在しないものを検出する
+- 該当ファイルを日本語リポジトリから削除する
+- マニフェストにエントリがあれば除去する
+- 該当ファイルを参照している `nav.adoc` の xref 行も削除する
+- upstream に存在しないモジュール全体 (例: `modules/LABENV/`) は、`pages/`、`nav.adoc`、`images/`、`attachments/` を含むモジュールディレクトリごと削除し、`antora.yml` の `nav` セクションからも除去する
+- 同一モジュール内に upstream に存在するファイルと存在しないファイルが混在する場合 (例: `modules/appendix/` — `glossary.adoc` は upstream に存在するが `appendix.adoc` は存在しない) は、独自ファイルのみ削除し、モジュール自体は残す
+- 出力例: `DELETED  modules/LABENV/pages/index.adoc (no upstream counterpart)`
+
+**注意**: 独自ファイルの削除はブランチ上で行われるため、レビュー時に確認できる。意図的に残したいファイルがある場合は、レビュー時に `git checkout` で復元する。
+
+### 9.13 nav.adoc の同期
+
+`nav.adoc` は upstream と日本語リポジトリ間で xref 行の構成を一致させる必要がある。
+
+- `sync-translate.py` 実行時 (処理フロー ステップ 8) に、各モジュールの `nav.adoc` を upstream と比較する
+- upstream で追加された xref 行は、日本語側の `nav.adoc` にも追加する。`[]` 内の表示テキストがある場合は AI API で翻訳する
+- upstream で削除された xref 行は、日本語側からも削除する
+- upstream で新規モジュールが追加された場合、そのモジュールの `nav.adoc` を upstream からコピーし、表示テキストを翻訳する
+- `nav.adoc` 自体もマニフェストで管理対象にできるが、xref 行の追加削除は構造変更に該当するため、ステータス管理ではなく upstream との直接比較で同期する
+
+### 9.14 antora.yml の同期
+
+`antora.yml` はサイト構成ファイルであり、upstream でモジュールが追加・削除された際に同期が必要。
+
+- `sync-translate.py` 実行時 (処理フロー ステップ 9) に、upstream の `antora.yml` の `nav` セクションと比較する
+- upstream で追加されたモジュールの nav エントリを日本語側にも追加する
+- upstream で削除されたモジュールの nav エントリを日本語側からも削除する
+- `name` フィールドはリポジトリ固有の値 (`ocp-virt-cookbook_ja`) であり、upstream と異なる値を維持する
+- `title`, `version` 等は upstream に合わせて更新する
+
+### 9.15 モジュール (ディレクトリ) 単位の追加・削除・リネーム
+
+ファイル単位の操作 (9.3-9.5) はモジュール内の個別ファイルを対象とするが、モジュールディレクトリ自体の追加・削除・リネームはより広い範囲に影響する。`sync-translate.py` は以下を自動処理する。
+
+#### モジュール追加
+
+upstream に存在するが日本語リポジトリに存在しないモジュールディレクトリを検出した場合:
+
+1. モジュールディレクトリ構造を作成 (`pages/`, `attachments/`, `images/`)
+2. `nav.adoc` を upstream からコピーし、表示テキスト (`[]` 内) を AI API で翻訳
+3. 全ページファイルを 9.3 の手順で翻訳・作成
+4. `attachments/` および `images/` 配下のファイルを upstream からコピー
+5. `antora.yml` の `nav` セクションに該当モジュールのエントリを追加 (9.14 参照)
+
+**具体例**: `modules/agentic-vm-management/` — upstream で新設されたモジュール。8つのページファイル、`nav.adoc`、`attachments/getting-started/mcps.json` をまとめて作成する。
+
+#### モジュール削除
+
+upstream から削除されたモジュール (日本語側に存在するが upstream に存在しないモジュール) を検出した場合:
+
+1. モジュールディレクトリを `pages/`、`nav.adoc`、`attachments/`、`images/` を含めてまるごと削除
+2. マニフェストから該当モジュール内の全ファイルのエントリを除去
+3. スナップショット (`originals/` 配下) の該当モジュールディレクトリを削除
+4. `antora.yml` の `nav` セクションから該当モジュールのエントリを削除 (9.14 参照)
+
+**注意**: 9.12 (日本語リポジトリ独自ファイル) との違い — 9.12 は「upstream に一度も存在しなかったファイル/モジュール」を対象とし、9.15 は「以前 upstream に存在したが削除されたモジュール」を対象とする。処理としては同一 (ディレクトリ削除 + antora.yml 更新) だが、起源が異なる。
+
+#### モジュールリネーム
+
+- ツールからは「旧モジュール削除 + 新モジュール追加」として見える
+- 旧モジュールの翻訳は再利用されない (新モジュールとして全ファイルを新規翻訳する)
+
+---
+
+## 10. 既存翻訳の初期化手順
+
+本リポジトリには、ツール導入前に翻訳済みのファイルが 53 件 (他に JA 独自ファイル 5 件) 存在する。これらを正しく管理対象に登録するには、**翻訳元となった時点の upstream コンテンツ** を基準にスナップショットを取る必要がある。
+
+### 10.1 背景
+
+本リポジトリは upstream コミット `70218468` (2026-06-09) 時点の英語コンテンツを元に、2026-06-12 に AI (RCB/Gemini) で一括翻訳された。`sync-init.py` のデフォルト (`--upstream-ref upstream/main`) で初期化すると最新の upstream を基準にしてしまい、fork 以降に upstream で追加・変更されたコンテンツも `synced` 扱いになる。
+
+### 10.2 初期化手順
+
+```bash
+# 1. upstream remote を追加・フェッチ
+git remote add upstream https://github.com/RedHatQuickCourses/ocp-virt-cookbook.git
+git fetch upstream
+
+# 2. fork 時点の upstream コミットを基準にスナップショットを取得
+python3 tools/translation/sync-init.py --upstream-ref 70218468
+
+# 3. (参考) 構造一致バリデーションで AI 翻訳時の欠損・余剰を確認
+python3 tools/translation/validate-structure.py
+
+# 4. AI で差分を一括翻訳し、日本語ファイルに適用 + sync-mark.py 自動実行
+#    構造不一致 (欠損セクション・余剰ブロック) も自動修正される
+python3 tools/translation/sync-translate.py --format
+```
+
+### 10.3 各ステップの説明
+
+**ステップ 2** により、fork 時点の英語原文がスナップショットとして保存され、全ブロックが `synced` として登録される。この時点でのマニフェストは「翻訳時点では全て対応済み」という状態を表す。
+
+**ステップ 3 (参考)** により、AI 翻訳時に欠落したセクション (例: `vm-lifecycle-states.adoc` の `== See Also`) や余剰ブロック (例: `vm-templates.adoc` の余分な NOTE ブロック)、コードブロック内コメントの誤翻訳を事前に確認できる。ステップ 4 で全て自動修正されるため、手動対応は不要。
+
+**ステップ 4** (`sync-translate.py`) により、以下が自動的に処理される:
+- **構造不一致の自動修正** (処理フロー 7d2): 欠損ブロック (スナップショットに存在するが JA にない) は翻訳して挿入、余剰ブロック (JA にあるがスナップショットにない) は削除。これにより 1:1 のブロック対応が確立される
+- **upstream 差分の翻訳**: fork 以降の `outdated` / `new` ブロックが AI で翻訳される
+- **コードブロック修正**: コメントの誤翻訳が英語原文に自動復元される
+- **attachments/images の同期**: 変更された YAML マニフェストや画像が upstream で上書きされる
+- 書式整形ツールの自動実行と `sync-mark.py` によるマニフェスト更新も行われる
+
+### 10.4 初期化後の状態
+
+```
+=== 初期化直後の想定状態 ===
+
+sync-init.py 実行後:
+  管理対象ファイル:      53 / 77 upstream page files
+  全同期済み (fork時点):  53  ← sync-init.py で登録済み (JA独自5件はスキップ)
+  構造不一致:             数件  ← AI 翻訳時の欠損・余剰 (sync-translate.py で自動修正)
+
+sync-translate.py 実行後:
+  構造不一致:             0件  ← 欠損ブロック挿入、余剰ブロック削除済み
+  outdated/new ブロック:  0件  ← fork 以降の変更を全て翻訳済み
+  新規ファイル:           24件翻訳済み  ← fork 以降に upstream で追加されたページファイル
+  新規 attachments:       55件コピー  ← 新規ページに対応する YAML/スクリプト等
+  新規 images:            24件コピー  ← 新規ページおよび既存ページ向けの画像
+  attachments 更新:       17件  ← fork 以降に upstream で変更された既存ファイル
+```
+
+### 10.5 注意事項
+
+- `--upstream-ref 70218468` は **初回の初期化時のみ** 使用する。以降の `sync-check.py` / `sync-mark.py` は `upstream/main` (デフォルト) を使用する。
+- fork 後にこのリポジトリ側でレビュー・修正を加えたファイル (例: `first_review` ブランチでの変更) は、日本語テキストが更新されているが、スナップショットの基準は fork 時点の英語のままとなる。これは正しい動作であり、upstream 側の変更のみを追跡する設計に合致する。
+- AI 翻訳時の構造不一致 (欠損セクション、余剰ブロック、コードブロック内コメント翻訳) は全て `sync-translate.py` が自動修正する。手動対応は不要。

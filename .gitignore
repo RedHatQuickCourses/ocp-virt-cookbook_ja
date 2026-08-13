@@ -111,6 +111,17 @@ dist
 .bundle/
 Gemfile.lock
 
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Development planning documents
+tools/translation/IMPLEMENTATION-PLAN.md
+tools/translation/IMPLEMENTATION-RESULTS.md
+
 # Claude Code
 .claude/
 CLAUDE.md

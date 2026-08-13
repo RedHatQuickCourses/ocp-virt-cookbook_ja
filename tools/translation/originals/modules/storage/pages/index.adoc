@@ -1,0 +1,75 @@
+= Storage Configuration
+:navtitle:
+
+== Overview
+
+This module covers storage configuration for OpenShift Virtualization, including LVM Storage operator, HostPath Provisioner, and troubleshooting storage issues.
+
+Proper storage configuration is essential for virtual machine deployments, as VMs require persistent storage for their disks and data.
+
+== What You'll Learn
+
+In this section, you will learn:
+
+* How to install and configure the LVM Storage operator for local disk storage
+* How to configure HostPath Provisioner for simple local storage
+* How to set a default storage class for automatic provisioning
+* How to troubleshoot common storage issues
+* Best practices for storage configuration in OpenShift Virtualization
+
+== Storage Options for OpenShift Virtualization
+
+OpenShift Virtualization supports various storage backends:
+
+* **LVM Storage**: Local disk storage using Logical Volume Manager (covered in this module)
+* **HostPath Provisioner**: Simple local storage provisioning (covered in this module)
+* **Ceph/ODF**: Distributed block and file storage
+* **NFS**: Network-attached storage
+* **External storage providers**: AWS EBS, Azure Disk, etc.
+
+This module covers LVM Storage and HostPath Provisioner for local storage scenarios, ideal for Single Node OpenShift (SNO) and bare-metal deployments.
+
+== Prerequisites
+
+Before proceeding with the tutorials in this section, ensure you have:
+
+* OpenShift 4.18+ cluster
+* Cluster admin access
+* At least one spare local disk on cluster nodes
+* Basic understanding of Linux storage concepts (LVM, block devices)
+
+== Sections
+
+xref:lvm-operator.adoc[]::
+Step-by-step guide to install and configure the LVM Storage operator with a local disk.
+
+xref:lvm-troubleshooting.adoc[]::
+Troubleshooting guide for diagnosing and resolving LVM storage issues.
+
+xref:hostpath-provisioner.adoc[]::
+Configure local storage using the HostPath Provisioner for development, testing, and single-node cluster scenarios.
+xref:multi-disk-configuration.adoc[]::
+Configure VMs with multiple disks using different StorageClasses for storage tiering.
+
+== Why Default Storage Class Matters
+
+Setting a default storage class is critical for OpenShift Virtualization:
+
+* **Boot Source Images**: DataSource OS images require a default storage class
+* **Automatic Provisioning**: VMs can be created without explicitly specifying storage
+* **Template Support**: VM templates work out-of-the-box
+* **Simplified Operations**: Consistent storage provisioning across the cluster
+
+See xref:lvm-operator.adoc#_step_5_set_default_storageclass[Step 5: Set Default StorageClass] in the LVM operator guide for details.
+
+== Next Steps
+
+After completing this module, you'll be ready to:
+
+* xref:networking:index.adoc[Configure networking] for your VMs
+* Create and configure virtual machines
+
+== See Also
+
+* xref:getting-started:default-storage-class.adoc[Configure Default Storage Class]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage/persistent-storage-using-local-storage#persistent-storage-using-lvms[OpenShift LVM Storage Documentation,window=_blank]
