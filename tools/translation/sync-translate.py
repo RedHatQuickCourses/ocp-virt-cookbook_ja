@@ -157,8 +157,12 @@ def _call_ai(
     for attempt in range(3):
         try:
             if provider_name == "gemini":
+                from google.genai import types as _gtypes
                 resp = client.models.generate_content(
-                    model=model, contents=prompt
+                    model=model, contents=prompt,
+                    config=_gtypes.GenerateContentConfig(
+                        http_options={"timeout": 120},
+                    ),
                 )
                 return resp.text
             if provider_name == "claude":
