@@ -37,6 +37,9 @@ import subprocess
 import sys
 import time
 
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 from _lib.anchor_matching import extract_fingerprint, match_blocks
 from _lib.block_parser import (
     Block,
