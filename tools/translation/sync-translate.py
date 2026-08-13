@@ -46,6 +46,7 @@ from _lib.block_parser import (
 )
 from _lib.git_utils import (
     git_branch_exists,
+    git_current_branch,
     git_fetch,
     git_ls_tree,
     git_rev_parse,
@@ -81,9 +82,9 @@ _NO_TRAILING_BLANK = frozenset({"block_attribute", "block_title"})
 
 
 def _validate_provider(
-    provider: str, model: str | None
-) -> tuple[str, object, str]:
-    """Validate provider setup and return ``(provider_name, client, model)``."""
+    provider: str, model: str | None, api_base: str | None = None
+) -> tuple[str, object, str, str | None]:
+    """Validate provider setup and return ``(provider_name, client, model, api_base)``."""
     if provider == "gemini":
         try:
             from google import genai  # type: ignore[import-untyped]
@@ -102,7 +103,7 @@ def _validate_provider(
             )
             sys.exit(1)
         client = genai.Client(api_key=api_key)
-        return ("gemini", client, model or "gemini-2.5-pro")
+        return ("gemini", client, model or "gemini-2.5-pro", None)
 
     if provider == "claude":
         try:
@@ -122,7 +123,7 @@ def _validate_provider(
             )
             sys.exit(1)
         client = anthropic.Anthropic(api_key=api_key)
-        return ("claude", client, model or "claude-sonnet-5")
+        return ("claude", client, model or "claude-sonnet-5", None)
 
     # litellm
     if not model:
@@ -139,17 +140,17 @@ def _validate_provider(
             file=sys.stderr,
         )
         sys.exit(1)
-    return ("litellm", _litellm, model)
+    return ("litellm", _litellm, model, api_base)
 
 
 def _call_ai(
-    provider_info: tuple[str, object, str], prompt: str
+    provider_info: tuple[str, object, str, str | None], prompt: str
 ) -> str | None:
     """Call the AI provider with retry (max 3, exponential backoff).
 
     Returns translated text, or ``None`` on failure.
     """
-    provider_name, client, model = provider_info
+    provider_name, client, model, api_base = provider_info
     for attempt in range(3):
         try:
             if provider_name == "gemini":
@@ -165,17 +166,30 @@ def _call_ai(
                 )
                 return msg.content[0].text
             # litellm
-            resp = client.completion(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-            )
+            kwargs: dict = {
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 8192,
+                "timeout": 120,
+            }
+            if api_base:
+                kwargs["api_base"] = api_base
+                kwargs["api_key"] = os.environ.get(
+                    "LITELLM_API_KEY",
+                    os.environ.get("OPENAI_API_KEY",
+                                   os.environ.get("DASHSCOPE_API_KEY", "")),
+                )
+            resp = client.completion(**kwargs)
             return resp.choices[0].message.content
         except Exception as exc:  # noqa: BLE001
             err = str(exc).lower()
-            if any(k in err for k in ("rate", "429", "quota", "resource")):
+            retryable = ("rate", "429", "quota", "resource",
+                         "connection", "timeout", "503", "500",
+                         "overloaded", "internal")
+            if any(k in err for k in retryable):
                 wait = 2 ** (attempt + 1)
                 print(
-                    f"    Rate limited, retrying in {wait}s...",
+                    f"    Retryable error, retrying in {wait}s... ({type(exc).__name__})",
                     file=sys.stderr,
                 )
                 time.sleep(wait)
@@ -1314,10 +1328,21 @@ def main() -> None:
         default=None,
         help="作成するブランチ名 (デフォルト: translate/YYYY-MM-DD)",
     )
+    parser.add_argument(
+        "--api-base",
+        default=None,
+        help="LiteLLM 用カスタム API ベース URL (OpenAI 互換エンドポイント)",
+    )
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        default=[],
+        help="処理対象のファイルまたはディレクトリ (省略時: 全管理ファイル)",
+    )
     args = parser.parse_args()
 
     # ---- validate provider ----
-    provider_info = _validate_provider(args.provider, args.model)
+    provider_info = _validate_provider(args.provider, args.model, args.api_base)
 
     # ---- check manifest ----
     if not os.path.exists(MANIFEST_PATH):
@@ -1349,8 +1374,9 @@ def main() -> None:
                 file=sys.stderr,
             )
             sys.exit(1)
-        git_switch_create_branch(branch)
-        print(f"BRANCH      Created branch '{branch}' from main")
+        start = git_current_branch()
+        git_switch_create_branch(branch, start)
+        print(f"BRANCH      Created branch '{branch}' from {start}")
 
     # ---- step 3: inline sync-check ----
     files_changed = _sync_check_inline(manifest, UPSTREAM_REF)
@@ -1360,6 +1386,16 @@ def main() -> None:
     )
     if not args.dry_run:
         save_manifest(manifest)
+
+    # ---- path filter helper ----
+    def _in_scope(fpath: str) -> bool:
+        if not args.paths:
+            return True
+        for p in args.paths:
+            p_norm = p.rstrip("/")
+            if fpath == p_norm or fpath.startswith(p_norm + "/"):
+                return True
+        return False
 
     # ---- prepare stats ----
     stats: dict = {
@@ -1384,6 +1420,9 @@ def main() -> None:
 
     # ---- step 4: new files / modules ----
     new_files, new_modules = _detect_new(manifest, UPSTREAM_REF)
+    if args.paths:
+        new_files = [f for f in new_files if _in_scope(f)]
+        new_modules = [m for m in new_modules if _in_scope(m)]
 
     for mod in new_modules:
         _create_new_module(
@@ -1399,6 +1438,9 @@ def main() -> None:
 
     # ---- step 5: deleted files / modules ----
     del_files, del_modules = _detect_deleted(manifest, UPSTREAM_REF)
+    if args.paths:
+        del_files = [f for f in del_files if _in_scope(f)]
+        del_modules = [m for m in del_modules if _in_scope(m)]
 
     for fpath in del_files:
         _delete_file(fpath, manifest, stats, args.dry_run)
@@ -1413,7 +1455,7 @@ def main() -> None:
     files_to_process = [
         (path, manifest["files"][path])
         for path in sorted(manifest["files"])
-        if any(
+        if _in_scope(path) and any(
             b["status"] in ("outdated", "new", "removed")
             for b in manifest["files"][path]["blocks"].values()
         )
