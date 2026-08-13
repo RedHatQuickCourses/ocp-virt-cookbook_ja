@@ -578,19 +578,16 @@ modules/networking/pages/linux-bridges.adoc: 3 blocks marked synced
 
 #### 用途
 
-`sync-check.py` で検知された `outdated` / `new` ブロックを AI API (Gemini または Claude) で自動翻訳し、日本語ファイルに直接適用する。翻訳作業は main ブランチから作成した新規ローカルブランチ上で行い、人間がレビューできる状態で停止する（`git add` / `git commit` / `git push` は行わない）。
+`sync-check.py` で検知された `outdated` / `new` ブロックを Gemini API で自動翻訳し、日本語ファイルに直接適用する。翻訳作業は main ブランチから作成した新規ローカルブランチ上で行い、人間がレビューできる状態で停止する（`git add` / `git commit` / `git push` は行わない）。
 
 #### 使い方
 
 ```bash
-# 全管理対象ファイルの outdated/new ブロックを翻訳 (デフォルト: Gemini)
+# 全管理対象ファイルの outdated/new ブロックを翻訳
 python3 tools/translation/sync-translate.py
 
-# Claude API を使用
-python3 tools/translation/sync-translate.py --provider claude
-
-# LiteLLM を使用 (任意のモデルを指定可能)
-python3 tools/translation/sync-translate.py --provider litellm --model qwen/qwen3-235b-a22b
+# モデルを指定
+python3 tools/translation/sync-translate.py --model gemini-2.5-pro
 
 # dry-run (翻訳結果を表示するが適用しない、ブランチも作成しない)
 python3 tools/translation/sync-translate.py --dry-run
@@ -601,11 +598,8 @@ python3 tools/translation/sync-translate.py --format
 # ブランチ名を指定
 python3 tools/translation/sync-translate.py --branch translate/2026-08-12
 
-# Claude API でモデルを指定
-python3 tools/translation/sync-translate.py --provider claude --model claude-sonnet-5
-
-# LiteLLM 経由で任意のプロバイダーのモデルを使用
-python3 tools/translation/sync-translate.py --provider litellm --model openai/gpt-4o
+# 中断した翻訳を再開
+python3 tools/translation/sync-translate.py --resume
 ```
 
 #### 引数
@@ -614,23 +608,15 @@ python3 tools/translation/sync-translate.py --provider litellm --model openai/gp
 |---|---|
 | `--dry-run` | 翻訳結果を stdout に表示するが、ファイルへの書き込み・ブランチ作成・`sync-mark.py` の実行を行わない |
 | `--format` | 翻訳適用後に `add-jp-lat-spaces.py` と `convert-fullwidth-parens.py` を自動実行 |
-| `--provider` | 翻訳 API プロバイダー。`gemini`、`claude`、`litellm` のいずれか。デフォルト: `gemini` |
-| `--model` | AI モデル。デフォルト: provider が `gemini` の場合 `gemini-2.5-pro`、`claude` の場合 `claude-sonnet-5`。`litellm` の場合は必須 (デフォルトなし) |
+| `--model` | Gemini モデル。デフォルト: `gemini-3.6-flash` |
 | `--branch` | 作成するブランチ名。デフォルト: `translate/<YYYY-MM-DD>` (実行日) |
+| `--resume` | 中断した翻訳を再開する。既存の translate ブランチに切り替え、プログレスファイルから翻訳済みファイルをスキップして続行する |
 
 #### 前提条件
 
-- 使用するプロバイダーに応じた Python パッケージと API キーが設定されていること (以下の手順を参照)
+- `google-genai` パッケージがインストールされていること: `pip install google-genai`
+- `GEMINI_API_KEY` 環境変数が設定されていること
 - 作業ディレクトリがクリーンであること (`git status` で未コミットの変更がないこと)
-
-##### プロバイダー別セットアップ
-
-| | Gemini (デフォルト) | Claude | LiteLLM |
-|---|---|---|---|
-| パッケージ | `pip install google-genai` | `pip install anthropic` | `pip install litellm` |
-| 環境変数 | `GEMINI_API_KEY` | `ANTHROPIC_API_KEY` | 使用するプロバイダーに応じた環境変数 (後述) |
-| デフォルトモデル | `gemini-2.5-pro` | `claude-sonnet-5` | なし (`--model` 必須) |
-| 推奨用途 | コスト重視 | 翻訳品質重視 | 任意のプロバイダー/モデルを統一 API で利用 |
 
 ##### Gemini API キーの設定
 
@@ -641,59 +627,25 @@ python3 tools/translation/sync-translate.py --provider litellm --model openai/gp
    ```
 3. 永続化する場合はシェルの設定ファイル (`~/.zshrc`, `~/.bashrc` 等) に追記する
 
-##### Claude API キーの設定
-
-1. [Anthropic Console](https://console.anthropic.com/) にアクセスし、API キーを発行する
-2. 環境変数に設定する:
-   ```bash
-   export ANTHROPIC_API_KEY="your-api-key-here"
-   ```
-3. 永続化する場合はシェルの設定ファイル (`~/.zshrc`, `~/.bashrc` 等) に追記する
-
-##### LiteLLM の設定
-
-[LiteLLM](https://docs.litellm.ai/) は OpenAI 互換の統一 API を提供するプロキシライブラリで、100 以上のプロバイダー (OpenAI, Qwen, Mistral, Cohere 等) に対応する。`--provider litellm` を指定すると、LiteLLM 経由で任意のモデルを利用できる。
-
-1. パッケージをインストール:
-   ```bash
-   pip install litellm
-   ```
-2. 使用するモデルのプロバイダーに応じた API キーを環境変数に設定する。例:
-   ```bash
-   # Qwen (DashScope) の場合
-   export DASHSCOPE_API_KEY="your-api-key-here"
-
-   # OpenAI の場合
-   export OPENAI_API_KEY="your-api-key-here"
-
-   # Mistral の場合
-   export MISTRAL_API_KEY="your-api-key-here"
-   ```
-3. `--model` にはLiteLLM のモデル名形式 (`<provider>/<model-name>`) を指定する:
-   ```bash
-   python3 tools/translation/sync-translate.py --provider litellm --model qwen/qwen3-235b-a22b
-   ```
-
-対応プロバイダーと環境変数の一覧は [LiteLLM Providers](https://docs.litellm.ai/docs/providers) を参照。
-
-**注意**: 本スクリプトのみ外部パッケージ (`google-genai`、`anthropic`、または `litellm`) に依存する。他のスクリプトは標準ライブラリのみで動作する。
+**注意**: 本スクリプトのみ外部パッケージ (`google-genai`) に依存する。他のスクリプトは標準ライブラリのみで動作する。
 
 #### 処理フロー
 
-1. 作業ディレクトリがクリーンであることを確認 (未コミットの変更があればエラー終了)
-2. main ブランチから新規ローカルブランチを作成し切り替え (`git switch -c <branch> main`)
+1. `--resume` でない場合: 作業ディレクトリがクリーンであることを確認 (未コミットの変更があればエラー終了)。`--resume` の場合: 既存の translate ブランチに切り替え、プログレスファイル (`tools/translation/.translate-progress.json`) を読み込む
+2. `--resume` でない場合: 現在のブランチから新規ローカルブランチを作成し切り替え (`git switch -c <branch>`)。プログレスファイルを初期化する
 3. `sync-check.py` を内部的に呼び出し、マニフェストのステータスを最新の upstream と照合して更新する (`git fetch upstream` も自動実行)。マニフェストの更新は新ブランチ上で行われるため、翻訳結果と共にレビュー対象となる
-4. **upstream 新規ファイル・モジュールの検出と自動登録**: upstream に存在するが日本語リポジトリに存在しない `.adoc` ファイルおよびモジュールディレクトリを検出する。新規モジュールの場合はディレクトリ構造の作成、`nav.adoc` のコピー・翻訳、`antora.yml` への追加を行う (9.15 参照)。各ページファイルは `sync-init.py` を内部的に呼び出して管理対象に登録し、全ブロックを AI API で翻訳して日本語ファイルとして新規作成する (後述の「新規ファイル翻訳」参照)。対応する `attachments/` および `images/` も upstream からコピーする
+3a. プログレスファイルに `sync_check_done: true` を記録する。`--resume` 時に `sync_check_done` が true であれば sync-check をスキップする
+4. **upstream 新規ファイル・モジュールの検出と自動登録**: upstream に存在するが日本語リポジトリに存在しない `.adoc` ファイルおよびモジュールディレクトリを検出する。新規モジュールの場合はディレクトリ構造の作成、`nav.adoc` のコピー・翻訳、`antora.yml` への追加を行う (9.15 参照)。各ページファイルは `sync-init.py` を内部的に呼び出して管理対象に登録し、全ブロックを AI API で翻訳して日本語ファイルとして新規作成する (後述の「新規ファイル翻訳」参照)。`--resume` 時はプログレスファイルの `completed_files` に含まれるファイルをスキップする。各ファイルの翻訳完了後にプログレスファイルを更新する。対応する `attachments/` および `images/` も upstream からコピーする
 5. **upstream で削除されたファイル・モジュールの削除**: upstream に対応するファイルが存在しない管理対象ファイルを検出し、日本語ファイル、マニフェストエントリ、スナップショットを削除する (9.4 参照)。モジュール全体が削除された場合はディレクトリごと削除し `antora.yml` からも除去する (9.15 参照)。upstream に一度も存在しなかった日本語独自ファイルも同様に削除する (9.12 参照)
 6. マニフェストを読み込み、`outdated` / `new` / `removed` ブロックを持つファイルを特定
-7. 各ファイルについて:
+7. 各ファイルについて。`--resume` 時は `completed_files` に含まれるファイルをスキップする:
    a. スナップショット英語 (`originals/<path>`) を読み込み
    b. 現在の upstream 英語を `git show upstream/main:<path>` で取得
    c. 現在の日本語ファイルを読み込み
    d. 不変アンカー照合で英語スナップショットと日本語ブロックを対応づけ
    d2. 構造不一致の自動修正: スナップショット英語に存在するが日本語に対応ブロックがないもの (AI 翻訳時の欠損) はスナップショットを参考に翻訳して挿入する。逆に日本語にあるがスナップショットに対応しないブロック (AI 翻訳時の余剰) は削除する。修正後、再度アンカー照合を行い 1:1 対応を確立する
    e. コードブロック修正: ステータスに関わらず、日本語ファイル内のコードブロック (`code_block`, `literal_block`) の内容がスナップショット英語と異なる場合、upstream 原文で上書きする (AI API は呼び出さない)
-   f. `outdated` ブロック (コードブロック以外): AI API (`--provider` で指定) で翻訳を生成し、日本語ファイル内の該当ブロックを置換 (後述のプロンプト設計参照)
+   f. `outdated` ブロック (コードブロック以外): Gemini API で翻訳を生成し、日本語ファイル内の該当ブロックを置換 (後述のプロンプト設計参照)
    g. `new` ブロック (コードブロック以外): AI API で翻訳を生成し、日本語ファイル内の適切な位置に挿入。コードブロックの場合は upstream 原文をそのまま挿入
    h. `removed` ブロック: 日本語ファイルから該当ブロックを削除
    i. 画像ファイルの同期: upstream のページが参照する画像 (`image::`) のうち、日本語リポジトリに存在しないものを `git show upstream/main:<path>` で取得してコピーする。upstream で削除された画像 (日本語側に存在するが upstream に存在しない) は削除する
@@ -703,6 +655,7 @@ python3 tools/translation/sync-translate.py --provider litellm --model openai/gp
 9. **antora.yml の同期**: upstream の `antora.yml` と比較し、`nav` セクションに新規モジュールの追加・削除を反映する。`name` フィールドなどリポジトリ固有の値は変更しない
 10. `--format` 指定時は書式整形ツールを実行
 11. `sync-mark.py` を内部的に呼び出してマニフェストとスナップショットを更新 (`removed` ブロックはマニフェストから除去)
+11a. プログレスファイルを削除する (正常完了時のみ)
 12. 完了メッセージを表示 (レビュー手順のガイドを含む)
 
 **注意**: ステップ 12 の後、`git add` / `git commit` / `git push` は一切行わない。翻訳結果はワーキングツリー上の未ステージ変更として残る。翻訳者が `git diff` でレビューした後、手動でコミット・プッシュする。
@@ -835,13 +788,26 @@ Review your changes:
 When satisfied, commit and push manually.
 ```
 
+#### 出力例 (--resume)
+
+```
+RESUME      Resuming on branch 'translate/2026-08-13' (5 files already completed)
+SKIP        modules/agentic-vm-management/pages/ai-skill-chaining.adoc (already translated)
+SKIP        modules/agentic-vm-management/pages/ai-vm-lifecycle.adoc (already translated)
+  ...
+  TRANSLATING ai-vm-rebalance.adoc (134 blocks)..........
+NEW FILE    modules/agentic-vm-management/pages/ai-vm-rebalance.adoc (134 blocks translated)
+  ...
+```
+
 #### エラー処理
 
 - 作業ディレクトリがクリーンでない: `Error: Working directory has uncommitted changes. Commit or stash them first.`
-- ブランチが既に存在: `Error: Branch 'translate/2026-08-12' already exists. Use --branch to specify a different name.`
-- API キー未設定: `Error: GEMINI_API_KEY environment variable not set` (Gemini) / `Error: ANTHROPIC_API_KEY environment variable not set` (Claude) / `Error: Required API key not set for model '<model>'. See: https://docs.litellm.ai/docs/providers` (LiteLLM)
-- パッケージ未インストール: `Error: google-genai package not found. Run: pip install google-genai` (Gemini) / `Error: anthropic package not found. Run: pip install anthropic` (Claude) / `Error: litellm package not found. Run: pip install litellm` (LiteLLM)
-- `--model` 未指定 (LiteLLM): `Error: --model is required when using --provider litellm`
+- ブランチが既に存在 (`--resume` なし): `Error: Branch 'translate/2026-08-12' already exists. Use --resume to continue, or --branch to specify a different name.`
+- `--resume` 時にブランチが存在しない: `Error: Branch 'translate/2026-08-13' not found. Run without --resume to start a new translation.`
+- `--resume` 時にプログレスファイルが存在しない: `Error: Progress file not found. The previous run may have completed successfully.`
+- API キー未設定: `Error: GEMINI_API_KEY environment variable not set`
+- パッケージ未インストール: `Error: google-genai package not found. Run: pip install google-genai`
 - API レート制限: リトライ (最大3回、指数バックオフ)
 - API エラー: 該当ブロックをスキップし、スキップされたブロックの一覧を最後に表示。スキップがあった場合は `sync-mark.py` を実行しない
 - マニフェスト未作成: `Error: manifest.json not found. Run sync-init.py first.`
@@ -969,11 +935,12 @@ tools/translation/
   convert-fullwidth-parens.py         # 既存
   sync-init.py                       # 新規
   sync-check.py                      # 新規
-  sync-translate.py                  # 新規 (要 google-genai / anthropic / litellm パッケージ)
+  sync-translate.py                  # 新規 (要 google-genai パッケージ)
   sync-mark.py                       # 新規
   sync-status.py                     # 新規
   validate-structure.py              # 新規
   manifest.json                      # 新規 (自動生成、Git 管理)
+  .translate-progress.json           # 翻訳進捗 (実行中のみ存在、完了時に削除)
   _lib/                              # 新規 — 共有ライブラリ
     __init__.py
     block_parser.py                  # ブロック解析 (セクション2)
@@ -997,6 +964,7 @@ tools/translation/
 | `originals/` | 対象 | diff の基準。upstream remote なしでもツールが動作可能にする |
 | `_lib/` | 対象 | 共有ライブラリ |
 | 5つのスクリプト | 対象 | ツール本体 |
+| `.translate-progress.json` | 対象外 | 実行中の一時ファイル。translate ブランチ上にのみ存在し、正常完了時に削除される |
 
 ---
 
@@ -1153,6 +1121,17 @@ upstream から削除されたモジュール (日本語側に存在するが up
 
 - ツールからは「旧モジュール削除 + 新モジュール追加」として見える
 - 旧モジュールの翻訳は再利用されない (新モジュールとして全ファイルを新規翻訳する)
+
+### 9.16 翻訳の中断と再開
+
+翻訳実行中にプロセスが中断された場合 (API タイムアウト、手動 kill、Ctrl+C 等):
+
+- 翻訳済みファイルは translate ブランチ上のディスクに残る
+- プログレスファイル (`tools/translation/.translate-progress.json`) に翻訳済みファイルのリストが記録されている
+- `--resume` フラグで再開すると、翻訳済みファイルをスキップして続行する
+- プログレスの粒度はファイル単位。翻訳途中のファイル (全ブロック完了前に中断) は最初から再翻訳する
+- プログレスファイルは正常完了時に自動削除される
+- 完全にやり直したい場合は translate ブランチを削除してから `--resume` なしで実行する
 
 ---
 

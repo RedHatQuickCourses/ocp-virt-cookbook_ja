@@ -11,7 +11,7 @@
   ```bash
   git remote add upstream https://github.com/RedHatQuickCourses/ocp-virt-cookbook.git
   ```
-- 使用する AI プロバイダーに応じた Python パッケージと API キー (後述)
+- google-genai パッケージと GEMINI_API_KEY 環境変数 (後述)
 
 ## クイックスタート
 
@@ -44,32 +44,32 @@ upstream との差分を検出し、AI API で自動翻訳して日本語ファ�
 - マニフェスト・スナップショットの更新
 
 ```bash
-# Gemini API で翻訳 (デフォルト)
+# デフォルト (Gemini API)
 python3 tools/translation/sync-translate.py
 
 # 書式整形も含めて実行 (推奨)
 python3 tools/translation/sync-translate.py --format
-
-# Claude API を使用
-python3 tools/translation/sync-translate.py --provider claude
-
-# LiteLLM を使用 (任意のモデルを指定可能)
-python3 tools/translation/sync-translate.py --provider litellm --model qwen/qwen3-235b-a22b
 
 # dry-run (翻訳結果を表示するが適用しない、ブランチも作成しない)
 python3 tools/translation/sync-translate.py --dry-run
 
 # ブランチ名を指定
 python3 tools/translation/sync-translate.py --branch translate/2026-08-12
+
+# モデルを指定
+python3 tools/translation/sync-translate.py --model gemini-2.5-pro
+
+# 中断した翻訳を再開
+python3 tools/translation/sync-translate.py --resume
 ```
 
 | 引数 | 説明 |
 |---|---|
 | `--dry-run` | 翻訳結果を stdout に表示するが、ファイルへの書き込み・ブランチ作成を行わない |
 | `--format` | 翻訳適用後に `add-jp-lat-spaces.py` と `convert-fullwidth-parens.py` を自動実行 |
-| `--provider` | 翻訳 API プロバイダー。`gemini`、`claude`、`litellm` のいずれか。デフォルト: `gemini` |
-| `--model` | AI モデル。デフォルト: `gemini` → `gemini-2.5-pro`、`claude` → `claude-sonnet-5`。`litellm` は必須 |
+| `--model` | Gemini モデル。デフォルト: `gemini-3.6-flash` |
 | `--branch` | 作成するブランチ名。デフォルト: `translate/<YYYY-MM-DD>` (実行日) |
+| `--resume` | 中断した翻訳を再開する。既存の translate ブランチに切り替え、翻訳済みファイルをスキップして続行する |
 
 ### sync-check.py — upstream 変更検知
 
@@ -146,32 +146,12 @@ python3 tools/translation/convert-fullwidth-parens.py
 python3 tools/translation/convert-fullwidth-parens.py --dry-run
 ```
 
-## AI プロバイダーの設定
-
-### Gemini (デフォルト)
+## Gemini API の設定
 
 ```bash
 pip install google-genai
 export GEMINI_API_KEY="your-api-key-here"
 ```
-
-### Claude
-
-```bash
-pip install anthropic
-export ANTHROPIC_API_KEY="your-api-key-here"
-```
-
-### LiteLLM
-
-```bash
-pip install litellm
-# 使用するプロバイダーに応じた API キーを設定
-export DASHSCOPE_API_KEY="your-api-key-here"    # Qwen の場合
-export OPENAI_API_KEY="your-api-key-here"        # OpenAI の場合
-```
-
-対応プロバイダーの一覧は [LiteLLM Providers](https://docs.litellm.ai/docs/providers) を参照。
 
 ## 推奨ワークフロー
 
@@ -193,6 +173,20 @@ git commit -m "translate: sync with upstream"
 git push origin translate/YYYY-MM-DD
 ```
 
+### 翻訳が中断した場合
+
+API タイムアウトや手動中断 (Ctrl+C) で翻訳が途中で止まった場合、`--resume` で翻訳済みファイルをスキップして再開できます。
+
+```bash
+# 中断した翻訳を再開
+python3 tools/translation/sync-translate.py --resume
+
+# 書式整形込みで再開
+python3 tools/translation/sync-translate.py --resume --format
+```
+
+プログレスの粒度はファイル単位です。翻訳途中のファイル (全ブロック完了前に中断) は最初から再翻訳されます。完全にやり直す場合は translate ブランチを削除してから `--resume` なしで実行してください。
+
 ### 翻訳せず差分だけ確認したい場合
 
 ```bash
@@ -202,7 +196,7 @@ python3 tools/translation/sync-status.py
 
 ## 注意事項
 
-- `sync-translate.py` 以外のツールは標準ライブラリのみで動作する (外部パッケージ不要)
+- `sync-translate.py` 以外のツールは標準ライブラリのみで動作する (外部パッケージ不要)。`sync-translate.py` は `google-genai` のみ必要
 - `sync-translate.py` は `git add` / `git commit` / `git push` を一切行わない。翻訳結果はワーキングツリー上の未ステージ変更として残る
 - 書式整形ツールは同じファイルに対して複数回実行しても安全 (冪等)
 - コードブロック (`----` / `....`) 内は書式整形の対象外

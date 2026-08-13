@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 """AI による自動翻訳スクリプト。
 
-sync-check.py で検知された outdated / new ブロックを AI API (Gemini、Claude、
-または LiteLLM) で自動翻訳し、日本語ファイルに直接適用する。翻訳作業は main
-ブランチから作成した新規ローカルブランチ上で行い、人間がレビューできる状態で
-停止する (git add / git commit / git push は行わない)。
+sync-check.py で検知された outdated / new ブロックを Gemini API で自動翻訳し、
+日本語ファイルに直接適用する。翻訳作業は現在のブランチから作成した新規ローカル
+ブランチ上で行い、人間がレビューできる状態で停止する (git add / git commit /
+git push は行わない)。
 
 使い方:
-  # 全管理対象ファイルの outdated/new ブロックを翻訳 (デフォルト: Gemini)
+  # 全管理対象ファイルの outdated/new ブロックを翻訳 (デフォルトモデル: gemini-3.6-flash)
   python3 tools/translation/sync-translate.py
 
-  # Claude API を使用
-  python3 tools/translation/sync-translate.py --provider claude
-
-  # LiteLLM を使用 (任意のモデルを指定可能)
-  python3 tools/translation/sync-translate.py --provider litellm --model qwen/qwen3-235b-a22b
+  # モデルを指定
+  python3 tools/translation/sync-translate.py --model gemini-2.5-pro
 
   # dry-run (翻訳結果を表示するが適用しない、ブランチも作成しない)
   python3 tools/translation/sync-translate.py --dry-run
@@ -24,14 +21,19 @@ sync-check.py で検知された outdated / new ブロックを AI API (Gemini�
 
   # ブランチ名を指定
   python3 tools/translation/sync-translate.py --branch translate/2026-08-12
+
+  # 中断した翻訳を再開
+  python3 tools/translation/sync-translate.py --resume
 """
 
 from __future__ import annotations
 
 import argparse
 import datetime
+import json
 import os
 import re
+import signal
 import shutil
 import multiprocessing
 import subprocess
@@ -77,114 +79,95 @@ from _lib.manifest import (
 
 ORIGINALS_DIR = "tools/translation/originals"
 UPSTREAM_REF = "upstream/main"
+PROGRESS_FILE = "tools/translation/.translate-progress.json"
 _IMMUTABLE_TYPES = frozenset({"code_block", "literal_block", "block_attribute"})
 _NO_TRAILING_BLANK = frozenset({"block_attribute", "block_title"})
 
 # ---------------------------------------------------------------------------
-# AI Provider — setup and call
+# Progress file for --resume
 # ---------------------------------------------------------------------------
 
+_interrupted = False
 
-def _validate_provider(
-    provider: str, model: str | None, api_base: str | None = None
-) -> tuple[str, object, str, str | None]:
-    """Validate provider setup and return ``(provider_name, client, model, api_base)``."""
-    if provider == "gemini":
-        try:
-            from google import genai  # type: ignore[import-untyped]
-        except ImportError:
-            print(
-                "Error: google-genai package not found. "
-                "Run: pip install google-genai",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            print(
-                "Error: GEMINI_API_KEY environment variable not set",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        client = genai.Client(
-            api_key=api_key,
-            http_options={"timeout": 120_000},
-        )
-        return ("gemini", client, model or "gemini-2.5-pro", None)
 
-    if provider == "claude":
-        try:
-            import anthropic  # type: ignore[import-untyped]
-        except ImportError:
-            print(
-                "Error: anthropic package not found. "
-                "Run: pip install anthropic",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not api_key:
-            print(
-                "Error: ANTHROPIC_API_KEY environment variable not set",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        client = anthropic.Anthropic(api_key=api_key)
-        return ("claude", client, model or "claude-sonnet-5", None)
+def _sigint_handler(signum, frame):
+    global _interrupted
+    _interrupted = True
+    print("\n\nInterrupted. To resume later:\n"
+          "  python3 tools/translation/sync-translate.py --resume\n",
+          file=sys.stderr, flush=True)
+    sys.exit(130)
 
-    # litellm
-    if not model:
-        print(
-            "Error: --model is required when using --provider litellm",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-    try:
-        import litellm as _litellm  # type: ignore[import-untyped]
-    except ImportError:
-        print(
-            "Error: litellm package not found. Run: pip install litellm",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-    return ("litellm", _litellm, model, api_base)
 
+def _load_progress() -> dict:
+    if os.path.exists(PROGRESS_FILE):
+        with open(PROGRESS_FILE, encoding="utf-8") as fh:
+            return json.load(fh)
+    return {}
+
+
+def _save_progress(progress: dict) -> None:
+    with open(PROGRESS_FILE, "w", encoding="utf-8") as fh:
+        json.dump(progress, fh, ensure_ascii=False, indent=2)
+
+
+def _init_progress(branch: str, model: str) -> dict:
+    progress = {
+        "branch": branch,
+        "model": model,
+        "started_at": datetime.datetime.now().isoformat(),
+        "sync_check_done": False,
+        "completed_files": [],
+        "completed_nav": [],
+        "completed_modules": [],
+        "completed_assets": [],
+    }
+    _save_progress(progress)
+    return progress
+
+
+def _delete_progress() -> None:
+    if os.path.exists(PROGRESS_FILE):
+        os.remove(PROGRESS_FILE)
+
+
+# ---------------------------------------------------------------------------
+# Gemini API — setup and call
+# ---------------------------------------------------------------------------
 
 _AI_TIMEOUT = 120  # seconds
 
 
-def _ai_worker(conn, provider_name, model, api_key, api_base, prompt):
+def _validate_gemini(model: str | None) -> tuple[str, str]:
+    """Validate Gemini setup and return ``(api_key, model)``."""
+    try:
+        from google import genai  # type: ignore[import-untyped]  # noqa: F401
+    except ImportError:
+        print(
+            "Error: google-genai package not found. "
+            "Run: pip install google-genai",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print(
+            "Error: GEMINI_API_KEY environment variable not set",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return (api_key, model or "gemini-3.6-flash")
+
+
+def _ai_worker(conn, model, api_key, prompt):
     """Run in a child process so the parent can kill it on timeout."""
     try:
-        if provider_name == "gemini":
-            from google import genai
-            client = genai.Client(api_key=api_key)
-            resp = client.models.generate_content(
-                model=model, contents=prompt,
-            )
-            conn.send(("ok", resp.text))
-        elif provider_name == "claude":
-            import anthropic
-            client = anthropic.Anthropic(api_key=api_key)
-            msg = client.messages.create(
-                model=model,
-                max_tokens=4096,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            conn.send(("ok", msg.content[0].text))
-        else:
-            import litellm
-            kwargs = {
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 8192,
-                "timeout": _AI_TIMEOUT,
-            }
-            if api_base:
-                kwargs["api_base"] = api_base
-                kwargs["api_key"] = api_key
-            resp = litellm.completion(**kwargs)
-            conn.send(("ok", resp.choices[0].message.content))
+        from google import genai
+        client = genai.Client(api_key=api_key)
+        resp = client.models.generate_content(
+            model=model, contents=prompt,
+        )
+        conn.send(("ok", resp.text))
     except Exception as exc:
         conn.send(("error", str(exc), type(exc).__name__))
     finally:
@@ -192,30 +175,19 @@ def _ai_worker(conn, provider_name, model, api_key, api_base, prompt):
 
 
 def _call_ai(
-    provider_info: tuple[str, object, str, str | None], prompt: str
+    gemini_info: tuple[str, str], prompt: str
 ) -> str | None:
-    """Call the AI provider in a subprocess with hard timeout.
+    """Call Gemini API in a subprocess with hard timeout.
 
     Returns translated text, or ``None`` on failure.
     """
-    provider_name, _client, model, api_base = provider_info
-
-    if provider_name == "gemini":
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-    elif provider_name == "claude":
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    else:
-        api_key = os.environ.get(
-            "LITELLM_API_KEY",
-            os.environ.get("OPENAI_API_KEY",
-                           os.environ.get("DASHSCOPE_API_KEY", "")),
-        )
+    api_key, model = gemini_info
 
     for attempt in range(3):
         parent_conn, child_conn = multiprocessing.Pipe()
         proc = multiprocessing.Process(
             target=_ai_worker,
-            args=(child_conn, provider_name, model, api_key, api_base, prompt),
+            args=(child_conn, model, api_key, prompt),
         )
         proc.start()
         if parent_conn.poll(timeout=_AI_TIMEOUT):
@@ -223,7 +195,6 @@ def _call_ai(
             proc.join(timeout=5)
             if result[0] == "ok":
                 return result[1]
-            # error from child
             err = result[1].lower()
             exc_name = result[2] if len(result) > 2 else "Exception"
             retryable = ("rate", "429", "quota", "resource",
@@ -240,7 +211,6 @@ def _call_ai(
                 print(f"    API error: {result[1]}", file=sys.stderr, flush=True)
                 return None
         else:
-            # timeout — kill the subprocess
             proc.kill()
             proc.join(timeout=5)
             print(
@@ -600,7 +570,7 @@ def _process_file(
     rel_path: str,
     file_entry: dict,
     upstream_ref: str,
-    provider_info: tuple,
+    gemini_info: tuple,
     stats: dict,
     skipped: list,
     dry_run: bool,
@@ -688,7 +658,7 @@ def _process_file(
                 prompt = _build_outdated_prompt(
                     sec_title, old_en, new_en, cur_ja
                 )
-                translated = _call_ai(provider_info, prompt)
+                translated = _call_ai(gemini_info, prompt)
                 if translated:
                     new_contents.append(
                         (up_block.block_type, translated.strip().split("\n"))
@@ -719,7 +689,7 @@ def _process_file(
                     prompt = _build_new_file_prompt(
                         "\n".join(up_block.lines)
                     )
-                    translated = _call_ai(provider_info, prompt)
+                    translated = _call_ai(gemini_info, prompt)
                     if translated:
                         new_contents.append(
                             (
@@ -745,7 +715,7 @@ def _process_file(
             old_sec = renames[section_path]
             if up_block.block_type == "section_header":
                 prompt = _build_new_file_prompt("\n".join(up_block.lines))
-                translated = _call_ai(provider_info, prompt)
+                translated = _call_ai(gemini_info, prompt)
                 if translated:
                     new_contents.append(
                         (up_block.block_type, translated.strip().split("\n"))
@@ -790,7 +760,7 @@ def _process_file(
                         sec_title, "\n".join(up_block.lines),
                         prev_ja, next_ja,
                     )
-                    translated = _call_ai(provider_info, prompt)
+                    translated = _call_ai(gemini_info, prompt)
                     if translated:
                         new_contents.append(
                             (
@@ -822,7 +792,7 @@ def _process_file(
         prompt = _build_new_prompt(
             sec_title, "\n".join(up_block.lines), prev_ja, next_ja,
         )
-        translated = _call_ai(provider_info, prompt)
+        translated = _call_ai(gemini_info, prompt)
         if translated:
             new_contents.append(
                 (up_block.block_type, translated.strip().split("\n"))
@@ -863,7 +833,7 @@ def _translate_new_file(
     upstream_ref: str,
     upstream_commit: str,
     manifest: dict,
-    provider_info: tuple,
+    gemini_info: tuple,
     stats: dict,
     skipped: list,
     dry_run: bool,
@@ -891,7 +861,7 @@ def _translate_new_file(
             new_contents.append((block.block_type, list(block.lines)))
         else:
             prompt = _build_new_file_prompt("\n".join(block.lines))
-            translated = _call_ai(provider_info, prompt)
+            translated = _call_ai(gemini_info, prompt)
             if translated:
                 new_contents.append(
                     (block.block_type, translated.strip().split("\n"))
@@ -1040,10 +1010,12 @@ def _create_new_module(
     upstream_ref: str,
     upstream_commit: str,
     manifest: dict,
-    provider_info: tuple,
+    gemini_info: tuple,
     stats: dict,
     skipped: list,
     dry_run: bool,
+    completed_files: set | None = None,
+    progress: dict | None = None,
 ) -> None:
     if not dry_run:
         for sub in ("pages", "attachments", "images"):
@@ -1054,7 +1026,7 @@ def _create_new_module(
     up_nav = git_show(upstream_ref, nav_path)
     if up_nav:
         _translate_and_write_nav(
-            nav_path, up_nav, provider_info, skipped, dry_run
+            nav_path, up_nav, gemini_info, skipped, dry_run
         )
         print(f"NAV SYNC    {nav_path}: created (new module)")
         stats["nav_synced"] += 1
@@ -1066,10 +1038,18 @@ def _create_new_module(
         if f.endswith(".adoc")
     ]
     for page in sorted(pages):
+        if completed_files and page in completed_files:
+            print(f"SKIP        {page} (already translated)")
+            continue
         _translate_new_file(
             page, upstream_ref, upstream_commit, manifest,
-            provider_info, stats, skipped, dry_run,
+            gemini_info, stats, skipped, dry_run,
         )
+        if not dry_run and completed_files is not None and progress is not None:
+            completed_files.add(page)
+            progress["completed_files"] = sorted(completed_files)
+            save_manifest(manifest)
+            _save_progress(progress)
 
     # attachments + images
     _copy_upstream_assets(module_path, upstream_ref, stats, dry_run)
@@ -1103,7 +1083,7 @@ def _copy_upstream_assets(
 def _translate_and_write_nav(
     nav_path: str,
     upstream_content: str,
-    provider_info: tuple,
+    gemini_info: tuple,
     skipped: list,
     dry_run: bool,
 ) -> None:
@@ -1113,7 +1093,7 @@ def _translate_and_write_nav(
         display = _extract_xref_display(line)
         target = _extract_xref_target(line)
         if target and display:
-            translated = _call_ai(provider_info, _build_new_file_prompt(display))
+            translated = _call_ai(gemini_info, _build_new_file_prompt(display))
             if translated:
                 new_lines.append(
                     line.replace(f"[{display}]", f"[{translated.strip()}]")
@@ -1132,7 +1112,7 @@ def _translate_and_write_nav(
 def _sync_nav(
     module_path: str,
     upstream_ref: str,
-    provider_info: tuple,
+    gemini_info: tuple,
     stats: dict,
     skipped: list,
     dry_run: bool,
@@ -1168,7 +1148,7 @@ def _sync_nav(
             display = _extract_xref_display(up_line)
             if display:
                 translated = _call_ai(
-                    provider_info, _build_new_file_prompt(display)
+                    gemini_info, _build_new_file_prompt(display)
                 )
                 if translated:
                     new_lines.append(
@@ -1373,15 +1353,9 @@ def main() -> None:
         "convert-fullwidth-parens.py を自動実行",
     )
     parser.add_argument(
-        "--provider",
-        choices=["gemini", "claude", "litellm"],
-        default="gemini",
-        help="翻訳 API プロバイダー (デフォルト: gemini)",
-    )
-    parser.add_argument(
         "--model",
         default=None,
-        help="AI モデル (デフォルト: provider に依存)",
+        help="Gemini モデル (デフォルト: gemini-3.6-flash)",
     )
     parser.add_argument(
         "--branch",
@@ -1389,9 +1363,10 @@ def main() -> None:
         help="作成するブランチ名 (デフォルト: translate/YYYY-MM-DD)",
     )
     parser.add_argument(
-        "--api-base",
-        default=None,
-        help="LiteLLM 用カスタム API ベース URL (OpenAI 互換エンドポイント)",
+        "--resume",
+        action="store_true",
+        help="中断した翻訳を再開する。既存のブランチに切り替え、"
+        "翻訳済みファイルをスキップして続行する",
     )
     parser.add_argument(
         "paths",
@@ -1401,8 +1376,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # ---- validate provider ----
-    provider_info = _validate_provider(args.provider, args.model, args.api_base)
+    # ---- validate Gemini ----
+    gemini_info = _validate_gemini(args.model)
 
     # ---- check manifest ----
     if not os.path.exists(MANIFEST_PATH):
@@ -1414,38 +1389,83 @@ def main() -> None:
 
     manifest = load_manifest()
 
-    # ---- step 1: working directory clean ----
+    # ---- install SIGINT handler ----
     if not args.dry_run:
-        if not git_status_clean():
-            print(
-                "Error: Working directory has uncommitted changes. "
-                "Commit or stash them first.",
-                file=sys.stderr,
-            )
-            sys.exit(1)
+        signal.signal(signal.SIGINT, _sigint_handler)
 
-    # ---- step 2: create branch ----
-    branch = args.branch or f"translate/{datetime.date.today().isoformat()}"
-    if not args.dry_run:
-        if git_branch_exists(branch):
+    # ---- resume or fresh start ----
+    progress: dict = {}
+    if args.resume:
+        progress = _load_progress()
+        if not progress:
             print(
-                f"Error: Branch '{branch}' already exists. "
-                "Use --branch to specify a different name.",
+                "Error: Progress file not found. "
+                "The previous run may have completed successfully.",
                 file=sys.stderr,
             )
             sys.exit(1)
-        start = git_current_branch()
-        git_switch_create_branch(branch, start)
-        print(f"BRANCH      Created branch '{branch}' from {start}")
+        branch = progress["branch"]
+        if not git_branch_exists(branch):
+            print(
+                f"Error: Branch '{branch}' not found. "
+                "Run without --resume to start a new translation.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        subprocess.run(
+            ["git", "switch", branch],
+            capture_output=True, check=True,
+        )
+        completed_count = len(progress.get("completed_files", []))
+        print(
+            f"RESUME      Resuming on branch '{branch}' "
+            f"({completed_count} files already completed)"
+        )
+    else:
+        # ---- step 1: working directory clean ----
+        if not args.dry_run:
+            if not git_status_clean():
+                print(
+                    "Error: Working directory has uncommitted changes. "
+                    "Commit or stash them first.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+
+        # ---- step 2: create branch ----
+        branch = args.branch or f"translate/{datetime.date.today().isoformat()}"
+        if not args.dry_run:
+            if git_branch_exists(branch):
+                print(
+                    f"Error: Branch '{branch}' already exists. "
+                    "Use --resume to continue, or --branch to specify "
+                    "a different name.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            start = git_current_branch()
+            git_switch_create_branch(branch, start)
+            print(f"BRANCH      Created branch '{branch}' from {start}")
 
     # ---- step 3: inline sync-check ----
-    files_changed = _sync_check_inline(manifest, UPSTREAM_REF)
-    print(
-        f"CHECKED     sync-check.py executed "
-        f"(fetched upstream, {files_changed} files with changes)"
-    )
+    if args.resume and progress.get("sync_check_done"):
+        print("CHECKED     sync-check skipped (already done)")
+        files_changed = 0
+    else:
+        files_changed = _sync_check_inline(manifest, UPSTREAM_REF)
+        print(
+            f"CHECKED     sync-check.py executed "
+            f"(fetched upstream, {files_changed} files with changes)"
+        )
+        if not args.dry_run:
+            progress = progress or _init_progress(branch, gemini_info[1])
+            progress["sync_check_done"] = True
+            _save_progress(progress)
+
     if not args.dry_run:
         save_manifest(manifest)
+        if not progress:
+            progress = _init_progress(branch, gemini_info[1])
 
     # ---- path filter helper ----
     def _in_scope(fpath: str) -> bool:
@@ -1484,17 +1504,38 @@ def main() -> None:
         new_files = [f for f in new_files if _in_scope(f)]
         new_modules = [m for m in new_modules if _in_scope(m)]
 
+    completed_files = set(progress.get("completed_files", []))
+    completed_modules = set(progress.get("completed_modules", []))
+
     for mod in new_modules:
+        if mod in completed_modules:
+            print(f"SKIP        {mod}/ (already translated)")
+            continue
         _create_new_module(
             mod, UPSTREAM_REF, upstream_commit, manifest,
-            provider_info, stats, skipped, args.dry_run,
+            gemini_info, stats, skipped, args.dry_run,
+            completed_files=completed_files,
+            progress=progress,
         )
+        if not args.dry_run:
+            completed_modules.add(mod)
+            progress["completed_modules"] = sorted(completed_modules)
+            save_manifest(manifest)
+            _save_progress(progress)
 
     for fpath in new_files:
+        if fpath in completed_files:
+            print(f"SKIP        {fpath} (already translated)")
+            continue
         _translate_new_file(
             fpath, UPSTREAM_REF, upstream_commit, manifest,
-            provider_info, stats, skipped, args.dry_run,
+            gemini_info, stats, skipped, args.dry_run,
         )
+        if not args.dry_run:
+            completed_files.add(fpath)
+            progress["completed_files"] = sorted(completed_files)
+            save_manifest(manifest)
+            _save_progress(progress)
 
     # ---- step 5: deleted files / modules ----
     del_files, del_modules = _detect_deleted(manifest, UPSTREAM_REF)
@@ -1535,10 +1576,18 @@ def main() -> None:
     # ---- step 7: process each file with changes ----
     modules_processed: set[str] = set()
     for rel_path, file_entry in files_to_process:
+        if rel_path in completed_files:
+            print(f"SKIP        {rel_path} (already translated)")
+            continue
         _process_file(
             rel_path, file_entry, UPSTREAM_REF,
-            provider_info, stats, skipped, args.dry_run,
+            gemini_info, stats, skipped, args.dry_run,
         )
+        if not args.dry_run:
+            completed_files.add(rel_path)
+            progress["completed_files"] = sorted(completed_files)
+            save_manifest(manifest)
+            _save_progress(progress)
         parts = rel_path.split("/")
         if len(parts) >= 2:
             modules_processed.add("/".join(parts[:2]))
@@ -1551,7 +1600,7 @@ def main() -> None:
     all_mods = _upstream_modules(UPSTREAM_REF) & _ja_modules()
     for mod in sorted(all_mods):
         _sync_nav(
-            mod, UPSTREAM_REF, provider_info, stats, skipped, args.dry_run,
+            mod, UPSTREAM_REF, gemini_info, stats, skipped, args.dry_run,
         )
 
     # ---- step 9: antora.yml sync ----
@@ -1576,6 +1625,7 @@ def main() -> None:
     elif not args.dry_run:
         _sync_mark_inline(manifest, UPSTREAM_REF)
         save_manifest(manifest)
+        _delete_progress()
         print("MARKED      sync-mark.py executed")
 
     # ---- step 12: summary ----
