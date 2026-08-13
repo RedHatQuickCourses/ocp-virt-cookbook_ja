@@ -828,6 +828,10 @@ def _translate_new_file(
 
     blocks = parse_blocks(en_content)
     generate_block_ids(blocks)
+    translatable = [b for b in blocks if b.block_type not in _IMMUTABLE_TYPES]
+    total_t = len(translatable)
+    short = os.path.basename(rel_path)
+    print(f"  TRANSLATING {short} ({total_t} blocks)...", end="", flush=True)
 
     new_contents: list[tuple[str, list[str]]] = []
     translated_count = 0
@@ -846,6 +850,9 @@ def _translate_new_file(
             else:
                 new_contents.append((block.block_type, list(block.lines)))
                 skipped.append((rel_path, block.block_id))
+            print(".", end="", flush=True)
+
+    print()  # newline after dots
 
     if not dry_run and new_contents:
         os.makedirs(os.path.dirname(rel_path), exist_ok=True)
