@@ -105,7 +105,10 @@ def _validate_provider(
                 file=sys.stderr,
             )
             sys.exit(1)
-        client = genai.Client(api_key=api_key)
+        client = genai.Client(
+            api_key=api_key,
+            http_options={"timeout": 120_000},
+        )
         return ("gemini", client, model or "gemini-2.5-pro", None)
 
     if provider == "claude":
@@ -187,8 +190,8 @@ def _call_ai(
         except Exception as exc:  # noqa: BLE001
             err = str(exc).lower()
             retryable = ("rate", "429", "quota", "resource",
-                         "connection", "timeout", "503", "500",
-                         "overloaded", "internal")
+                         "connection", "timeout", "deadline",
+                         "503", "500", "overloaded", "internal")
             if any(k in err for k in retryable):
                 wait = 2 ** (attempt + 1)
                 print(
