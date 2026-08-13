@@ -33,10 +33,10 @@ import datetime
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
@@ -150,8 +150,15 @@ def _validate_provider(
     return ("litellm", _litellm, model, api_base)
 
 
-_THREAD_POOL = ThreadPoolExecutor(max_workers=1)
 _AI_TIMEOUT = 120  # seconds
+
+
+class _AITimeoutError(Exception):
+    pass
+
+
+def _alarm_handler(signum, frame):
+    raise _AITimeoutError(f"API call timed out after {_AI_TIMEOUT}s")
 
 
 def _call_ai(
@@ -160,50 +167,53 @@ def _call_ai(
     """Call the AI provider with retry (max 3, exponential backoff).
 
     Returns translated text, or ``None`` on failure.
+    Uses signal.alarm to enforce a hard timeout that interrupts blocked I/O.
     """
     provider_name, client, model, api_base = provider_info
-
-    def _do_call() -> str:
-        if provider_name == "gemini":
-            resp = client.models.generate_content(
-                model=model, contents=prompt,
-            )
-            return resp.text
-        if provider_name == "claude":
-            msg = client.messages.create(
-                model=model,
-                max_tokens=4096,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return msg.content[0].text
-        # litellm
-        kwargs: dict = {
-            "model": model,
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 8192,
-            "timeout": _AI_TIMEOUT,
-        }
-        if api_base:
-            kwargs["api_base"] = api_base
-            kwargs["api_key"] = os.environ.get(
-                "LITELLM_API_KEY",
-                os.environ.get("OPENAI_API_KEY",
-                               os.environ.get("DASHSCOPE_API_KEY", "")),
-            )
-        resp = client.completion(**kwargs)
-        return resp.choices[0].message.content
-
     for attempt in range(3):
+        old_handler = signal.signal(signal.SIGALRM, _alarm_handler)
         try:
-            future = _THREAD_POOL.submit(_do_call)
-            return future.result(timeout=_AI_TIMEOUT)
-        except FuturesTimeoutError:
+            signal.alarm(_AI_TIMEOUT)
+            if provider_name == "gemini":
+                resp = client.models.generate_content(
+                    model=model, contents=prompt,
+                )
+                signal.alarm(0)
+                return resp.text
+            if provider_name == "claude":
+                msg = client.messages.create(
+                    model=model,
+                    max_tokens=4096,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                signal.alarm(0)
+                return msg.content[0].text
+            # litellm
+            kwargs: dict = {
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 8192,
+                "timeout": _AI_TIMEOUT,
+            }
+            if api_base:
+                kwargs["api_base"] = api_base
+                kwargs["api_key"] = os.environ.get(
+                    "LITELLM_API_KEY",
+                    os.environ.get("OPENAI_API_KEY",
+                                   os.environ.get("DASHSCOPE_API_KEY", "")),
+                )
+            resp = client.completion(**kwargs)
+            signal.alarm(0)
+            return resp.choices[0].message.content
+        except _AITimeoutError:
+            signal.alarm(0)
             print(
                 f"    Timeout ({_AI_TIMEOUT}s), retrying... (attempt {attempt + 1}/3)",
                 file=sys.stderr, flush=True,
             )
             time.sleep(2 ** (attempt + 1))
         except Exception as exc:  # noqa: BLE001
+            signal.alarm(0)
             err = str(exc).lower()
             retryable = ("rate", "429", "quota", "resource",
                          "connection", "timeout", "deadline",
@@ -218,6 +228,9 @@ def _call_ai(
             else:
                 print(f"    API error: {exc}", file=sys.stderr, flush=True)
                 return None
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old_handler)
     print("    Failed after 3 retries", file=sys.stderr, flush=True)
     return None
 
