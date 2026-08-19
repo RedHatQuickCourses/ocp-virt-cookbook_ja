@@ -792,6 +792,179 @@ class TestSyncTranslateHelpers(unittest.TestCase):
         result = self.mod._apply_heading_glossary(["== Cleanup"])
         self.assertEqual(result, ["== クリーンアップ"])
 
+    # ---- code fence strip/restore ----
+    def test_strip_code_fences_standard(self):
+        lines = ["----", "# comment", "code", "----"]
+        opening, closing, content = self.mod._strip_code_fences(lines)
+        self.assertEqual(opening, "----")
+        self.assertEqual(closing, "----")
+        self.assertEqual(content, ["# comment", "code"])
+
+    def test_strip_code_fences_dots(self):
+        lines = ["....", "text", "...."]
+        opening, closing, content = self.mod._strip_code_fences(lines)
+        self.assertEqual(opening, "....")
+        self.assertEqual(closing, "....")
+        self.assertEqual(content, ["text"])
+
+    def test_strip_code_fences_no_fences(self):
+        lines = ["just text"]
+        opening, closing, content = self.mod._strip_code_fences(lines)
+        self.assertEqual(opening, "")
+        self.assertEqual(closing, "")
+        self.assertEqual(content, ["just text"])
+
+    def test_restore_code_fences(self):
+        result = self.mod._restore_code_fences(
+            "----", "----", ["# コメント", "code"]
+        )
+        self.assertEqual(result, ["----", "# コメント", "code", "----"])
+
+    def test_restore_code_fences_no_opening(self):
+        result = self.mod._restore_code_fences("", "", ["code"])
+        self.assertEqual(result, ["code"])
+
+    def test_has_comments_with_bash_comment(self):
+        lines = ["----", "# Delete VMs", "oc delete vm", "----"]
+        self.assertTrue(self.mod._has_comments(lines))
+
+    def test_has_comments_no_comment(self):
+        lines = ["----", "oc get pods", "----"]
+        self.assertFalse(self.mod._has_comments(lines))
+
+    def test_has_comments_markdown_heading(self):
+        """## inside code block is detected as comment (# prefix)."""
+        lines = ["----", "## Virtual Machines", "| col |", "----"]
+        self.assertTrue(self.mod._has_comments(lines))
+
+    # ---- fix_translated_admonition ----
+    def test_fix_translated_admonition_important(self):
+        result = self.mod._fix_translated_admonition(
+            ["重要: これは重要です。"]
+        )
+        self.assertEqual(result, ["IMPORTANT: これは重要です。"])
+
+    def test_fix_translated_admonition_tip(self):
+        result = self.mod._fix_translated_admonition(
+            ["ヒント: 便利な情報です。"]
+        )
+        self.assertEqual(result, ["TIP: 便利な情報です。"])
+
+    def test_fix_translated_admonition_note(self):
+        result = self.mod._fix_translated_admonition(
+            ["注: 補足です。"]
+        )
+        self.assertEqual(result, ["NOTE: 補足です。"])
+
+    def test_fix_translated_admonition_no_match(self):
+        result = self.mod._fix_translated_admonition(
+            ["普通のテキストです。"]
+        )
+        self.assertIsNone(result)
+
+    # ---- batch prompt / parse ----
+    def test_build_batch_prompt(self):
+        result = self.mod._build_batch_prompt(
+            ["Hello", "World"], "Rules here"
+        )
+        self.assertIn("===BLOCK_1===", result)
+        self.assertIn("===BLOCK_2===", result)
+        self.assertIn("Hello", result)
+        self.assertIn("World", result)
+        self.assertIn("Rules here", result)
+
+    def test_parse_batch_response_valid(self):
+        response = (
+            "===BLOCK_1===\nこんにちは\n"
+            "===BLOCK_2===\n世界\n"
+        )
+        result = self.mod._parse_batch_response(response, 2)
+        self.assertEqual(result, ["こんにちは", "世界"])
+
+    def test_parse_batch_response_wrong_count(self):
+        response = "===BLOCK_1===\nこんにちは\n"
+        result = self.mod._parse_batch_response(response, 2)
+        self.assertIsNone(result)
+
+    def test_parse_batch_response_empty_block(self):
+        response = (
+            "===BLOCK_1===\nこんにちは\n"
+            "===BLOCK_2===\n\n"
+        )
+        result = self.mod._parse_batch_response(response, 2)
+        self.assertIsNone(result)
+
+    def test_parse_batch_response_multiline(self):
+        response = (
+            "===BLOCK_1===\n行1\n行2\n行3\n"
+            "===BLOCK_2===\n単一行\n"
+        )
+        result = self.mod._parse_batch_response(response, 2)
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0], "行1\n行2\n行3")
+        self.assertEqual(result[1], "単一行")
+
+    def test_parse_batch_response_misnumbered(self):
+        response = (
+            "===BLOCK_1===\nA\n"
+            "===BLOCK_3===\nB\n"
+        )
+        result = self.mod._parse_batch_response(response, 2)
+        self.assertIsNone(result)
+
+    # ---- rate state ----
+    def test_rate_state_update_from_headers(self):
+        state = self.mod._RateState()
+        state.update_from_headers({
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-limit-tokens": "4000000",
+            "x-ratelimit-remaining-requests": "999",
+            "x-ratelimit-remaining-tokens": "3999000",
+        })
+        self.assertEqual(state.rpm_limit, 1000)
+        self.assertEqual(state.tpm_limit, 4000000)
+        self.assertEqual(state.batch_size, 15)
+
+    def test_rate_state_batch_size_low_rpm(self):
+        state = self.mod._RateState()
+        state.update_from_headers({
+            "x-ratelimit-limit-requests": "10",
+            "x-ratelimit-limit-tokens": "4000000",
+            "x-ratelimit-remaining-requests": "9",
+            "x-ratelimit-remaining-tokens": "3999000",
+        })
+        self.assertEqual(state.batch_size, 5)
+
+    def test_rate_state_adaptive_wait_plenty(self):
+        state = self.mod._RateState()
+        state.rpm_limit = 1000
+        state.tpm_limit = 4000000
+        state.remaining_rpm = 900
+        state.remaining_tpm = 3500000
+        self.assertEqual(state.adaptive_wait(), 0.0)
+
+    def test_rate_state_adaptive_wait_low(self):
+        state = self.mod._RateState()
+        state.rpm_limit = 100
+        state.tpm_limit = 4000000
+        state.remaining_rpm = 10
+        state.remaining_tpm = 3500000
+        wait = state.adaptive_wait()
+        self.assertGreater(wait, 0.0)
+
+    def test_rate_state_halve_batch(self):
+        state = self.mod._RateState()
+        state.batch_size = 10
+        state.halve_batch()
+        self.assertEqual(state.batch_size, 5)
+        state.halve_batch()
+        self.assertEqual(state.batch_size, 2)
+        state.halve_batch()
+        self.assertEqual(state.batch_size, 1)
+        state.halve_batch()
+        self.assertEqual(state.batch_size, 1)
+
 
 class TestSyncAntoraPlaybook(unittest.TestCase):
     """Tests for _sync_antora_playbook_yml."""

@@ -618,7 +618,7 @@ python3 tools/translation/sync-translate.py --resume
 
 #### 前提条件
 
-- `google-genai` パッケージがインストールされていること: `pip install google-genai`
+- Python 3.9 以上 (標準ライブラリのみ使用、外部パッケージ不要)
 - `GEMINI_API_KEY` 環境変数が設定されていること
 - 作業ディレクトリがクリーンであること (`git status` で未コミットの変更がないこと)
 
@@ -630,8 +630,6 @@ python3 tools/translation/sync-translate.py --resume
    export GEMINI_API_KEY="your-api-key-here"
    ```
 3. 永続化する場合はシェルの設定ファイル (`~/.zshrc`, `~/.bashrc` 等) に追記する
-
-**注意**: 本スクリプトのみ外部パッケージ (`google-genai`) に依存する。他のスクリプトは標準ライブラリのみで動作する。
 
 #### 処理フロー
 
@@ -659,6 +657,7 @@ python3 tools/translation/sync-translate.py --resume
 9. **antora.yml の同期**: upstream の `antora.yml` と比較し、`nav` セクションに新規モジュールの追加・削除を反映する。`name` フィールドなどリポジトリ固有の値は変更しない
 9a. **antora-playbook.yml の同期**: upstream の `antora-playbook.yml` をベースに、JA 固有フィールド (`site.start_page` のコンポーネント名、`asciidoc.attributes.build-date`) のみ上書き保持して同期する (9.14.1 参照)
 10. `--format` 指定時は書式整形ツールを実行
+10a. `--format` 指定時は既存翻訳の事後補正 (アドモニションキーワード復元、見出し用語集適用) を全ファイルに対して実行 (9.20 参照)
 11. `sync-mark.py` を内部的に呼び出してマニフェストとスナップショットを更新 (`removed` ブロックはマニフェストから除去)
 11a. プログレスファイルを削除する (正常完了時のみ)
 12. 完了メッセージを表示 (レビュー手順のガイドを含む)
@@ -818,8 +817,7 @@ NEW FILE    modules/agentic-vm-management/pages/ai-vm-rebalance.adoc (134 blocks
 - `--resume` 時にブランチが存在しない: `Error: Branch 'translate/2026-08-13' not found. Run without --resume to start a new translation.`
 - `--resume` 時にプログレスファイルが存在しない: `Error: Progress file not found. The previous run may have completed successfully.`
 - API キー未設定: `Error: GEMINI_API_KEY environment variable not set`
-- パッケージ未インストール: `Error: google-genai package not found. Run: pip install google-genai`
-- API レート制限: リトライ (最大3回、指数バックオフ)
+- API レート制限 (429): `Retry-After` ヘッダーまたは指数バックオフで待機。3 回連続時はバッチサイズを半減して再試行 (9.21.3 参照)
 - API エラー: 該当ブロックをスキップし、スキップされたブロックの一覧を最後に表示。スキップがあった場合は `sync-mark.py` を実行しない
 - マニフェスト未作成: `Error: manifest.json not found. Run sync-init.py first.`
 - 変更対象ブロックなし: `No outdated or new blocks found. Nothing to translate.`
@@ -1282,6 +1280,259 @@ AsciiDoc のインラインアドモニション (`NOTE:`, `WARNING:`, `IMPORTAN
 `[[anchor_id]]` 付きの見出し (例: `== See Also [[see_also]]`) も対応する。見出しテキスト部分のみを用語集で照合し、アンカーはそのまま保持する。
 
 用語集に一致しない見出しは従来通り AI 翻訳する。用語集の拡張は `sync-translate.py` の `_HEADING_GLOSSARY` 辞書に追加する。
+
+### 9.19 コードブロックフェンスの保護
+
+`code_block` ブロックのコメント翻訳時 (`_has_comments` が True の場合)、AI にコードブロック全体を渡すと `----` フェンスマーカーが除去されるケースがある。特に、マークダウン形式の出力 (`##` 見出し、`|` テーブル) を含むコードブロックで発生しやすい。
+
+#### 対策: フェンス分離方式
+
+`admonition_inline` のキーワード保護、`list_item` のプレフィックス保護と同じパターンで、フェンスマーカーを分離・復元する:
+
+1. **翻訳前**: コードブロックの先頭行 (`----` / `....`) と末尾行 (`----` / `....`) を分離し、内部コンテンツのみを AI に送信
+2. **翻訳後**: 元のフェンスマーカーを先頭・末尾に再付与
+
+#### 実装
+
+```python
+def _strip_code_fences(lines: list[str]) -> tuple[str, str, list[str]]:
+    """コードブロックのフェンスマーカーを分離する。"""
+    if len(lines) < 2:
+        return "", "", lines
+    first = lines[0].strip()
+    last = lines[-1].strip()
+    if (first.startswith("----") or first.startswith("....")) and \
+       (last.startswith("----") or last.startswith("......")):
+        return lines[0], lines[-1], lines[1:-1]
+    return "", "", lines
+
+def _restore_code_fences(
+    opening: str, closing: str, lines: list[str]
+) -> list[str]:
+    """翻訳後のコンテンツにフェンスマーカーを再付与する。"""
+    if not opening:
+        return lines
+    return [opening] + lines + [closing]
+```
+
+#### 適用箇所
+
+- `_translate_new_file` 内のコードブロックコメント翻訳パス
+- `_translate_file` 内のコードブロックコメント翻訳パス
+
+フェンス分離は `_has_comments` の判定にも影響する。`_has_comments` にはフェンス分離後の内部コンテンツを渡すことで、フェンスマーカー自体をコメント判定の対象外とする。
+
+### 9.20 既存翻訳の事後補正 (アドモニション・見出し用語集)
+
+9.17 (アドモニションキーワード保護) と 9.18 (見出し用語集) は翻訳実行時に適用されるが、upstream で変更がなく再翻訳されなかったブロックには効かない。これらの保護機能が追加される前に翻訳されたブロックに残る不整合を修正するため、`--format` 実行時に全ファイルを対象とした事後補正パスを追加する。
+
+#### 処理内容
+
+`sync-translate.py` の処理フローに **ステップ 10a** (ステップ 10 の書式整形後、ステップ 11 の sync-mark 前) を追加する:
+
+1. `modules/*/pages/*.adoc` の全ファイルを走査する
+2. 各ファイルをブロックパーサで解析する
+3. 各ブロックに対して以下を適用する:
+   - `admonition_inline` ブロック: `_ensure_admonition_prefix` を適用し、日本語に翻訳されたアドモニションキーワードを英語に復元する
+   - `prose` ブロック: 先頭行が日本語アドモニションキーワード (`重要:`, `ヒント:`, `注:`, `警告:`, `注意:`, `注記:`) で始まる場合、対応する英語キーワードに復元し、ブロック種別を `admonition_inline` に変更する。ブロックパーサは日本語キーワードを認識しないため `prose` として解析されるが、本来は `admonition_inline` であるべきブロック
+   - `section_header` ブロック: まず現在の JA 見出しテキストを用語集で照合する。一致しない場合、対応する `originals/` のスナップショットから英語見出しを取得し、英語テキストが用語集に一致すればその訳語を適用する
+4. いずれかのブロックが変更された場合のみファイルを書き出す
+
+#### 冪等性
+
+この処理は冪等である。既に正しいキーワード/見出しを持つブロックには変更を加えない。`--format` なしの実行では事後補正は行われない (翻訳時の保護のみ)。
+
+#### 出力
+
+修正が行われた場合:
+
+```
+POSTFIX     modules/networking/pages/static-ip-configuration.adoc (2 blocks corrected)
+```
+
+修正なしの場合は出力しない。
+
+### 9.21 Gemini API 呼び出しの効率化
+
+#### 背景
+
+現行の実装は 1 ブロック = 1 API コールの逐次処理であり、大量のブロックを翻訳する場合にレート制限 (RPM: Requests Per Minute、TPM: Tokens Per Minute) がボトルネックとなる。本セクションでは、API 呼び出しを効率化するための変更を規定する。
+
+#### 9.21.1 REST API 直接呼び出しへの移行
+
+`google-genai` SDK を廃止し、標準ライブラリ (`urllib.request`) のみで Gemini REST API を直接呼び出す。これにより外部パッケージ依存が完全になくなり、`.venv` や `pip install` なしで実行可能となる。
+
+##### エンドポイント
+
+```
+POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}
+```
+
+##### リクエストボディ
+
+```json
+{
+  "contents": [
+    {
+      "parts": [
+        {"text": "{prompt}"}
+      ]
+    }
+  ]
+}
+```
+
+##### レスポンス
+
+```json
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {"text": "{translated_text}"}
+        ]
+      }
+    }
+  ]
+}
+```
+
+翻訳テキストは `response["candidates"][0]["content"]["parts"][0]["text"]` から取得する。
+
+##### レート制限ヘッダー
+
+レスポンスの HTTP ヘッダーから以下の情報を取得する:
+
+| ヘッダー | 型 | 内容 |
+|---|---|---|
+| `x-ratelimit-limit-requests` | int | RPM 上限 |
+| `x-ratelimit-limit-tokens` | int | TPM 上限 |
+| `x-ratelimit-remaining-requests` | int | 残り RPM |
+| `x-ratelimit-remaining-tokens` | int | 残り TPM |
+| `x-ratelimit-reset-requests` | duration | RPM リセットまでの時間 |
+| `x-ratelimit-reset-tokens` | duration | TPM リセットまでの時間 |
+
+初回リクエストのレスポンスで RPM/TPM 上限を取得し、以降のバッチサイズと並列度の計算に使用する。
+
+##### エラー処理
+
+| HTTP ステータス | 対処 |
+|---|---|
+| 200 | 正常。レスポンスボディからテキストを取得 |
+| 429 | レート制限超過。`Retry-After` ヘッダーまたは指数バックオフで待機してリトライ |
+| 500, 503 | サーバーエラー。指数バックオフでリトライ (最大 3 回) |
+| その他 4xx | 致命的エラー。該当ブロックをスキップ |
+
+#### 9.21.2 ブロックバッチ化
+
+複数の翻訳対象ブロックを 1 回の API コールにまとめることで、RPM 消費を削減する。
+
+##### バッチサイズの決定
+
+初回 API レスポンスから取得した RPM/TPM 上限に基づき、バッチサイズを自動計算する:
+
+```python
+batch_size = max(1, min(
+    rpm_limit // 2,       # RPM の半分をバッチ削減の余裕に
+    tpm_limit // 4000,    # 1ブロック平均 ~4000 トークンと仮定
+    15,                   # レスポンスパース信頼性の上限
+))
+```
+
+RPM/TPM が取得できない場合 (ヘッダーが存在しない場合) は、デフォルト `batch_size = 5` を使用する。
+
+##### バッチプロンプト形式
+
+```
+あなたは技術文書の翻訳者です。OpenShift Virtualization に関する英語ドキュメントを日本語に翻訳してください。
+
+## ルール
+- (既存のルールと同一)
+- 各ブロックは ===BLOCK_N=== で区切られています
+- 翻訳結果も同じ ===BLOCK_N=== 区切りで出力してください
+- ブロック数を変えないでください
+
+===BLOCK_1===
+{english_block_1}
+
+===BLOCK_2===
+{english_block_2}
+
+===BLOCK_3===
+{english_block_3}
+```
+
+##### レスポンスのパース
+
+1. `===BLOCK_N===` デリミタで分割する
+2. 入力ブロック数と出力ブロック数が一致することを検証する
+3. 不一致の場合は **フォールバック**: バッチ内の各ブロックを個別に再翻訳する (1 ブロック 1 コール)
+4. 空のブロックが返された場合も個別再翻訳にフォールバックする
+
+##### バッチ化の適用範囲
+
+| 翻訳パス | バッチ化 | 理由 |
+|---|---|---|
+| 新規ファイル翻訳 (`_translate_new_file`) | 適用 | 同一ファイル内の連続ブロックをバッチ化 |
+| outdated/new ブロック翻訳 (`_translate_file`) | 適用 | 同一ファイル内の翻訳対象ブロックをバッチ化 |
+| コードブロックコメント翻訳 | 適用しない | フェンス strip/restore と組み合わせが複雑 |
+| nav.adoc の xref 翻訳 | 適用しない | 通常は少数 |
+| 見出し翻訳 (用語集不一致時) | バッチに含める | prose 等と同じバッチに混在可 |
+
+##### バッチ化と既存保護機能の統合
+
+- `admonition_inline`: バッチ化前にキーワードを strip し、レスポンスパース後に restore する (ブロック単位で strip/restore を適用)
+- `list_item`: バッチ化前にプレフィックスを strip し、レスポンスパース後に restore する
+- `section_header`: 用語集に一致するものはバッチに含めない (AI 呼び出し不要)
+- `code_block`: バッチに含めない (個別処理を維持)
+
+#### 9.21.3 適応的レート制御
+
+レスポンスヘッダーの残りクォータに基づき、リクエスト間隔を動的に制御する。
+
+##### アルゴリズム
+
+```python
+def _adaptive_wait(remaining_rpm: int, remaining_tpm: int, rpm_limit: int):
+    """残りクォータに基づいて待機時間を計算する。"""
+    if remaining_rpm <= 0 or remaining_tpm <= 0:
+        return 60.0  # リセットまで最大 60 秒待機
+    if remaining_rpm < rpm_limit * 0.2:
+        # 残り 20% 以下: リクエスト間隔を長くする
+        return 60.0 / remaining_rpm
+    return 0.0  # クォータに余裕がある場合は待機しない
+```
+
+##### 429 エラー時の処理
+
+1. `Retry-After` ヘッダーがあればその秒数だけ待機する
+2. ヘッダーがなければ指数バックオフ: 4 秒、8 秒、16 秒
+3. 3 回連続で 429 の場合、**バッチサイズを半減** して再試行する (TPM 超過の可能性)
+
+##### 進捗表示
+
+```
+RATE LIMIT  RPM: 45/1000, TPM: 850000/4000000 (batch_size=10)
+```
+
+レート制限情報を 10 リクエストごと (またはバッチごと) に表示する。
+
+#### 9.21.4 並列ファイル処理 (将来拡張)
+
+本バージョンではファイル単位の並列化は実装しない。ブロックバッチ化とレート制御の効果を確認した後、必要に応じて `concurrent.futures.ThreadPoolExecutor` による並列化を検討する。並列化する場合、レート制御はスレッド間で共有する必要がある (`threading.Lock` で保護)。
+
+#### 9.21.5 前提条件の変更
+
+REST API 直接呼び出しへの移行に伴い、以下が変更される:
+
+| 項目 | 変更前 | 変更後 |
+|---|---|---|
+| 外部パッケージ | `google-genai` 必須 | 不要 (標準ライブラリのみ) |
+| セットアップ | `pip install google-genai` | 不要 |
+| 仮想環境 | `.venv` 推奨 | 不要 |
+| 環境変数 | `GEMINI_API_KEY` | `GEMINI_API_KEY` (変更なし) |
+| Python バージョン | 3.9+ | 3.9+ (変更なし) |
 
 ---
 

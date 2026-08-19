@@ -34,11 +34,14 @@ import json
 import os
 import re
 import signal
+import glob
 import shutil
-import multiprocessing
 import subprocess
 import sys
+import threading
 import time
+import urllib.error
+import urllib.request
 
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
@@ -151,23 +154,17 @@ def _delete_progress() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Gemini API — setup and call
+# Gemini REST API — setup, rate control, and call
 # ---------------------------------------------------------------------------
 
 _AI_TIMEOUT = 120  # seconds
+_GEMINI_BASE_URL = (
+    "https://generativelanguage.googleapis.com/v1beta/models"
+)
 
 
 def _validate_gemini(model: str | None) -> tuple[str, str]:
     """Validate Gemini setup and return ``(api_key, model)``."""
-    try:
-        from google import genai  # type: ignore[import-untyped]  # noqa: F401
-    except ImportError:
-        print(
-            "Error: google-genai package not found. "
-            "Run: pip install google-genai",
-            file=sys.stderr,
-        )
-        sys.exit(1)
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print(
@@ -178,68 +175,244 @@ def _validate_gemini(model: str | None) -> tuple[str, str]:
     return (api_key, model or "gemini-3.7-flash")
 
 
-def _ai_worker(conn, model, api_key, prompt):
-    """Run in a child process so the parent can kill it on timeout."""
-    try:
-        from google import genai
-        client = genai.Client(api_key=api_key)
-        resp = client.models.generate_content(
-            model=model, contents=prompt,
-        )
-        conn.send(("ok", resp.text))
-    except Exception as exc:
-        conn.send(("error", str(exc), type(exc).__name__))
-    finally:
-        conn.close()
+class _RateState:
+    """Thread-safe rate limit state from Gemini response headers."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self.rpm_limit: int = 0
+        self.tpm_limit: int = 0
+        self.remaining_rpm: int = 0
+        self.remaining_tpm: int = 0
+        self.request_count: int = 0
+        self.batch_size: int = 5  # default until first response
+
+    def update_from_headers(self, headers: dict[str, str]) -> None:
+        with self._lock:
+            for key, val in headers.items():
+                lk = key.lower()
+                if lk == "x-ratelimit-limit-requests":
+                    self.rpm_limit = int(val)
+                elif lk == "x-ratelimit-limit-tokens":
+                    self.tpm_limit = int(val)
+                elif lk == "x-ratelimit-remaining-requests":
+                    self.remaining_rpm = int(val)
+                elif lk == "x-ratelimit-remaining-tokens":
+                    self.remaining_tpm = int(val)
+            self.request_count += 1
+            if self.rpm_limit and self.tpm_limit and self.request_count == 1:
+                self.batch_size = max(1, min(
+                    self.rpm_limit // 2,
+                    self.tpm_limit // 4000,
+                    15,
+                ))
+
+    def adaptive_wait(self) -> float:
+        with self._lock:
+            if self.remaining_rpm <= 0 and self.rpm_limit > 0:
+                return 60.0
+            if self.remaining_tpm <= 0 and self.tpm_limit > 0:
+                return 60.0
+            if self.rpm_limit and self.remaining_rpm < self.rpm_limit * 0.2:
+                return max(0.5, 60.0 / max(self.remaining_rpm, 1))
+            return 0.0
+
+    def halve_batch(self) -> None:
+        with self._lock:
+            self.batch_size = max(1, self.batch_size // 2)
+
+    def status_line(self) -> str:
+        with self._lock:
+            if not self.rpm_limit:
+                return ""
+            return (
+                f"RPM: {self.remaining_rpm}/{self.rpm_limit}, "
+                f"TPM: {self.remaining_tpm}/{self.tpm_limit} "
+                f"(batch_size={self.batch_size})"
+            )
+
+
+_rate_state = _RateState()
 
 
 def _call_ai(
     gemini_info: tuple[str, str], prompt: str
 ) -> str | None:
-    """Call Gemini API in a subprocess with hard timeout.
+    """Call Gemini REST API with timeout and retries.
 
     Returns translated text, or ``None`` on failure.
     """
     api_key, model = gemini_info
+    url = f"{_GEMINI_BASE_URL}/{model}:generateContent?key={api_key}"
+    body = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+    }).encode("utf-8")
+
+    consecutive_429 = 0
 
     for attempt in range(3):
-        parent_conn, child_conn = multiprocessing.Pipe()
-        proc = multiprocessing.Process(
-            target=_ai_worker,
-            args=(child_conn, model, api_key, prompt),
+        wait = _rate_state.adaptive_wait()
+        if wait > 0:
+            time.sleep(wait)
+
+        req = urllib.request.Request(
+            url, data=body,
+            headers={"Content-Type": "application/json"},
         )
-        proc.start()
-        if parent_conn.poll(timeout=_AI_TIMEOUT):
-            result = parent_conn.recv()
-            proc.join(timeout=5)
-            if result[0] == "ok":
-                return result[1]
-            err = result[1].lower()
-            exc_name = result[2] if len(result) > 2 else "Exception"
-            retryable = ("rate", "429", "quota", "resource",
-                         "connection", "timeout", "deadline",
-                         "503", "500", "overloaded", "internal")
-            if any(k in err for k in retryable):
-                wait = 2 ** (attempt + 1)
+        try:
+            with urllib.request.urlopen(req, timeout=_AI_TIMEOUT) as resp:
+                hdrs = {k: v for k, v in resp.getheaders()}
+                _rate_state.update_from_headers(hdrs)
+                data = json.loads(resp.read().decode("utf-8"))
+                text = (
+                    data.get("candidates", [{}])[0]
+                    .get("content", {})
+                    .get("parts", [{}])[0]
+                    .get("text")
+                )
+                if _rate_state.request_count % 10 == 0:
+                    status = _rate_state.status_line()
+                    if status:
+                        print(f"RATE LIMIT  {status}", flush=True)
+                return text
+        except urllib.error.HTTPError as exc:
+            code = exc.code
+            if code == 429:
+                consecutive_429 += 1
+                retry_after = exc.headers.get("Retry-After")
+                if retry_after:
+                    wait_s = float(retry_after)
+                else:
+                    wait_s = 2 ** (attempt + 1)
+                if consecutive_429 >= 3:
+                    _rate_state.halve_batch()
+                    print(
+                        f"    429 x{consecutive_429}, batch halved to "
+                        f"{_rate_state.batch_size}",
+                        file=sys.stderr, flush=True,
+                    )
                 print(
-                    f"    Retryable error, retrying in {wait}s... ({exc_name})",
+                    f"    Rate limited (429), waiting {wait_s:.0f}s... "
+                    f"(attempt {attempt + 1}/3)",
                     file=sys.stderr, flush=True,
                 )
-                time.sleep(wait)
+                time.sleep(wait_s)
+            elif code in (500, 503):
+                wait_s = 2 ** (attempt + 1)
+                print(
+                    f"    Server error ({code}), retrying in {wait_s}s...",
+                    file=sys.stderr, flush=True,
+                )
+                time.sleep(wait_s)
             else:
-                print(f"    API error: {result[1]}", file=sys.stderr, flush=True)
+                err_body = exc.read().decode("utf-8", errors="replace")[:200]
+                print(
+                    f"    API error ({code}): {err_body}",
+                    file=sys.stderr, flush=True,
+                )
                 return None
-        else:
-            proc.kill()
-            proc.join(timeout=5)
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            wait_s = 2 ** (attempt + 1)
             print(
-                f"    Timeout ({_AI_TIMEOUT}s), retrying... (attempt {attempt + 1}/3)",
+                f"    Network error: {exc}, retrying in {wait_s}s... "
+                f"(attempt {attempt + 1}/3)",
                 file=sys.stderr, flush=True,
             )
-            time.sleep(2 ** (attempt + 1))
-        parent_conn.close()
+            time.sleep(wait_s)
+
     print("    Failed after 3 retries", file=sys.stderr, flush=True)
     return None
+
+
+# ---------------------------------------------------------------------------
+# Batch translation
+# ---------------------------------------------------------------------------
+
+_BLOCK_DELIM_RE = re.compile(r"===BLOCK_(\d+)===")
+
+
+def _build_batch_prompt(
+    blocks_text: list[str], base_rules: str
+) -> str:
+    """Build a batched prompt with ===BLOCK_N=== delimiters."""
+    parts = [base_rules]
+    parts.append(
+        "\n- 各ブロックは ===BLOCK_N=== で区切られています"
+        "\n- 翻訳結果も同じ ===BLOCK_N=== 区切りで出力してください"
+        "\n- ブロック数を変えないでください\n"
+    )
+    for i, text in enumerate(blocks_text, 1):
+        parts.append(f"\n===BLOCK_{i}===\n{text}")
+    return "\n".join(parts)
+
+
+def _parse_batch_response(
+    response: str, expected_count: int
+) -> list[str] | None:
+    """Parse a batched response into individual blocks.
+
+    Returns a list of translated texts, or None if parsing fails.
+    """
+    chunks: list[tuple[int, str]] = []
+    current_idx = -1
+    current_lines: list[str] = []
+
+    for line in response.split("\n"):
+        m = _BLOCK_DELIM_RE.match(line.strip())
+        if m:
+            if current_idx >= 0:
+                chunks.append((current_idx, "\n".join(current_lines).strip()))
+            current_idx = int(m.group(1))
+            current_lines = []
+        else:
+            current_lines.append(line)
+
+    if current_idx >= 0:
+        chunks.append((current_idx, "\n".join(current_lines).strip()))
+
+    if len(chunks) != expected_count:
+        return None
+
+    chunks.sort(key=lambda x: x[0])
+    for i, (idx, _) in enumerate(chunks, 1):
+        if idx != i:
+            return None
+
+    results = [text for _, text in chunks]
+    if any(not t for t in results):
+        return None
+    return results
+
+
+def _call_ai_batch(
+    gemini_info: tuple[str, str],
+    blocks_text: list[str],
+    base_rules: str,
+) -> list[str | None]:
+    """Translate multiple blocks in one API call with fallback.
+
+    Returns a list of translated texts (same length as blocks_text).
+    Individual entries may be None on failure.
+    """
+    if len(blocks_text) == 1:
+        prompt = base_rules + "\n\n## 翻訳対象の英語:\n" + blocks_text[0]
+        result = _call_ai(gemini_info, prompt)
+        return [result]
+
+    prompt = _build_batch_prompt(blocks_text, base_rules)
+    response = _call_ai(gemini_info, prompt)
+
+    if response:
+        parsed = _parse_batch_response(response, len(blocks_text))
+        if parsed:
+            return parsed
+
+    results: list[str | None] = []
+    for text in blocks_text:
+        prompt = base_rules + "\n\n## 翻訳対象の英語:\n" + text
+        result = _call_ai(gemini_info, prompt)
+        results.append(result)
+    return results
 
 
 # ---------------------------------------------------------------------------
@@ -345,17 +518,15 @@ def _build_code_comment_prompt(en_code: str, current_ja: str | None = None) -> s
 
 
 def _has_comments(lines: list[str]) -> bool:
-    """コードブロック内にコメント行があるか判定する。"""
-    in_delim = False
-    for line in lines:
+    """コードブロック内にコメント行があるか判定する。
+
+    フェンスマーカー (---- / ....) を除いた内部コンテンツのみを検査する。
+    """
+    _, _, content = _strip_code_fences(lines)
+    for line in content:
         stripped = line.strip()
-        if stripped.startswith("----") or stripped.startswith("...."):
-            in_delim = not in_delim
-            continue
         if stripped.startswith("[") and stripped.endswith("]"):
             continue
-        if stripped.startswith("#") and not in_delim:
-            return True
         if _RE_COMMENT_LINE.match(stripped):
             return True
     return False
@@ -392,6 +563,30 @@ def _ensure_list_prefix(original_lines: list[str], translated_lines: list[str]) 
     if not re.match(r"^(\*+\s+|\.+\s+)", translated_lines[0]):
         translated_lines[0] = prefix + translated_lines[0]
     return translated_lines
+
+
+def _strip_code_fences(
+    lines: list[str],
+) -> tuple[str, str, list[str]]:
+    """コードブロックのフェンスマーカーを分離する。"""
+    if len(lines) < 2:
+        return "", "", lines
+    first = lines[0].strip()
+    last = lines[-1].strip()
+    if (first.startswith("----") or first.startswith("....")) and (
+        last.startswith("----") or last.startswith("....")
+    ):
+        return lines[0], lines[-1], lines[1:-1]
+    return "", "", lines
+
+
+def _restore_code_fences(
+    opening: str, closing: str, lines: list[str]
+) -> list[str]:
+    """翻訳後のコンテンツにフェンスマーカーを再付与する。"""
+    if not opening:
+        return lines
+    return [opening] + lines + [closing]
 
 
 def _strip_admonition_prefix(lines: list[str]) -> tuple[str, list[str]]:
@@ -799,19 +994,24 @@ def _process_file(
 
         # ---- code_block: translate comments only ----
         if up_block.block_type == "code_block":
-            en_code = "\n".join(up_block.lines)
+            opening, closing, content = _strip_code_fences(up_block.lines)
             if _has_comments(up_block.lines):
                 cur_ja_code = None
                 if snap_idx is not None:
                     ja_idx = match_map.get(snap_idx)
                     if ja_idx is not None and 0 <= ja_idx < len(ja_blocks):
-                        cur_ja_code = "\n".join(ja_blocks[ja_idx].lines)
-                prompt = _build_code_comment_prompt(en_code, cur_ja_code)
+                        _, _, ja_content = _strip_code_fences(
+                            ja_blocks[ja_idx].lines
+                        )
+                        cur_ja_code = "\n".join(ja_content)
+                prompt = _build_code_comment_prompt(
+                    "\n".join(content), cur_ja_code
+                )
                 translated = _call_ai(gemini_info, prompt)
                 if translated:
-                    new_contents.append(
-                        ("code_block", translated.strip().split("\n"))
-                    )
+                    result = translated.strip().split("\n")
+                    result = _restore_code_fences(opening, closing, result)
+                    new_contents.append(("code_block", result))
                     print(
                         f"  TRANSLATED  {up_id}  "
                         "(code block comments translated)"
@@ -1085,17 +1285,28 @@ def _translate_new_file(
     new_contents: list[tuple[str, list[str]]] = []
     translated_count = 0
 
+    # Phase 1: handle non-batchable blocks immediately, collect batchable ones
+    _BATCHABLE = frozenset({
+        "prose", "list_item", "admonition_inline",
+        "section_header", "table", "example_block",
+        "block_title", "document_header", "attribute_entry",
+    })
+    pending: list[tuple[int, Block, str, str]] = []
+    # (index_in_new_contents, block, stripped_text, prefix_or_keyword)
+
     for block in blocks:
+        idx = len(new_contents)
         if block.block_type in _IMMUTABLE_TYPES:
             new_contents.append((block.block_type, list(block.lines)))
         elif block.block_type == "code_block":
+            opening, closing, content = _strip_code_fences(block.lines)
             if _has_comments(block.lines):
-                prompt = _build_code_comment_prompt("\n".join(block.lines))
+                prompt = _build_code_comment_prompt("\n".join(content))
                 translated = _call_ai(gemini_info, prompt)
                 if translated:
-                    new_contents.append(
-                        ("code_block", translated.strip().split("\n"))
-                    )
+                    result = translated.strip().split("\n")
+                    result = _restore_code_fences(opening, closing, result)
+                    new_contents.append(("code_block", result))
                     translated_count += 1
                 else:
                     new_contents.append(("code_block", list(block.lines)))
@@ -1108,62 +1319,80 @@ def _translate_new_file(
             if glossary_lines is not None:
                 new_contents.append(("section_header", glossary_lines))
                 translated_count += 1
+                print(".", end="", flush=True)
             else:
-                prompt = _build_new_file_prompt("\n".join(block.lines))
-                translated = _call_ai(gemini_info, prompt)
-                if translated:
-                    new_contents.append(
-                        ("section_header", translated.strip().split("\n"))
-                    )
-                    translated_count += 1
-                else:
-                    new_contents.append(
-                        ("section_header", list(block.lines))
-                    )
-                    skipped.append((rel_path, block.block_id))
-            print(".", end="", flush=True)
+                new_contents.append(("section_header", list(block.lines)))
+                pending.append(
+                    (idx, block, "\n".join(block.lines), "")
+                )
         elif block.block_type == "admonition_inline":
             keyword, content_lines = _strip_admonition_prefix(block.lines)
-            prompt = _build_new_file_prompt("\n".join(content_lines))
-            translated = _call_ai(gemini_info, prompt)
-            if translated:
-                result_lines = translated.strip().split("\n")
-                result_lines = _restore_admonition_prefix(
-                    keyword, result_lines
-                )
-                new_contents.append(("admonition_inline", result_lines))
-                translated_count += 1
-            else:
-                new_contents.append(
-                    ("admonition_inline", list(block.lines))
-                )
-                skipped.append((rel_path, block.block_id))
-            print(".", end="", flush=True)
+            new_contents.append(("admonition_inline", list(block.lines)))
+            pending.append(
+                (idx, block, "\n".join(content_lines), keyword)
+            )
         elif block.block_type == "list_item":
             prefix, content_lines = _strip_list_prefix(block.lines)
-            prompt = _build_new_file_prompt("\n".join(content_lines))
-            translated = _call_ai(gemini_info, prompt)
+            new_contents.append(("list_item", list(block.lines)))
+            pending.append(
+                (idx, block, "\n".join(content_lines), prefix)
+            )
+        elif block.block_type in _BATCHABLE:
+            new_contents.append((block.block_type, list(block.lines)))
+            pending.append(
+                (idx, block, "\n".join(block.lines), "")
+            )
+        else:
+            new_contents.append((block.block_type, list(block.lines)))
+            pending.append(
+                (idx, block, "\n".join(block.lines), "")
+            )
+
+    # Phase 2: batch translate pending blocks
+    batch_size = _rate_state.batch_size
+    base_rules = (
+        "あなたは技術文書の翻訳者です。OpenShift Virtualization に関する"
+        "英語ドキュメントを日本語に翻訳してください。\n\n"
+        "## ルール\n"
+        "- AsciiDoc の構文 (マークアップ、xref、コードブロック参照、リンク等)"
+        " はそのまま維持すること\n"
+        "- 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は"
+        "英語のまま残すこと\n"
+        "- AsciiDoc のアドモニションキーワード "
+        "(NOTE:, WARNING:, IMPORTANT:, TIP:, CAUTION:) は"
+        "英語のまま維持すること。日本語に翻訳しないこと\n"
+        "- インラインアドモニション (NOTE: テキスト) と"
+        "ブロックアドモニション ([NOTE]\\n====) の形式を"
+        "相互に変換しないこと\n"
+        "- 翻訳文のみを出力し、説明や注記は付けないこと\n"
+        "- 自然な日本語で、技術的に正確な翻訳を行うこと"
+    )
+
+    for batch_start in range(0, len(pending), batch_size):
+        batch = pending[batch_start:batch_start + batch_size]
+        texts = [text for _, _, text, _ in batch]
+        results = _call_ai_batch(gemini_info, texts, base_rules)
+
+        for (idx, block, _text, prefix), translated in zip(batch, results):
             if translated:
                 result_lines = translated.strip().split("\n")
-                result_lines = _restore_list_prefix(prefix, result_lines)
-                new_contents.append(("list_item", result_lines))
+                if block.block_type == "list_item" and prefix:
+                    result_lines = _restore_list_prefix(prefix, result_lines)
+                    result_lines = _ensure_list_prefix(
+                        block.lines, result_lines
+                    )
+                elif block.block_type == "admonition_inline" and prefix:
+                    result_lines = _restore_admonition_prefix(
+                        prefix, result_lines
+                    )
+                    result_lines = _ensure_admonition_prefix(
+                        block.lines, result_lines
+                    )
+                new_contents[idx] = (block.block_type, result_lines)
                 translated_count += 1
             else:
-                new_contents.append(("list_item", list(block.lines)))
                 skipped.append((rel_path, block.block_id))
-            print(".", end="", flush=True)
-        else:
-            prompt = _build_new_file_prompt("\n".join(block.lines))
-            translated = _call_ai(gemini_info, prompt)
-            if translated:
-                new_contents.append(
-                    (block.block_type, translated.strip().split("\n"))
-                )
-                translated_count += 1
-            else:
-                new_contents.append((block.block_type, list(block.lines)))
-                skipped.append((rel_path, block.block_id))
-            print(".", end="", flush=True)
+        print("." * len(batch), end="", flush=True)
 
     print()  # newline after dots
 
@@ -1174,6 +1403,129 @@ def _translate_new_file(
 
     print(f"NEW FILE    {rel_path} ({translated_count} blocks translated)")
     stats["new_files"] += 1
+
+
+# ---------------------------------------------------------------------------
+# Post-processing — fix admonition keywords and heading glossary in all files
+# ---------------------------------------------------------------------------
+
+
+_RE_JA_ADMONITION_PREFIX = re.compile(
+    r"^(" + "|".join(re.escape(k) for k in _TRANSLATED_ADMONITION_MAP) + r"):\s"
+)
+
+
+def _fix_translated_admonition(lines: list[str]) -> list[str] | None:
+    """prose ブロックの先頭が日本語アドモニションの場合、英語に復元する。
+
+    修正があれば新しい行リストを返す。なければ None。
+    """
+    if not lines:
+        return None
+    m = _RE_JA_ADMONITION_PREFIX.match(lines[0])
+    if not m:
+        return None
+    ja_kw = m.group(1)
+    en_kw = _TRANSLATED_ADMONITION_MAP.get(ja_kw)
+    if not en_kw:
+        return None
+    rest = lines[0][m.end():]
+    return [f"{en_kw}: {rest}"] + lines[1:]
+
+
+def _postprocess_admonitions_and_headings() -> int:
+    """Walk all JA .adoc files, fix admonition keywords and heading glossary.
+
+    For heading glossary, compares with the originals/ snapshot to find the
+    English heading text and applies the glossary if it matches.
+
+    Returns the number of files modified.
+    """
+    files_fixed = 0
+    for adoc_path in sorted(glob.glob("modules/*/pages/*.adoc")):
+        with open(adoc_path, encoding="utf-8") as fh:
+            content = fh.read()
+        blocks = parse_blocks(content)
+
+        en_headers: list[list[str]] = []
+        snap_path = os.path.join(ORIGINALS_DIR, adoc_path)
+        if os.path.exists(snap_path):
+            with open(snap_path, encoding="utf-8") as fh:
+                en_blocks = parse_blocks(fh.read())
+            en_headers = [
+                list(b.lines) for b in en_blocks
+                if b.block_type == "section_header"
+            ]
+
+        changed = False
+        new_contents: list[tuple[str, list[str]]] = []
+        header_idx = 0
+
+        for block in blocks:
+            if block.block_type == "admonition_inline":
+                fixed = _ensure_admonition_prefix(
+                    block.lines, list(block.lines)
+                )
+                if fixed != list(block.lines):
+                    new_contents.append(("admonition_inline", fixed))
+                    changed = True
+                else:
+                    new_contents.append(
+                        ("admonition_inline", list(block.lines))
+                    )
+            elif block.block_type == "prose":
+                fixed = _fix_translated_admonition(block.lines)
+                if fixed is not None:
+                    new_contents.append(("admonition_inline", fixed))
+                    changed = True
+                else:
+                    new_contents.append(("prose", list(block.lines)))
+            elif block.block_type == "section_header":
+                glossary = _apply_heading_glossary(block.lines)
+                if glossary is not None and glossary != list(block.lines):
+                    new_contents.append(("section_header", glossary))
+                    changed = True
+                elif header_idx < len(en_headers):
+                    en_glossary = _apply_heading_glossary(
+                        en_headers[header_idx]
+                    )
+                    if (
+                        en_glossary is not None
+                        and en_glossary != list(block.lines)
+                    ):
+                        new_contents.append(
+                            ("section_header", en_glossary)
+                        )
+                        changed = True
+                    else:
+                        new_contents.append(
+                            ("section_header", list(block.lines))
+                        )
+                else:
+                    new_contents.append(
+                        ("section_header", list(block.lines))
+                    )
+                header_idx += 1
+            else:
+                new_contents.append(
+                    (block.block_type, list(block.lines))
+                )
+
+        if changed:
+            corrected = sum(
+                1
+                for (_, new_lines), blk in zip(new_contents, blocks)
+                if new_lines != list(blk.lines)
+            )
+            with open(adoc_path, "w", encoding="utf-8") as fh:
+                fh.write(_reconstruct_file(new_contents))
+            print(
+                f"POSTFIX     {adoc_path} "
+                f"({corrected} blocks corrected)"
+            )
+            files_fixed += 1
+
+    return files_fixed
 
 
 # ---------------------------------------------------------------------------
@@ -1998,6 +2350,15 @@ def main() -> None:
                     [sys.executable, script_path], check=False,
                 )
                 print(f"FORMATTED   {script} applied")
+
+    # ---- step 10a: postprocess admonition/heading fixes ----
+    if args.format and not args.dry_run:
+        fixed_count = _postprocess_admonitions_and_headings()
+        if fixed_count:
+            print(
+                f"POSTFIX     {fixed_count} files corrected "
+                "(admonition/heading glossary)"
+            )
 
     # ---- step 11: sync-mark ----
     if skipped:
