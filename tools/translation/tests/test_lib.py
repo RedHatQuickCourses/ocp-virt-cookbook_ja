@@ -1144,11 +1144,11 @@ class TestEnsureDocHeaderAttrs(unittest.TestCase):
             ":navtitle: Cloud Init Fundamentals",
         ])
 
-    def test_all_attrs_present(self):
+    def test_all_attrs_present_overwritten(self):
         en = ["= Title", ":navtitle: Title"]
         ja = ["= タイトル", ":navtitle: タイトル"]
         result = self.mod._ensure_doc_header_attrs(en, ja)
-        self.assertEqual(result, ["= タイトル", ":navtitle: タイトル"])
+        self.assertEqual(result, ["= タイトル", ":navtitle: Title"])
 
     def test_no_attrs_in_en(self):
         en = ["= Title"]

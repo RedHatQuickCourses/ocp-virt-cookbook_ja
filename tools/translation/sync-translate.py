@@ -677,7 +677,8 @@ def _ensure_doc_header_attrs(
 ) -> list[str]:
     """document_header の属性行を EN 側と一致させる。
 
-    EN にあって JA にない属性 (:navtitle: 等) を復元する。
+    EN にある属性は EN の値で上書き（:navtitle: 等は翻訳不要）。
+    EN にあって JA にない属性は追加する。
     """
     if not en_lines or not ja_lines:
         return ja_lines
@@ -688,28 +689,31 @@ def _ensure_doc_header_attrs(
         if m:
             en_attrs[m.group(1)] = line
 
-    ja_attr_names: set[str] = set()
-    for line in ja_lines:
-        m = _RE_ATTR_LINE.match(line)
-        if m:
-            ja_attr_names.add(m.group(1))
-
-    missing = [
-        en_attrs[k] for k in en_attrs if k not in ja_attr_names
-    ]
-    if not missing:
+    if not en_attrs:
         return ja_lines
 
-    result = list(ja_lines)
+    result: list[str] = []
+    seen_attrs: set[str] = set()
+    for line in ja_lines:
+        m = _RE_ATTR_LINE.match(line)
+        if m and m.group(1) in en_attrs:
+            if m.group(1) not in seen_attrs:
+                result.append(en_attrs[m.group(1)])
+                seen_attrs.add(m.group(1))
+        else:
+            result.append(line)
+
     insert_pos = 1
-    for line in ja_lines[1:]:
+    for line in result[1:]:
         if _RE_ATTR_LINE.match(line):
             insert_pos += 1
         else:
             break
-    for line in missing:
-        result.insert(insert_pos, line)
-        insert_pos += 1
+    for attr_name, attr_line in en_attrs.items():
+        if attr_name not in seen_attrs:
+            result.insert(insert_pos, attr_line)
+            insert_pos += 1
+
     return result
 
 
@@ -1664,27 +1668,69 @@ def _postprocess_admonitions_and_headings() -> int:
                     en_doc_header = list(b.lines)
                     break
 
+        _LOWER_ADMON_KWS = {
+            "NOTE": "Note", "TIP": "Tip", "IMPORTANT": "Important",
+            "WARNING": "Warning", "CAUTION": "Caution",
+        }
+        en_has_lower_admon: set[str] = set()
+        if os.path.exists(snap_path):
+            for b in en_blocks:
+                if b.block_type == "prose" and b.lines:
+                    for lower_kw in _LOWER_ADMON_KWS.values():
+                        if b.lines[0].startswith(lower_kw + ":"):
+                            en_has_lower_admon.add(lower_kw)
+
         changed = False
         new_contents: list[tuple[str, list[str]]] = []
         header_idx = 0
+        doc_header_attrs: set[str] = set()
 
         for block in blocks:
             if block.block_type == "admonition_inline":
                 fixed = _ensure_admonition_prefix(
                     block.lines, list(block.lines)
                 )
-                if fixed != list(block.lines):
-                    new_contents.append(("admonition_inline", fixed))
-                    changed = True
-                else:
-                    new_contents.append(
-                        ("admonition_inline", list(block.lines))
-                    )
+                restored = False
+                if fixed and en_has_lower_admon:
+                    m = _RE_ADMONITION_PREFIX.match(fixed[0])
+                    if m:
+                        upper_kw = m.group(1)
+                        lower_kw = _LOWER_ADMON_KWS.get(upper_kw)
+                        if lower_kw and lower_kw in en_has_lower_admon:
+                            fixed = [
+                                lower_kw + ":" + fixed[0][len(upper_kw) + 1:]
+                            ] + fixed[1:]
+                            new_contents.append(("prose", fixed))
+                            changed = True
+                            restored = True
+                            en_has_lower_admon.discard(lower_kw)
+                if not restored:
+                    if fixed != list(block.lines):
+                        new_contents.append(("admonition_inline", fixed))
+                        changed = True
+                    else:
+                        new_contents.append(
+                            ("admonition_inline", list(block.lines))
+                        )
             elif block.block_type == "prose":
                 fixed = _fix_translated_admonition(block.lines)
                 if fixed is not None:
-                    new_contents.append(("admonition_inline", fixed))
-                    changed = True
+                    m = _RE_ADMONITION_PREFIX.match(fixed[0]) if fixed else None
+                    upper_kw = m.group(1) if m else None
+                    lower_kw = (
+                        _LOWER_ADMON_KWS.get(upper_kw)
+                        if upper_kw else None
+                    )
+                    if lower_kw and lower_kw in en_has_lower_admon:
+                        restored = [
+                            lower_kw + ":" + fixed[0][len(upper_kw) + 1:]
+                        ] + fixed[1:]
+                        new_contents.append(("prose", restored))
+                        changed = True
+                        en_has_lower_admon.discard(lower_kw)
+                    else:
+                        new_contents.append(("admonition_inline", fixed))
+                        changed = True
                 else:
                     new_contents.append(("prose", list(block.lines)))
             elif block.block_type == "section_header":
@@ -1725,12 +1771,25 @@ def _postprocess_admonitions_and_headings() -> int:
                 fixed = _ensure_doc_header_attrs(
                     en_doc_header, list(block.lines)
                 )
+                doc_header_attrs = set()
+                for line in fixed:
+                    m = _RE_ATTR_LINE.match(line)
+                    if m:
+                        doc_header_attrs.add(m.group(1))
                 if fixed != list(block.lines):
                     new_contents.append(("document_header", fixed))
                     changed = True
                 else:
                     new_contents.append(
                         ("document_header", list(block.lines))
+                    )
+            elif block.block_type == "attribute_entry" and block.lines:
+                m = _RE_ATTR_LINE.match(block.lines[0])
+                if m and m.group(1) in doc_header_attrs:
+                    changed = True
+                else:
+                    new_contents.append(
+                        (block.block_type, list(block.lines))
                     )
             else:
                 new_contents.append(
