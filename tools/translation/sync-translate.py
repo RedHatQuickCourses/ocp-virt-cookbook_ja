@@ -774,6 +774,39 @@ def _dedup_sections(
     return result
 
 
+def _enforce_heading_structure(
+    new_contents: list[tuple[str, list[str]]],
+    up_blocks: list,
+) -> list[tuple[str, list[str]]]:
+    """見出しレベルシーケンスを EN と位置ベースで一致させる。"""
+    def _hl(lines: list[str]) -> int:
+        if not lines:
+            return 0
+        m = re.match(r"^(={1,5})\s", lines[0])
+        return len(m.group(1)) if m else 0
+
+    en_headers = [b for b in up_blocks if b.block_type == "section_header"]
+    ja_indices = [i for i, (bt, _) in enumerate(new_contents)
+                  if bt == "section_header"]
+
+    if len(en_headers) != len(ja_indices):
+        return new_contents
+
+    changed = False
+    for en_b, ja_i in zip(en_headers, ja_indices):
+        en_level = _hl(list(en_b.lines))
+        _, ja_lines = new_contents[ja_i]
+        ja_level = _hl(ja_lines)
+        if en_level != ja_level and en_level > 0:
+            ja_lines[0] = re.sub(r"^=+", "=" * en_level, ja_lines[0])
+            new_contents[ja_i] = ("section_header", ja_lines)
+            changed = True
+
+    if changed:
+        print("  HEADFIX     heading levels enforced to match EN")
+    return new_contents
+
+
 def _apply_heading_glossary(lines: list[str]) -> list[str] | None:
     """見出しテキストが用語集に一致すれば翻訳済み行を返す。一致しなければ None。"""
     if not lines:
@@ -1234,8 +1267,36 @@ def _process_file(
             else:
                 # synced — keep JA
                 if ja_idx is not None and 0 <= ja_idx < len(ja_blocks):
+                    kept_lines = list(ja_blocks[ja_idx].lines)
+                    if up_block.block_type == "section_header":
+                        kept_lines = _ensure_heading_level(
+                            list(up_block.lines), kept_lines
+                        )
+                        ja_text = re.sub(
+                            r"^={1,5}\s+", "", kept_lines[0]
+                        ).strip() if kept_lines else ""
+                        en_text = re.sub(
+                            r"^={1,5}\s+", "", up_block.lines[0]
+                        ).strip() if up_block.lines else ""
+                        expected_ja = _HEADING_GLOSSARY.get(en_text)
+                        if (expected_ja is None
+                                and ja_text in _HEADING_GLOSSARY.values()):
+                            prompt = _build_new_file_prompt(
+                                "\n".join(up_block.lines)
+                            )
+                            translated = _call_ai(gemini_info, prompt)
+                            if translated:
+                                kept_lines = translated.strip().split("\n")
+                                kept_lines = _ensure_heading_level(
+                                    list(up_block.lines), kept_lines
+                                )
+                                print(
+                                    f"  RETRANSLATE {up_id}  "
+                                    "(synced heading was mismatched)"
+                                )
+                                stats["blocks_translated"] += 1
                     new_contents.append(
-                        (up_block.block_type, list(ja_blocks[ja_idx].lines))
+                        (up_block.block_type, kept_lines)
                     )
                 else:
                     # structure mismatch: block missing from JA → translate
@@ -1438,6 +1499,9 @@ def _process_file(
     # deduplicate sections before writing
     new_contents = _dedup_sections(new_contents, up_blocks)
 
+    # enforce heading structure (position-based level correction)
+    new_contents = _enforce_heading_structure(new_contents, up_blocks)
+
     # 7k — write
     if not dry_run and new_contents:
         with open(rel_path, "w", encoding="utf-8") as fh:
@@ -1601,6 +1665,9 @@ def _translate_new_file(
         print("." * len(batch), end="", flush=True)
 
     print()  # newline after dots
+
+    # enforce heading structure (position-based level correction)
+    new_contents = _enforce_heading_structure(new_contents, blocks)
 
     if not dry_run and new_contents:
         os.makedirs(os.path.dirname(rel_path), exist_ok=True)

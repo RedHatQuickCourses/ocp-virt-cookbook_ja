@@ -1620,6 +1620,74 @@ AI 翻訳時に以下の意図しない変換が発生する:
 
 `document_header` の翻訳結果を処理する際、EN 原文の `:attr:` 行で翻訳結果に存在しないものを復元する。`:navtitle:` の値が英語のまま残っている場合は翻訳結果の値を使用する。
 
+### 9.25 synced パスのセクションヘッダー検証と見出し構造強制
+
+#### 背景
+
+`_process_file` の「synced」パス (EN 未変更 → 旧 JA をそのまま保持) に以下の欠陥がある:
+
+1. **見出しレベル未強制**: `_ensure_heading_level` が適用されないため、旧 JA の見出しレベルが EN と異なっていてもそのまま出力される
+2. **誤訳内容の保持**: 旧 JA の section_header に誤った翻訳 (例: `== Cloning vs Golden Images` → `== 前提条件`) が含まれていても、EN 側が変更されていなければ「synced」として保持される
+3. **連鎖的レベル不一致**: 誤訳保持により `_dedup_sections` が正しい方の重複を除去し、後続の見出しレベルが全てカスケード的にズレる
+
+実測では 10 ファイル / 73 箇所の見出しレベル不一致と 9 ファイルのセクション欠落・重複が発生した。
+
+#### 対策 1: synced パスの section_header 検証
+
+`_process_file` の synced パスで section_header ブロックを保持する際、以下の検証を行う:
+
+1. `_ensure_heading_level` を適用し、JA 見出しレベルを EN と一致させる
+2. JA 見出しテキスト (レベルプレフィックス除去後) が用語集 `_HEADING_GLOSSARY` の値 (他の EN 見出しの翻訳) と一致し、かつ対応する EN 見出しテキストがその用語集エントリのキーと異なる場合、**誤訳として再翻訳する**
+
+```python
+# synced パスの section_header 処理
+kept_lines = list(ja_blocks[ja_idx].lines)
+kept_lines = _ensure_heading_level(list(up_block.lines), kept_lines)
+
+# 誤訳検出: JA テキストが別の EN 見出しの用語集翻訳と重複
+ja_text = _heading_text(kept_lines)
+en_text = _heading_text(list(up_block.lines))
+expected_ja = _HEADING_GLOSSARY.get(en_text)
+if expected_ja is None and ja_text in _HEADING_GLOSSARY.values():
+    # 用語集にない EN 見出しなのに JA が用語集翻訳と一致 → 誤訳
+    # → AI で再翻訳
+```
+
+#### 対策 2: ポスト再構築の見出し構造検証
+
+`_process_file` で `new_contents` を構築した後、`_dedup_sections` の後に見出し構造を EN と比較検証する:
+
+1. EN と JA の見出しレベルシーケンスを位置順に取得
+2. 見出し数が一致し、レベルシーケンスも一致すれば何もしない (高速パス)
+3. 見出し数は一致するがレベルが異なる場合: 位置ベースで EN のレベルを強制適用
+
+```python
+def _enforce_heading_structure(new_contents, up_blocks):
+    en_headers = [(i, b) for i, b in enumerate(up_blocks)
+                  if b.block_type == "section_header"]
+    ja_headers = [(i, lines) for i, (bt, lines) in enumerate(new_contents)
+                  if bt == "section_header"]
+    if len(en_headers) != len(ja_headers):
+        return new_contents  # 数不一致は _dedup_sections で対応
+    for (_, en_b), (ja_i, ja_lines) in zip(en_headers, ja_headers):
+        en_level = _heading_level(list(en_b.lines))
+        ja_level = _heading_level(ja_lines)
+        if en_level != ja_level:
+            ja_lines[0] = re.sub(r'^=+', '=' * en_level, ja_lines[0])
+            new_contents[ja_i] = ("section_header", ja_lines)
+    return new_contents
+```
+
+`_translate_new_file` でも同様に構築後に呼び出す。
+
+#### 適用順序
+
+`_process_file` 内:
+1. `new_contents` 構築 (全ブロックイテレーション)
+2. `_dedup_sections(new_contents, up_blocks)` — テキスト重複除去
+3. `_enforce_heading_structure(new_contents, up_blocks)` — レベル強制 (**新規**)
+4. `_reconstruct_file(new_contents)` — ファイル書き出し
+
 ---
 
 ## 10. 既存翻訳の初期化手順

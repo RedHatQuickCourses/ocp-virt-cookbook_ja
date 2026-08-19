@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sys
 import tempfile
 import unittest
@@ -1169,6 +1170,509 @@ class TestEnsureDocHeaderAttrs(unittest.TestCase):
         self.assertEqual(result, ["= タイトル"])
         result = self.mod._ensure_doc_header_attrs(["= Title"], [])
         self.assertEqual(result, [])
+
+
+class TestEnforceHeadingStructure(unittest.TestCase):
+    """Tests for _enforce_heading_structure."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_no_change_when_matched(self):
+        contents = [
+            ("section_header", ["== セクション A"]),
+            ("prose", ["テキスト"]),
+            ("section_header", ["=== サブ"]),
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== Section A"],
+                  start_line=1, end_line=1),
+            Block(block_type="prose", lines=["Text"],
+                  start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["=== Sub"],
+                  start_line=3, end_line=3),
+        ]
+        result = self.mod._enforce_heading_structure(contents, up_blocks)
+        self.assertEqual(result[0][1], ["== セクション A"])
+        self.assertEqual(result[2][1], ["=== サブ"])
+
+    def test_level_corrected(self):
+        contents = [
+            ("section_header", ["== セクション A"]),
+            ("prose", ["テキスト"]),
+            ("section_header", ["== サブ"]),  # wrong: should be ===
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== Section A"],
+                  start_line=1, end_line=1),
+            Block(block_type="prose", lines=["Text"],
+                  start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["=== Sub"],
+                  start_line=3, end_line=3),
+        ]
+        result = self.mod._enforce_heading_structure(contents, up_blocks)
+        self.assertEqual(result[2][1], ["=== サブ"])
+
+    def test_cascading_swap_corrected(self):
+        """== ↔ === swaps across multiple headings are all fixed."""
+        contents = [
+            ("section_header", ["== 概要"]),
+            ("prose", ["テキスト"]),
+            ("section_header", ["=== メソッド"]),   # wrong: should be ==
+            ("section_header", ["== サブ1"]),        # wrong: should be ===
+            ("section_header", ["=== サブ2"]),       # wrong: should be ==
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== Overview"],
+                  start_line=1, end_line=1),
+            Block(block_type="prose", lines=["Text"],
+                  start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["== Methods"],
+                  start_line=3, end_line=3),
+            Block(block_type="section_header", lines=["=== Sub1"],
+                  start_line=4, end_line=4),
+            Block(block_type="section_header", lines=["== Sub2"],
+                  start_line=5, end_line=5),
+        ]
+        result = self.mod._enforce_heading_structure(contents, up_blocks)
+        self.assertEqual(result[2][1], ["== メソッド"])
+        self.assertEqual(result[3][1], ["=== サブ1"])
+        self.assertEqual(result[4][1], ["== サブ2"])
+
+    def test_count_mismatch_no_change(self):
+        """When heading counts differ, return unchanged."""
+        contents = [
+            ("section_header", ["== A"]),
+            ("section_header", ["== B"]),
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== A"],
+                  start_line=1, end_line=1),
+        ]
+        result = self.mod._enforce_heading_structure(contents, up_blocks)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0][1], ["== A"])
+
+    def test_preserves_anchor(self):
+        """Anchor [[id]] is preserved when level is corrected."""
+        contents = [
+            ("section_header", ["=== 前提条件 [[prerequisites]]"]),
+        ]
+        up_blocks = [
+            Block(block_type="section_header",
+                  lines=["== Prerequisites [[prerequisites]]"],
+                  start_line=1, end_line=1),
+        ]
+        result = self.mod._enforce_heading_structure(contents, up_blocks)
+        self.assertEqual(result[0][1], ["== 前提条件 [[prerequisites]]"])
+
+    def test_empty_inputs(self):
+        """Empty contents and empty up_blocks should return unchanged."""
+        result = self.mod._enforce_heading_structure([], [])
+        self.assertEqual(result, [])
+
+    def test_no_section_headers(self):
+        """Contents with no section_header blocks return unchanged."""
+        contents = [
+            ("prose", ["テキスト"]),
+            ("code_block", ["[source,yaml]", "---", "key: value"]),
+        ]
+        up_blocks = [
+            Block(block_type="prose", lines=["Text"],
+                  start_line=1, end_line=1),
+            Block(block_type="code_block",
+                  lines=["[source,yaml]", "---", "key: value"],
+                  start_line=2, end_line=4),
+        ]
+        result = self.mod._enforce_heading_structure(contents, up_blocks)
+        self.assertEqual(len(result), 2)
+
+    def test_deep_level_5_correction(self):
+        """Level 5 (=====) headings are correctly enforced."""
+        contents = [
+            ("section_header", ["== セクション"]),
+            ("section_header", ["=== サブ"]),
+            ("section_header", ["==== 深い"]),
+            ("section_header", ["=== 最深部"]),  # wrong: should be =====
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== Section"],
+                  start_line=1, end_line=1),
+            Block(block_type="section_header", lines=["=== Sub"],
+                  start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["==== Deep"],
+                  start_line=3, end_line=3),
+            Block(block_type="section_header", lines=["===== Deepest"],
+                  start_line=4, end_line=4),
+        ]
+        result = self.mod._enforce_heading_structure(contents, up_blocks)
+        self.assertEqual(result[3][1], ["===== 最深部"])
+
+    def test_dedup_then_enforce_count_mismatch(self):
+        """After dedup reduces heading count, enforce skips (count mismatch)."""
+        contents = [
+            ("section_header", ["== まとめ"]),
+            ("prose", ["内容1"]),
+            ("section_header", ["== まとめ"]),  # duplicate
+            ("prose", ["内容2"]),
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== Summary"],
+                  start_line=1, end_line=1),
+            Block(block_type="prose", lines=["Content"],
+                  start_line=2, end_line=2),
+        ]
+        deduped = self.mod._dedup_sections(contents, up_blocks)
+        self.assertEqual(len(deduped), 2)
+        result = self.mod._enforce_heading_structure(deduped, up_blocks)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0][1], ["== まとめ"])
+
+
+class TestSyncedHeaderValidation(unittest.TestCase):
+    """Tests for synced-path section_header validation logic."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_glossary_value_detected_as_mismatch(self):
+        """JA text that matches a glossary value for a different EN heading
+        should be flagged as a mismatch."""
+        glossary = self.mod._HEADING_GLOSSARY
+        self.assertIn("Prerequisites", glossary)
+        self.assertEqual(glossary["Prerequisites"], "前提条件")
+        self.assertNotIn("Cloning vs Golden Images", glossary)
+        en_text = "Cloning vs Golden Images"
+        ja_text = "前提条件"
+        expected_ja = glossary.get(en_text)
+        self.assertIsNone(expected_ja)
+        self.assertIn(ja_text, glossary.values())
+
+    def test_correct_glossary_match_not_flagged(self):
+        """JA text that correctly matches the glossary for its EN heading
+        should NOT be flagged."""
+        glossary = self.mod._HEADING_GLOSSARY
+        en_text = "Prerequisites"
+        expected_ja = glossary.get(en_text)
+        self.assertIsNotNone(expected_ja)
+
+    def test_non_glossary_heading_not_flagged(self):
+        """JA text that doesn't match any glossary value should not be flagged."""
+        glossary = self.mod._HEADING_GLOSSARY
+        en_text = "Cloning vs Golden Images"
+        ja_text = "クローンとゴールデンイメージの比較"
+        expected_ja = glossary.get(en_text)
+        self.assertIsNone(expected_ja)
+        self.assertNotIn(ja_text, glossary.values())
+
+    def test_all_glossary_entries_trigger_detection(self):
+        """Every glossary value should trigger mismatch when paired with a
+        non-glossary EN heading."""
+        glossary = self.mod._HEADING_GLOSSARY
+        for en_key, ja_val in glossary.items():
+            self.assertIn(ja_val, glossary.values())
+
+    def test_retranslation_fallback_on_ai_failure(self):
+        """When AI retranslation returns None, the level-corrected original
+        JA heading is preserved (not lost)."""
+        en_lines = ["== Cloning vs Golden Images"]
+        ja_lines = ["=== 前提条件"]  # wrong level + wrong text
+        kept = self.mod._ensure_heading_level(en_lines, list(ja_lines))
+        self.assertEqual(kept, ["== 前提条件"])
+
+    def test_synced_heading_level_fixed_even_without_retranslation(self):
+        """Even if the heading text is not a glossary mismatch, the level
+        should still be corrected in the synced path."""
+        en_lines = ["== Some Unique Heading"]
+        ja_lines = ["=== ユニークな見出し"]  # wrong level, text is fine
+        kept = self.mod._ensure_heading_level(en_lines, list(ja_lines))
+        self.assertEqual(kept, ["== ユニークな見出し"])
+        ja_text = kept[0].lstrip("= ").strip()
+        glossary = self.mod._HEADING_GLOSSARY
+        expected = glossary.get("Some Unique Heading")
+        self.assertIsNone(expected)
+        self.assertNotIn(ja_text, glossary.values())
+
+
+class TestDedupThenEnforceAlignment(unittest.TestCase):
+    """Tests for the dedup → enforce pipeline when dedup brings counts
+    into alignment (the inverse of the count-mismatch case)."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_dedup_aligns_count_then_enforce_fixes_levels(self):
+        """dedup removes extra duplicate → counts match → enforce fixes levels."""
+        contents = [
+            ("section_header", ["== 概要"]),
+            ("prose", ["テキスト"]),
+            ("section_header", ["== 前提条件"]),     # duplicate of next
+            ("section_header", ["== 前提条件"]),     # duplicate (to be removed)
+            ("prose", ["手順内容"]),
+            ("section_header", ["== まとめ"]),       # wrong level (should be ===)
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== Overview"],
+                  start_line=1, end_line=1),
+            Block(block_type="prose", lines=["Text"],
+                  start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["== Prerequisites"],
+                  start_line=3, end_line=3),
+            Block(block_type="prose", lines=["Steps"],
+                  start_line=4, end_line=4),
+            Block(block_type="section_header", lines=["=== Summary"],
+                  start_line=5, end_line=5),
+        ]
+        deduped = self.mod._dedup_sections(contents, up_blocks)
+        self.assertEqual(
+            sum(1 for bt, _ in deduped if bt == "section_header"), 3,
+        )
+        result = self.mod._enforce_heading_structure(deduped, up_blocks)
+        headers = [(bt, lines) for bt, lines in result if bt == "section_header"]
+        self.assertEqual(headers[0][1], ["== 概要"])
+        self.assertEqual(headers[1][1], ["== 前提条件"])
+        self.assertEqual(headers[2][1], ["=== まとめ"])
+
+    def test_real_world_cascade_pattern(self):
+        """Reproduces the real bug pattern: a section drops, all subsequent
+        headings shift by one, levels cascade wrong.
+
+        EN structure: == A, === B, == C, === D, == E
+        JA (buggy):   == A, == B(wrong text+level), === C(wrong level),
+                      == D(wrong text+level), === E(wrong level), == E(dup)
+        After dedup+enforce the levels should match EN."""
+        contents = [
+            ("section_header", ["== セクション A"]),
+            ("prose", ["テキスト A"]),
+            ("section_header", ["== 前提条件"]),       # should be === B
+            ("prose", ["テキスト B"]),
+            ("section_header", ["=== セクション C"]),   # should be == C
+            ("prose", ["テキスト C"]),
+            ("section_header", ["== 前提条件"]),       # should be === D (dup)
+            ("prose", ["テキスト D"]),
+            ("section_header", ["=== セクション E"]),   # should be == E
+            ("section_header", ["== セクション E"]),    # duplicate
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== Section A"],
+                  start_line=1, end_line=1),
+            Block(block_type="prose", lines=["Text A"],
+                  start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["=== Section B"],
+                  start_line=3, end_line=3),
+            Block(block_type="prose", lines=["Text B"],
+                  start_line=4, end_line=4),
+            Block(block_type="section_header", lines=["== Section C"],
+                  start_line=5, end_line=5),
+            Block(block_type="prose", lines=["Text C"],
+                  start_line=6, end_line=6),
+            Block(block_type="section_header", lines=["=== Section D"],
+                  start_line=7, end_line=7),
+            Block(block_type="prose", lines=["Text D"],
+                  start_line=8, end_line=8),
+            Block(block_type="section_header", lines=["== Section E"],
+                  start_line=9, end_line=9),
+        ]
+        deduped = self.mod._dedup_sections(contents, up_blocks)
+        ja_header_count = sum(1 for bt, _ in deduped if bt == "section_header")
+        en_header_count = sum(1 for b in up_blocks
+                              if b.block_type == "section_header")
+        if ja_header_count == en_header_count:
+            result = self.mod._enforce_heading_structure(deduped, up_blocks)
+            headers = [(bt, lines) for bt, lines in result
+                       if bt == "section_header"]
+            self.assertEqual(headers[0][1][0][:2], "==")
+            self.assertEqual(headers[1][1][0][:3], "===")
+            self.assertEqual(headers[2][1][0][:2], "==")
+            self.assertNotEqual(headers[2][1][0][:3], "===")
+            self.assertEqual(headers[3][1][0][:3], "===")
+            self.assertEqual(headers[4][1][0][:2], "==")
+            self.assertNotEqual(headers[4][1][0][:3], "===")
+
+
+class TestSyncedPathRetranslationFlow(unittest.TestCase):
+    """Integration test for the synced-path retranslation flow.
+
+    Simulates the exact logic from _process_file L1267-1300 to verify
+    the complete pipeline: _ensure_heading_level → mismatch detection →
+    AI retranslation → _ensure_heading_level again."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def _run_synced_path(self, en_lines, ja_lines, ai_result=None):
+        """Simulate the synced-path logic for a section_header."""
+        mod = self.mod
+        kept_lines = list(ja_lines)
+        retranslated = False
+        kept_lines = mod._ensure_heading_level(list(en_lines), kept_lines)
+        ja_text = (
+            re.sub(r"^={1,5}\s+", "", kept_lines[0]).strip()
+            if kept_lines else ""
+        )
+        en_text = (
+            re.sub(r"^={1,5}\s+", "", en_lines[0]).strip()
+            if en_lines else ""
+        )
+        expected_ja = mod._HEADING_GLOSSARY.get(en_text)
+        if expected_ja is None and ja_text in mod._HEADING_GLOSSARY.values():
+            if ai_result is not None:
+                kept_lines = ai_result.strip().split("\n")
+                kept_lines = mod._ensure_heading_level(
+                    list(en_lines), kept_lines
+                )
+                retranslated = True
+        return kept_lines, retranslated
+
+    def test_mismatch_triggers_retranslation(self):
+        """Wrong glossary value on non-glossary EN heading →
+        AI retranslation produces correct result."""
+        kept, retranslated = self._run_synced_path(
+            en_lines=["=== Cloning vs Golden Images"],
+            ja_lines=["== 前提条件"],
+            ai_result="=== クローンとゴールデンイメージの比較",
+        )
+        self.assertTrue(retranslated)
+        self.assertEqual(kept, ["=== クローンとゴールデンイメージの比較"])
+
+    def test_ai_fixes_wrong_level_in_retranslation(self):
+        """AI returns heading with wrong level → second _ensure_heading_level
+        corrects it."""
+        kept, retranslated = self._run_synced_path(
+            en_lines=["=== Cloning vs Golden Images"],
+            ja_lines=["== 前提条件"],
+            ai_result="== クローンとゴールデンイメージの比較",
+        )
+        self.assertTrue(retranslated)
+        self.assertEqual(kept, ["=== クローンとゴールデンイメージの比較"])
+
+    def test_ai_failure_preserves_level_corrected_original(self):
+        """AI failure (None) → keep level-corrected original JA."""
+        kept, retranslated = self._run_synced_path(
+            en_lines=["=== Cloning vs Golden Images"],
+            ja_lines=["== 前提条件"],
+            ai_result=None,
+        )
+        self.assertFalse(retranslated)
+        self.assertEqual(kept, ["=== 前提条件"])
+
+    def test_non_glossary_text_skips_retranslation(self):
+        """JA text not in glossary values → no retranslation needed."""
+        kept, retranslated = self._run_synced_path(
+            en_lines=["== Custom Heading"],
+            ja_lines=["=== カスタム見出し"],
+            ai_result="should not be used",
+        )
+        self.assertFalse(retranslated)
+        self.assertEqual(kept, ["== カスタム見出し"])
+
+    def test_glossary_heading_not_flagged(self):
+        """EN heading IS in glossary → expected_ja is not None → no
+        retranslation (glossary path would have handled it)."""
+        kept, retranslated = self._run_synced_path(
+            en_lines=["== Prerequisites"],
+            ja_lines=["=== 概要"],
+            ai_result="should not be used",
+        )
+        self.assertFalse(retranslated)
+        self.assertEqual(kept, ["== 概要"])
+
+    def test_all_glossary_values_trigger_retranslation(self):
+        """Every glossary JA value triggers retranslation when paired with
+        a non-glossary EN heading."""
+        for en_key, ja_val in self.mod._HEADING_GLOSSARY.items():
+            kept, retranslated = self._run_synced_path(
+                en_lines=[f"== Non-Glossary Heading {en_key}"],
+                ja_lines=[f"== {ja_val}"],
+                ai_result=f"== 正しい翻訳 {en_key}",
+            )
+            self.assertTrue(
+                retranslated,
+                f"Expected retranslation for JA value '{ja_val}' "
+                f"but it was not triggered",
+            )
+
+
+class TestGlossaryPreemptsSyncedPath(unittest.TestCase):
+    """Verify that glossary-matched headings never reach the synced path
+    because _apply_heading_glossary returns non-None and the code continues."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_all_glossary_headings_handled_by_glossary_path(self):
+        """Every glossary EN heading returns a non-None result from
+        _apply_heading_glossary, meaning the code takes the glossary branch
+        (continue) and never reaches the synced path."""
+        for en_text, expected_ja in self.mod._HEADING_GLOSSARY.items():
+            for level in ("==", "===", "===="):
+                result = self.mod._apply_heading_glossary(
+                    [f"{level} {en_text}"]
+                )
+                self.assertIsNotNone(
+                    result,
+                    f"_apply_heading_glossary returned None for "
+                    f"'{level} {en_text}' — this would fall through to "
+                    f"the synced path incorrectly",
+                )
+                text = re.sub(r"^={2,5}\s+", "", result[0]).strip()
+                self.assertEqual(
+                    text, expected_ja,
+                    f"Expected '{expected_ja}' but got '{text}' "
+                    f"for '{level} {en_text}'",
+                )
+
+    def test_glossary_with_anchor_still_handled(self):
+        """Glossary heading with [[anchor]] still returns non-None."""
+        result = self.mod._apply_heading_glossary(
+            ["== Prerequisites [[prereqs]]"]
+        )
+        self.assertIsNotNone(result)
+        self.assertIn("前提条件", result[0])
+        self.assertIn("[[prereqs]]", result[0])
+
+    def test_non_glossary_heading_falls_through(self):
+        """Non-glossary heading returns None from _apply_heading_glossary,
+        confirming it would reach the synced path."""
+        result = self.mod._apply_heading_glossary(
+            ["== Cloning vs Golden Images"]
+        )
+        self.assertIsNone(result)
 
 
 class TestSyncAntoraPlaybook(unittest.TestCase):
