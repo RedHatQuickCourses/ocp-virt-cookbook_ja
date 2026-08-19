@@ -638,6 +638,138 @@ def _ensure_admonition_prefix(
     return translated_lines
 
 
+def _ensure_heading_level(
+    en_lines: list[str], ja_lines: list[str]
+) -> list[str]:
+    """翻訳結果の見出しレベルを EN と一致させる。"""
+    if not en_lines or not ja_lines:
+        return ja_lines
+    en_m = re.match(r"^(={1,5})\s", en_lines[0])
+    ja_m = re.match(r"^(={1,5})\s", ja_lines[0])
+    if en_m and ja_m and en_m.group(1) != ja_m.group(1):
+        ja_lines = [en_m.group(1) + ja_lines[0][len(ja_m.group(1)):]] + ja_lines[1:]
+    return ja_lines
+
+
+def _ensure_admonition_case(
+    en_lines: list[str], ja_lines: list[str]
+) -> list[str]:
+    """EN が小文字アドモニション (Note: 等) の場合、JA の大文字変換を復元する。"""
+    if not en_lines or not ja_lines:
+        return ja_lines
+    en_first = en_lines[0]
+    ja_first = ja_lines[0]
+    for lower_kw, upper_kw in [
+        ("Note:", "NOTE:"), ("Tip:", "TIP:"), ("Important:", "IMPORTANT:"),
+        ("Warning:", "WARNING:"), ("Caution:", "CAUTION:"),
+    ]:
+        if en_first.startswith(lower_kw) and ja_first.startswith(upper_kw):
+            ja_lines = [lower_kw + ja_first[len(upper_kw):]] + ja_lines[1:]
+            break
+    return ja_lines
+
+
+_RE_ATTR_LINE = re.compile(r"^:([^:]+):\s*(.*)")
+
+
+def _ensure_doc_header_attrs(
+    en_lines: list[str], ja_lines: list[str]
+) -> list[str]:
+    """document_header の属性行を EN 側と一致させる。
+
+    EN にあって JA にない属性 (:navtitle: 等) を復元する。
+    """
+    if not en_lines or not ja_lines:
+        return ja_lines
+
+    en_attrs: dict[str, str] = {}
+    for line in en_lines:
+        m = _RE_ATTR_LINE.match(line)
+        if m:
+            en_attrs[m.group(1)] = line
+
+    ja_attr_names: set[str] = set()
+    for line in ja_lines:
+        m = _RE_ATTR_LINE.match(line)
+        if m:
+            ja_attr_names.add(m.group(1))
+
+    missing = [
+        en_attrs[k] for k in en_attrs if k not in ja_attr_names
+    ]
+    if not missing:
+        return ja_lines
+
+    result = list(ja_lines)
+    insert_pos = 1
+    for line in ja_lines[1:]:
+        if _RE_ATTR_LINE.match(line):
+            insert_pos += 1
+        else:
+            break
+    for line in missing:
+        result.insert(insert_pos, line)
+        insert_pos += 1
+    return result
+
+
+def _dedup_sections(
+    new_contents: list[tuple[str, list[str]]],
+    up_blocks: list,
+) -> list[tuple[str, list[str]]]:
+    """new_contents から重複セクションを除去する。
+
+    upstream のセクション見出し数と比較し、JA 側に余剰セクションがあれば
+    2 回目以降の同名見出しとその配下ブロックを削除する。
+    """
+    def _heading_text(lines: list[str]) -> str:
+        if not lines:
+            return ""
+        return re.sub(r"^={1,5}\s+", "", lines[0]).strip()
+
+    def _heading_level(lines: list[str]) -> int:
+        if not lines:
+            return 0
+        m = re.match(r"^(={1,5})\s", lines[0])
+        return len(m.group(1)) if m else 0
+
+    up_h2_texts = []
+    for b in up_blocks:
+        if b.block_type == "section_header":
+            lvl = _heading_level(list(b.lines))
+            if lvl == 2:
+                up_h2_texts.append(
+                    re.sub(r"^={1,5}\s+", "", b.lines[0]).strip()
+                    if b.lines else ""
+                )
+
+    seen: dict[str, int] = {}
+    dup_indices: set[int] = set()
+    for i, (btype, lines) in enumerate(new_contents):
+        if btype == "section_header":
+            lvl = _heading_level(lines)
+            if lvl == 2:
+                text = _heading_text(lines)
+                if text in seen:
+                    dup_start = i
+                    dup_end = len(new_contents)
+                    for j in range(i + 1, len(new_contents)):
+                        jtype, jlines = new_contents[j]
+                        if jtype == "section_header" and _heading_level(jlines) <= lvl:
+                            dup_end = j
+                            break
+                    for k in range(dup_start, dup_end):
+                        dup_indices.add(k)
+                else:
+                    seen[text] = i
+
+    if not dup_indices:
+        return new_contents
+
+    result = [entry for i, entry in enumerate(new_contents) if i not in dup_indices]
+    return result
+
+
 def _apply_heading_glossary(lines: list[str]) -> list[str] | None:
     """見出しテキストが用語集に一致すれば翻訳済み行を返す。一致しなければ None。"""
     if not lines:
@@ -1028,6 +1160,9 @@ def _process_file(
         if up_block.block_type == "section_header":
             glossary_lines = _apply_heading_glossary(up_block.lines)
             if glossary_lines is not None:
+                glossary_lines = _ensure_heading_level(
+                    list(up_block.lines), glossary_lines
+                )
                 new_contents.append(("section_header", glossary_lines))
                 if status in ("outdated", "new"):
                     print(f"  GLOSSARY    {up_id}  (heading from glossary)")
@@ -1061,6 +1196,18 @@ def _process_file(
                     if up_block.block_type == "admonition_inline":
                         result_lines = _ensure_admonition_prefix(
                             up_block.lines, result_lines
+                        )
+                    if up_block.block_type == "section_header":
+                        result_lines = _ensure_heading_level(
+                            list(up_block.lines), result_lines
+                        )
+                    if up_block.block_type == "prose":
+                        result_lines = _ensure_admonition_case(
+                            list(up_block.lines), result_lines
+                        )
+                    if up_block.block_type == "document_header":
+                        result_lines = _ensure_doc_header_attrs(
+                            list(up_block.lines), result_lines
                         )
                     new_contents.append(
                         (up_block.block_type, result_lines)
@@ -1102,6 +1249,18 @@ def _process_file(
                             result_lines = _ensure_admonition_prefix(
                                 up_block.lines, result_lines
                             )
+                        if up_block.block_type == "section_header":
+                            result_lines = _ensure_heading_level(
+                                list(up_block.lines), result_lines
+                            )
+                        if up_block.block_type == "prose":
+                            result_lines = _ensure_admonition_case(
+                                list(up_block.lines), result_lines
+                            )
+                        if up_block.block_type == "document_header":
+                            result_lines = _ensure_doc_header_attrs(
+                                list(up_block.lines), result_lines
+                            )
                         new_contents.append(
                             (
                                 up_block.block_type,
@@ -1128,8 +1287,12 @@ def _process_file(
                 prompt = _build_new_file_prompt("\n".join(up_block.lines))
                 translated = _call_ai(gemini_info, prompt)
                 if translated:
+                    result_lines = translated.strip().split("\n")
+                    result_lines = _ensure_heading_level(
+                        list(up_block.lines), result_lines
+                    )
                     new_contents.append(
-                        (up_block.block_type, translated.strip().split("\n"))
+                        (up_block.block_type, result_lines)
                     )
                     print(f"  TRANSLATED  {up_id}  (section renamed)")
                     stats["blocks_translated"] += 1
@@ -1182,6 +1345,18 @@ def _process_file(
                             result_lines = _ensure_admonition_prefix(
                                 up_block.lines, result_lines
                             )
+                        if up_block.block_type == "section_header":
+                            result_lines = _ensure_heading_level(
+                                list(up_block.lines), result_lines
+                            )
+                        if up_block.block_type == "prose":
+                            result_lines = _ensure_admonition_case(
+                                list(up_block.lines), result_lines
+                            )
+                        if up_block.block_type == "document_header":
+                            result_lines = _ensure_doc_header_attrs(
+                                list(up_block.lines), result_lines
+                            )
                         new_contents.append(
                             (
                                 up_block.block_type,
@@ -1223,6 +1398,18 @@ def _process_file(
                 result_lines = _ensure_admonition_prefix(
                     up_block.lines, result_lines
                 )
+            if up_block.block_type == "section_header":
+                result_lines = _ensure_heading_level(
+                    list(up_block.lines), result_lines
+                )
+            if up_block.block_type == "prose":
+                result_lines = _ensure_admonition_case(
+                    list(up_block.lines), result_lines
+                )
+            if up_block.block_type == "document_header":
+                result_lines = _ensure_doc_header_attrs(
+                    list(up_block.lines), result_lines
+                )
             new_contents.append(
                 (up_block.block_type, result_lines)
             )
@@ -1243,6 +1430,9 @@ def _process_file(
                     f"  REMOVED     {bid}  (removed from upstream)"
                 )
                 stats["blocks_removed"] += 1
+
+    # deduplicate sections before writing
+    new_contents = _dedup_sections(new_contents, up_blocks)
 
     # 7k — write
     if not dry_run and new_contents:
@@ -1388,6 +1578,18 @@ def _translate_new_file(
                     result_lines = _ensure_admonition_prefix(
                         block.lines, result_lines
                     )
+                if block.block_type == "section_header":
+                    result_lines = _ensure_heading_level(
+                        list(block.lines), result_lines
+                    )
+                if block.block_type == "prose":
+                    result_lines = _ensure_admonition_case(
+                        list(block.lines), result_lines
+                    )
+                if block.block_type == "document_header":
+                    result_lines = _ensure_doc_header_attrs(
+                        list(block.lines), result_lines
+                    )
                 new_contents[idx] = (block.block_type, result_lines)
                 translated_count += 1
             else:
@@ -1481,7 +1683,12 @@ def _postprocess_admonitions_and_headings() -> int:
                 else:
                     new_contents.append(("prose", list(block.lines)))
             elif block.block_type == "section_header":
-                glossary = _apply_heading_glossary(block.lines)
+                result = list(block.lines)
+                if header_idx < len(en_headers):
+                    result = _ensure_heading_level(
+                        en_headers[header_idx], result
+                    )
+                glossary = _apply_heading_glossary(result)
                 if glossary is not None and glossary != list(block.lines):
                     new_contents.append(("section_header", glossary))
                     changed = True
@@ -1496,6 +1703,9 @@ def _postprocess_admonitions_and_headings() -> int:
                         new_contents.append(
                             ("section_header", en_glossary)
                         )
+                        changed = True
+                    elif result != list(block.lines):
+                        new_contents.append(("section_header", result))
                         changed = True
                     else:
                         new_contents.append(

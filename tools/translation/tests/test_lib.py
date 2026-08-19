@@ -966,6 +966,211 @@ class TestSyncTranslateHelpers(unittest.TestCase):
         self.assertEqual(state.batch_size, 1)
 
 
+class TestEnsureHeadingLevel(unittest.TestCase):
+    """Tests for _ensure_heading_level."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_level_mismatch_fixed(self):
+        en = ["=== Prerequisites"]
+        ja = ["== 前提条件"]
+        result = self.mod._ensure_heading_level(en, ja)
+        self.assertEqual(result, ["=== 前提条件"])
+
+    def test_level_match_unchanged(self):
+        en = ["== Overview"]
+        ja = ["== 概要"]
+        result = self.mod._ensure_heading_level(en, ja)
+        self.assertEqual(result, ["== 概要"])
+
+    def test_non_heading_unchanged(self):
+        en = ["Some text"]
+        ja = ["テキスト"]
+        result = self.mod._ensure_heading_level(en, ja)
+        self.assertEqual(result, ["テキスト"])
+
+    def test_empty_lines(self):
+        result = self.mod._ensure_heading_level([], ["== 見出し"])
+        self.assertEqual(result, ["== 見出し"])
+        result = self.mod._ensure_heading_level(["== Heading"], [])
+        self.assertEqual(result, [])
+
+    def test_deep_heading_level(self):
+        en = ["==== Deep Heading"]
+        ja = ["== 深い見出し"]
+        result = self.mod._ensure_heading_level(en, ja)
+        self.assertEqual(result, ["==== 深い見出し"])
+
+
+class TestEnsureAdmonitionCase(unittest.TestCase):
+    """Tests for _ensure_admonition_case."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_note_case_preserved(self):
+        en = ["Note: Replace your-key with the actual key."]
+        ja = ["NOTE: your-key を実際のキーに置き換えてください。"]
+        result = self.mod._ensure_admonition_case(en, ja)
+        self.assertEqual(
+            result, ["Note: your-key を実際のキーに置き換えてください。"]
+        )
+
+    def test_uppercase_note_unchanged(self):
+        en = ["NOTE: This is important."]
+        ja = ["NOTE: これは重要です。"]
+        result = self.mod._ensure_admonition_case(en, ja)
+        self.assertEqual(result, ["NOTE: これは重要です。"])
+
+    def test_non_admonition_unchanged(self):
+        en = ["Some regular text"]
+        ja = ["通常のテキスト"]
+        result = self.mod._ensure_admonition_case(en, ja)
+        self.assertEqual(result, ["通常のテキスト"])
+
+    def test_tip_case_preserved(self):
+        en = ["Tip: Use this command."]
+        ja = ["TIP: このコマンドを使ってください。"]
+        result = self.mod._ensure_admonition_case(en, ja)
+        self.assertEqual(
+            result, ["Tip: このコマンドを使ってください。"]
+        )
+
+    def test_empty_lines(self):
+        result = self.mod._ensure_admonition_case([], ["NOTE: text"])
+        self.assertEqual(result, ["NOTE: text"])
+
+
+class TestDedupSections(unittest.TestCase):
+    """Tests for _dedup_sections."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_no_duplicates(self):
+        contents = [
+            ("section_header", ["== セクション A"]),
+            ("prose", ["テキスト A"]),
+            ("section_header", ["== セクション B"]),
+            ("prose", ["テキスト B"]),
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== Section A"],
+                  start_line=1, end_line=1),
+            Block(block_type="prose", lines=["Text A"],
+                  start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["== Section B"],
+                  start_line=3, end_line=3),
+            Block(block_type="prose", lines=["Text B"],
+                  start_line=4, end_line=4),
+        ]
+        result = self.mod._dedup_sections(contents, up_blocks)
+        self.assertEqual(len(result), 4)
+
+    def test_duplicate_removed(self):
+        contents = [
+            ("section_header", ["== まとめ"]),
+            ("prose", ["内容1"]),
+            ("section_header", ["== まとめ"]),
+            ("prose", ["内容2"]),
+            ("section_header", ["== 次のセクション"]),
+        ]
+        up_blocks = [
+            Block(block_type="section_header", lines=["== Summary"],
+                  start_line=1, end_line=1),
+            Block(block_type="prose", lines=["Content"],
+                  start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["== Next"],
+                  start_line=3, end_line=3),
+        ]
+        result = self.mod._dedup_sections(contents, up_blocks)
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[0][1], ["== まとめ"])
+        self.assertEqual(result[1][1], ["内容1"])
+        self.assertEqual(result[2][1], ["== 次のセクション"])
+
+    def test_subsection_not_affected(self):
+        contents = [
+            ("section_header", ["== セクション"]),
+            ("section_header", ["=== サブ"]),
+            ("prose", ["テキスト"]),
+        ]
+        up_blocks = []
+        result = self.mod._dedup_sections(contents, up_blocks)
+        self.assertEqual(len(result), 3)
+
+
+class TestEnsureDocHeaderAttrs(unittest.TestCase):
+    """Tests for _ensure_doc_header_attrs."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_missing_navtitle_restored(self):
+        en = ["= Cloud Init Fundamentals", ":navtitle: Cloud Init Fundamentals"]
+        ja = ["= Cloud Init の基礎"]
+        result = self.mod._ensure_doc_header_attrs(en, ja)
+        self.assertEqual(result, [
+            "= Cloud Init の基礎",
+            ":navtitle: Cloud Init Fundamentals",
+        ])
+
+    def test_all_attrs_present(self):
+        en = ["= Title", ":navtitle: Title"]
+        ja = ["= タイトル", ":navtitle: タイトル"]
+        result = self.mod._ensure_doc_header_attrs(en, ja)
+        self.assertEqual(result, ["= タイトル", ":navtitle: タイトル"])
+
+    def test_no_attrs_in_en(self):
+        en = ["= Title"]
+        ja = ["= タイトル"]
+        result = self.mod._ensure_doc_header_attrs(en, ja)
+        self.assertEqual(result, ["= タイトル"])
+
+    def test_multiple_missing_attrs(self):
+        en = ["= Title", ":navtitle: Title", ":page-layout: home"]
+        ja = ["= タイトル"]
+        result = self.mod._ensure_doc_header_attrs(en, ja)
+        self.assertIn(":navtitle: Title", result)
+        self.assertIn(":page-layout: home", result)
+        self.assertEqual(result[0], "= タイトル")
+
+    def test_empty_inputs(self):
+        result = self.mod._ensure_doc_header_attrs([], ["= タイトル"])
+        self.assertEqual(result, ["= タイトル"])
+        result = self.mod._ensure_doc_header_attrs(["= Title"], [])
+        self.assertEqual(result, [])
+
+
 class TestSyncAntoraPlaybook(unittest.TestCase):
     """Tests for _sync_antora_playbook_yml."""
 

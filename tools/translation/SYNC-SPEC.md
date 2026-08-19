@@ -1534,6 +1534,92 @@ REST API 直接呼び出しへの移行に伴い、以下が変更される:
 | 環境変数 | `GEMINI_API_KEY` | `GEMINI_API_KEY` (変更なし) |
 | Python バージョン | 3.9+ | 3.9+ (変更なし) |
 
+### 9.22 既存ファイル更新時のセクション重複防止
+
+#### 背景
+
+`_process_file` は upstream のブロック順にイテレートし、各ブロックについて:
+- 旧スナップショットに存在する (synced/outdated) → 旧 JA の対応ブロックを使用
+- 旧スナップショットに存在しない (new) → AI で翻訳
+
+しかし upstream でセクションの追加・削除・並べ替えが発生した場合、以下の問題が発生する:
+
+1. **セクション重複**: `match_blocks` (旧スナップショット ↔ JA) のギャップ内位置照合が不正確になり、synced ブロックの JA 取得先がずれる。結果として同一見出しのセクションがファイル内に複数回出現する
+2. **見出しレベル不一致**: 新規ブロックの翻訳時に見出しレベル (`===` vs `==`) が保持されない場合がある
+3. **見出し内容ズレ**: synced の section_header で旧 JA の別セクション見出しが使用される
+
+#### 対策 1: 見出しレベルの強制保持
+
+`section_header` ブロックの翻訳結果に対して、元の EN 見出しのレベルプレフィックス (`==`, `===` 等) を強制的に復元する:
+
+```python
+def _ensure_heading_level(en_lines: list[str], ja_lines: list[str]) -> list[str]:
+    """翻訳結果の見出しレベルを EN と一致させる。"""
+    if not en_lines or not ja_lines:
+        return ja_lines
+    en_line = en_lines[0]
+    ja_line = ja_lines[0]
+    en_prefix = re.match(r'^(={1,5})\s', en_line)
+    ja_prefix = re.match(r'^(={1,5})\s', ja_line)
+    if en_prefix and ja_prefix and en_prefix.group(1) != ja_prefix.group(1):
+        ja_line = en_prefix.group(1) + ja_line[len(ja_prefix.group(1)):]
+        return [ja_line] + ja_lines[1:]
+    return ja_lines
+```
+
+適用箇所: `_process_file` 内の全 section_header 翻訳パス (new, outdated, structure-fix)。用語集適用時にも EN 見出しレベルを使用する。
+
+#### 対策 2: 再構築結果のセクション重複検出・除去
+
+`_process_file` の `new_contents` 構築後、ファイル書き出し前に重複セクションを検出・除去する:
+
+1. `new_contents` から `section_header` のリスト (見出しテキスト、位置) を抽出する
+2. 同一見出しテキスト (レベルプレフィックス除去後) が複数回出現する場合:
+   a. 対応する EN upstream の見出しテキストを位置から逆引きし、正しい見出しを特定する
+   b. 2 回目以降の出現は重複と判定し、その section_header と配下ブロック (次の同レベル以上 section_header まで) を `new_contents` から除去する
+3. 重複除去が行われた場合、ログに `DEDUP` を出力する
+
+#### 対策 3: 事後補正パスでの重複除去
+
+`--format` 実行時の事後補正パス (9.20) にもセクション重複検出を追加する。これにより、今回のバグで作成された既存翻訳ファイルの重複も修正できる:
+
+1. 各 `.adoc` ファイルを読み込み、`== ` で始まる行を抽出する
+2. 同一テキストの重複を検出する
+3. 重複セクション (2 回目以降) とその配下ブロックを除去する
+4. `originals/` の対応する EN ファイルのセクション数と一致することを検証する
+
+### 9.23 アドモニション形式・ケースの保持
+
+#### 背景
+
+AI 翻訳時に以下の意図しない変換が発生する:
+
+1. **インライン → ブロック変換**: `NOTE: text` が `[NOTE]\n====\n...\n====` に変換される
+2. **ケース昇格**: EN の `Note:` (通常テキスト、非 AsciiDoc アドモニション) が JA で `NOTE:` (AsciiDoc アドモニション) に変換される
+
+#### 対策 1: プロンプト強化 (9.17 の補強)
+
+既存の翻訳プロンプトに以下のルールを追加する:
+
+- 「`Note:` (小文字 n) は通常テキストであり、AsciiDoc のアドモニションキーワード `NOTE:` (大文字) に変換しないこと」
+- 「同様に `Tip:`, `Important:`, `Warning:`, `Caution:` も小文字始まりの場合は大文字に変換しないこと」
+
+#### 対策 2: ケース保持のポストプロセス
+
+翻訳結果の先頭が `NOTE: ` / `TIP: ` 等で始まり、EN 原文の先頭が `Note: ` / `Tip: ` 等 (小文字) で始まる場合、翻訳結果を元のケースに復元する。
+
+適用箇所: `_process_file` と `_translate_new_file` の翻訳結果処理。
+
+### 9.24 document_header の属性保持
+
+#### 背景
+
+`document_header` ブロック (ファイル先頭の `= Title` と `:attr:` 行) の翻訳時に、`:navtitle:` 等の属性行が欠落するケースがある。
+
+#### 対策
+
+`document_header` の翻訳結果を処理する際、EN 原文の `:attr:` 行で翻訳結果に存在しないものを復元する。`:navtitle:` の値が英語のまま残っている場合は翻訳結果の値を使用する。
+
 ---
 
 ## 10. 既存翻訳の初期化手順
