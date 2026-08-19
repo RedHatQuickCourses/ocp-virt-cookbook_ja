@@ -1650,6 +1650,7 @@ def _postprocess_admonitions_and_headings() -> int:
         blocks = parse_blocks(content)
 
         en_headers: list[list[str]] = []
+        en_doc_header: list[str] = []
         snap_path = os.path.join(ORIGINALS_DIR, adoc_path)
         if os.path.exists(snap_path):
             with open(snap_path, encoding="utf-8") as fh:
@@ -1658,6 +1659,10 @@ def _postprocess_admonitions_and_headings() -> int:
                 list(b.lines) for b in en_blocks
                 if b.block_type == "section_header"
             ]
+            for b in en_blocks:
+                if b.block_type == "document_header":
+                    en_doc_header = list(b.lines)
+                    break
 
         changed = False
         new_contents: list[tuple[str, list[str]]] = []
@@ -1716,6 +1721,17 @@ def _postprocess_admonitions_and_headings() -> int:
                         ("section_header", list(block.lines))
                     )
                 header_idx += 1
+            elif block.block_type == "document_header" and en_doc_header:
+                fixed = _ensure_doc_header_attrs(
+                    en_doc_header, list(block.lines)
+                )
+                if fixed != list(block.lines):
+                    new_contents.append(("document_header", fixed))
+                    changed = True
+                else:
+                    new_contents.append(
+                        ("document_header", list(block.lines))
+                    )
             else:
                 new_contents.append(
                     (block.block_type, list(block.lines))
@@ -2562,7 +2578,7 @@ def main() -> None:
                 print(f"FORMATTED   {script} applied")
 
     # ---- step 10a: postprocess admonition/heading fixes ----
-    if args.format and not args.dry_run:
+    if not args.dry_run:
         fixed_count = _postprocess_admonitions_and_headings()
         if fixed_count:
             print(
