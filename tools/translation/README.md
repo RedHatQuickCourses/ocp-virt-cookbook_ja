@@ -67,7 +67,7 @@ python3 tools/translation/sync-translate.py --resume
 |---|---|
 | `--dry-run` | 翻訳結果を stdout に表示するが、ファイルへの書き込み・ブランチ作成を行わない |
 | `--format` | 翻訳適用後に `add-jp-lat-spaces.py` と `convert-fullwidth-parens.py` を自動実行 |
-| `--model` | Gemini モデル。デフォルト: `gemini-3.6-flash` |
+| `--model` | Gemini モデル。デフォルト: `gemini-3.7-flash` |
 | `--branch` | 作成するブランチ名。デフォルト: `translate/<YYYY-MM-DD>` (実行日) |
 | `--resume` | 中断した翻訳を再開する。既存の translate ブランチに切り替え、翻訳済みファイルをスキップして続行する |
 

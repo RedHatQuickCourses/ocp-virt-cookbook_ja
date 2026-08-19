@@ -193,6 +193,55 @@ class TestBlockParser(unittest.TestCase):
         second_section = [b for b in blocks if b.block_type == "section_header" and "Second" in b.lines[0]][0]
         self.assertEqual(second_section.block_id, "second/section_header/0")
 
+    # ---- 14b. test_generate_block_ids_hierarchical ----
+    def test_generate_block_ids_hierarchical(self):
+        """Subsections with the same heading under different parents get unique IDs."""
+        content = (
+            "= Doc\n\n"
+            "== Method One\n\nIntro one.\n\n"
+            "=== When to Use\n\n* Use case A\n\n"
+            "=== Limitations\n\n* Limit A\n\n"
+            "== Method Two\n\nIntro two.\n\n"
+            "=== When to Use\n\n* Use case B\n\n"
+            "=== Limitations\n\n* Limit B\n\n"
+        )
+        blocks = parse_blocks(content)
+        generate_block_ids(blocks)
+
+        # Collect all list_item blocks (the * items)
+        list_items = [b for b in blocks if b.block_type == "list_item"]
+        self.assertEqual(len(list_items), 4)
+
+        # Each "When to Use" list_item should have a unique block_id
+        self.assertNotEqual(list_items[0].block_id, list_items[2].block_id)
+        # Each "Limitations" list_item should have a unique block_id
+        self.assertNotEqual(list_items[1].block_id, list_items[3].block_id)
+
+        # Verify hierarchical section_path structure
+        self.assertEqual(list_items[0].section_path, "method-one/when-to-use")
+        self.assertEqual(list_items[1].section_path, "method-one/limitations")
+        self.assertEqual(list_items[2].section_path, "method-two/when-to-use")
+        self.assertEqual(list_items[3].section_path, "method-two/limitations")
+
+    # ---- 14c. test_generate_block_ids_level_reset ----
+    def test_generate_block_ids_level_reset(self):
+        """A new level-2 heading clears deeper level slugs."""
+        content = (
+            "= Doc\n\n"
+            "== Parent\n\n"
+            "=== Child\n\nText under child.\n\n"
+            "== Sibling\n\nText under sibling.\n\n"
+        )
+        blocks = parse_blocks(content)
+        generate_block_ids(blocks)
+
+        sibling_prose = [
+            b for b in blocks
+            if b.block_type == "prose" and b.section_path == "sibling"
+        ]
+        self.assertEqual(len(sibling_prose), 1)
+        self.assertEqual(sibling_prose[0].block_id, "sibling/prose/0")
+
     # ---- 15. test_compute_block_hash ----
     def test_compute_block_hash(self):
         """Hash of known lines produces expected 16-char hex string."""
@@ -227,6 +276,71 @@ class TestBlockParser(unittest.TestCase):
         self.assertIn("[source,bash]", code[0].attrs)
         self.assertIn("[source,bash]", code[0].lines)
         self.assertIn("echo hello", code[0].lines)
+
+    # ---- 18b. test_table_in_list_continuation ----
+    def test_table_in_list_continuation(self):
+        """Table inside list continuation is included in the list_item block."""
+        content = (
+            "= Doc\n\n"
+            "== Section\n\n"
+            ". Step one\n"
+            "+\n"
+            "|===\n"
+            "|Col A |Col B\n"
+            "\n"
+            "|val1 |val2\n"
+            "|===\n\n"
+            "Some prose after.\n"
+        )
+        blocks = parse_blocks(content)
+        list_items = [b for b in blocks if b.block_type == "list_item"]
+        self.assertEqual(len(list_items), 1)
+        # Table delimiters should be inside the list_item
+        joined = "\n".join(list_items[0].lines)
+        self.assertIn("|===", joined)
+        self.assertIn("|val1 |val2", joined)
+        # Prose after should be a separate block
+        prose = [b for b in blocks if b.block_type == "prose"]
+        self.assertEqual(len(prose), 1)
+        self.assertIn("Some prose after.", prose[0].lines)
+
+    # ---- 18c. test_eof_in_table_state ----
+    def test_eof_in_table_state(self):
+        """Content in an unterminated table at EOF is preserved, not dropped."""
+        content = (
+            "= Doc\n\n"
+            "== Section\n\n"
+            "|===\n"
+            "|Col A |Col B\n"
+            "\n"
+            "|val1 |val2\n"
+        )
+        blocks = parse_blocks(content)
+        tables = [b for b in blocks if b.block_type == "table"]
+        self.assertEqual(len(tables), 1)
+        joined = "\n".join(tables[0].lines)
+        self.assertIn("|val1 |val2", joined)
+
+    # ---- 18d. test_sections_after_table_in_list_continuation ----
+    def test_sections_after_table_in_list_continuation(self):
+        """Sections after a table in a list continuation are not dropped."""
+        content = (
+            "= Doc\n\n"
+            "== Part One\n\n"
+            ". Step\n"
+            "+\n"
+            "|===\n"
+            "|A |B\n"
+            "|===\n\n"
+            "== Summary\n\n"
+            "Final text.\n"
+        )
+        blocks = parse_blocks(content)
+        sections = [b for b in blocks if b.block_type == "section_header"]
+        self.assertEqual(len(sections), 2)
+        summary_prose = [b for b in blocks if b.block_type == "prose"]
+        self.assertEqual(len(summary_prose), 1)
+        self.assertIn("Final text.", summary_prose[0].lines)
 
     # ---- 19. test_empty_lines_between_blocks ----
     def test_empty_lines_between_blocks(self):
@@ -542,6 +656,306 @@ class TestAnchorMatching(unittest.TestCase):
         matches = [(0, 0)]
         result = find_ja_lines_for_block(5, matches, ja_blocks)
         self.assertIsNone(result)
+
+
+class TestSyncTranslateHelpers(unittest.TestCase):
+    """Tests for sync-translate.py helper functions."""
+
+    @classmethod
+    def setUpClass(cls):
+        from importlib import import_module
+        # sync-translate contains a hyphen, so use importlib
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    # ---- admonition prefix strip ----
+    def test_strip_admonition_prefix_note(self):
+        keyword, lines = self.mod._strip_admonition_prefix(
+            ["NOTE: This is a note."]
+        )
+        self.assertEqual(keyword, "NOTE")
+        self.assertEqual(lines, ["This is a note."])
+
+    def test_strip_admonition_prefix_warning(self):
+        keyword, lines = self.mod._strip_admonition_prefix(
+            ["WARNING: Be careful.", "More text."]
+        )
+        self.assertEqual(keyword, "WARNING")
+        self.assertEqual(lines, ["Be careful.", "More text."])
+
+    def test_strip_admonition_prefix_none(self):
+        keyword, lines = self.mod._strip_admonition_prefix(
+            ["Regular text."]
+        )
+        self.assertEqual(keyword, "")
+        self.assertEqual(lines, ["Regular text."])
+
+    # ---- admonition prefix restore ----
+    def test_restore_admonition_prefix(self):
+        result = self.mod._restore_admonition_prefix(
+            "IMPORTANT", ["これは重要です。"]
+        )
+        self.assertEqual(result, ["IMPORTANT: これは重要です。"])
+
+    def test_restore_admonition_prefix_empty(self):
+        result = self.mod._restore_admonition_prefix(
+            "", ["テキスト"]
+        )
+        self.assertEqual(result, ["テキスト"])
+
+    # ---- admonition prefix ensure ----
+    def test_ensure_admonition_prefix_already_correct(self):
+        result = self.mod._ensure_admonition_prefix(
+            ["NOTE: Original text."],
+            ["NOTE: 翻訳されたテキスト。"],
+        )
+        self.assertEqual(result, ["NOTE: 翻訳されたテキスト。"])
+
+    def test_ensure_admonition_prefix_translated_to_japanese(self):
+        result = self.mod._ensure_admonition_prefix(
+            ["IMPORTANT: Use strong passwords."],
+            ["重要: 強力なパスワードを使用してください。"],
+        )
+        self.assertEqual(
+            result,
+            ["IMPORTANT: 強力なパスワードを使用してください。"],
+        )
+
+    def test_ensure_admonition_prefix_translated_tip(self):
+        result = self.mod._ensure_admonition_prefix(
+            ["TIP: Use automation."],
+            ["ヒント: 自動化を使用してください。"],
+        )
+        self.assertEqual(
+            result,
+            ["TIP: 自動化を使用してください。"],
+        )
+
+    def test_ensure_admonition_prefix_translated_note(self):
+        result = self.mod._ensure_admonition_prefix(
+            ["NOTE: Remember this."],
+            ["注: これを覚えてください。"],
+        )
+        self.assertEqual(
+            result,
+            ["NOTE: これを覚えてください。"],
+        )
+
+    def test_ensure_admonition_prefix_missing(self):
+        result = self.mod._ensure_admonition_prefix(
+            ["WARNING: Danger zone."],
+            ["危険なゾーンです。"],
+        )
+        self.assertEqual(
+            result,
+            ["WARNING: 危険なゾーンです。"],
+        )
+
+    def test_ensure_admonition_prefix_non_admonition(self):
+        result = self.mod._ensure_admonition_prefix(
+            ["Regular text."],
+            ["通常のテキスト。"],
+        )
+        self.assertEqual(result, ["通常のテキスト。"])
+
+    # ---- heading glossary ----
+    def test_heading_glossary_match(self):
+        result = self.mod._apply_heading_glossary(["== See Also"])
+        self.assertEqual(result, ["== 参照"])
+
+    def test_heading_glossary_match_level3(self):
+        result = self.mod._apply_heading_glossary(["=== Prerequisites"])
+        self.assertEqual(result, ["=== 前提条件"])
+
+    def test_heading_glossary_with_anchor(self):
+        result = self.mod._apply_heading_glossary(
+            ["== See Also [[see_also]]"]
+        )
+        self.assertEqual(result, ["== 参照 [[see_also]]"])
+
+    def test_heading_glossary_no_match(self):
+        result = self.mod._apply_heading_glossary(
+            ["== Custom Section Title"]
+        )
+        self.assertIsNone(result)
+
+    def test_heading_glossary_summary(self):
+        result = self.mod._apply_heading_glossary(["== Summary"])
+        self.assertEqual(result, ["== まとめ"])
+
+    def test_heading_glossary_cleanup(self):
+        result = self.mod._apply_heading_glossary(["== Cleanup"])
+        self.assertEqual(result, ["== クリーンアップ"])
+
+
+class TestSyncAntoraPlaybook(unittest.TestCase):
+    """Tests for _sync_antora_playbook_yml."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.orig_cwd = os.getcwd()
+        os.chdir(self.tmpdir)
+
+    def tearDown(self):
+        os.chdir(self.orig_cwd)
+        import shutil
+        shutil.rmtree(self.tmpdir)
+
+    def _write(self, name, content):
+        with open(os.path.join(self.tmpdir, name), "w") as f:
+            f.write(content)
+
+    def _read(self, name):
+        with open(os.path.join(self.tmpdir, name)) as f:
+            return f.read()
+
+    def test_component_name_replaced(self):
+        self._write("antora.yml", "name: ocp-virt-cookbook_ja\n")
+        self._write("antora-playbook.yml", "")
+        upstream = (
+            "site:\n"
+            "  title: OpenShift Virtualization cookbook\n"
+            "  start_page: ocp-virt-cookbook::index.adoc\n"
+            "\n"
+            "asciidoc:\n"
+            "  attributes:\n"
+            "    page-pagination: true\n"
+        )
+        with mock.patch.object(self.mod, "git_show", return_value=upstream):
+            stats = {}
+            self.mod._sync_antora_playbook_yml("upstream/main", stats, False)
+        result = self._read("antora-playbook.yml")
+        self.assertIn("ocp-virt-cookbook_ja::index.adoc", result)
+        self.assertNotIn("ocp-virt-cookbook::index.adoc", result)
+
+    def test_build_date_inserted(self):
+        self._write("antora.yml", "name: ocp-virt-cookbook_ja\n")
+        self._write("antora-playbook.yml", "")
+        upstream = (
+            "site:\n"
+            "  title: Test\n"
+            "  start_page: ocp-virt-cookbook::index.adoc\n"
+            "\n"
+            "asciidoc:\n"
+            "  attributes:\n"
+            "    page-pagination: true\n"
+            "\n"
+            "ui:\n"
+            "  bundle:\n"
+            "    url: ./ui-bundle/ui-bundle.zip\n"
+        )
+        with mock.patch.object(self.mod, "git_show", return_value=upstream):
+            stats = {}
+            self.mod._sync_antora_playbook_yml("upstream/main", stats, False)
+        result = self._read("antora-playbook.yml")
+        self.assertIn("build-date: '@'", result)
+        lines = result.split("\n")
+        bd_idx = next(i for i, l in enumerate(lines) if "build-date" in l)
+        pg_idx = next(i for i, l in enumerate(lines) if "page-pagination" in l)
+        self.assertEqual(bd_idx, pg_idx + 1)
+
+    def test_build_date_value_overridden(self):
+        self._write("antora.yml", "name: ocp-virt-cookbook_ja\n")
+        self._write("antora-playbook.yml", "")
+        upstream = (
+            "site:\n"
+            "  title: Test\n"
+            "  start_page: ocp-virt-cookbook_ja::index.adoc\n"
+            "\n"
+            "asciidoc:\n"
+            "  attributes:\n"
+            "    page-pagination: true\n"
+            "    build-date: '2026-01-01'\n"
+        )
+        with mock.patch.object(self.mod, "git_show", return_value=upstream):
+            stats = {}
+            self.mod._sync_antora_playbook_yml("upstream/main", stats, False)
+        result = self._read("antora-playbook.yml")
+        self.assertIn("build-date: '@'", result)
+        self.assertNotIn("2026-01-01", result)
+
+    def test_no_change_when_synced(self):
+        self._write("antora.yml", "name: ocp-virt-cookbook_ja\n")
+        synced = (
+            "site:\n"
+            "  title: Test\n"
+            "  start_page: ocp-virt-cookbook_ja::index.adoc\n"
+            "\n"
+            "asciidoc:\n"
+            "  attributes:\n"
+            "    page-pagination: true\n"
+            "    build-date: '@'\n"
+        )
+        self._write("antora-playbook.yml", synced)
+        with mock.patch.object(self.mod, "git_show", return_value=synced):
+            stats = {}
+            self.mod._sync_antora_playbook_yml("upstream/main", stats, False)
+        self.assertNotIn("playbook_updated", stats)
+
+    def test_extensions_preserved_from_upstream(self):
+        self._write("antora.yml", "name: ocp-virt-cookbook_ja\n")
+        self._write("antora-playbook.yml", "")
+        upstream = (
+            "site:\n"
+            "  title: Test\n"
+            "  start_page: ocp-virt-cookbook::index.adoc\n"
+            "\n"
+            "antora:\n"
+            "  extensions:\n"
+            "    - require: '@antora/lunr-extension'\n"
+            "      index_latest_only: true\n"
+            "\n"
+            "asciidoc:\n"
+            "  attributes:\n"
+            "    page-pagination: true\n"
+        )
+        with mock.patch.object(self.mod, "git_show", return_value=upstream):
+            stats = {}
+            self.mod._sync_antora_playbook_yml("upstream/main", stats, False)
+        result = self._read("antora-playbook.yml")
+        self.assertIn("lunr-extension", result)
+        self.assertIn("index_latest_only: true", result)
+
+    def test_dry_run_no_write(self):
+        self._write("antora.yml", "name: ocp-virt-cookbook_ja\n")
+        original = "site:\n  start_page: old::index.adoc\n"
+        self._write("antora-playbook.yml", original)
+        upstream = (
+            "site:\n"
+            "  start_page: ocp-virt-cookbook::index.adoc\n"
+            "\n"
+            "asciidoc:\n"
+            "  attributes:\n"
+            "    page-pagination: true\n"
+        )
+        with mock.patch.object(self.mod, "git_show", return_value=upstream):
+            stats = {}
+            self.mod._sync_antora_playbook_yml("upstream/main", stats, True)
+        self.assertEqual(self._read("antora-playbook.yml"), original)
+        self.assertTrue(stats.get("playbook_updated"))
+
+    def test_no_upstream_playbook(self):
+        self._write("antora.yml", "name: ocp-virt-cookbook_ja\n")
+        self._write("antora-playbook.yml", "old content\n")
+        with mock.patch.object(self.mod, "git_show", return_value=None):
+            stats = {}
+            self.mod._sync_antora_playbook_yml("upstream/main", stats, False)
+        self.assertEqual(self._read("antora-playbook.yml"), "old content\n")
 
 
 if __name__ == "__main__":

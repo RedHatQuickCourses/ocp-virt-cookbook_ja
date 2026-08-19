@@ -7,7 +7,7 @@ sync-check.py で検知された outdated / new ブロックを Gemini API で�
 git push は行わない)。
 
 使い方:
-  # 全管理対象ファイルの outdated/new ブロックを翻訳 (デフォルトモデル: gemini-3.6-flash)
+  # 全管理対象ファイルの outdated/new ブロックを翻訳 (デフォルトモデル: gemini-3.7-flash)
   python3 tools/translation/sync-translate.py
 
   # モデルを指定
@@ -80,8 +80,27 @@ from _lib.manifest import (
 ORIGINALS_DIR = "tools/translation/originals"
 UPSTREAM_REF = "upstream/main"
 PROGRESS_FILE = "tools/translation/.translate-progress.json"
-_IMMUTABLE_TYPES = frozenset({"code_block", "literal_block", "block_attribute"})
+_IMMUTABLE_TYPES = frozenset({"literal_block", "block_attribute"})
+_RE_COMMENT_LINE = re.compile(r"^(\s*#\s?)(.*)")
 _NO_TRAILING_BLANK = frozenset({"block_attribute", "block_title"})
+_RE_ADMONITION_PREFIX = re.compile(
+    r"^(NOTE|WARNING|IMPORTANT|CAUTION|TIP):\s*"
+)
+_TRANSLATED_ADMONITION_MAP: dict[str, str] = {
+    "注": "NOTE", "注記": "NOTE", "注意": "CAUTION",
+    "重要": "IMPORTANT", "ヒント": "TIP", "警告": "WARNING",
+}
+_HEADING_GLOSSARY: dict[str, str] = {
+    "See Also": "参照",
+    "Additional Resources": "追加リソース",
+    "Summary": "まとめ",
+    "Prerequisites": "前提条件",
+    "Cleanup": "クリーンアップ",
+    "Overview": "概要",
+    "Troubleshooting": "トラブルシューティング",
+    "Next Steps": "次のステップ",
+    "Best Practices": "ベストプラクティス",
+}
 
 # ---------------------------------------------------------------------------
 # Progress file for --resume
@@ -156,7 +175,7 @@ def _validate_gemini(model: str | None) -> tuple[str, str]:
             file=sys.stderr,
         )
         sys.exit(1)
-    return (api_key, model or "gemini-3.6-flash")
+    return (api_key, model or "gemini-3.7-flash")
 
 
 def _ai_worker(conn, model, api_key, prompt):
@@ -241,6 +260,11 @@ def _build_outdated_prompt(
         "リンク等) はそのまま維持すること\n"
         "- 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は"
         "英語のまま残すこと\n"
+        "- AsciiDoc のアドモニションキーワード (NOTE:, WARNING:, "
+        "IMPORTANT:, TIP:, CAUTION:) は英語のまま維持すること。"
+        "日本語に翻訳しないこと\n"
+        "- インラインアドモニション (NOTE: テキスト) とブロックアドモニション "
+        "([NOTE]\\n====) の形式を相互に変換しないこと\n"
         "- 既存の日本語翻訳のスタイルと文体を維持すること\n"
         "- 翻訳文のみを出力し、説明や注記は付けないこと\n\n"
         f"## セクション: {section_title}\n\n"
@@ -267,6 +291,11 @@ def _build_new_prompt(
         "リンク等) はそのまま維持すること\n"
         "- 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は"
         "英語のまま残すこと\n"
+        "- AsciiDoc のアドモニションキーワード (NOTE:, WARNING:, "
+        "IMPORTANT:, TIP:, CAUTION:) は英語のまま維持すること。"
+        "日本語に翻訳しないこと\n"
+        "- インラインアドモニション (NOTE: テキスト) とブロックアドモニション "
+        "([NOTE]\\n====) の形式を相互に変換しないこと\n"
         "- 以下の前後のブロックの文体に合わせること\n"
         "- 翻訳文のみを出力し、説明や注記は付けないこと\n\n"
         f"## セクション: {section_title}\n\n"
@@ -285,10 +314,154 @@ def _build_new_file_prompt(en_text: str) -> str:
         "リンク等) はそのまま維持すること\n"
         "- 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は"
         "英語のまま残すこと\n"
+        "- AsciiDoc のアドモニションキーワード (NOTE:, WARNING:, "
+        "IMPORTANT:, TIP:, CAUTION:) は英語のまま維持すること。"
+        "日本語に翻訳しないこと\n"
+        "- インラインアドモニション (NOTE: テキスト) とブロックアドモニション "
+        "([NOTE]\\n====) の形式を相互に変換しないこと\n"
         "- 翻訳文のみを出力し、説明や注記は付けないこと\n"
         "- 自然な日本語で、技術的に正確な翻訳を行うこと\n\n"
         f"## 翻訳対象の英語:\n{en_text}"
     )
+
+
+def _build_code_comment_prompt(en_code: str, current_ja: str | None = None) -> str:
+    base = (
+        "あなたは技術文書の翻訳者です。以下のコードブロック内の"
+        "コメント行 (# で始まる行) のみを日本語に翻訳してください。\n\n"
+        "## ルール\n"
+        "- コメント行 (# で始まる行) のみを翻訳すること\n"
+        "- コメント行以外のすべての行 (コマンド、YAML、変数、空行等) は"
+        "一切変更せず、そのまま出力すること\n"
+        "- コメント内の技術用語 (CLI コマンド、YAML キー、API 名、製品名) は"
+        "英語のまま残すこと\n"
+        "- 出力はコードブロック全体 (コメント行を翻訳済み) とし、"
+        "説明や注記は付けないこと\n\n"
+        f"## コードブロック:\n{en_code}"
+    )
+    if current_ja:
+        base += f"\n\n## 参考: 現在の日本語版:\n{current_ja}"
+    return base
+
+
+def _has_comments(lines: list[str]) -> bool:
+    """コードブロック内にコメント行があるか判定する。"""
+    in_delim = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("----") or stripped.startswith("...."):
+            in_delim = not in_delim
+            continue
+        if stripped.startswith("[") and stripped.endswith("]"):
+            continue
+        if stripped.startswith("#") and not in_delim:
+            return True
+        if _RE_COMMENT_LINE.match(stripped):
+            return True
+    return False
+
+
+def _strip_list_prefix(lines: list[str]) -> tuple[str, list[str]]:
+    """リスト項目の構造プレフィックスを分離して返す。"""
+    if not lines:
+        return "", lines
+    first = lines[0]
+    m = re.match(r"^(\*+\s+|\.+\s+)", first)
+    if m:
+        prefix = m.group(1)
+        stripped_first = first[len(prefix):]
+        return prefix, [stripped_first] + lines[1:]
+    return "", lines
+
+
+def _restore_list_prefix(prefix: str, lines: list[str]) -> list[str]:
+    """翻訳後のテキストにリストプレフィックスを再付与する。"""
+    if not prefix or not lines:
+        return lines
+    return [prefix + lines[0]] + lines[1:]
+
+
+def _ensure_list_prefix(original_lines: list[str], translated_lines: list[str]) -> list[str]:
+    """翻訳結果にリストプレフィックスが残っていることを保証する。"""
+    if not original_lines or not translated_lines:
+        return translated_lines
+    m = re.match(r"^(\*+\s+|\.+\s+)", original_lines[0])
+    if not m:
+        return translated_lines
+    prefix = m.group(1)
+    if not re.match(r"^(\*+\s+|\.+\s+)", translated_lines[0]):
+        translated_lines[0] = prefix + translated_lines[0]
+    return translated_lines
+
+
+def _strip_admonition_prefix(lines: list[str]) -> tuple[str, list[str]]:
+    """アドモニションキーワードプレフィックスを分離して返す。"""
+    if not lines:
+        return "", lines
+    m = _RE_ADMONITION_PREFIX.match(lines[0])
+    if m:
+        keyword = m.group(1)
+        rest = lines[0][m.end():]
+        return keyword, [rest] + lines[1:]
+    return "", lines
+
+
+def _restore_admonition_prefix(keyword: str, lines: list[str]) -> list[str]:
+    """翻訳後のテキストにアドモニションキーワードを再付与する。"""
+    if not keyword or not lines:
+        return lines
+    return [f"{keyword}: {lines[0]}"] + lines[1:]
+
+
+def _ensure_admonition_prefix(
+    original_lines: list[str], translated_lines: list[str]
+) -> list[str]:
+    """翻訳結果のアドモニションキーワードが英語のまま残っていることを保証する。"""
+    if not original_lines or not translated_lines:
+        return translated_lines
+    m = _RE_ADMONITION_PREFIX.match(original_lines[0])
+    if not m:
+        return translated_lines
+    keyword = m.group(1)
+    if _RE_ADMONITION_PREFIX.match(translated_lines[0]):
+        return translated_lines
+    for ja_kw in _TRANSLATED_ADMONITION_MAP:
+        pat = f"{ja_kw}: "
+        if translated_lines[0].startswith(pat):
+            rest = translated_lines[0][len(pat):]
+            translated_lines[0] = f"{keyword}: {rest}"
+            return translated_lines
+        pat2 = f"{ja_kw}:"
+        if translated_lines[0].startswith(pat2) and (
+            len(translated_lines[0]) == len(pat2)
+            or translated_lines[0][len(pat2)] == " "
+        ):
+            rest = translated_lines[0][len(pat2):].lstrip()
+            translated_lines[0] = f"{keyword}: {rest}"
+            return translated_lines
+    translated_lines[0] = f"{keyword}: {translated_lines[0]}"
+    return translated_lines
+
+
+def _apply_heading_glossary(lines: list[str]) -> list[str] | None:
+    """見出しテキストが用語集に一致すれば翻訳済み行を返す。一致しなければ None。"""
+    if not lines:
+        return None
+    line = lines[0]
+    m = re.match(r"^(={2,5})\s+", line)
+    if not m:
+        return None
+    prefix = m.group(0)
+    text = line[len(prefix):].strip()
+    anchor = ""
+    anchor_m = re.search(r"\s*\[\[([^\]]+)\]\]\s*$", text)
+    if anchor_m:
+        anchor = " " + anchor_m.group(0).strip()
+        text = text[: anchor_m.start()].strip()
+    ja_text = _HEADING_GLOSSARY.get(text)
+    if ja_text is None:
+        return None
+    return [f"{prefix}{ja_text}{anchor}"]
 
 
 # ---------------------------------------------------------------------------
@@ -619,27 +792,47 @@ def _process_file(
         status = bi.get("status", "new")
         snap_idx = snap_id_to_idx.get(up_id)
 
-        # ---- immutable / code blocks → always use upstream ----
+        # ---- immutable types (literal_block, block_attribute) ----
         if up_block.block_type in _IMMUTABLE_TYPES:
             new_contents.append((up_block.block_type, list(up_block.lines)))
-            if snap_idx is not None and status == "outdated":
-                print(f"  COPIED      {up_id}  (code block updated)")
-                stats["code_copied"] += 1
-            elif snap_idx is not None:
-                ja_idx = match_map.get(snap_idx)
-                if (
-                    ja_idx is not None
-                    and 0 <= ja_idx < len(ja_blocks)
-                    and compute_block_hash(ja_blocks[ja_idx].lines)
-                    != compute_block_hash(snap_blocks[snap_idx].lines)
-                ):
-                    print(
-                        f"  RESTORED    {up_id}  "
-                        "(code block comment was translated, "
-                        "restored to English)"
-                    )
-                    stats["code_restored"] += 1
             continue
+
+        # ---- code_block: translate comments only ----
+        if up_block.block_type == "code_block":
+            en_code = "\n".join(up_block.lines)
+            if _has_comments(up_block.lines):
+                cur_ja_code = None
+                if snap_idx is not None:
+                    ja_idx = match_map.get(snap_idx)
+                    if ja_idx is not None and 0 <= ja_idx < len(ja_blocks):
+                        cur_ja_code = "\n".join(ja_blocks[ja_idx].lines)
+                prompt = _build_code_comment_prompt(en_code, cur_ja_code)
+                translated = _call_ai(gemini_info, prompt)
+                if translated:
+                    new_contents.append(
+                        ("code_block", translated.strip().split("\n"))
+                    )
+                    print(
+                        f"  TRANSLATED  {up_id}  "
+                        "(code block comments translated)"
+                    )
+                    stats["blocks_translated"] += 1
+                else:
+                    new_contents.append(("code_block", list(up_block.lines)))
+                    skipped.append((rel_path, up_id))
+            else:
+                new_contents.append(("code_block", list(up_block.lines)))
+            continue
+
+        # ---- section_header: apply heading glossary ----
+        if up_block.block_type == "section_header":
+            glossary_lines = _apply_heading_glossary(up_block.lines)
+            if glossary_lines is not None:
+                new_contents.append(("section_header", glossary_lines))
+                if status in ("outdated", "new"):
+                    print(f"  GLOSSARY    {up_id}  (heading from glossary)")
+                    stats["blocks_translated"] += 1
+                continue
 
         # ---- block exists in snapshot (synced / outdated) ----
         if snap_idx is not None:
@@ -660,8 +853,17 @@ def _process_file(
                 )
                 translated = _call_ai(gemini_info, prompt)
                 if translated:
+                    result_lines = translated.strip().split("\n")
+                    if up_block.block_type == "list_item":
+                        result_lines = _ensure_list_prefix(
+                            up_block.lines, result_lines
+                        )
+                    if up_block.block_type == "admonition_inline":
+                        result_lines = _ensure_admonition_prefix(
+                            up_block.lines, result_lines
+                        )
                     new_contents.append(
-                        (up_block.block_type, translated.strip().split("\n"))
+                        (up_block.block_type, result_lines)
                     )
                     print(
                         f"  TRANSLATED  {up_id}  (outdated → synced)"
@@ -691,10 +893,19 @@ def _process_file(
                     )
                     translated = _call_ai(gemini_info, prompt)
                     if translated:
+                        result_lines = translated.strip().split("\n")
+                        if up_block.block_type == "list_item":
+                            result_lines = _ensure_list_prefix(
+                                up_block.lines, result_lines
+                            )
+                        if up_block.block_type == "admonition_inline":
+                            result_lines = _ensure_admonition_prefix(
+                                up_block.lines, result_lines
+                            )
                         new_contents.append(
                             (
                                 up_block.block_type,
-                                translated.strip().split("\n"),
+                                result_lines,
                             )
                         )
                         print(
@@ -762,10 +973,19 @@ def _process_file(
                     )
                     translated = _call_ai(gemini_info, prompt)
                     if translated:
+                        result_lines = translated.strip().split("\n")
+                        if up_block.block_type == "list_item":
+                            result_lines = _ensure_list_prefix(
+                                up_block.lines, result_lines
+                            )
+                        if up_block.block_type == "admonition_inline":
+                            result_lines = _ensure_admonition_prefix(
+                                up_block.lines, result_lines
+                            )
                         new_contents.append(
                             (
                                 up_block.block_type,
-                                translated.strip().split("\n"),
+                                result_lines,
                             )
                         )
                         print(
@@ -794,8 +1014,17 @@ def _process_file(
         )
         translated = _call_ai(gemini_info, prompt)
         if translated:
+            result_lines = translated.strip().split("\n")
+            if up_block.block_type == "list_item":
+                result_lines = _ensure_list_prefix(
+                    up_block.lines, result_lines
+                )
+            if up_block.block_type == "admonition_inline":
+                result_lines = _ensure_admonition_prefix(
+                    up_block.lines, result_lines
+                )
             new_contents.append(
-                (up_block.block_type, translated.strip().split("\n"))
+                (up_block.block_type, result_lines)
             )
             print(f"  TRANSLATED  {up_id}  (new → synced)")
             stats["blocks_translated"] += 1
@@ -859,6 +1088,70 @@ def _translate_new_file(
     for block in blocks:
         if block.block_type in _IMMUTABLE_TYPES:
             new_contents.append((block.block_type, list(block.lines)))
+        elif block.block_type == "code_block":
+            if _has_comments(block.lines):
+                prompt = _build_code_comment_prompt("\n".join(block.lines))
+                translated = _call_ai(gemini_info, prompt)
+                if translated:
+                    new_contents.append(
+                        ("code_block", translated.strip().split("\n"))
+                    )
+                    translated_count += 1
+                else:
+                    new_contents.append(("code_block", list(block.lines)))
+                    skipped.append((rel_path, block.block_id))
+            else:
+                new_contents.append(("code_block", list(block.lines)))
+            print(".", end="", flush=True)
+        elif block.block_type == "section_header":
+            glossary_lines = _apply_heading_glossary(block.lines)
+            if glossary_lines is not None:
+                new_contents.append(("section_header", glossary_lines))
+                translated_count += 1
+            else:
+                prompt = _build_new_file_prompt("\n".join(block.lines))
+                translated = _call_ai(gemini_info, prompt)
+                if translated:
+                    new_contents.append(
+                        ("section_header", translated.strip().split("\n"))
+                    )
+                    translated_count += 1
+                else:
+                    new_contents.append(
+                        ("section_header", list(block.lines))
+                    )
+                    skipped.append((rel_path, block.block_id))
+            print(".", end="", flush=True)
+        elif block.block_type == "admonition_inline":
+            keyword, content_lines = _strip_admonition_prefix(block.lines)
+            prompt = _build_new_file_prompt("\n".join(content_lines))
+            translated = _call_ai(gemini_info, prompt)
+            if translated:
+                result_lines = translated.strip().split("\n")
+                result_lines = _restore_admonition_prefix(
+                    keyword, result_lines
+                )
+                new_contents.append(("admonition_inline", result_lines))
+                translated_count += 1
+            else:
+                new_contents.append(
+                    ("admonition_inline", list(block.lines))
+                )
+                skipped.append((rel_path, block.block_id))
+            print(".", end="", flush=True)
+        elif block.block_type == "list_item":
+            prefix, content_lines = _strip_list_prefix(block.lines)
+            prompt = _build_new_file_prompt("\n".join(content_lines))
+            translated = _call_ai(gemini_info, prompt)
+            if translated:
+                result_lines = translated.strip().split("\n")
+                result_lines = _restore_list_prefix(prefix, result_lines)
+                new_contents.append(("list_item", result_lines))
+                translated_count += 1
+            else:
+                new_contents.append(("list_item", list(block.lines)))
+                skipped.append((rel_path, block.block_id))
+            print(".", end="", flush=True)
         else:
             prompt = _build_new_file_prompt("\n".join(block.lines))
             translated = _call_ai(gemini_info, prompt)
@@ -1278,6 +1571,94 @@ def _sync_antora_yml(
 
 
 # ---------------------------------------------------------------------------
+# antora-playbook.yml sync  (step 9a)
+# ---------------------------------------------------------------------------
+
+
+def _sync_antora_playbook_yml(
+    upstream_ref: str,
+    stats: dict,
+    dry_run: bool,
+) -> None:
+    up_content = git_show(upstream_ref, "antora-playbook.yml")
+    if not up_content:
+        return
+
+    ja_name: str | None = None
+    if os.path.exists("antora.yml"):
+        with open("antora.yml", encoding="utf-8") as fh:
+            for raw_line in fh:
+                if raw_line.strip().startswith("name:"):
+                    ja_name = raw_line.strip().split(":", 1)[1].strip()
+                    break
+    if not ja_name:
+        return
+
+    lines = up_content.rstrip("\n").split("\n")
+    result: list[str] = []
+    build_date_found = False
+
+    in_asciidoc = False
+    in_attrs = False
+    attr_indent = "    "
+    last_attr_idx = -1
+
+    for line in lines:
+        stripped = line.strip()
+        indent = len(line) - len(line.lstrip()) if stripped else -1
+
+        if stripped.startswith("start_page:") and "::" in stripped:
+            comp = stripped.split(":", 1)[1].strip().split("::")[0]
+            if comp != ja_name:
+                line = line.replace(f"{comp}::", f"{ja_name}::")
+
+        result.append(line)
+
+        if indent == 0 and stripped:
+            if stripped == "asciidoc:" or stripped.startswith("asciidoc:"):
+                in_asciidoc = True
+                in_attrs = False
+            else:
+                if in_attrs and not build_date_found:
+                    result.insert(last_attr_idx + 1, f"{attr_indent}build-date: '@'")
+                    build_date_found = True
+                in_asciidoc = False
+                in_attrs = False
+            continue
+
+        if in_asciidoc and not in_attrs and stripped.startswith("attributes:"):
+            in_attrs = True
+            continue
+
+        if in_attrs and stripped and indent > 0:
+            attr_indent = " " * indent
+            last_attr_idx = len(result) - 1
+            if stripped.startswith("build-date:"):
+                if stripped != "build-date: '@'":
+                    result[-1] = f"{attr_indent}build-date: '@'"
+                build_date_found = True
+
+    if in_attrs and not build_date_found:
+        result.insert(last_attr_idx + 1, f"{attr_indent}build-date: '@'")
+
+    new_content = "\n".join(result)
+    if not new_content.endswith("\n"):
+        new_content += "\n"
+
+    current = ""
+    if os.path.exists("antora-playbook.yml"):
+        with open("antora-playbook.yml", encoding="utf-8") as fh:
+            current = fh.read()
+
+    if new_content != current:
+        if not dry_run:
+            with open("antora-playbook.yml", "w", encoding="utf-8") as fh:
+                fh.write(new_content)
+        print("PLAYBOOK    antora-playbook.yml: updated from upstream")
+        stats["playbook_updated"] = True
+
+
+# ---------------------------------------------------------------------------
 # Module asset sync  (step 7i/7j)
 # ---------------------------------------------------------------------------
 
@@ -1355,7 +1736,7 @@ def main() -> None:
     parser.add_argument(
         "--model",
         default=None,
-        help="Gemini モデル (デフォルト: gemini-3.6-flash)",
+        help="Gemini モデル (デフォルト: gemini-3.7-flash)",
     )
     parser.add_argument(
         "--branch",
@@ -1486,7 +1867,6 @@ def main() -> None:
         "files_updated": 0,
         "blocks_translated": 0,
         "code_copied": 0,
-        "code_restored": 0,
         "blocks_removed": 0,
         "assets_copied": 0,
         "assets_updated": 0,
@@ -1606,6 +1986,9 @@ def main() -> None:
     # ---- step 9: antora.yml sync ----
     _sync_antora_yml(UPSTREAM_REF, stats, args.dry_run)
 
+    # ---- step 9a: antora-playbook.yml sync ----
+    _sync_antora_playbook_yml(UPSTREAM_REF, stats, args.dry_run)
+
     # ---- step 10: format ----
     if args.format and not args.dry_run:
         for script in ("add-jp-lat-spaces.py", "convert-fullwidth-parens.py"):
@@ -1642,10 +2025,6 @@ def main() -> None:
         parts_list.append(f"{stats['code_copied']} code blocks copied")
     if stats["blocks_removed"]:
         parts_list.append(f"{stats['blocks_removed']} blocks removed")
-    if stats["code_restored"]:
-        parts_list.append(
-            f"{stats['code_restored']} code blocks restored"
-        )
     if stats["assets_copied"]:
         parts_list.append(f"{stats['assets_copied']} assets copied")
     if stats["assets_updated"]:

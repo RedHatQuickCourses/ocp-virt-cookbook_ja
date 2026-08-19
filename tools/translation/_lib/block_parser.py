@@ -257,11 +257,16 @@ def parse_blocks(content: str) -> list[Block]:
                 break
             line = raw_lines[line_num - 1]
 
-        # ----- リスト継続中のコードブロック処理 -----
+        # ----- リスト継続中のデリミタブロック処理 -----
         if list_continuation_code_delim is not None:
             current_lines.append(line)
             current_end = line_num
-            if _RE_CODE_DELIM.match(line) or _RE_LITERAL_DELIM.match(line):
+            is_closing = (
+                (list_continuation_code_delim == "----" and _RE_CODE_DELIM.match(line))
+                or (list_continuation_code_delim == "...." and _RE_LITERAL_DELIM.match(line))
+                or (list_continuation_code_delim == "|===" and _RE_TABLE_DELIM.match(line))
+            )
+            if is_closing:
                 list_continuation_code_delim = None
             continue
 
@@ -428,6 +433,11 @@ def parse_blocks(content: str) -> list[Block]:
                 current_lines.append(line)
                 list_continuation_code_delim = "...."
                 continue
+            # テーブル開始
+            if _RE_TABLE_DELIM.match(line):
+                current_lines.append(line)
+                list_continuation_code_delim = "|==="
+                continue
             # 新しいリスト項目が始まったら、現在のブロックを確定して再処理
             if _RE_LIST_ITEM.match(line):
                 _flush_current()
@@ -582,6 +592,25 @@ def parse_blocks(content: str) -> list[Block]:
             current_start = line_num
 
     # ファイル末尾: 残りを確定
+    # デリミタブロック内で EOF に達した場合、正しい型で確定する
+    _STATE_TO_TYPE = {
+        _State.IN_CODE_BLOCK: "code_block",
+        _State.IN_LITERAL_BLOCK: "literal_block",
+        _State.IN_EXAMPLE_BLOCK: "example_block",
+        _State.IN_TABLE: "table",
+    }
+    if state in _STATE_TO_TYPE and current_lines:
+        btype = _STATE_TO_TYPE[state]
+        a, al, t, tl, ts, a_s = _collect_pending()
+        _finalize_block(
+            btype, current_lines, current_start,
+            current_start + len(current_lines) - 1,
+            attrs=a, attr_lines=al, title=t, title_line=tl,
+            title_start=ts, attr_start=a_s,
+        )
+        current_lines = []
+        current_type = ""
+        state = _State.NORMAL
     _flush_current()
     if _has_pending():
         _flush_pending_attrs_as_blocks()
@@ -668,17 +697,26 @@ def generate_block_ids(blocks: list[Block]) -> None:
 
     ID 形式: ``<section_path>/<block_type>/<ordinal>``
 
+    セクションパスは見出しレベルに基づく階層構造を持つ。例えば
+    ``== Method 1`` の下の ``=== When to Use`` は
+    ``method-1/when-to-use`` となり、同名サブセクションの衝突を防ぐ。
+
     Args:
         blocks: :func:`parse_blocks` が返したブロックのリスト。
     """
     current_section_path = "_root"
+    # 各見出しレベル (2-5) のスラグを保持
+    level_slugs: dict[int, str] = {}
     # セクション内のブロック種別ごとのカウンター
     ordinal_counters: dict[str, int] = {}
 
     for i, block in enumerate(blocks):
         if block.block_type == "section_header":
-            # セクションヘッダーからセクションパスを決定
             heading_text = block.lines[0] if block.lines else ""
+
+            # 見出しレベルを検出 (== → 2, === → 3, ...)
+            m = _RE_SECTION_HEADER.match(heading_text)
+            level = len(m.group(1)) if m else 2
 
             # アンカーが attrs にある場合 (ヘッダー直前の [[anchor]] 等)
             anchor = _extract_anchor_from_attrs(block.attrs)
@@ -689,10 +727,17 @@ def generate_block_ids(blocks: list[Block]) -> None:
                 if prev.block_type == "block_attribute":
                     anchor = _extract_anchor_from_attrs(prev.lines)
 
-            if anchor:
-                current_section_path = anchor
-            else:
-                current_section_path = _slugify(heading_text)
+            slug = anchor if anchor else _slugify(heading_text)
+
+            # このレベルのスラグを設定し、より深いレベルをクリア
+            level_slugs[level] = slug
+            for lvl in [k for k in level_slugs if k > level]:
+                del level_slugs[lvl]
+
+            # 全アクティブレベルから階層パスを構築
+            path_parts = [level_slugs[lvl]
+                          for lvl in sorted(level_slugs)]
+            current_section_path = "/".join(path_parts)
 
             # カウンターをリセット
             ordinal_counters = {}

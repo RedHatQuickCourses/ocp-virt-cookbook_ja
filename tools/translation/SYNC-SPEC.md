@@ -47,9 +47,9 @@ upstream リポジトリ (`RedHatQuickCourses/ocp-virt-cookbook`) の英語コ�
 | ブロック種別 | 開始パターン | 終了条件 | 翻訳対象 |
 |---|---|---|---|
 | `document_header` | 1行目の `= タイトル` | 連続する `:attr:` 行の末尾まで | タイトルと一部属性値 |
-| `section_header` | `^={2,5}\s` | 単一行 | 見出しテキスト |
+| `section_header` | `^={2,5}\s` | 単一行 | 見出しテキスト (用語集に一致すれば用語集を優先) |
 | `prose` | 他の種別に該当しない非空行 | 空行または他の種別の開始 | 全文 |
-| `code_block` | `[source,...]\n----` または単独の `----` | 対応する `----` 閉じデリミタ | 不変 (翻訳しない) |
+| `code_block` | `[source,...]\n----` または単独の `----` | 対応する `----` 閉じデリミタ | コメント行のみ翻訳 (コード本体は不変) |
 | `literal_block` | `....` | 対応する `....` 閉じデリミタ | 不変 |
 | `admonition_inline` | `^(NOTE\|WARNING\|IMPORTANT\|CAUTION\|TIP): ` | 空行 | 本文 (キーワードは不変) |
 | `example_block` | `[NOTE]\n====` 等、または単独の `====` | 対応する `====` 閉じデリミタ | 内容 (アドモニションキーワードは不変) |
@@ -63,7 +63,7 @@ upstream リポジトリ (`RedHatQuickCourses/ocp-virt-cookbook`) の英語コ�
 
 - **block_attribute 行** (`[source,yaml]`, `[cols="1,2"]`, `[NOTE]`, `[IMPORTANT]` 等) は、直後のデリミタブロック (code_block, table, example_block 等) と **一体のブロック** として扱う。単独ブロックにはしない。
 - **block_title 行** (`.期待される出力` 等) も同様に、直後のブロックの一部として扱う。
-- **リスト継続** (`+` 単独行) は、前のリスト項目ブロックに含める。`+` に続くコードブロック等も同じリスト項目ブロックの一部とする。
+- **リスト継続** (`+` 単独行) は、前のリスト項目ブロックに含める。`+` に続くコードブロック、リテラルブロック、テーブル (`|===`) 等のデリミタブロックも同じリスト項目ブロックの一部とする。
 
 ### 2.4 解析ステートマシン
 
@@ -118,6 +118,10 @@ upstream リポジトリ (`RedHatQuickCourses/ocp-virt-cookbook`) の英語コ�
 ```
 
 **注意**: デリミタ行 (`----`, `....`, `====`, `|===`) は末尾に空白文字が付いていても有効なデリミタとして扱う (`\s*$`)。upstream のファイルに末尾空白付きデリミタが存在するケースが確認されている (例: `creating-managing-storage-class.adoc` L82)。
+
+**リスト継続中のデリミタブロック**: `+` (リスト継続) の後に出現する `----`, `....`, `|===` はそれぞれ対応する閉じデリミタまでを list_item ブロック内に含める。テーブル (`|===`) も同様に、開き・閉じデリミタとその間の全行を list_item ブロックの一部として蓄積する。
+
+**EOF でのブロック確定**: ファイル末尾に到達した時点で IN_CODE_BLOCK, IN_LITERAL_BLOCK, IN_EXAMPLE_BLOCK, IN_TABLE の各状態にある場合は、蓄積中の内容を対応するブロック種別 (code_block, literal_block, example_block, table) として確定する。内容をサイレントに破棄してはならない。
 
 ### 2.5 このリポジトリで確認されたパターンへの対応
 
@@ -236,7 +240,7 @@ def compute_block_hash(lines: list[str]) -> str:
 | 要素 | 不変部分 | フィンガープリント |
 |---|---|---|
 | セクション見出し | `=` レベル + `[[anchor_id]]` (あれば) | `("section", level, anchor_id_or_None)` |
-| コードブロック | 全内容 (コードは翻訳しない) | `("code", content_hash[:16])` |
+| コードブロック | コード本体 (コメント行を除くコード行) | `("code", content_hash[:16])` |
 | block_attribute | `[source,yaml]` 等の全文 | `("attr", raw_text)` |
 | admonition キーワード | `NOTE:`, `WARNING:` 等 | `("admonition", keyword)` |
 | テーブル構造 | `[cols=...]` 属性 + `\|===` デリミタ | `("table", cols_attr)` |
@@ -608,7 +612,7 @@ python3 tools/translation/sync-translate.py --resume
 |---|---|
 | `--dry-run` | 翻訳結果を stdout に表示するが、ファイルへの書き込み・ブランチ作成・`sync-mark.py` の実行を行わない |
 | `--format` | 翻訳適用後に `add-jp-lat-spaces.py` と `convert-fullwidth-parens.py` を自動実行 |
-| `--model` | Gemini モデル。デフォルト: `gemini-3.6-flash` |
+| `--model` | Gemini モデル。デフォルト: `gemini-3.7-flash` |
 | `--branch` | 作成するブランチ名。デフォルト: `translate/<YYYY-MM-DD>` (実行日) |
 | `--resume` | 中断した翻訳を再開する。既存の translate ブランチに切り替え、プログレスファイルから翻訳済みファイルをスキップして続行する |
 
@@ -644,15 +648,16 @@ python3 tools/translation/sync-translate.py --resume
    c. 現在の日本語ファイルを読み込み
    d. 不変アンカー照合で英語スナップショットと日本語ブロックを対応づけ
    d2. 構造不一致の自動修正: スナップショット英語に存在するが日本語に対応ブロックがないもの (AI 翻訳時の欠損) はスナップショットを参考に翻訳して挿入する。逆に日本語にあるがスナップショットに対応しないブロック (AI 翻訳時の余剰) は削除する。修正後、再度アンカー照合を行い 1:1 対応を確立する
-   e. コードブロック修正: ステータスに関わらず、日本語ファイル内のコードブロック (`code_block`, `literal_block`) の内容がスナップショット英語と異なる場合、upstream 原文で上書きする (AI API は呼び出さない)
-   f. `outdated` ブロック (コードブロック以外): Gemini API で翻訳を生成し、日本語ファイル内の該当ブロックを置換 (後述のプロンプト設計参照)
-   g. `new` ブロック (コードブロック以外): AI API で翻訳を生成し、日本語ファイル内の適切な位置に挿入。コードブロックの場合は upstream 原文をそのまま挿入
+   e. コードブロック翻訳: `code_block` は upstream 原文をベースに AI API でコメント行 (`#` で始まる行) のみ翻訳する (コード本体は不変)。`literal_block` および `block_attribute` は upstream 原文をそのまま使用する (AI API は呼び出さない)
+   f. `outdated` ブロック (上記以外): Gemini API で翻訳を生成し、日本語ファイル内の該当ブロックを置換 (後述のプロンプト設計参照)
+   g. `new` ブロック (上記以外): AI API で翻訳を生成し、日本語ファイル内の適切な位置に挿入
    h. `removed` ブロック: 日本語ファイルから該当ブロックを削除
    i. 画像ファイルの同期: upstream のページが参照する画像 (`image::`) のうち、日本語リポジトリに存在しないものを `git show upstream/main:<path>` で取得してコピーする。upstream で削除された画像 (日本語側に存在するが upstream に存在しない) は削除する
    j. attachments/images の更新同期: 処理対象ファイルが属するモジュールの `attachments/` および `images/` 配下の既存ファイルを upstream と比較し、内容が異なるファイルを upstream で上書きする (9.11 参照)
    k. 日本語ファイルを書き出し
 8. **nav.adoc の同期**: 各モジュールの `nav.adoc` を upstream と比較し、差分を反映する。新規ページへの xref 行を追加し、削除されたページの xref 行を削除する。xref の表示テキスト (`[]` 内) がある場合は AI API で翻訳する
 9. **antora.yml の同期**: upstream の `antora.yml` と比較し、`nav` セクションに新規モジュールの追加・削除を反映する。`name` フィールドなどリポジトリ固有の値は変更しない
+9a. **antora-playbook.yml の同期**: upstream の `antora-playbook.yml` をベースに、JA 固有フィールド (`site.start_page` のコンポーネント名、`asciidoc.attributes.build-date`) のみ上書き保持して同期する (9.14.1 参照)
 10. `--format` 指定時は書式整形ツールを実行
 11. `sync-mark.py` を内部的に呼び出してマニフェストとスナップショットを更新 (`removed` ブロックはマニフェストから除去)
 11a. プログレスファイルを削除する (正常完了時のみ)
@@ -670,6 +675,8 @@ python3 tools/translation/sync-translate.py --resume
 ## ルール
 - AsciiDoc の構文 (マークアップ、xref、コードブロック参照、リンク等) はそのまま維持すること
 - 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は英語のまま残すこと
+- AsciiDoc のアドモニションキーワード (NOTE:, WARNING:, IMPORTANT:, TIP:, CAUTION:) は英語のまま維持すること。日本語に翻訳しないこと
+- インラインアドモニション (NOTE: テキスト) とブロックアドモニション ([NOTE]\n====) の形式を相互に変換しないこと
 - 既存の日本語翻訳のスタイルと文体を維持すること
 - 翻訳文のみを出力し、説明や注記は付けないこと
 
@@ -696,6 +703,8 @@ python3 tools/translation/sync-translate.py --resume
 ## ルール
 - AsciiDoc の構文 (マークアップ、xref、コードブロック参照、リンク等) はそのまま維持すること
 - 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は英語のまま残すこと
+- AsciiDoc のアドモニションキーワード (NOTE:, WARNING:, IMPORTANT:, TIP:, CAUTION:) は英語のまま維持すること。日本語に翻訳しないこと
+- インラインアドモニション (NOTE: テキスト) とブロックアドモニション ([NOTE]\n====) の形式を相互に変換しないこと
 - 以下の前後のブロックの文体に合わせること
 - 翻訳文のみを出力し、説明や注記は付けないこと
 
@@ -713,13 +722,13 @@ python3 tools/translation/sync-translate.py --resume
 
 ##### コードブロックの扱い
 
-コードブロック (`code_block`, `literal_block`) は翻訳対象外であり、upstream の英語原文をそのまま使用する。以下のルールで処理する:
+コードブロック (`code_block`) のコメント行 (`#` で始まる行) は翻訳対象とし、コード本体は不変とする。`literal_block` および `block_attribute` は完全に不変 (翻訳しない)。以下のルールで処理する:
 
-- `outdated` の場合: 現在の upstream の内容で日本語ファイル内のコードブロックを上書きする。AI API は呼び出さない。
-- `synced` の場合でも、日本語ファイル内のコードブロック内容がスナップショット英語と不一致であれば (AI 翻訳時にコメントが翻訳されたケース等)、スナップショットの英語原文で上書きする。
-- `new` の場合: upstream の英語原文をそのまま挿入する。AI API は呼び出さない。
+- **コードブロック (`code_block`)**: AI API でコメント行のみ翻訳する。コード本体 (コマンド、YAML キー・値、変数等) は変更しない。`outdated` / `new` / `synced` のいずれのステータスでも、upstream の英語原文をベースに AI API でコメント翻訳を行う。日本語ファイル内に既にコメントが翻訳済みの場合は、現在の日本語訳を参考にして更新する。
+- **リテラルブロック (`literal_block`)**: upstream の英語原文をそのまま使用する。AI API は呼び出さない。
+- **block_attribute**: upstream の英語原文をそのまま使用する。
 
-**背景**: 既存の AI 一括翻訳で、コードブロック内の YAML/bash コメント (例: `# Change to:` → `# 変更:`) が翻訳されているファイルが11件確認されている。この修正ロジックにより、初回実行時にこれらが自動的に英語原文に戻される。
+コードブロック翻訳用プロンプトでは、コメント行 (`#` で始まる行) のみを翻訳し、それ以外の行は一切変更しないことを明示的に指示する。
 
 ##### 新規ファイル翻訳 (処理フロー ステップ 4)
 
@@ -728,7 +737,8 @@ upstream に存在するが日本語リポジトリに存在しないファイ�
 1. `sync-init.py` を内部的に呼び出し、スナップショットとマニフェストに登録
 2. upstream 英語ファイルをブロック解析
 3. 各ブロックを種別に応じて処理:
-   - コードブロック / block_attribute: 英語原文をそのままコピー
+   - コードブロック (`code_block`): AI API でコメント行のみ翻訳 (コード本体は不変)
+   - リテラルブロック / block_attribute: 英語原文をそのままコピー
    - セクション見出し / 散文 / リスト / テーブル等: AI API で翻訳
 4. 翻訳結果を日本語ファイルとして `modules/<module>/pages/` に書き出し
 5. 対応する `attachments/` および `images/` 配下のファイルも upstream からコピー
@@ -739,6 +749,8 @@ upstream に存在するが日本語リポジトリに存在しないファイ�
 ## ルール
 - AsciiDoc の構文 (マークアップ、xref、コードブロック参照、リンク等) はそのまま維持すること
 - 技術用語 (CLI コマンド、YAML キー、API 名、製品名) は英語のまま残すこと
+- AsciiDoc のアドモニションキーワード (NOTE:, WARNING:, IMPORTANT:, TIP:, CAUTION:) は英語のまま維持すること。日本語に翻訳しないこと
+- インラインアドモニション (NOTE: テキスト) とブロックアドモニション ([NOTE]\n====) の形式を相互に変換しないこと
 - 翻訳文のみを出力し、説明や注記は付けないこと
 - 自然な日本語で、技術的に正確な翻訳を行うこと
 
@@ -761,10 +773,9 @@ DELETED     modules/LABENV/pages/index.adoc (no upstream counterpart)
 modules/networking/pages/linux-bridges.adoc:
   TRANSLATED  overview/prose/0  (outdated → synced)
   TRANSLATED  create-net-attach-def/prose/2  (outdated → synced)
-  COPIED      create-net-attach-def/code_block/1  (code block updated)
+  TRANSLATED  create-net-attach-def/code_block/1  (code block comments translated)
   TRANSLATED  test-secondary-network/prose/3  (new → synced)
   REMOVED     deprecated-section/prose/0  (removed from upstream)
-  RESTORED    step-3/code_block/2  (code block comment was translated, restored to English)
 
 IMAGE SYNC  modules/networking/images/layer2-secondary-topology.png: copied from upstream
 IMAGE SYNC  modules/performance/images/performance-tuning-ladder.svg: copied from upstream
@@ -780,7 +791,7 @@ FORMATTED   add-jp-lat-spaces.py applied
 FORMATTED   convert-fullwidth-parens.py applied
 MARKED      sync-mark.py executed
 
-24 new files translated, 1 file updated, 3 blocks translated, 1 code block copied, 1 block removed, 1 code block restored, 16 images copied, 17 attachments updated
+24 new files translated, 1 file updated, 3 blocks translated, 1 code block comments translated, 1 block removed, 16 images copied, 17 attachments updated
 
 Review your changes:
   git diff
@@ -1020,10 +1031,10 @@ tools/translation/
 
 ### 9.7 コードブロックが upstream で変更された場合
 
-- コードブロックは不変 (翻訳しない) なので、ハッシュ変更は英語・日本語両方に影響
-- `sync-check.py` が `outdated` として報告
-- `sync-translate.py` が upstream の内容で日本語ファイルのコードブロックを自動的に上書きする (AI API は呼び出さない)
-- 既存翻訳で AI がコードブロック内のコメントを翻訳していたケース (例: `# Change to:` → `# 変更:`) も、`sync-translate.py` の実行時にステータスに関わらず英語原文に自動修正される (11ファイルで確認済み)
+- コードブロックのコード本体は不変だが、コメント行 (`#` で始まる行) は翻訳対象
+- `sync-check.py` がハッシュ変更を検知し `outdated` として報告
+- `sync-translate.py` が upstream のコードブロックをベースに、AI API でコメント行のみ翻訳する
+- 日本語ファイル内に既にコメントが翻訳済みの場合は、現在の日本語訳を参考にして差分を更新する
 - `validate-structure.py` もコードブロック内容の不一致を検出する
 
 ### 9.8 部分更新 (ファイル内の一部ブロックのみ翻訳反映)
@@ -1090,6 +1101,92 @@ upstream に対応するファイルが存在しない日本語ファイルは�
 - `name` フィールドはリポジトリ固有の値 (`ocp-virt-cookbook_ja`) であり、upstream と異なる値を維持する
 - `title`, `version` 等は upstream に合わせて更新する
 
+### 9.14.1 antora-playbook.yml の同期
+
+`antora-playbook.yml` はサイトレベルの構成ファイルであり、ブロック単位の翻訳管理 (マニフェスト) の範囲外とする。ただし、upstream で追加・変更された設定 (拡張機能、UI、AsciiDoc 属性等) を日本語リポジトリに反映するため、`sync-translate.py` 実行時 (処理フロー ステップ 9a) に同期を行う。
+
+#### 同期方針
+
+upstream の `antora-playbook.yml` をベースとし、**JA 固有フィールドのみ上書き保持** する。
+
+#### JA 固有フィールド
+
+| フィールド | JA での値 | 理由 |
+|---|---|---|
+| `site.start_page` | `ocp-virt-cookbook_ja::index.adoc` | `antora.yml` の `name` が `ocp-virt-cookbook_ja` であるため、コンポーネント名部分を一致させる必要がある |
+| `asciidoc.attributes.build-date` | `'@'` | PDF 生成で使用する JA 独自属性 |
+
+上記以外のフィールドは upstream の値をそのまま採用する。
+
+#### 処理手順
+
+1. upstream の `antora-playbook.yml` を `git show upstream/main:antora-playbook.yml` で取得
+2. YAML としてパースする (PyYAML は標準ライブラリではないため、行単位の文字列処理で対応する)
+3. `site.start_page` のコンポーネント名部分を JA の `antora.yml` の `name` フィールド値に置換する
+   - パターン: `<upstream_component_name>::<page>` → `<ja_component_name>::<page>`
+   - 例: `ocp-virt-cookbook::index.adoc` → `ocp-virt-cookbook_ja::index.adoc`
+4. JA 独自の `asciidoc.attributes` をマージする (upstream に存在しない属性を追加、upstream に存在する属性は upstream の値を優先)
+5. 結果を `antora-playbook.yml` に書き出す
+
+#### 具体例
+
+upstream:
+```yaml
+site:
+  title: OpenShift Virtualization cookbook
+  start_page: ocp-virt-cookbook::index.adoc
+
+antora:
+  extensions:
+    - require: '@antora/lunr-extension'
+      index_latest_only: true
+
+content:
+  sources:
+  - url: ./
+
+asciidoc:
+  attributes:
+    page-pagination: true
+
+ui:
+  bundle:
+    url: ./ui-bundle/ui-bundle.zip
+  supplemental_files: ./supplemental-ui
+```
+
+同期後の JA:
+```yaml
+site:
+  title: OpenShift Virtualization cookbook
+  start_page: ocp-virt-cookbook_ja::index.adoc
+
+antora:
+  extensions:
+    - require: '@antora/lunr-extension'
+      index_latest_only: true
+
+content:
+  sources:
+  - url: ./
+
+asciidoc:
+  attributes:
+    page-pagination: true
+    build-date: '@'
+
+ui:
+  bundle:
+    url: ./ui-bundle/ui-bundle.zip
+  supplemental_files: ./supplemental-ui
+```
+
+#### 変更検知
+
+- upstream と JA の `antora-playbook.yml` を比較し、差分がある場合のみ書き出す
+- 変更があった場合は `PLAYBOOK  antora-playbook.yml: updated from upstream` と出力する
+- 変更がない場合は出力しない
+
 ### 9.15 モジュール (ディレクトリ) 単位の追加・削除・リネーム
 
 ファイル単位の操作 (9.3-9.5) はモジュール内の個別ファイルを対象とするが、モジュールディレクトリ自体の追加・削除・リネームはより広い範囲に影響する。`sync-translate.py` は以下を自動処理する。
@@ -1132,6 +1229,59 @@ upstream から削除されたモジュール (日本語側に存在するが up
 - プログレスの粒度はファイル単位。翻訳途中のファイル (全ブロック完了前に中断) は最初から再翻訳する
 - プログレスファイルは正常完了時に自動削除される
 - 完全にやり直したい場合は translate ブランチを削除してから `--resume` なしで実行する
+
+### 9.17 アドモニションキーワードの保護
+
+AsciiDoc のインラインアドモニション (`NOTE:`, `WARNING:`, `IMPORTANT:`, `TIP:`, `CAUTION:`) のキーワード部分は英語でなければ正しく描画されない。AI 翻訳時にキーワードが日本語に変換される問題への対策:
+
+#### プロンプトによる抑止
+
+全翻訳プロンプト (outdated / new / new-file) に以下のルールを含める:
+
+- 「AsciiDoc のアドモニションキーワード (NOTE:, WARNING:, IMPORTANT:, TIP:, CAUTION:) は英語のまま維持すること。日本語に翻訳しないこと」
+- 「インラインアドモニション (NOTE: テキスト) とブロックアドモニション ([NOTE]\n====) の形式を相互に変換しないこと」
+
+#### プレフィックス分離による保護
+
+`admonition_inline` ブロックの翻訳時は、`list_item` と同様にプレフィックス分離方式を適用する:
+
+1. 翻訳前: キーワードプレフィックス (`NOTE: ` 等) を分離し、本文のみを AI に送信
+2. 翻訳後: 元のキーワードプレフィックスを再付与
+
+#### ポストプロセス検証
+
+全翻訳パス (outdated / new / structure-fix / new-file) で翻訳結果に対して以下を検証する:
+
+- 翻訳結果の先頭が日本語のアドモニションキーワード (`注:`, `重要:`, `ヒント:`, `警告:`, `注意:`, `注記:`) で始まる場合、対応する英語キーワードに置換する
+- キーワードが完全に欠落している場合、元のキーワードを再付与する
+
+| 日本語 | 復元先 |
+|--------|--------|
+| `注:` / `注記:` | `NOTE:` |
+| `重要:` | `IMPORTANT:` |
+| `ヒント:` | `TIP:` |
+| `警告:` | `WARNING:` |
+| `注意:` | `CAUTION:` |
+
+### 9.18 セクション見出しの用語集
+
+ドキュメント全体で頻出するセクション見出しの翻訳を統一するため、用語集を設ける。見出しテキスト (レベルプレフィックス除去後) が用語集に一致する場合、AI 翻訳を呼び出さず用語集の訳語を使用する。
+
+| 英語 | 日本語 |
+|------|--------|
+| See Also | 参照 |
+| Additional Resources | 追加リソース |
+| Summary | まとめ |
+| Prerequisites | 前提条件 |
+| Cleanup | クリーンアップ |
+| Overview | 概要 |
+| Troubleshooting | トラブルシューティング |
+| Next Steps | 次のステップ |
+| Best Practices | ベストプラクティス |
+
+`[[anchor_id]]` 付きの見出し (例: `== See Also [[see_also]]`) も対応する。見出しテキスト部分のみを用語集で照合し、アンカーはそのまま保持する。
+
+用語集に一致しない見出しは従来通り AI 翻訳する。用語集の拡張は `sync-translate.py` の `_HEADING_GLOSSARY` 辞書に追加する。
 
 ---
 
