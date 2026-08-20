@@ -1832,6 +1832,11 @@ def _postprocess_admonitions_and_headings() -> int:
                         if b.lines[0].startswith(lower_kw + ":"):
                             en_has_lower_admon.add(lower_kw)
 
+        ja_header_count = sum(
+            1 for b in blocks if b.block_type == "section_header"
+        )
+        headers_aligned = ja_header_count == len(en_headers)
+
         changed = False
         new_contents: list[tuple[str, list[str]]] = []
         header_idx = 0
@@ -1888,7 +1893,7 @@ def _postprocess_admonitions_and_headings() -> int:
                     new_contents.append(("prose", list(block.lines)))
             elif block.block_type == "section_header":
                 result = list(block.lines)
-                if header_idx < len(en_headers):
+                if headers_aligned and header_idx < len(en_headers):
                     result = _ensure_heading_level(
                         en_headers[header_idx], result
                     )
@@ -1896,7 +1901,10 @@ def _postprocess_admonitions_and_headings() -> int:
                 if glossary is not None and glossary != list(block.lines):
                     new_contents.append(("section_header", glossary))
                     changed = True
-                elif header_idx < len(en_headers):
+                elif (
+                    headers_aligned
+                    and header_idx < len(en_headers)
+                ):
                     en_glossary = _apply_heading_glossary(
                         en_headers[header_idx]
                     )
@@ -1919,6 +1927,9 @@ def _postprocess_admonitions_and_headings() -> int:
                         new_contents.append(
                             ("section_header", list(block.lines))
                         )
+                elif glossary is None and result != list(block.lines):
+                    new_contents.append(("section_header", result))
+                    changed = True
                 else:
                     new_contents.append(
                         ("section_header", list(block.lines))
