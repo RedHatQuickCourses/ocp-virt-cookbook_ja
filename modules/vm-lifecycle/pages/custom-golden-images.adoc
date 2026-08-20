@@ -32,6 +32,7 @@
 == ゴールデンイメージのワークフロー
 
 プロセスには以下のステップが含まれます。
+
 . 標準 OS イメージからベース VM を展開する
 . VM をカスタマイズする (ソフトウェアのインストール、設定の構成) 
 . VM を汎用化する (マシン固有のデータを削除) 
@@ -50,7 +51,7 @@ oc create namespace golden-images
 
 カスタマイズ用のベース Fedora VM を作成します。
 
-WARNING: この例で使用している cloud-init のパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードまたは SSH キー認証を使用してください。
+WARNING: この例で使用している cloud-init のパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードまたは SSH 鍵認証を使用してください。
 
 xref:attachment$custom-golden-images/golden-image-base-vm.yaml[golden-image-base-vm.yaml をダウンロード]
 
@@ -133,6 +134,7 @@ oc get dv -n golden-images
 ----
 
 クローン進捗を示す出力例：
+
 [source,text]
 ----
 NAME                  PHASE             PROGRESS   RESTARTS   AGE
@@ -147,13 +149,14 @@ oc get vmi -n golden-images
 ----
 
 出力：
+
 [source,text]
 ----
 NAME             AGE   PHASE     IP             NODENAME   READY
 base-fedora-vm   4m    Running   10.128.1.151   ocplab01   True
 ----
 
-NOTE: ディスクの初期クローンには、ストレージのパフォーマンスに応じて通常 3〜5 分かかります。
+Note: ディスクの初期クローンには、ストレージのパフォーマンスに応じて通常 3〜5 分かかります。
 
 == ステップ 2: VM のカスタマイズ
 
@@ -246,6 +249,7 @@ oc get vm -n golden-images
 ----
 
 出力：
+
 [source,text]
 ----
 NAME             AGE   STATUS    READY
@@ -289,6 +293,7 @@ oc get datasource -n golden-images
 ----
 
 出力：
+
 [source,text]
 ----
 NAME                   AGE
@@ -447,6 +452,7 @@ oc get dv -n golden-images
 ----
 
 出力：
+
 [source,text]
 ----
 NAME                  PHASE             PROGRESS   RESTARTS   AGE
@@ -467,6 +473,7 @@ oc get vmi -n golden-images
 ----
 
 出力：
+
 [source,text]
 ----
 NAME             AGE   PHASE     IP             NODENAME   READY
@@ -519,6 +526,7 @@ DataSource の命名例：
 == ベストプラクティス
 
 === イメージの作成
+
 - カスタマイズは最小限かつ目的に絞る
 - インストールされたすべてのソフトウェアと構成をドキュメント化する
 - 本番環境で使用する前にゴールデンイメージを徹底的にテストする
@@ -526,6 +534,7 @@ DataSource の命名例：
 - バージョンごとに変更履歴 (changelog) を維持する
 
 === 汎用化
+
 - 常にログと一時ファイルをクリーンアップする
 - SSH ホストキーを削除する
 - マシン固有の識別子を削除する
@@ -533,16 +542,18 @@ DataSource の命名例：
 - bash 履歴を消去する
 
 === ストレージ
+
 - ユースケースに適したディスクサイズを使用する
 - 可能であればシンプロビジョニングを検討する
 - ゴールデンイメージのストレージ使用量を監視する
 
 === セキュリティ
+
 - ゴールデンイメージを作成する前にセキュリティ更新を適用する
 - 機密データや資格情報を削除する
 - 不要なサービスを無効にする
 - ファイアウォールルールを適切に構成する
-- VM 固有のシークレット (SSH キー、パスワード) には cloud-init を使用する
+- VM 固有のシークレット (SSH 鍵、パスワード) には cloud-init を使用する
 
 == トラブルシューティング
 

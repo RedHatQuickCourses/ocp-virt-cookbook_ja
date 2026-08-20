@@ -159,7 +159,7 @@ oc logs -n imported-vms cdi-upload-fedora-imported-disk -f
 
 イメージのアップロードが完了したので、その PVC をブートディスクとして使用する VM を作成します。
 
-WARNING: この例の cloud-init パスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSH 鍵認証を使用してください。
 
 xref:attachment$import-qcow2-boot-volume/vm-from-imported-qcow2.yaml[vm-from-imported-qcow2.yaml をダウンロード]
 
