@@ -20,6 +20,16 @@ Key benefits of VM cloning:
 * Quick scale-out for identical workloads
 * Reduced time from deployment to production-ready state
 
+== Business Use Cases
+
+Cloning is most valuable when you need a VM that is already configured, rather than one built from scratch:
+
+* **Environment provisioning**: Clone a fully configured, production-like VM for QA testing. The result is both faster to produce and closer to production than a VM built from scratch.
+* **Scale-out testing**: Clone a web server VM ten times to simulate load across multiple identical instances.
+* **Cross-namespace deployment**: Promote a validated VM from a staging namespace to a production namespace, with RBAC controlling access to the source. See <<cloning-across-namespaces>>.
+* **Disaster recovery testing**: Clone production VMs into a DR namespace, exercise failover procedures against the clones, then delete them, with no impact on the running production VMs.
+* **Developer sandboxes**: Give each developer a clone of a reference VM that already has the required tools and configuration installed.
+
 == Cloning vs Golden Images
 
 While both approaches enable rapid VM deployment, they serve different purposes:
@@ -51,7 +61,7 @@ While both approaches enable rapid VM deployment, they serve different purposes:
 
 == Prerequisites
 
-* OpenShift 4.18+ with OpenShift Virtualization operator installed
+* OpenShift {ocp-min-version}+ with OpenShift Virtualization operator installed
 * Access to OpenShift web console or CLI tools: `oc`, `virtctl`
 * Storage class that supports volume cloning
 * At least one VM to clone from (or we'll create one)
@@ -78,6 +88,62 @@ For automation or customization:
 * Create a new VM that references the cloned PVC
 * Allows customization during clone process
 * Useful for cross-namespace cloning
+
+=== Comparing the Cloning Paths
+
+The two methods above, together with the golden image pattern described in xref:custom-golden-images.adoc[Custom Golden Images], reach the same result through different resources:
+
+....
+Web console clone  — simplest, same namespace
+│
+└─ source VM
+   │
+   └─ Clone action in the console
+      │
+      └─ new VM, with a full copy of the source disks
+
+CLI DataVolume clone  — scriptable, works across namespaces
+│
+└─ source PVC
+   │
+   └─ DataVolume  — spec.source.pvc
+      │
+      └─ new PVC
+         │
+         └─ new VM referencing that PVC
+
+Clone from a golden image  — many VMs from one prepared image
+│
+└─ DataSource
+   │
+   └─ DataVolume  — spec.sourceRef
+      │
+      └─ new VM
+....
+
+Use this to choose between them:
+
+[cols="1,2,1,1",options="header"]
+|===
+|Method |Best for |Namespace |RBAC
+
+|Web console
+|One-off copies of a VM, done interactively
+|Same namespace
+|Not required
+
+|CLI DataVolume
+|Automation, scripted or repeated clones
+|Same or different
+|Required for cross-namespace
+
+|Golden image
+|Many VMs from one standardized, generalized image
+|Same or different
+|Required for cross-namespace
+|===
+
+IMPORTANT: All three paths produce a full, independent copy of the disk. A clone is not a snapshot and not a reference to the source, so each one consumes storage equal to the source volume. Plan capacity as the number of clones multiplied by the source volume size. See <<storage-space-requirements>>.
 
 === Storage Cloning Behavior
 
@@ -164,7 +230,8 @@ spec:
               #cloud-config
               user: fedora
               password: fedora123
-              chpasswd: { expire: false }
+              chpasswd:
+                expire: false
               ssh_pwauth: true
               runcmd:
                 - dnf install -y nginx
@@ -454,6 +521,7 @@ spec:
 *4. Remove unnecessary fields:*
 
 Remove these metadata fields that are auto-generated:
+
 * `metadata.uid`
 * `metadata.resourceVersion`
 * `metadata.creationTimestamp`
@@ -577,7 +645,8 @@ spec:
               fqdn: webserver-custom.local
               manage_etc_hosts: true
               password: fedora123
-              chpasswd: { expire: false }
+              chpasswd:
+                expire: false
               ssh_pwauth: true
               runcmd:
                 - hostnamectl set-hostname webserver-custom
@@ -622,6 +691,7 @@ curl localhost
 # Shows custom HTML
 ----
 
+[#cloning-across-namespaces]
 == Cloning Across Namespaces
 
 Clone VMs to different namespaces for environment separation (dev, test, prod).
@@ -653,7 +723,12 @@ rules:
   - apiGroups: ["cdi.kubevirt.io"]
     resources: ["datavolumes"]
     verbs: ["get", "list"]
----
+----
+
+Bind the Role to the default service account in the production namespace:
+
+[source,yaml]
+----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -771,7 +846,8 @@ spec:
               fqdn: webserver-prod.production.local
               manage_etc_hosts: true
               password: fedora123
-              chpasswd: { expire: false }
+              chpasswd:
+                expire: false
               ssh_pwauth: true
               runcmd:
                 - hostnamectl set-hostname webserver-prod
@@ -825,6 +901,7 @@ cdi.kubevirt.io/cloneType: snapshot  # Smart cloning
 cdi.kubevirt.io/cloneType: copy      # Host-assisted cloning
 ----
 
+[#storage-space-requirements]
 === Storage Space Requirements
 
 Each clone requires full storage allocation:
@@ -932,6 +1009,7 @@ cat /etc/machine-id
 **Problem**: DataVolume shows `CloneInProgress` for extended time.
 
 **Possible causes**:
+
 * Large source volume
 * Slow storage or network
 * Host-assisted cloning on large volumes
@@ -1021,6 +1099,7 @@ Ensure `spec.source.pvc.name` and `spec.source.pvc.namespace` are correct.
 **Problem**: DataVolume succeeded but VM stuck in "Scheduling" or "Starting".
 
 **Possible causes**:
+
 * PVC not bound
 * Insufficient resources
 * Node scheduling issues
@@ -1076,6 +1155,8 @@ oc get namespace | grep vm-cloning
 In this tutorial, you learned:
 
 * How VM cloning works in OpenShift Virtualization
+* The business scenarios where cloning is the right approach
+* How the web console, CLI DataVolume, and golden image paths compare, and how to choose between them
 * The difference between web console and CLI cloning methods
 * How to clone VMs using the OpenShift web console
 * How to clone VMs using CLI with standalone DataVolumes
@@ -1092,4 +1173,4 @@ VM cloning accelerates development, testing, and deployment workflows by enablin
 
 == See Also
 
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/advanced-vm-creation#virt-creating-vms-by-cloning-pvcs[Creating VMs by cloning PVCs,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/managing-vms#virt-creating-vms-by-cloning-pvcs[Creating VMs by cloning PVCs,window=_blank]

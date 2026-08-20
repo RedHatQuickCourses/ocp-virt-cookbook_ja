@@ -9,17 +9,12 @@ You will create a Windows VM, install VirtIO drivers during the Windows installa
 
 == Prerequisites
 
-* **OpenShift 4.18+** with OpenShift Virtualization operator installed
+* **OpenShift {ocp-min-version}+** with OpenShift Virtualization operator installed
 * **CLI tools**: `oc` and `virtctl` installed
 * **Windows installation ISO** (Windows 10/11 or Server 2019/2022)
 * **VirtIO drivers ISO** from Red Hat Customer Portal or Fedora project
 * **Valid Windows license** and product key
 * **Cluster resources**: 4+ GB RAM, 60+ GB storage available
-
-Versions tested:
-----
-OpenShift 4.20, 4.21
-----
 
 == Step 1: Download and Upload VirtIO Drivers
 
@@ -113,76 +108,23 @@ metadata:
     app: windows-vm-virtio
 spec:
   runStrategy: Always
+  instancetype:
+    name: u1.large
+  preference:
+    name: windows.2k25.virtio
   template:
-    metadata:
-      labels:
-        kubevirt.io/size: medium
-        kubevirt.io/domain: windows-vm-virtio
-        vm.kubevirt.io/name: windows-vm-virtio
     spec:
       domain:
-        cpu:
-          cores: 2
-          sockets: 1
-          threads: 2
-        resources:
-          requests:
-            memory: 4Gi
         devices:
           disks:
             - name: rootdisk
-              disk:
-                bus: virtio
+              disk: {}
               bootOrder: 2
             - name: windows-installation-iso
-              cdrom:
-                bus: sata
+              cdrom: {}
               bootOrder: 1
             - name: virtio-drivers-iso
-              cdrom:
-                bus: sata
-          interfaces:
-            - name: default
-              masquerade: {}
-              model: virtio
-          tpm: {}
-          rng: {}
-        clock:
-          utc: {}
-          timer:
-            hpet:
-              present: false
-            pit:
-              tickPolicy: delay
-            rtc:
-              tickPolicy: catchup
-            hyperv: {}
-        features:
-          acpi: {}
-          apic: {}
-          hyperv:
-            relaxed: {}
-            vapic: {}
-            spinlocks:
-              spinlocks: 8191
-            vpindex: {}
-            runtime: {}
-            synic: {}
-            stimer: {}
-            reset: {}
-            frequencies: {}
-            reenlightenment: {}
-            tlbflush: {}
-            ipi: {}
-          smm:
-            enabled: true
-        firmware:
-          bootloader:
-            efi:
-              secureBoot: true
-      networks:
-        - name: default
-          pod: {}
+              cdrom: {}
       volumes:
         - name: rootdisk
           dataVolume:
@@ -376,6 +318,6 @@ Your Windows VM now provides enterprise-grade performance with full VirtIO drive
 
 == See Also
 
-* link:https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-installing-virtio-drivers.html[OpenShift VirtIO Driver Installation,window=_blank]
+* link:https://docs.openshift.com/container-platform/{ocp-docs-version}/virt/vm_networking/virt-installing-virtio-drivers.html[OpenShift VirtIO Driver Installation,window=_blank]
 * link:https://kubevirt.io/user-guide/[KubeVirt User Guide,window=_blank]
 * xref:remote-access-windows-vms.adoc[Remote Access to Windows VMs]

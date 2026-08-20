@@ -5,6 +5,8 @@
 
 The HostPath Provisioner (HPP) provides a simple way to use local node storage for OpenShift Virtualization workloads. It's included as part of the OpenShift Virtualization operator and creates persistent volumes backed by directories on the host filesystem.
 
+image::hpp-architecture.drawio.svg[HPP CSI Architecture - Host filesystem to VM disk data flow, align=center]
+
 === When to Use HostPath Provisioner
 
 HPP is ideal for:
@@ -12,7 +14,16 @@ HPP is ideal for:
 * **Development and testing environments**: Quick setup without complex storage infrastructure
 * **Single-node clusters**: Where distributed storage isn't necessary
 * **Prototyping**: Rapid iteration before production storage deployment
+* **Proof-of-concept and demo environments**: Simpler solution to allow audiences to focus on the demo
+* **CI/CD and ephemeral environments**: Where storage is frequently provisioned and destroyed
+* **Training and workshop environments**: Short-term, shared use of storage without needing additional infrastructure
 * **Edge deployments**: Minimal infrastructure requirements
+
+HPP is not a good fit for:
+
+* **Production workloads**: Lacks native replication, high availability, and backup/snapshot features
+* **Scenarios requiring resource isolation**: No support for thin provisioning or usage quotas
+* **Scenarios requiring workload mobility**: Data is tied to a single node and cannot be moved
 
 === Comparison with LVM Storage
 
@@ -55,15 +66,9 @@ For production deployments requiring advanced features like snapshots and thin p
 * Prepare node directories with proper permissions
 * Create PVCs and use with VMs
 
-Versions tested:
-----
-OpenShift 4.21+
-OpenShift Virtualization 4.21+
-----
-
 == Prerequisites
 
-* **OpenShift 4.21+** with OpenShift Virtualization installed
+* **OpenShift {ocp-min-version}+** with OpenShift Virtualization installed
 * **Cluster admin access**: Required to create HostPathProvisioner and StorageClass resources
 * **Available local disk space**: Sufficient space on worker nodes for VM storage
 * **oc CLI**: Installed and configured
@@ -123,6 +128,10 @@ spec:
           WantedBy=multi-user.target
 EOF
 ----
+
+NOTE: In single node clusters, the node may be placed in a different MachineConfigPool due to the node taking on multiple node roles.
+You can confirm which MachineConfigPool the node is a member of by checking the node count of the MachineConfigPools with `oc get mcp`.
+Adjust the `machineconfiguration.openshift.io/role: worker` label in the example above to match accordingly.
 
 NOTE: Applying a MachineConfig will trigger a rolling reboot of worker nodes. Allow time for all nodes to update before proceeding.
 
@@ -416,6 +425,10 @@ metadata:
   name: hpp-test-vm
   namespace: default
 spec:
+  instancetype:
+    name: u1.small
+  preference:
+    name: fedora
   runStrategy: Always
   template:
     metadata:
@@ -423,22 +436,15 @@ spec:
         kubevirt.io/vm: hpp-test-vm
     spec:
       domain:
-        cpu:
-          cores: 1
         devices:
           disks:
-          - name: rootdisk
-            disk:
-              bus: virtio
-          - name: cloudinitdisk
-            disk:
-              bus: virtio
+          - disk: {}
+            name: rootdisk
+          - disk: {}
+            name: cloudinitdisk
           interfaces:
-          - name: default
-            masquerade: {}
-        resources:
-          requests:
-            memory: 1Gi
+          - masquerade: {}
+            name: default
       networks:
       - name: default
         pod: {}
@@ -455,7 +461,9 @@ spec:
             chpasswd:
               expire: false
   dataVolumeTemplates:
-  - metadata:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
       name: hpp-test-vm-rootdisk
     spec:
       storage:
@@ -611,4 +619,4 @@ HPP provides a simple, lightweight storage solution ideal for development and te
 
 * xref:lvm-operator.adoc[LVM Storage Operator] - Production-ready local storage with thin provisioning and snapshots
 * xref:lvm-troubleshooting.adoc[LVM Storage Troubleshooting] - Diagnosing storage issues
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/virtualization/storage#virt-configuring-local-storage-with-hpp[OpenShift Virtualization: Configuring Local Storage with HPP,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/storage#virt-configuring-local-storage-with-hpp[OpenShift Virtualization: Configuring Local Storage with HPP,window=_blank]

@@ -5,14 +5,9 @@
 
 This tutorial shows you how to create a primary network using User Defined Networks (UDNs) with Layer 2 topology in OpenShift Virtualization. Instead of using the cluster's default network, UDNs let you define custom IP ranges and provide complete network isolation for applications within a specific namespace. This approach is ideal when applications need direct control over IP addressing or require custom networking requirements. The entire setup takes just 5 straightforward steps without requiring additional network attachment definitions.
 
-Versions tested:
-----
-OpenShift 4.19, 4.20, 4.21
-----
-
 == Prerequisites
 
-* OpenShift 4.19+ cluster with OpenShift Virtualization operator installed
+* OpenShift {ocp-min-version}+ cluster with OpenShift Virtualization operator installed
 * OVN-Kubernetes network plugin (default in OpenShift)
 * Cluster admin access for creating namespaces and UserDefinedNetwork resources
 * CLI tools installed: `oc`, `virtctl`
@@ -83,6 +78,10 @@ metadata:
     network-type: udn-primary
 spec:
   runStrategy: Always
+  instancetype:
+    name: u1.small
+  preference:
+    name: fedora
   dataVolumeTemplates:
   - metadata:
       name: fedora-udn-volume
@@ -106,19 +105,13 @@ spec:
         devices:
           disks:
           - name: datavolumedisk
-            disk:
-              bus: virtio
+            disk: {}
           - name: cloudinitdisk
-            disk:
-              bus: virtio
+            disk: {}
           interfaces:
           - name: default
             binding:
               name: l2bridge
-        resources:
-          requests:
-            memory: 2Gi
-            cpu: 1
       networks:
       - name: default
         pod: {}
@@ -127,7 +120,7 @@ spec:
         dataVolume:
           name: fedora-udn-volume
       - name: cloudinitdisk
-        cloudInitNoCloud:          
+        cloudInitNoCloud:
           userData: |
             #cloud-config
             write_files:
@@ -135,10 +128,11 @@ spec:
               content: |
                 nameserver 172.30.0.10      # cluster DNS
                 search udn-primary-vm-guests.svc.cluster.local svc.cluster.local
-                options ndots:5            
+                options ndots:5
             user: fedora
             password: fedora
-            chpasswd: { expire: False }
+            chpasswd:
+              expire: false
             packages:
             - python3
             runcmd:
@@ -151,7 +145,7 @@ EOF
 
 Create a Kubernetes Service to expose the VM's Python HTTP server with a LoadBalancer.
 
-NOTE: Cloud services like AWS automatically deploy a load balancer for this configuration. For bare metal deployments, consider using link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/ingress_and_load_balancing/load-balancing-with-metallb[MetalLB,window=_blank] as your load balancer.
+NOTE: Cloud services like AWS automatically deploy a load balancer for this configuration. For bare metal deployments, consider using link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/ingress_and_load_balancing/load-balancing-with-metallb[MetalLB,window=_blank] as your load balancer.
 
 xref:attachment$udn-primary-networks/fedora-vm-web-service.yaml[Download fedora-vm-web-service.yaml]
 
@@ -187,6 +181,7 @@ oc get svc
 ----
 
 Example output:
+[source,text]
 ----
 NAME                    TYPE           CLUSTER-IP      EXTERNAL-IP                                                                  PORT(S)        AGE
 fedora-vm-web-service   LoadBalancer   172.30.72.140   aa32981df19ad4959ae9a82fb9990db9-1996929606.ca-central-1.elb.amazonaws.com   80:32291/TCP   45m
@@ -200,9 +195,41 @@ curl aa32981df19ad4959ae9a82fb9990db9-1996929606.ca-central-1.elb.amazonaws.com
 ----
 
 Expected output:
+[source,html]
 ----
 <h1>Welcome to OpenShift Virtualization !!!</h1>
 ----
+
+== Network Topology
+
+The following diagram illustrates how a UDN primary network provides namespace-scoped network isolation with custom IP addressing. Unlike secondary networks that add an interface alongside the default pod network, a UDN primary network replaces the default pod network entirely for all workloads in the namespace.
+
+image::udn-primary-topology.png[UDN Primary Network Topology, align=center]
+
+The `UserDefinedNetwork` resource with `Layer2` topology and `role: Primary` configures OVN-Kubernetes to manage a custom subnet (192.168.100.0/24) for the labeled namespace. OVN-Kubernetes IPAM assigns addresses from this subnet with `Persistent` lifecycle, meaning VMs retain their IPs across restarts and migrations. Each VM's primary interface connects through an l2bridge binding directly to the UDN, with no Multus plugin or `NetworkAttachmentDefinition` required. External access is provided through standard Kubernetes Services, such as a LoadBalancer that routes traffic to VMs on the UDN subnet.
+
+NOTE: The namespace must be labeled with `k8s.ovn.org/primary-user-defined-network` before any workloads are deployed. This label cannot be added or removed after pods or VMs are running in the namespace.
+
+== Business Use Cases
+
+UDN primary networks are best suited for workloads that require complete network isolation with custom IP addressing at the namespace level.
+
+[cols="1,2",options="header"]
+|===
+|Use Case |Description
+
+|Multi-tenant SaaS platforms
+|Each tenant gets a dedicated namespace with an isolated subnet. VMs in one tenant's namespace cannot reach VMs in another tenant's namespace, providing network-level tenant isolation without physical network segmentation.
+
+|Development and test environments
+|Teams get namespaces with custom IP ranges (e.g., 10.0.1.0/24 for dev, 10.0.2.0/24 for staging), allowing developers to define addressing schemes that mirror production without conflicting with other teams or the cluster's default network.
+
+|Cluster-managed IP persistence
+|VMs that require stable IP addresses across restarts and live migrations. With `Persistent` IPAM lifecycle, database servers, monitoring agents, and clustered applications retain their addresses without external DHCP or static configuration inside the guest.
+
+|Comparison with secondary networks
+|Choose UDN primary networks when workloads should not use the default pod network at all and need namespace-level isolation. Choose Layer 2 secondary networks when VMs need an additional private network alongside the default pod network, such as for dedicated replication or heartbeat traffic.
+|===
 
 == Summary
 
@@ -216,6 +243,6 @@ In this tutorial, you learned:
 
 == See Also
 
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/understanding-multiple-networks[OpenShift - Understanding Multiple Networks,window=_blank]
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/primary-networks[Configuring Primary Networks,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/multiple_networks/understanding-multiple-networks[OpenShift - Understanding Multiple Networks,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/multiple_networks/primary-networks[Configuring Primary Networks,window=_blank]
 

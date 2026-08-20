@@ -17,7 +17,7 @@ This tutorial covers node selectors, node affinity, and pod affinity/anti-affini
 
 == Prerequisites
 
-* OpenShift 4.18+ with OpenShift Virtualization installed
+* OpenShift {ocp-min-version}+ with OpenShift Virtualization installed
 * Cluster admin access to label nodes
 * `oc` and `virtctl` CLI tools installed
 * Multiple worker nodes in your cluster (for meaningful placement)
@@ -156,6 +156,10 @@ metadata:
   namespace: vm-placement
 spec:
   runStrategy: Manual
+  instancetype:
+    name: u1.large
+  preference:
+    name: fedora
   template:
     metadata:
       labels:
@@ -164,29 +168,24 @@ spec:
       nodeSelector:
         storage: ssd  # VM will only run on nodes with storage=ssd label
       domain:
-        cpu:
-          cores: 2
-        memory:
-          guest: 4Gi
         devices:
           disks:
-          - name: rootdisk
-            disk:
-              bus: virtio
-          - name: cloudinitdisk
-            disk:
-              bus: virtio
+            - name: rootdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
       volumes:
-      - name: rootdisk
-        containerDisk:
-          image: quay.io/containerdisks/fedora:43
-      - name: cloudinitdisk
-        cloudInitNoCloud:
-          userData: |
-            #cloud-config
-            user: fedora
-            password: fedora
-            chpasswd: { expire: False }
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:43
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: fedora
+              password: fedora
+              chpasswd:
+                expire: false
 ----
 
 Apply and start the VM:
@@ -263,6 +262,10 @@ metadata:
   namespace: vm-placement
 spec:
   runStrategy: Manual
+  instancetype:
+    name: u1.large
+  preference:
+    name: fedora
   template:
     metadata:
       labels:
@@ -272,40 +275,35 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: gpu
-                operator: In
-                values:
-                - nvidia-t4
-                - nvidia-a100
-              - key: env
-                operator: In
-                values:
-                - production
+              - matchExpressions:
+                  - key: gpu
+                    operator: In
+                    values:
+                      - nvidia-t4
+                      - nvidia-a100
+                  - key: env
+                    operator: In
+                    values:
+                      - production
       domain:
-        cpu:
-          cores: 4
-        memory:
-          guest: 8Gi
         devices:
           disks:
-          - name: rootdisk
-            disk:
-              bus: virtio
-          - name: cloudinitdisk
-            disk:
-              bus: virtio
+            - name: rootdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
       volumes:
-      - name: rootdisk
-        containerDisk:
-          image: quay.io/containerdisks/fedora:43
-      - name: cloudinitdisk
-        cloudInitNoCloud:
-          userData: |
-            #cloud-config
-            user: fedora
-            password: fedora
-            chpasswd: { expire: False }
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:43
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: fedora
+              password: fedora
+              chpasswd:
+                expire: false
 ----
 
 Key points:
@@ -330,6 +328,10 @@ metadata:
   namespace: vm-placement
 spec:
   runStrategy: Manual
+  instancetype:
+    name: u1.large
+  preference:
+    name: fedora
   template:
     metadata:
       labels:
@@ -338,44 +340,39 @@ spec:
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            preference:
-              matchExpressions:
-              - key: storage
-                operator: In
-                values:
-                - nvme
-          - weight: 50
-            preference:
-              matchExpressions:
-              - key: storage
-                operator: In
-                values:
-                - ssd
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: storage
+                    operator: In
+                    values:
+                      - nvme
+            - weight: 50
+              preference:
+                matchExpressions:
+                  - key: storage
+                    operator: In
+                    values:
+                      - ssd
       domain:
-        cpu:
-          cores: 2
-        memory:
-          guest: 2Gi
         devices:
           disks:
-          - name: rootdisk
-            disk:
-              bus: virtio
-          - name: cloudinitdisk
-            disk:
-              bus: virtio
+            - name: rootdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
       volumes:
-      - name: rootdisk
-        containerDisk:
-          image: quay.io/containerdisks/fedora:43
-      - name: cloudinitdisk
-        cloudInitNoCloud:
-          userData: |
-            #cloud-config
-            user: fedora
-            password: fedora
-            chpasswd: { expire: False }
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:43
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: fedora
+              password: fedora
+              chpasswd:
+                expire: false
 ----
 
 Key points:
@@ -431,6 +428,10 @@ metadata:
   namespace: vm-placement
 spec:
   runStrategy: Manual
+  instancetype:
+    name: u1.large
+  preference:
+    name: fedora
   template:
     metadata:
       labels:
@@ -440,37 +441,32 @@ spec:
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - database
-            topologyKey: kubernetes.io/hostname
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - database
+              topologyKey: kubernetes.io/hostname
       domain:
-        cpu:
-          cores: 2
-        memory:
-          guest: 2Gi
         devices:
           disks:
-          - name: rootdisk
-            disk:
-              bus: virtio
-          - name: cloudinitdisk
-            disk:
-              bus: virtio
+            - name: rootdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
       volumes:
-      - name: rootdisk
-        containerDisk:
-          image: quay.io/containerdisks/fedora:43
-      - name: cloudinitdisk
-        cloudInitNoCloud:
-          userData: |
-            #cloud-config
-            user: fedora
-            password: fedora
-            chpasswd: { expire: False }
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:43
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: fedora
+              password: fedora
+              chpasswd:
+                expire: false
 ----
 
 This VM will run on the same node (`topologyKey: kubernetes.io/hostname`) as pods/VMs with `app=database`.
@@ -506,6 +502,10 @@ metadata:
   namespace: vm-placement
 spec:
   runStrategy: Manual
+  instancetype:
+    name: u1.large
+  preference:
+    name: fedora
   template:
     metadata:
       labels:
@@ -515,37 +515,32 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - redis-cache
-            topologyKey: kubernetes.io/hostname
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - redis-cache
+              topologyKey: kubernetes.io/hostname
       domain:
-        cpu:
-          cores: 2
-        memory:
-          guest: 4Gi
         devices:
           disks:
-          - name: rootdisk
-            disk:
-              bus: virtio
-          - name: cloudinitdisk
-            disk:
-              bus: virtio
+            - name: rootdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
       volumes:
-      - name: rootdisk
-        containerDisk:
-          image: quay.io/containerdisks/fedora:43
-      - name: cloudinitdisk
-        cloudInitNoCloud:
-          userData: |
-            #cloud-config
-            user: fedora
-            password: fedora
-            chpasswd: { expire: False }
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:43
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: fedora
+              password: fedora
+              chpasswd:
+                expire: false
 ----
 
 This ensures multiple cache VMs never run on the same node, improving availability.
@@ -917,6 +912,6 @@ In this tutorial you learned:
 
 * xref:getting-started:vm-lifecycle-states.adoc[] - VM states and lifecycle management
 * xref:getting-started:virtctl-basics.adoc[] - CLI commands for VM management
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/nodes#virt-node-placement-vms[Node Placement for Virtual Machines - Red Hat Documentation,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/nodes#virt-node-placement-vms[Node Placement for Virtual Machines - Red Hat Documentation,window=_blank]
 * link:https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/[Assigning Pods to Nodes - Kubernetes Documentation,window=_blank]
 * link:https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/[Taints and Tolerations - Kubernetes Documentation,window=_blank]

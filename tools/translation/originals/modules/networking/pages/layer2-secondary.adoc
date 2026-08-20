@@ -14,15 +14,9 @@ Doing this allows `VirtualMachines` to continue using the default Pod network as
 * You don't need to route ingress connectivity to the secondary network from the internet.
 * Lastly, you don't require access to external networks from the secondary network.
 
-Versions tested:
-
-----
-OpenShift 4.20,4.21
-----
-
 == Prerequisites
 
-* OpenShift 4.20+ cluster with OpenShift Virtualization operator installed
+* OpenShift {ocp-min-version}+ cluster with OpenShift Virtualization operator installed
 * Cluster admin access for creating NetworkAttachmentDefinition resources
 * CLI tools installed: `oc`, `virtctl`
 * Basic understanding of Kubernetes networking concepts
@@ -37,7 +31,6 @@ The process is outlined in three steps:
 ** <<creating_first_vm,Creating the First VirtualMachine>>
 ** <<creating_second_vm,Creating a Second VirtualMachine>>
 * <<testing_secondary_network,Testing the Secondary Network>>
-
 
 == Creating a Namespace [[creating_a_namespace]]
 
@@ -100,7 +93,6 @@ oc get net-attach-def l2-network -n example-l2-secondary
 ----
 
 With the `l2-network` created, proceed with <<attaching_vms,Attaching VirtualMachines>> to the network.
-
 
 == Attaching VirtualMachines [[attaching_vms]]
 
@@ -316,7 +308,6 @@ Check that the second VM named `fedora-l2-secondary2` is up and running in the `
 oc get vm fedora-l2-secondary2 -n example-l2-secondary
 ----
 
-
 == Testing the Secondary Network [[testing_secondary_network]]
 
 Since the secondary network is `layer2` only, and exists purely as a virtual network within the cluster and namespace, we must test connectivity from one VM to another.
@@ -360,6 +351,37 @@ oc project default
 oc delete namespace example-l2-secondary
 ----
 
+== Network Topology
+
+The following diagram illustrates how two VMs on different worker nodes communicate over a Layer 2 secondary network. Traffic flows through the OVN overlay via a Geneve tunnel between nodes, without requiring any physical network access or node-level NIC configuration.
+
+image::layer2-secondary-topology.png[Layer 2 Secondary Network Topology, align=center]
+
+The `ovn-k8s-cni-overlay` CNI plugin with `layer2` topology creates a cluster-wide OVN logical switch. Multus attaches each VM's secondary interface to this logical switch via a bridge connection. When VM-A on Node 1 sends traffic to VM-B on Node 2, OVN encapsulates the frames in a Geneve tunnel and delivers them through the cluster's existing node-to-node network. The VMs see direct Layer 2 connectivity as if they were on the same physical switch, even though the underlying transport is an overlay.
+
+NOTE: Because Layer 2 secondary networks operate entirely within the OVN overlay, no `NodeNetworkConfigurationPolicy` (NNCP), bridge setup, or VLAN configuration is required on the cluster nodes. This makes Layer 2 the simplest secondary network option to deploy.
+
+== Business Use Cases
+
+Layer 2 secondary networks are best suited for workloads that need simple, isolated VM-to-VM connectivity without external network access.
+
+[cols="1,2",options="header"]
+|===
+|Use Case |Description
+
+|Internal east-west communication
+|Database replication, message queues, or application clustering between VMs that need direct Layer 2 connectivity without exposing traffic outside the cluster.
+
+|Development and test environments
+|Isolated VM networks for testing multi-tier applications without requiring physical NIC access or network team involvement.
+
+|Simple VM-to-VM connectivity
+|Workloads where VMs need to reach each other on a private subnet but do not require access to external networks or the internet.
+
+|Alternative to Linux bridges
+|When no physical network integration is needed, Layer 2 overlay is simpler than configuring Linux bridges, which require node-level NNCP resources and physical NIC access. Choose Linux bridges when VMs must join an existing physical network segment.
+|===
+
 == Summary
 
 In this tutorial, you learned:
@@ -372,6 +394,6 @@ In this tutorial, you learned:
 
 == See Also
 
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-connecting-vm-to-ovn-secondary-network[OpenShift Virtualization - Connecting a VM to an OVN secondary network,window=_blank]
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/multiple_networks/understanding-multiple-networks[OpenShift - Understanding Multiple Networks,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/networking#virt-connecting-vm-to-ovn-secondary-network[OpenShift Virtualization - Connecting a VM to an OVN secondary network,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/multiple_networks/understanding-multiple-networks[OpenShift - Understanding Multiple Networks,window=_blank]
 
