@@ -1,0 +1,435 @@
+= Hotplugging Volumes and Network Interfaces to Running VMs
+:navtitle: Hotplug Volumes and Interfaces
+
+== Overview
+
+This tutorial demonstrates how to dynamically add and remove storage volumes to running virtual machines without requiring a restart. Hotplugging enables zero-downtime storage expansion, flexible resource allocation, and reduced maintenance windows.
+
+You will use `virtctl addvolume` to attach a new PVC to a running VM, verify it appears as a new block device inside the guest, and then remove it with `virtctl removevolume`. The tutorial also covers network interface hotplugging concepts and requirements.
+
+== When to Use Hotplugging
+
+Hotplugging is useful whenever storage or network needs change after a VM is already serving traffic, and a restart would be disruptive:
+
+* **Database growth**: A production database VM is running out of disk space. Attach an additional storage volume without downtime.
+* **Debug and diagnostic volumes**: Attach a scratch volume to a running production VM, collect logs or a memory dump, then detach it. No restart, and the VM keeps serving requests.
+* **Dynamic network segments**: An application VM needs access to a new VLAN. Hotplug a secondary network interface instead of restarting the VM.
+* **Temporary scratch storage**: Attach extra storage for a batch job, then remove it when the job completes, so the capacity is not tied up permanently.
+* **Compliance data collection**: Attach an audit volume, collect the required data, and detach it, keeping the window in which the storage is attached as short as possible.
+
+TIP: The use case determines whether you want the `--persist` flag. Long-lived data disks should be persisted so they survive a restart; temporary volumes for diagnostics, batch jobs, or audits are usually attached without it. See <<persist-flag>>.
+
+== How Hotplugging Works
+
+Hotplugging changes the VM's device layout while the VM keeps running. The base VM in this tutorial boots with two virtio disks; adding a volume introduces a third device without interrupting the VM:
+
+....
+BEFORE  — hotplug-vm running
+│
+├─ rootdisk        — vda   (virtio)
+└─ cloudinitdisk   — vdb   (virtio)
+
+   virtctl addvolume hotplug-vm --volume-name=hotplug-disk --persist
+   the VM keeps running — no restart, no downtime
+
+AFTER   — the same hotplug-vm, still running
+│
+├─ rootdisk        — vda   (virtio)
+├─ cloudinitdisk   — vdb   (virtio)
+└─ hotplug-disk    — sda   (SCSI, hotplugged)
+....
+
+Note that the hotplugged volume appears as `sda`, not `vdc`. Hotplugged volumes are attached to the SCSI bus rather than the virtio PCI bus, because virtio disks cannot be added to the PCI bus after boot. This is why the device name changes prefix. See <<disk-bus-type>> for details.
+
+Behind that single `virtctl` command, the PVC reaches the guest through an attachment pod:
+
+....
+PersistentVolumeClaim (hotplug-disk)
+│
+└─ virtctl addvolume  — patches the running VM
+   │
+   └─ attachment pod  — makes the PVC available to the VM's launcher pod
+      │
+      └─ /dev/sda in the guest  — a new block device, ready to format
+....
+
+The attachment pod is visible in the VMI status as the `hotplugVolume` field, which you will see in Step 4.
+
+== Prerequisites
+
+* **OpenShift {ocp-min-version}+** with OpenShift Virtualization operator installed
+* **Cluster admin access** (`system:admin` or equivalent)
+* **`oc` CLI** and **`virtctl` CLI** installed
+* **Default StorageClass** configured
+
+== Step 1: Create a Namespace and Base VM
+
+Create a namespace and deploy a VM to use as the hotplug target.
+
+[source,bash,role=execute]
+----
+oc create namespace hotplug-demo
+----
+
+WARNING: The cloud-init password in this example is for demo purposes only. Always use a strong, unique password or SSH key authentication in production environments.
+
+xref:attachment$hotplug-volumes-interfaces/vm-hotplug.yaml[Download vm-hotplug.yaml]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: hotplug-vm
+  namespace: hotplug-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: hotplug-vm
+    spec:
+      domain:
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 1Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+EOF
+----
+
+Wait for the VM to start:
+
+[source,bash,role=execute]
+----
+oc get vm -n hotplug-demo -w
+----
+
+Once `STATUS=Running` and `READY=True`, proceed. Press `Ctrl+C` to exit the watch.
+
+Verify the initial disk layout:
+
+[source,bash,role=execute]
+----
+oc get vmi hotplug-vm -n hotplug-demo -o jsonpath='{range .status.volumeStatus[*]}{.name}: {.target}{"\n"}{end}'
+----
+
+Expected output:
+----
+rootdisk: vda
+cloudinitdisk: vdb
+----
+
+== Step 2: Create a PVC for Hotplugging
+
+Create a PersistentVolumeClaim that will be hotplugged into the running VM.
+
+xref:attachment$hotplug-volumes-interfaces/hotplug-pvc.yaml[Download hotplug-pvc.yaml]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hotplug-disk
+  namespace: hotplug-demo
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: lvms-vg1
+  volumeMode: Block
+EOF
+----
+
+IMPORTANT: Hotplug volumes must use `volumeMode: Block`. Filesystem-mode PVCs require a pre-created `disk.img` file and are not suitable for direct hotplug of blank volumes.
+
+Wait for the PVC to be provisioned. With `WaitForFirstConsumer` binding mode, it may remain `Pending` until attached:
+
+[source,bash,role=execute]
+----
+oc get pvc hotplug-disk -n hotplug-demo
+----
+
+== Step 3: Hotplug the Volume
+
+Use `virtctl addvolume` to attach the PVC to the running VM:
+
+[source,bash,role=execute]
+----
+virtctl addvolume hotplug-vm --volume-name=hotplug-disk --namespace=hotplug-demo --persist
+----
+
+Expected output:
+----
+Successfully submitted addvolume request to VM hotplug-vm for volume hotplug-disk
+----
+
+The `--persist` flag ensures the volume remains attached after VM restarts. Without it, the volume would be detached on the next reboot.
+
+== Step 4: Verify the Hotplugged Volume
+
+Check the VMI volume status to confirm the new disk appeared:
+
+[source,bash,role=execute]
+----
+oc get vmi hotplug-vm -n hotplug-demo -o jsonpath='{range .status.volumeStatus[*]}{.name}: {.target} (hotplugVolume: {.hotplugVolume}){"\n"}{end}'
+----
+
+Expected output:
+----
+rootdisk: vda (hotplugVolume: )
+cloudinitdisk: vdb (hotplugVolume: )
+hotplug-disk: sda (hotplugVolume: {"attachPodName":"...","attachPodUID":"..."})
+----
+
+The hotplugged volume appears as a SCSI device (`sda`) with phase `Ready`. Note the `hotplugVolume` field with attach pod information.
+
+Verify the PVC is now bound:
+
+[source,bash,role=execute]
+----
+oc get pvc hotplug-disk -n hotplug-demo
+----
+
+Expected output:
+----
+NAME           STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+hotplug-disk   Bound    pvc-xxxx     5Gi        RWO            lvms-vg1       1m
+----
+
+Verify from inside the guest. Access the VM console:
+
+[source,bash,role=execute]
+----
+virtctl console hotplug-vm -n hotplug-demo
+----
+
+Log in with username `fedora` and password `redhat`, then list block devices:
+
+[source,bash]
+----
+lsblk
+----
+
+You should see a new disk device (e.g., `sda`) with the size matching the PVC. Press `Ctrl+]` to exit.
+
+== Step 5: Format and Use the Hotplugged Disk (Inside the Guest)
+
+Inside the VM console, format the new disk:
+
+[source,bash]
+----
+sudo mkfs.xfs /dev/sda
+----
+
+Create a mount point and mount the disk:
+
+[source,bash]
+----
+sudo mkdir -p /mnt/hotplug
+sudo mount /dev/sda /mnt/hotplug
+----
+
+Write a test file and verify:
+
+[source,bash]
+----
+echo "Hotplug test" | sudo tee /mnt/hotplug/test.txt
+----
+
+[source,bash]
+----
+cat /mnt/hotplug/test.txt
+----
+
+Expected output:
+----
+Hotplug test
+----
+
+Unmount before removing:
+
+[source,bash]
+----
+sudo umount /mnt/hotplug
+----
+
+Press `Ctrl+]` to exit the console.
+
+== Step 6: Remove the Hotplugged Volume
+
+Detach the volume from the running VM:
+
+[source,bash,role=execute]
+----
+virtctl removevolume hotplug-vm --volume-name=hotplug-disk --namespace=hotplug-demo
+----
+
+Expected output:
+----
+Successfully submitted removevolume request to VM hotplug-vm for volume hotplug-disk
+----
+
+IMPORTANT: Always unmount the filesystem inside the guest before removing a hotplugged volume to prevent data corruption.
+
+Verify the volume was removed:
+
+[source,bash,role=execute]
+----
+oc get vmi hotplug-vm -n hotplug-demo -o jsonpath='{range .status.volumeStatus[*]}{.name}: {.target}{"\n"}{end}'
+----
+
+Expected output:
+----
+rootdisk: vda
+cloudinitdisk: vdb
+----
+
+The hotplug-disk is no longer attached. The PVC still exists and retains the data:
+
+[source,bash,role=execute]
+----
+oc get pvc hotplug-disk -n hotplug-demo
+----
+
+== Hotplug Volume Reference
+
+[#persist-flag]
+=== The --persist Flag
+
+[cols="1,1",options="header"]
+|===
+| Flag
+| Behavior
+
+| `--persist`
+| Volume is added to the VM spec and survives restarts
+
+| (no flag)
+| Volume is attached only to the current VMI; lost on restart
+|===
+
+Use `--persist` for data disks that should remain attached permanently. Omit it for temporary operations like data migration or one-time imports.
+
+=== Supported Volume Types
+
+Hotplug supports:
+
+* PersistentVolumeClaims (PVCs)
+* DataVolumes
+
+Hotplug does not support:
+
+* containerDisk volumes
+* cloudInitNoCloud / cloudInitConfigDrive volumes
+* emptyDir volumes
+
+[#disk-bus-type]
+=== Disk Bus Type
+
+Hotplugged volumes use the SCSI bus by default (appearing as `sda`, `sdb`, etc.), unlike virtio disks which appear as `vda`, `vdb`. This is because virtio disks cannot be hotplugged to the PCI bus after boot. SCSI provides hot-add capability.
+
+== Network Interface Hotplugging (Reference)
+
+OpenShift Virtualization also supports hotplugging network interfaces. This requires additional infrastructure that may not be available on all clusters.
+
+=== Requirements
+
+* **Multus CNI thick plugin**: The standard Multus deployment must be running as a thick plugin.
+* **Multus Dynamic Networks Controller**: A daemon that watches for annotation changes and triggers Multus to configure new attachments.
+* **Multi-node cluster**: On single-node clusters, migration-based hotplug is not available.
+
+=== How It Works
+
+Unlike volume hotplugging (which uses `virtctl addvolume`), network interface hotplugging is done by editing the VM spec:
+
+. Create a NetworkAttachmentDefinition (NAD) for the secondary network.
+. Edit the VM spec to add the new interface and network definitions.
+. The interface is attached to the running VM (if thick Multus is available) or after a live migration.
+
+The result is the same pattern as volume hotplug, the running VM gains a device it did not boot with:
+
+....
+BEFORE  — one interface
+│
+└─ default     — masquerade, pod network
+
+   edit the VM spec to add an interface backed by a NAD
+
+AFTER   — two interfaces
+│
+├─ default     — masquerade, pod network
+└─ dyniface1   — bridge, secondary network
+....
+
+=== Removing an Interface
+
+Set the interface `state: absent` in the VM spec:
+
+[source,yaml]
+----
+interfaces:
+- name: dyniface1
+  state: absent
+  bridge: {}
+----
+
+NOTE: Hot-unplug is only supported for bridge-binding interfaces. SR-IOV interfaces cannot be hot-unplugged.
+
+For detailed network hotplug procedures, see the link:https://kubevirt.io/user-guide/network/hotplug_interfaces/[KubeVirt Hotplug Network Interfaces documentation,window=_blank].
+
+== Cleanup
+
+Remove all resources created in this tutorial:
+
+[source,bash,role=execute]
+----
+oc delete namespace hotplug-demo
+----
+
+== Summary
+
+In this tutorial you learned how to:
+
+* Recognize the scenarios where hotplugging avoids a disruptive restart
+* Trace how a PVC reaches the guest as a new block device, and why it appears on the SCSI bus
+* Hotplug a PVC volume to a running VM using `virtctl addvolume`
+* Use the `--persist` flag to make hotplugged volumes survive restarts
+* Verify hotplugged volumes appear as new block devices inside the guest
+* Format and mount hotplugged storage within the VM
+* Remove hotplugged volumes with `virtctl removevolume`
+* Understand the requirements and methods for network interface hotplugging
+
+== See Also
+
+* link:https://kubevirt.io/user-guide/storage/hotplug_volumes/[Hotplug Volumes - KubeVirt User Guide,window=_blank]
+* link:https://kubevirt.io/user-guide/network/hotplug_interfaces/[Hotplug Network Interfaces - KubeVirt User Guide,window=_blank]
+* xref:vm-lifecycle:boot-order-boot-sources.adoc[Boot Order and Boot Sources]
