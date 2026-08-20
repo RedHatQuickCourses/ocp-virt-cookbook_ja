@@ -2654,6 +2654,12 @@ def main() -> None:
 
     # ---- step 7: process each file with changes ----
     modules_processed: set[str] = set()
+
+    for fpath in new_files + del_files:
+        parts = fpath.split("/")
+        if len(parts) >= 2:
+            modules_processed.add("/".join(parts[:2]))
+
     for rel_path, file_entry in files_to_process:
         if rel_path in completed_files:
             print(f"SKIP        {rel_path} (already translated)")

@@ -647,7 +647,7 @@ python3 tools/translation/sync-translate.py --resume
    g. `new` ブロック (上記以外): AI API で翻訳を生成し、日本語ファイル内の適切な位置に挿入
    h. `removed` ブロック: 日本語ファイルから該当ブロックを削除
    i. 画像ファイルの同期: upstream のページが参照する画像 (`image::`) のうち、日本語リポジトリに存在しないものを `git show upstream/main:<path>` で取得してコピーする。upstream で削除された画像 (日本語側に存在するが upstream に存在しない) は削除する
-   j. attachments/images の更新同期: 処理対象ファイルが属するモジュールの `attachments/` および `images/` 配下の既存ファイルを upstream と比較し、内容が異なるファイルを upstream で上書きする (9.11 参照)
+   j. attachments/images の更新同期: 処理対象ファイル (変更ブロックを持つファイル)、新規ファイル、および削除されたファイルが属するモジュールの `attachments/` および `images/` 配下を upstream と比較し、新規ファイルの追加・既存ファイルの更新・削除済みファイルの削除を行う (9.11 参照)
    k. 日本語ファイルを書き出し
 8. **nav.adoc の同期**: 各モジュールの `nav.adoc` を upstream と比較し、差分を反映する。新規ページへの xref 行を追加し、削除されたページの xref 行を削除する。xref の表示テキスト (`[]` 内) がある場合は AI API で翻訳する
 9. **antora.yml の同期**: upstream の `antora.yml` と比較し、`nav` セクションに新規モジュールの追加・削除を反映する。`name` フィールドなどリポジトリ固有の値は変更しない
