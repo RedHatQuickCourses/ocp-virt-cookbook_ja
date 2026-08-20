@@ -1814,9 +1814,13 @@ def _postprocess_admonitions_and_headings() -> int:
                     en_glossary = _apply_heading_glossary(
                         en_headers[header_idx]
                     )
+                    ja_text = re.sub(
+                        r"^={1,5}\s+", "", result[0]
+                    ).strip() if result else ""
                     if (
                         en_glossary is not None
                         and en_glossary != list(block.lines)
+                        and ja_text not in _HEADING_GLOSSARY.values()
                     ):
                         new_contents.append(
                             ("section_header", en_glossary)
