@@ -25,8 +25,8 @@ API は、OpenShift Virtualization およびその基盤となる OpenShift Cont
 
 * OpenShift Virtualization がインストールされた OpenShift v4.18 以降のクラスター
 * クラスターレベルの管理者アクセス権 (テスト用またはシングルテナントのクラスターの場合は `kubeadmin` アカウントの認証情報) 
-* REST API および関連する HTTP CRUD 操作 (GET、PUT、POST、PATCH、DELETE) 、トークンベースの認証、JSON などに関する理解
-* REST API 開発ツール (Postman、cURL など) 
+* REST API および関連する HTTP CRUD 操作 (GET、PUT、POST、PATCH、DELETE)、トークンベースの認証、JSON などに関する理解
+* REST API 開発ツール (Postman、cURL など)
 
 == セクション
 
