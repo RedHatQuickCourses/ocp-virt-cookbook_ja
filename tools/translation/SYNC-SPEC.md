@@ -78,7 +78,7 @@ upstream リポジトリ (`RedHatQuickCourses/ocp-virt-cookbook`) の英語コ�
     ^....\s*$          → IN_LITERAL_BLOCK へ
     ^====\s*$          → IN_EXAMPLE_BLOCK へ (block_attribute があれば付与)
     ^|===\s*$          → IN_TABLE へ (block_attribute があれば付与)
-    ^[cols=...]        → block_attribute を蓄積、EXPECT_TABLE へ
+    ^[cols=...]        → block_attribute を蓄積、EXPECT_DELIMITED へ
     ^\[.*\]$ (上記以外)→ block_attribute を蓄積、EXPECT_DELIMITED へ
     ^NOTE: 等          → admonition_inline ブロック開始、NORMAL のまま
     ^.テキスト         → block_title を蓄積、EXPECT_TITLED_BLOCK へ
@@ -102,7 +102,9 @@ upstream リポジトリ (`RedHatQuickCourses/ocp-virt-cookbook`) の英語コ�
 
 状態: EXPECT_DELIMITED
   ^----\s*$            → IN_CODE_BLOCK へ (蓄積済み block_attribute を付与)
+  ^....\s*$            → IN_LITERAL_BLOCK へ (蓄積済み block_attribute を付与)
   ^====\s*$            → IN_EXAMPLE_BLOCK へ (蓄積済み block_attribute を付与)
+  ^|===\s*$            → IN_TABLE へ (蓄積済み block_attribute を付与)
   ^.テキスト            → block_title も蓄積、EXPECT_DELIMITED のまま
   その他                → block_attribute を単独ブロックとして確定、行を再処理
 
@@ -116,6 +118,8 @@ upstream リポジトリ (`RedHatQuickCourses/ocp-virt-cookbook`) の英語コ�
   ^\[.*\]$ (上記以外)  → block_attribute も蓄積、EXPECT_DELIMITED へ
   その他                → block_title を単独ブロックとして確定、行を再処理
 ```
+
+**注意**: 仕様上の `EXPECT_TABLE` 状態 (`[cols=...]` が起点) は `EXPECT_DELIMITED` に統合されている。`[cols=...]` は block_attribute として蓄積され、EXPECT_DELIMITED が `|===` を処理するため、独立した状態は不要である。
 
 **注意**: デリミタ行 (`----`, `....`, `====`, `|===`) は末尾に空白文字が付いていても有効なデリミタとして扱う (`\s*$`)。upstream のファイルに末尾空白付きデリミタが存在するケースが確認されている (例: `creating-managing-storage-class.adoc` L82)。
 
@@ -607,6 +611,7 @@ python3 tools/translation/sync-translate.py --resume
 
 | 引数 | 説明 |
 |---|---|
+| `paths` (位置, `nargs="*"`) | 翻訳対象のファイルまたはディレクトリ。省略時は全管理対象ファイルを処理 |
 | `--dry-run` | 翻訳結果を stdout に表示するが、ファイルへの書き込み・ブランチ作成・`sync-mark.py` の実行を行わない |
 | `--model` | Gemini モデル。デフォルト: `gemini-3.7-flash` |
 | `--branch` | 作成するブランチ名。デフォルト: `translate/<YYYY-MM-DD>` (実行日) |
@@ -641,7 +646,7 @@ python3 tools/translation/sync-translate.py --resume
    b. 現在の upstream 英語を `git show upstream/main:<path>` で取得
    c. 現在の日本語ファイルを読み込み
    d. 不変アンカー照合で英語スナップショットと日本語ブロックを対応づけ
-   d2. 構造不一致の自動修正: スナップショット英語に存在するが日本語に対応ブロックがないもの (AI 翻訳時の欠損) はスナップショットを参考に翻訳して挿入する。逆に日本語にあるがスナップショットに対応しないブロック (AI 翻訳時の余剰) は削除する。修正後、再度アンカー照合を行い 1:1 対応を確立する
+   d2. upstream ブロック順による再構築: upstream ブロックを順にイテレートし、各ブロックについてスナップショットとの対応関係 (ステップ d のアンカー照合結果) に基づき、対応する JA ブロックを取得またはAI翻訳で生成する。upstream に存在しないブロック (JA の余剰) は自動的に出力から除外され、upstream にのみ存在するブロック (JA の欠損) は新規翻訳される。この方式により、構造不一致の修正と再アンカー照合が不要になる
    e. コードブロック翻訳: `code_block` は upstream 原文をベースに AI API でコメント行 (`#` で始まる行) のみ翻訳する (コード本体は不変)。`literal_block` および `block_attribute` は upstream 原文をそのまま使用する (AI API は呼び出さない)
    f. `outdated` ブロック (上記以外): Gemini API で翻訳を生成し、日本語ファイル内の該当ブロックを置換 (後述のプロンプト設計参照)
    g. `new` ブロック (上記以外): AI API で翻訳を生成し、日本語ファイル内の適切な位置に挿入
@@ -911,7 +916,7 @@ python3 tools/translation/validate-structure.py --strict
       - 一致すれば OK
       - 不一致なら WARNING (どのセクションで何が何個ずれているか)
    e. セクション見出しの順序と階層レベルが一致するか検証
-   f. コードブロックの内容が同一か検証 (コードは翻訳しないため)
+   f. コードブロックのコード本体が同一か検証 (コメント行 `#` は翻訳対象のため比較から除外する)
 2. 結果を出力
 
 #### 出力例
@@ -1058,7 +1063,7 @@ tools/translation/
 
 - **新規ファイル翻訳時 (ステップ 4)**: 新規ページに対応する `attachments/` および `images/` を upstream からコピー
 - **既存ファイル処理時 (ステップ 7i)**: upstream の変更でページに `image::` 参照が追加された場合、参照先の画像ファイルを upstream からコピー。upstream で削除された画像は日本語側からも削除
-- **既存 attachments/images の更新同期 (ステップ 7j)**: 管理対象モジュール内の既存 `attachments/` および `images/` ファイルを upstream と比較し、内容が異なるファイルを upstream の内容で上書きする。upstream で削除されたファイルは日本語側からも削除する
+- **既存 attachments/images の更新同期 (ステップ 7j)**: upstream に存在する全管理対象モジュール内の `attachments/` および `images/` ファイルを upstream と比較し、内容が異なるファイルを upstream の内容で上書きする。upstream で削除されたファイルは日本語側からも削除する。変更ブロックの有無に関わらず全モジュールを対象とする
 - **モジュール削除時 (ステップ 5)**: モジュールディレクトリごと削除する際に `attachments/` および `images/` も含めて削除
 
 ### 9.12 日本語リポジトリ独自ファイル
@@ -1597,20 +1602,19 @@ def _ensure_heading_level(en_lines: list[str], ja_lines: list[str]) -> list[str]
 
 `_process_file` の `new_contents` 構築後、ファイル書き出し前に重複セクションを検出・除去する:
 
-1. `new_contents` から `section_header` のリスト (見出しテキスト、位置) を抽出する
-2. 同一見出しテキスト (レベルプレフィックス除去後) が複数回出現する場合:
-   a. 対応する EN upstream の見出しテキストを位置から逆引きし、正しい見出しを特定する
-   b. 2 回目以降の出現は重複と判定し、その section_header と配下ブロック (次の同レベル以上 section_header まで) を `new_contents` から除去する
-3. 重複除去が行われた場合、ログに `DEDUP` を出力する
+1. EN (upstream) と JA (`new_contents`) のセクション見出し総数を比較する
+2. JA のセクション数が EN 以下の場合は何もしない。異なる EN 見出しが同一の JA テキストに翻訳されたケースであり、重複ではない
+3. JA のセクション数が EN を超える場合、全見出しレベル (>= 2) を対象に、同一レベル・同一テキストの 2 回目以降の見出しとその配下ブロック (次の同レベル以上 section_header まで) を除去する。重複判定のキーはレベルとテキストの組 (`{level}:{text}`) とし、異なるレベルの同名見出しは別個に扱う
+4. 重複除去が行われた場合、ログに `DEDUP` を出力する
 
 #### 対策 3: 事後補正パスでの重複除去
 
-事後補正パス (9.20) にもセクション重複検出を追加する。これにより、今回のバグで作成された既存翻訳ファイルの重複も修正できる:
+事後補正パス (9.20) にもセクション重複検出を追加する。これにより、過去の翻訳で発生した重複セクションも修正できる:
 
-1. 各 `.adoc` ファイルを読み込み、`== ` で始まる行を抽出する
-2. 同一テキストの重複を検出する
-3. 重複セクション (2 回目以降) とその配下ブロックを除去する
-4. `originals/` の対応する EN ファイルのセクション数と一致することを検証する
+1. 各 `.adoc` ファイルについて、JA と `originals/` の対応する EN ファイルのセクション見出し総数を比較する
+2. JA のセクション数が EN 以下の場合はスキップする
+3. JA のセクション数が EN を超える場合、同一レベル・同一テキストの重複セクション (2 回目以降) とその配下ブロックを除去する
+4. 重複除去が行われた場合、ログに出力する
 
 ### 9.23 アドモニション形式・ケースの保持
 

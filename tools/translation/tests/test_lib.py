@@ -1840,5 +1840,525 @@ class TestSyncAntoraPlaybook(unittest.TestCase):
         self.assertEqual(self._read("antora-playbook.yml"), "old content\n")
 
 
+# =========================================================================
+# Additional block_parser tests — coverage gaps
+# =========================================================================
+
+class TestBlockParserAdditional(unittest.TestCase):
+    """Additional tests for _lib.block_parser covering spec gaps."""
+
+    # ---- block_title + block_attribute + delimiter (2.3) ----
+    def test_block_title_plus_attr_plus_example(self):
+        """[NOTE] + .Title + ==== produces ONE example_block with both attrs
+        and title (spec 2.3 / layer2-secondary.adoc pattern)."""
+        content = (
+            "= Doc\n\n"
+            "[NOTE]\n"
+            ".This is important\n"
+            "====\n"
+            "Note content here.\n"
+            "====\n"
+        )
+        blocks = parse_blocks(content)
+        example = [b for b in blocks if b.block_type == "example_block"]
+        self.assertEqual(len(example), 1)
+        self.assertIn("[NOTE]", example[0].attrs)
+        self.assertEqual(example[0].title, ".This is important")
+        self.assertIn("Note content here.", example[0].lines)
+
+    # ---- list continuation with code block (2.4) ----
+    def test_list_continuation_with_code_block(self):
+        """``+\\n----\\n...\\n----`` inside a list produces ONE list_item."""
+        content = (
+            "= Doc\n\n"
+            "== Section\n\n"
+            ". Step one\n"
+            "+\n"
+            "----\n"
+            "oc get pods\n"
+            "----\n\n"
+            "Some prose after.\n"
+        )
+        blocks = parse_blocks(content)
+        list_items = [b for b in blocks if b.block_type == "list_item"]
+        self.assertEqual(len(list_items), 1)
+        joined = "\n".join(list_items[0].lines)
+        self.assertIn("----", joined)
+        self.assertIn("oc get pods", joined)
+        prose = [b for b in blocks if b.block_type == "prose"]
+        self.assertEqual(len(prose), 1)
+
+    # ---- list continuation with literal block (2.4) ----
+    def test_list_continuation_with_literal_block(self):
+        """``+\\n....\\n...\\n....`` inside a list produces ONE list_item."""
+        content = (
+            "= Doc\n\n"
+            ". Step\n"
+            "+\n"
+            "....\n"
+            "output text\n"
+            "....\n\n"
+            "After.\n"
+        )
+        blocks = parse_blocks(content)
+        list_items = [b for b in blocks if b.block_type == "list_item"]
+        self.assertEqual(len(list_items), 1)
+        joined = "\n".join(list_items[0].lines)
+        self.assertIn("....", joined)
+        self.assertIn("output text", joined)
+
+    # ---- [[anchor-id]] standalone anchor (2.5) ----
+    def test_standalone_bracket_anchor(self):
+        """``[[anchor-id]]`` on its own line becomes block_attribute."""
+        content = "= Doc\n\n[[my-anchor]]\n== Section\n"
+        blocks = parse_blocks(content)
+        attrs = [b for b in blocks if b.block_type == "block_attribute"]
+        self.assertTrue(len(attrs) >= 1)
+        self.assertIn("[[my-anchor]]", attrs[0].lines)
+
+    # ---- [#anchor-id] shorthand anchor before code block (2.5) ----
+    def test_shorthand_anchor_before_code_block(self):
+        """``[#anchor-id]`` before ``----`` groups with the code_block."""
+        content = "= Doc\n\n[#my-code]\n----\necho test\n----\n"
+        blocks = parse_blocks(content)
+        code = [b for b in blocks if b.block_type == "code_block"]
+        self.assertEqual(len(code), 1)
+        self.assertIn("[#my-code]", code[0].attrs)
+
+
+class TestSlugifyAdditional(unittest.TestCase):
+    """Additional slugify tests for spec 3.4 coverage."""
+
+    def test_slugify_with_anchor_uses_anchor(self):
+        """When [[anchor_id]] is present, generate_block_ids uses anchor,
+        not slug (spec 3.4 rule 1)."""
+        content = "= Doc\n\n[[custom-anchor]]\n== Some Heading\n\nParagraph text.\n"
+        blocks = parse_blocks(content)
+        generate_block_ids(blocks)
+        prose = [b for b in blocks if b.block_type == "prose"]
+        self.assertTrue(len(prose) >= 1)
+        self.assertEqual(prose[0].section_path, "custom-anchor")
+        self.assertEqual(prose[0].block_id, "custom-anchor/prose/0")
+
+    def test_slugify_50_char_truncation(self):
+        """Slugs are truncated at 50 characters (spec 3.4 rule 6)."""
+        long_heading = "== " + "a" * 60
+        slug = _slugify(long_heading)
+        self.assertEqual(len(slug), 50)
+        self.assertEqual(slug, "a" * 50)
+
+    def test_slugify_fullwidth_to_halfwidth(self):
+        """Full-width alphanumeric characters are converted to half-width
+        (spec 3.4 rule 2)."""
+        slug = _slugify("== Ｈｅｌｌｏ１２３")
+        self.assertEqual(slug, "hello123")
+
+    def test_slugify_fullwidth_katakana_preserved(self):
+        """Full-width katakana is preserved (not alphanumeric)."""
+        slug = _slugify("== テスト")
+        self.assertEqual(slug, "テスト")
+
+    def test_slugify_special_chars_removed(self):
+        """Characters outside [a-z0-9぀-鿿-] are removed (spec 3.4 rule 5)."""
+        slug = _slugify("== Hello! World? (test)")
+        self.assertEqual(slug, "hello-world-test")
+
+
+# =========================================================================
+# Additional anchor_matching tests — coverage gaps
+# =========================================================================
+
+class TestAnchorMatchingAdditional(unittest.TestCase):
+    """Additional tests for _lib.anchor_matching covering spec gaps."""
+
+    # ---- code_block fingerprint excludes comment lines (5.2) ----
+    def test_fingerprint_code_block_excludes_comments(self):
+        """Code block fingerprint hashes only non-comment lines (spec 5.2)."""
+        block_with_comments = Block(
+            block_type="code_block",
+            lines=["----", "# This is a comment", "echo hello", "# Another comment", "----"],
+            start_line=1, end_line=5,
+        )
+        block_without_comments = Block(
+            block_type="code_block",
+            lines=["----", "echo hello", "----"],
+            start_line=1, end_line=3,
+        )
+        fp_with = extract_fingerprint(block_with_comments)
+        fp_without = extract_fingerprint(block_without_comments)
+        self.assertIsNotNone(fp_with)
+        self.assertIsNotNone(fp_without)
+        self.assertEqual(fp_with, fp_without)
+
+    def test_fingerprint_code_block_different_code(self):
+        """Different code bodies produce different fingerprints."""
+        block_a = Block(
+            block_type="code_block",
+            lines=["----", "echo hello", "----"],
+            start_line=1, end_line=3,
+        )
+        block_b = Block(
+            block_type="code_block",
+            lines=["----", "echo world", "----"],
+            start_line=1, end_line=3,
+        )
+        fp_a = extract_fingerprint(block_a)
+        fp_b = extract_fingerprint(block_b)
+        self.assertNotEqual(fp_a, fp_b)
+
+    def test_fingerprint_code_block_same_code_different_comments(self):
+        """Same code with translated comments produces same fingerprint."""
+        block_en = Block(
+            block_type="code_block",
+            lines=["----", "# Delete all VMs", "oc delete vm --all", "----"],
+            start_line=1, end_line=4,
+        )
+        block_ja = Block(
+            block_type="code_block",
+            lines=["----", "# 全ての VM を削除", "oc delete vm --all", "----"],
+            start_line=1, end_line=4,
+        )
+        fp_en = extract_fingerprint(block_en)
+        fp_ja = extract_fingerprint(block_ja)
+        self.assertEqual(fp_en, fp_ja)
+
+    # ---- literal_block fingerprint (5.2) ----
+    def test_fingerprint_literal_block(self):
+        """Literal block returns ("code", hash) using content between ....."""
+        block = Block(
+            block_type="literal_block",
+            lines=["....", "output text", "more output", "...."],
+            start_line=1, end_line=4,
+        )
+        fp = extract_fingerprint(block)
+        self.assertIsNotNone(fp)
+        self.assertEqual(fp[0], "code")
+        expected_hash = compute_block_hash(["output text", "more output"])
+        self.assertEqual(fp[1], expected_hash)
+
+    # ---- example_block fingerprint (5.2) ----
+    def test_fingerprint_example_block_with_admonition_attr(self):
+        """Example block with [NOTE] attr returns ("attr", "[NOTE]")."""
+        block = Block(
+            block_type="example_block",
+            lines=["[NOTE]", "====", "Some note.", "===="],
+            start_line=1, end_line=4,
+            attrs=["[NOTE]"],
+        )
+        fp = extract_fingerprint(block)
+        self.assertEqual(fp, ("attr", "[NOTE]"))
+
+    def test_fingerprint_example_block_without_admonition_attr(self):
+        """Example block without admonition attr returns None."""
+        block = Block(
+            block_type="example_block",
+            lines=["====", "Example content.", "===="],
+            start_line=1, end_line=3,
+            attrs=[],
+        )
+        fp = extract_fingerprint(block)
+        self.assertIsNone(fp)
+
+    # ---- section_header with inline anchor [[...]] (5.2) ----
+    def test_fingerprint_section_header_inline_anchor(self):
+        """Section header with inline [[anchor]] in text returns anchor."""
+        block = Block(
+            block_type="section_header",
+            lines=["== Introduction [[intro-id]]"],
+            start_line=1, end_line=1,
+            attrs=[],
+        )
+        fp = extract_fingerprint(block)
+        self.assertEqual(fp, ("section", 2, "intro-id"))
+
+    def test_fingerprint_section_header_attrs_take_priority(self):
+        """Anchor in attrs takes priority over inline anchor."""
+        block = Block(
+            block_type="section_header",
+            lines=["== Introduction [[inline-id]]"],
+            start_line=1, end_line=1,
+            attrs=["[[attr-id]]"],
+        )
+        fp = extract_fingerprint(block)
+        self.assertEqual(fp, ("section", 2, "attr-id"))
+
+    # ---- gap fill with unequal block counts (5.3) ----
+    def test_match_gap_unequal_blocks(self):
+        """When EN has more gap blocks than JA, only min(en, ja) are matched."""
+        en_blocks = [
+            Block(block_type="section_header", lines=["== A"], start_line=1, end_line=1),
+            Block(block_type="prose", lines=["P1"], start_line=2, end_line=2),
+            Block(block_type="prose", lines=["P2"], start_line=3, end_line=3),
+            Block(block_type="prose", lines=["P3"], start_line=4, end_line=4),
+            Block(block_type="section_header", lines=["== B"], start_line=5, end_line=5),
+        ]
+        ja_blocks = [
+            Block(block_type="section_header", lines=["== A"], start_line=1, end_line=1),
+            Block(block_type="prose", lines=["JP1"], start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["== B"], start_line=3, end_line=3),
+        ]
+        matches = match_blocks(en_blocks, ja_blocks)
+        self.assertIn((0, 0), matches)
+        self.assertIn((4, 2), matches)
+        self.assertIn((1, 1), matches)
+        self.assertNotIn((2, 2), matches)
+        self.assertNotIn((3, 3), matches)
+
+    def test_match_gap_ja_has_more(self):
+        """When JA has more gap blocks than EN, only min(en, ja) are matched."""
+        en_blocks = [
+            Block(block_type="section_header", lines=["== A"], start_line=1, end_line=1),
+            Block(block_type="prose", lines=["P1"], start_line=2, end_line=2),
+            Block(block_type="section_header", lines=["== B"], start_line=3, end_line=3),
+        ]
+        ja_blocks = [
+            Block(block_type="section_header", lines=["== A"], start_line=1, end_line=1),
+            Block(block_type="prose", lines=["JP1"], start_line=2, end_line=2),
+            Block(block_type="prose", lines=["JP2"], start_line=3, end_line=3),
+            Block(block_type="prose", lines=["JP3"], start_line=4, end_line=4),
+            Block(block_type="section_header", lines=["== B"], start_line=5, end_line=5),
+        ]
+        matches = match_blocks(en_blocks, ja_blocks)
+        self.assertIn((0, 0), matches)
+        self.assertIn((2, 4), matches)
+        self.assertIn((1, 1), matches)
+        self.assertEqual(len(matches), 3)
+
+
+# =========================================================================
+# validate-structure.py tests
+# =========================================================================
+
+class TestValidateStructure(unittest.TestCase):
+    """Tests for validate-structure.py _validate_file function."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "validate_structure",
+            os.path.join(_TOOL_ROOT, "validate-structure.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_identical_files_no_violations(self):
+        """Identical EN and JA structure produces no violations."""
+        content = (
+            "= Title\n\n"
+            "== Section\n\n"
+            "Paragraph text.\n\n"
+            "[source,yaml]\n"
+            "----\n"
+            "key: value\n"
+            "----\n"
+        )
+        violations = self.mod._validate_file(content, content, "test.adoc")
+        self.assertEqual(violations, [])
+
+    def test_section_heading_count_mismatch(self):
+        """Different section heading counts → violation."""
+        en = "= Title\n\n== Section A\n\nText.\n\n== Section B\n\nMore text.\n"
+        ja = "= タイトル\n\n== セクション A\n\nテキスト。\n"
+        violations = self.mod._validate_file(en, ja, "test.adoc")
+        self.assertTrue(any("section heading count" in v for v in violations))
+
+    def test_section_heading_level_mismatch(self):
+        """Different section heading levels → violation."""
+        en = "= Title\n\n== Section A\n\nText.\n"
+        ja = "= タイトル\n\n=== セクション A\n\nテキスト。\n"
+        violations = self.mod._validate_file(en, ja, "test.adoc")
+        self.assertTrue(any("level" in v for v in violations))
+
+    def test_block_type_count_mismatch(self):
+        """Different block type counts in a section → violation."""
+        en = "= Title\n\n== Section\n\nP1.\n\nP2.\n"
+        ja = "= タイトル\n\n== セクション\n\nP1のみ。\n"
+        violations = self.mod._validate_file(en, ja, "test.adoc")
+        self.assertTrue(any("prose" in v for v in violations))
+
+    def test_code_block_content_match_ignores_comments(self):
+        """Code blocks with different comments but same code → no violation."""
+        en = (
+            "= Title\n\n"
+            "== Section\n\n"
+            "----\n"
+            "# English comment\n"
+            "oc get pods\n"
+            "----\n"
+        )
+        ja = (
+            "= タイトル\n\n"
+            "== セクション\n\n"
+            "----\n"
+            "# 日本語コメント\n"
+            "oc get pods\n"
+            "----\n"
+        )
+        violations = self.mod._validate_file(en, ja, "test.adoc")
+        code_violations = [v for v in violations if "code_block" in v and "content differs" in v]
+        self.assertEqual(code_violations, [])
+
+    def test_code_block_content_mismatch_detected(self):
+        """Code blocks with different code body → violation."""
+        en = (
+            "= Title\n\n"
+            "== Section\n\n"
+            "----\n"
+            "oc get pods\n"
+            "----\n"
+        )
+        ja = (
+            "= タイトル\n\n"
+            "== セクション\n\n"
+            "----\n"
+            "oc get nodes\n"
+            "----\n"
+        )
+        violations = self.mod._validate_file(en, ja, "test.adoc")
+        self.assertTrue(any("content differs" in v for v in violations))
+
+    def test_translated_prose_no_violation(self):
+        """Translated prose with same structure → no violations."""
+        en = (
+            "= Title\n\n"
+            "== Overview\n\n"
+            "This is the overview paragraph.\n\n"
+            "NOTE: Remember this.\n"
+        )
+        ja = (
+            "= タイトル\n\n"
+            "== 概要\n\n"
+            "これは概要の段落です。\n\n"
+            "NOTE: これを覚えてください。\n"
+        )
+        violations = self.mod._validate_file(en, ja, "test.adoc")
+        self.assertEqual(violations, [])
+
+
+# =========================================================================
+# sync-translate.py: _verify_code_block_content tests (9.20.1)
+# =========================================================================
+
+class TestVerifyCodeBlockContent(unittest.TestCase):
+    """Tests for _verify_code_block_content (spec 9.20.1)."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = __import__("importlib").util.spec_from_file_location(
+            "sync_translate",
+            os.path.join(_TOOL_ROOT, "sync-translate.py"),
+        )
+        mod = __import__("importlib").util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cls.mod = mod
+
+    def test_identical_content_unchanged(self):
+        """Identical JA and EN returns JA unchanged."""
+        lines = ["----", "oc get pods", "----"]
+        result = self.mod._verify_code_block_content(lines, lines)
+        self.assertEqual(result, lines)
+
+    def test_translated_code_restored(self):
+        """Translated code body (<=30%) is restored to EN."""
+        en = ["----", "echo hello", "echo world", "echo test", "echo ok", "----"]
+        ja = ["----", "echo こんにちは", "echo world", "echo test", "echo ok", "----"]
+        result = self.mod._verify_code_block_content(ja, en)
+        self.assertEqual(result, en)
+
+    def test_over_30_percent_not_restored(self):
+        """If >30% of code lines differ, no restoration."""
+        en = ["----", "line1", "line2", "line3", "----"]
+        ja = ["----", "翻訳1", "翻訳2", "line3", "----"]
+        result = self.mod._verify_code_block_content(ja, en)
+        self.assertEqual(result, ja)
+
+    def test_comments_are_ignored(self):
+        """Comment lines (# prefix) are excluded from comparison."""
+        en = ["----", "# English comment", "oc get pods", "----"]
+        ja = ["----", "# 日本語コメント", "oc get pods", "----"]
+        result = self.mod._verify_code_block_content(ja, en)
+        self.assertEqual(result, ja)
+
+    def test_delimiters_are_ignored(self):
+        """Delimiter lines (----) are excluded from comparison."""
+        en = ["----", "code", "----"]
+        ja = ["----", "code", "----"]
+        result = self.mod._verify_code_block_content(ja, en)
+        self.assertEqual(result, ja)
+
+    def test_line_count_mismatch_returns_ja(self):
+        """Different line counts returns JA unchanged."""
+        en = ["----", "line1", "line2", "----"]
+        ja = ["----", "line1", "----"]
+        result = self.mod._verify_code_block_content(ja, en)
+        self.assertEqual(result, ja)
+
+    def test_callout_marker_restored(self):
+        """Callout markers (# <N>) that were removed are restored."""
+        en = ["----", "oc get pods # <1>", "oc get nodes # <2>", "----"]
+        ja = ["----", "oc get pods", "oc get nodes", "----"]
+        result = self.mod._verify_code_block_content(ja, en)
+        self.assertEqual(result[1], "oc get pods # <1>")
+        self.assertEqual(result[2], "oc get nodes # <2>")
+
+    def test_inline_comment_difference_ignored(self):
+        """Lines where only inline comment portion differs are skipped."""
+        en = ["----", "oc get pods  # Get all pods", "----"]
+        ja = ["----", "oc get pods  # 全ての Pod を取得", "----"]
+        result = self.mod._verify_code_block_content(ja, en)
+        self.assertEqual(result, ja)
+
+    def test_block_attribute_lines_ignored(self):
+        """Lines starting with [ are excluded from comparison."""
+        en = ["[source,bash]", "----", "echo hello", "----"]
+        ja = ["[source,bash]", "----", "echo hello", "----"]
+        result = self.mod._verify_code_block_content(ja, en)
+        self.assertEqual(result, ja)
+
+
+# =========================================================================
+# _collect_files tests
+# =========================================================================
+
+class TestCollectFiles(unittest.TestCase):
+    """Tests for _lib.common._collect_files."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
+
+    def test_collect_from_directory(self):
+        """Collects .adoc files recursively from a directory."""
+        d = self.tmpdir.name
+        sub = os.path.join(d, "pages")
+        os.makedirs(sub)
+        for name in ["a.adoc", "b.adoc", "c.txt"]:
+            with open(os.path.join(sub, name), "w") as f:
+                f.write("content")
+        from _lib.common import _collect_files
+        result = _collect_files([d])
+        adoc_files = [f for f in result if f.endswith(".adoc")]
+        self.assertEqual(len(adoc_files), 2)
+
+    def test_collect_single_file(self):
+        """Collects a single file path directly."""
+        d = self.tmpdir.name
+        fpath = os.path.join(d, "test.adoc")
+        with open(fpath, "w") as f:
+            f.write("content")
+        from _lib.common import _collect_files
+        result = _collect_files([fpath])
+        self.assertEqual(result, [fpath])
+
+    def test_collect_nonexistent_warns(self):
+        """Non-existent path produces warning, returns empty."""
+        from _lib.common import _collect_files
+        result = _collect_files(["/nonexistent/path"])
+        self.assertEqual(result, [])
+
+
 if __name__ == "__main__":
     unittest.main()

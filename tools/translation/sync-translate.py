@@ -280,7 +280,7 @@ def _call_ai(
                 if retry_after:
                     wait_s = float(retry_after)
                 else:
-                    wait_s = 2 ** (attempt + 1)
+                    wait_s = 4 * 2 ** attempt
                 if consecutive_429 >= 3:
                     _rate_state.halve_batch()
                     print(
@@ -295,7 +295,7 @@ def _call_ai(
                 )
                 time.sleep(wait_s)
             elif code in (500, 503):
-                wait_s = 2 ** (attempt + 1)
+                wait_s = 4 * 2 ** attempt
                 print(
                     f"    Server error ({code}), retrying in {wait_s}s...",
                     file=sys.stderr, flush=True,
@@ -309,7 +309,7 @@ def _call_ai(
                 )
                 return None
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            wait_s = 2 ** (attempt + 1)
+            wait_s = 4 * 2 ** attempt
             print(
                 f"    Network error: {exc}, retrying in {wait_s}s... "
                 f"(attempt {attempt + 1}/3)",
@@ -412,6 +412,37 @@ def _call_ai_batch(
     return results
 
 
+def _call_ai_batch_full(
+    gemini_info: tuple[str, str],
+    full_prompts: list[str],
+) -> list[str | None]:
+    """Batch translate blocks, each with its own complete prompt.
+
+    Falls back to individual calls if batch parsing fails.
+    """
+    if len(full_prompts) == 1:
+        return [_call_ai(gemini_info, full_prompts[0])]
+
+    combined = (
+        "以下の翻訳タスクを ===BLOCK_N=== で区切って示します。"
+        "各タスクを独立に処理し、結果を同じ ===BLOCK_N=== 区切りで"
+        "出力してください。ブロック数を変えないでください。\n"
+    )
+    for i, prompt in enumerate(full_prompts, 1):
+        combined += f"\n===BLOCK_{i}===\n{prompt}"
+
+    response = _call_ai(gemini_info, combined)
+    if response:
+        parsed = _parse_batch_response(response, len(full_prompts))
+        if parsed:
+            return parsed
+
+    results: list[str | None] = []
+    for prompt in full_prompts:
+        results.append(_call_ai(gemini_info, prompt))
+    return results
+
+
 # ---------------------------------------------------------------------------
 # Prompt builders
 # ---------------------------------------------------------------------------
@@ -435,6 +466,10 @@ def _build_outdated_prompt(
         "日本語に翻訳しないこと\n"
         "- インラインアドモニション (NOTE: テキスト) とブロックアドモニション "
         "([NOTE]\\n====) の形式を相互に変換しないこと\n"
+        "- `Note:` (小文字 n) は通常テキストであり、AsciiDoc のアドモニション"
+        "キーワード `NOTE:` (大文字) に変換しないこと。"
+        "同様に `Tip:`, `Important:`, `Warning:`, `Caution:` も"
+        "小文字始まりの場合は大文字に変換しないこと\n"
         "- 既存の日本語翻訳のスタイルと文体を維持すること\n"
         "- 翻訳文のみを出力し、説明や注記は付けないこと\n\n"
         f"## セクション: {section_title}\n\n"
@@ -466,6 +501,10 @@ def _build_new_prompt(
         "日本語に翻訳しないこと\n"
         "- インラインアドモニション (NOTE: テキスト) とブロックアドモニション "
         "([NOTE]\\n====) の形式を相互に変換しないこと\n"
+        "- `Note:` (小文字 n) は通常テキストであり、AsciiDoc のアドモニション"
+        "キーワード `NOTE:` (大文字) に変換しないこと。"
+        "同様に `Tip:`, `Important:`, `Warning:`, `Caution:` も"
+        "小文字始まりの場合は大文字に変換しないこと\n"
         "- 以下の前後のブロックの文体に合わせること\n"
         "- 翻訳文のみを出力し、説明や注記は付けないこと\n\n"
         f"## セクション: {section_title}\n\n"
@@ -489,6 +528,10 @@ def _build_new_file_prompt(en_text: str) -> str:
         "日本語に翻訳しないこと\n"
         "- インラインアドモニション (NOTE: テキスト) とブロックアドモニション "
         "([NOTE]\\n====) の形式を相互に変換しないこと\n"
+        "- `Note:` (小文字 n) は通常テキストであり、AsciiDoc のアドモニション"
+        "キーワード `NOTE:` (大文字) に変換しないこと。"
+        "同様に `Tip:`, `Important:`, `Warning:`, `Caution:` も"
+        "小文字始まりの場合は大文字に変換しないこと\n"
         "- 翻訳文のみを出力し、説明や注記は付けないこと\n"
         "- 自然な日本語で、技術的に正確な翻訳を行うこと\n\n"
         f"## 翻訳対象の英語:\n{en_text}"
@@ -727,8 +770,9 @@ def _dedup_sections(
 ) -> list[tuple[str, list[str]]]:
     """new_contents から重複セクションを除去する。
 
-    upstream のセクション見出し数と比較し、JA 側に余剰セクションがあれば
-    2 回目以降の同名見出しとその配下ブロックを削除する。
+    JA のセクション見出し総数が EN を超える場合のみ重複除去を行う。
+    JA <= EN の場合は何もしない (異なる EN 見出しが同一 JA テキストに
+    翻訳されたケースであり、重複ではない)。全見出しレベル (>= 2) を対象とする。
     """
     def _heading_text(lines: list[str]) -> str:
         if not lines:
@@ -741,24 +785,25 @@ def _dedup_sections(
         m = re.match(r"^(={1,5})\s", lines[0])
         return len(m.group(1)) if m else 0
 
-    up_h2_texts = []
-    for b in up_blocks:
-        if b.block_type == "section_header":
-            lvl = _heading_level(list(b.lines))
-            if lvl == 2:
-                up_h2_texts.append(
-                    re.sub(r"^={1,5}\s+", "", b.lines[0]).strip()
-                    if b.lines else ""
-                )
+    en_section_count = sum(
+        1 for b in up_blocks if b.block_type == "section_header"
+    )
+    ja_section_count = sum(
+        1 for btype, _ in new_contents if btype == "section_header"
+    )
+
+    if ja_section_count <= en_section_count:
+        return new_contents
 
     seen: dict[str, int] = {}
     dup_indices: set[int] = set()
     for i, (btype, lines) in enumerate(new_contents):
         if btype == "section_header":
             lvl = _heading_level(lines)
-            if lvl == 2:
+            if lvl >= 2:
                 text = _heading_text(lines)
-                if text in seen:
+                key = f"{lvl}:{text}"
+                if key in seen:
                     dup_start = i
                     dup_end = len(new_contents)
                     for j in range(i + 1, len(new_contents)):
@@ -769,11 +814,16 @@ def _dedup_sections(
                     for k in range(dup_start, dup_end):
                         dup_indices.add(k)
                 else:
-                    seen[text] = i
+                    seen[key] = i
 
     if not dup_indices:
         return new_contents
 
+    removed_count = len(dup_indices)
+    print(
+        f"    DEDUP   {removed_count} duplicate blocks removed",
+        flush=True,
+    )
     result = [entry for i, entry in enumerate(new_contents) if i not in dup_indices]
     return result
 
@@ -1121,13 +1171,16 @@ def _process_file(
     # 7a — read three versions
     snap_file = os.path.join(ORIGINALS_DIR, rel_path)
     if not os.path.exists(snap_file):
+        print(f"SKIP        {rel_path} (snapshot not found: {snap_file})")
         return
     with open(snap_file, encoding="utf-8") as fh:
         snap_content = fh.read()
     up_content = git_show(upstream_ref, upstream_path)
     if up_content is None:
+        print(f"SKIP        {rel_path} (upstream file not found)")
         return
     if not os.path.exists(rel_path):
+        print(f"SKIP        {rel_path} (JA file not found)")
         return
     with open(rel_path, encoding="utf-8") as fh:
         ja_content = fh.read()
@@ -1152,6 +1205,8 @@ def _process_file(
 
     # 7d-7g — iterate upstream blocks and build new file
     new_contents: list[tuple[str, list[str]]] = []
+    # Deferred translation requests: (idx_in_new_contents, up_block, prompt, prefix)
+    pending_translate: list[tuple[int, Block, str, str]] = []
 
     for up_idx, up_block in enumerate(up_blocks):
         up_id = up_block.block_id
@@ -1223,51 +1278,46 @@ def _process_file(
                     if ja_idx is not None and 0 <= ja_idx < len(ja_blocks)
                     else ""
                 )
+                adm_prefix = ""
+                if up_block.block_type == "admonition_inline":
+                    kw, stripped = _strip_admonition_prefix(
+                        list(snap_block.lines)
+                    )
+                    old_en = "\n".join(stripped)
+                    kw2, stripped2 = _strip_admonition_prefix(
+                        list(up_block.lines)
+                    )
+                    new_en = "\n".join(stripped2)
+                    adm_prefix = kw2 or kw
+                    if cur_ja:
+                        _, ja_stripped = _strip_admonition_prefix(
+                            cur_ja.split("\n")
+                        )
+                        cur_ja = "\n".join(ja_stripped)
+                if up_block.block_type == "list_item":
+                    lp, stripped = _strip_list_prefix(
+                        list(snap_block.lines)
+                    )
+                    old_en = "\n".join(stripped)
+                    lp2, stripped2 = _strip_list_prefix(
+                        list(up_block.lines)
+                    )
+                    new_en = "\n".join(stripped2)
+                    adm_prefix = lp2 or lp
+                    if cur_ja:
+                        _, ja_stripped = _strip_list_prefix(
+                            cur_ja.split("\n")
+                        )
+                        cur_ja = "\n".join(ja_stripped)
                 sec_title = _get_section_title(up_blocks, up_block)
                 prompt = _build_outdated_prompt(
                     sec_title, old_en, new_en, cur_ja
                 )
-                translated = _call_ai(gemini_info, prompt)
-                if translated:
-                    result_lines = translated.strip().split("\n")
-                    if up_block.block_type == "list_item":
-                        result_lines = _ensure_list_prefix(
-                            up_block.lines, result_lines
-                        )
-                    if up_block.block_type == "admonition_inline":
-                        result_lines = _ensure_admonition_prefix(
-                            up_block.lines, result_lines
-                        )
-                    if up_block.block_type == "section_header":
-                        result_lines = _ensure_heading_level(
-                            list(up_block.lines), result_lines
-                        )
-                    if up_block.block_type == "prose":
-                        result_lines = _ensure_admonition_case(
-                            list(up_block.lines), result_lines
-                        )
-                    if up_block.block_type == "document_header":
-                        result_lines = _ensure_doc_header_attrs(
-                            list(up_block.lines), result_lines
-                        )
-                    new_contents.append(
-                        (up_block.block_type, result_lines)
-                    )
-                    print(
-                        f"  TRANSLATED  {up_id}  (outdated → synced)"
-                    )
-                    stats["blocks_translated"] += 1
-                else:
-                    # fallback — keep current JA or upstream
-                    if ja_idx is not None and 0 <= ja_idx < len(ja_blocks):
-                        new_contents.append(
-                            (up_block.block_type, list(ja_blocks[ja_idx].lines))
-                        )
-                    else:
-                        new_contents.append(
-                            (up_block.block_type, list(up_block.lines))
-                        )
-                    skipped.append((rel_path, up_id))
+                nc_idx = len(new_contents)
+                new_contents.append(None)
+                pending_translate.append(
+                    (nc_idx, up_block, prompt, adm_prefix)
+                )
             else:
                 # synced — keep JA
                 if ja_idx is not None and 0 <= ja_idx < len(ja_blocks):
@@ -1303,49 +1353,25 @@ def _process_file(
                         (up_block.block_type, kept_lines)
                     )
                 else:
-                    # structure mismatch: block missing from JA → translate
+                    # structure mismatch: block missing from JA → defer
+                    adm_prefix = ""
+                    en_lines = list(up_block.lines)
+                    if up_block.block_type == "admonition_inline":
+                        adm_prefix, en_lines = _strip_admonition_prefix(
+                            en_lines
+                        )
+                    if up_block.block_type == "list_item":
+                        adm_prefix, en_lines = _strip_list_prefix(
+                            en_lines
+                        )
                     prompt = _build_new_file_prompt(
-                        "\n".join(up_block.lines)
+                        "\n".join(en_lines)
                     )
-                    translated = _call_ai(gemini_info, prompt)
-                    if translated:
-                        result_lines = translated.strip().split("\n")
-                        if up_block.block_type == "list_item":
-                            result_lines = _ensure_list_prefix(
-                                up_block.lines, result_lines
-                            )
-                        if up_block.block_type == "admonition_inline":
-                            result_lines = _ensure_admonition_prefix(
-                                up_block.lines, result_lines
-                            )
-                        if up_block.block_type == "section_header":
-                            result_lines = _ensure_heading_level(
-                                list(up_block.lines), result_lines
-                            )
-                        if up_block.block_type == "prose":
-                            result_lines = _ensure_admonition_case(
-                                list(up_block.lines), result_lines
-                            )
-                        if up_block.block_type == "document_header":
-                            result_lines = _ensure_doc_header_attrs(
-                                list(up_block.lines), result_lines
-                            )
-                        new_contents.append(
-                            (
-                                up_block.block_type,
-                                result_lines,
-                            )
-                        )
-                        print(
-                            f"  TRANSLATED  {up_id}  "
-                            "(structure fix, missing block)"
-                        )
-                        stats["blocks_translated"] += 1
-                    else:
-                        new_contents.append(
-                            (up_block.block_type, list(up_block.lines))
-                        )
-                        skipped.append((rel_path, up_id))
+                    nc_idx = len(new_contents)
+                    new_contents.append(None)
+                    pending_translate.append(
+                        (nc_idx, up_block, prompt, adm_prefix)
+                    )
             continue
 
         # ---- new block (not in snapshot) ----
@@ -1354,22 +1380,11 @@ def _process_file(
             old_sec = renames[section_path]
             if up_block.block_type == "section_header":
                 prompt = _build_new_file_prompt("\n".join(up_block.lines))
-                translated = _call_ai(gemini_info, prompt)
-                if translated:
-                    result_lines = translated.strip().split("\n")
-                    result_lines = _ensure_heading_level(
-                        list(up_block.lines), result_lines
-                    )
-                    new_contents.append(
-                        (up_block.block_type, result_lines)
-                    )
-                    print(f"  TRANSLATED  {up_id}  (section renamed)")
-                    stats["blocks_translated"] += 1
-                else:
-                    new_contents.append(
-                        (up_block.block_type, list(up_block.lines))
-                    )
-                    skipped.append((rel_path, up_id))
+                nc_idx = len(new_contents)
+                new_contents.append(None)
+                pending_translate.append(
+                    (nc_idx, up_block, prompt, "")
+                )
             else:
                 # reuse JA from old section
                 suffix = up_id[len(section_path):]  # /type/ordinal
@@ -1390,6 +1405,16 @@ def _process_file(
                         )
                         reused = True
                 if not reused:
+                    adm_prefix = ""
+                    en_lines = list(up_block.lines)
+                    if up_block.block_type == "admonition_inline":
+                        adm_prefix, en_lines = _strip_admonition_prefix(
+                            en_lines
+                        )
+                    if up_block.block_type == "list_item":
+                        adm_prefix, en_lines = _strip_list_prefix(
+                            en_lines
+                        )
                     sec_title = _get_section_title(up_blocks, up_block)
                     prev_ja = _find_adjacent_ja(
                         up_blocks, up_idx, -1,
@@ -1400,50 +1425,23 @@ def _process_file(
                         snap_id_to_idx, match_map, ja_blocks,
                     )
                     prompt = _build_new_prompt(
-                        sec_title, "\n".join(up_block.lines),
+                        sec_title, "\n".join(en_lines),
                         prev_ja, next_ja,
                     )
-                    translated = _call_ai(gemini_info, prompt)
-                    if translated:
-                        result_lines = translated.strip().split("\n")
-                        if up_block.block_type == "list_item":
-                            result_lines = _ensure_list_prefix(
-                                up_block.lines, result_lines
-                            )
-                        if up_block.block_type == "admonition_inline":
-                            result_lines = _ensure_admonition_prefix(
-                                up_block.lines, result_lines
-                            )
-                        if up_block.block_type == "section_header":
-                            result_lines = _ensure_heading_level(
-                                list(up_block.lines), result_lines
-                            )
-                        if up_block.block_type == "prose":
-                            result_lines = _ensure_admonition_case(
-                                list(up_block.lines), result_lines
-                            )
-                        if up_block.block_type == "document_header":
-                            result_lines = _ensure_doc_header_attrs(
-                                list(up_block.lines), result_lines
-                            )
-                        new_contents.append(
-                            (
-                                up_block.block_type,
-                                result_lines,
-                            )
-                        )
-                        print(
-                            f"  TRANSLATED  {up_id}  (new → synced)"
-                        )
-                        stats["blocks_translated"] += 1
-                    else:
-                        new_contents.append(
-                            (up_block.block_type, list(up_block.lines))
-                        )
-                        skipped.append((rel_path, up_id))
+                    nc_idx = len(new_contents)
+                    new_contents.append(None)
+                    pending_translate.append(
+                        (nc_idx, up_block, prompt, adm_prefix)
+                    )
             continue
 
         # regular new block
+        adm_prefix = ""
+        en_lines = list(up_block.lines)
+        if up_block.block_type == "admonition_inline":
+            adm_prefix, en_lines = _strip_admonition_prefix(en_lines)
+        if up_block.block_type == "list_item":
+            adm_prefix, en_lines = _strip_list_prefix(en_lines)
         sec_title = _get_section_title(up_blocks, up_block)
         prev_ja = _find_adjacent_ja(
             up_blocks, up_idx, -1,
@@ -1454,41 +1452,75 @@ def _process_file(
             snap_id_to_idx, match_map, ja_blocks,
         )
         prompt = _build_new_prompt(
-            sec_title, "\n".join(up_block.lines), prev_ja, next_ja,
+            sec_title, "\n".join(en_lines), prev_ja, next_ja,
         )
-        translated = _call_ai(gemini_info, prompt)
-        if translated:
-            result_lines = translated.strip().split("\n")
-            if up_block.block_type == "list_item":
-                result_lines = _ensure_list_prefix(
-                    up_block.lines, result_lines
-                )
-            if up_block.block_type == "admonition_inline":
-                result_lines = _ensure_admonition_prefix(
-                    up_block.lines, result_lines
-                )
-            if up_block.block_type == "section_header":
-                result_lines = _ensure_heading_level(
-                    list(up_block.lines), result_lines
-                )
-            if up_block.block_type == "prose":
-                result_lines = _ensure_admonition_case(
-                    list(up_block.lines), result_lines
-                )
-            if up_block.block_type == "document_header":
-                result_lines = _ensure_doc_header_attrs(
-                    list(up_block.lines), result_lines
-                )
-            new_contents.append(
-                (up_block.block_type, result_lines)
-            )
-            print(f"  TRANSLATED  {up_id}  (new → synced)")
-            stats["blocks_translated"] += 1
-        else:
-            new_contents.append(
-                (up_block.block_type, list(up_block.lines))
-            )
-            skipped.append((rel_path, up_id))
+        nc_idx = len(new_contents)
+        new_contents.append(None)
+        pending_translate.append(
+            (nc_idx, up_block, prompt, adm_prefix)
+        )
+
+    # ---- batch translate pending blocks (gaps 3, 4, 5) ----
+    if pending_translate:
+        batch_size = _rate_state.batch_size
+        for batch_start in range(0, len(pending_translate), batch_size):
+            batch = pending_translate[
+                batch_start:batch_start + batch_size
+            ]
+            full_prompts = [prompt for _, _, prompt, _ in batch]
+            results = _call_ai_batch_full(gemini_info, full_prompts)
+            for (nc_idx, block, _prompt, pfx), translated in zip(
+                batch, results
+            ):
+                if translated:
+                    result_lines = translated.strip().split("\n")
+                    if block.block_type == "list_item" and pfx:
+                        result_lines = _restore_list_prefix(
+                            pfx, result_lines
+                        )
+                    if block.block_type == "list_item":
+                        result_lines = _ensure_list_prefix(
+                            block.lines, result_lines
+                        )
+                    if block.block_type == "admonition_inline" and pfx:
+                        result_lines = _restore_admonition_prefix(
+                            pfx, result_lines
+                        )
+                    if block.block_type == "admonition_inline":
+                        result_lines = _ensure_admonition_prefix(
+                            block.lines, result_lines
+                        )
+                    if block.block_type == "section_header":
+                        result_lines = _ensure_heading_level(
+                            list(block.lines), result_lines
+                        )
+                    if block.block_type == "prose":
+                        result_lines = _ensure_admonition_case(
+                            list(block.lines), result_lines
+                        )
+                    if block.block_type == "document_header":
+                        result_lines = _ensure_doc_header_attrs(
+                            list(block.lines), result_lines
+                        )
+                    new_contents[nc_idx] = (
+                        block.block_type, result_lines
+                    )
+                    print(
+                        f"  TRANSLATED  {block.block_id}"
+                    )
+                    stats["blocks_translated"] += 1
+                else:
+                    new_contents[nc_idx] = (
+                        block.block_type, list(block.lines)
+                    )
+                    skipped.append((rel_path, block.block_id))
+
+    # fill any remaining None placeholders (shouldn't happen)
+    new_contents = [
+        entry if entry is not None
+        else ("prose", [])
+        for entry in new_contents
+    ]
 
     # report removed blocks
     for bid, bi in file_entry["blocks"].items():
@@ -1626,6 +1658,10 @@ def _translate_new_file(
         "- インラインアドモニション (NOTE: テキスト) と"
         "ブロックアドモニション ([NOTE]\\n====) の形式を"
         "相互に変換しないこと\n"
+        "- `Note:` (小文字 n) は通常テキストであり、AsciiDoc のアドモニション"
+        "キーワード `NOTE:` (大文字) に変換しないこと。"
+        "同様に `Tip:`, `Important:`, `Warning:`, `Caution:` も"
+        "小文字始まりの場合は大文字に変換しないこと\n"
         "- 翻訳文のみを出力し、説明や注記は付けないこと\n"
         "- 自然な日本語で、技術的に正確な翻訳を行うこと"
     )
@@ -1670,7 +1706,7 @@ def _translate_new_file(
 
     print()  # newline after dots
 
-    # enforce heading structure (position-based level correction)
+    new_contents = _dedup_sections(new_contents, blocks)
     new_contents = _enforce_heading_structure(new_contents, blocks)
 
     if not dry_run and new_contents:
@@ -1979,17 +2015,60 @@ def _postprocess_admonitions_and_headings() -> int:
                     (block.block_type, list(block.lines))
                 )
 
-        if changed:
-            corrected = sum(
-                1
-                for (_, new_lines), blk in zip(new_contents, blocks)
-                if new_lines != list(blk.lines)
+        # Section dedup in postprocess pass (spec 9.22 対策 3)
+        if en_headers:
+            en_sec_count = len(en_headers)
+            ja_sec_count = sum(
+                1 for bt, _ in new_contents if bt == "section_header"
             )
+            if ja_sec_count > en_sec_count:
+                dedup_seen: dict[str, int] = {}
+                dedup_indices: set[int] = set()
+                for i, (bt, lines) in enumerate(new_contents):
+                    if bt == "section_header" and lines:
+                        lvl_m = re.match(r"^(={1,5})\s", lines[0])
+                        lvl = len(lvl_m.group(1)) if lvl_m else 0
+                        if lvl >= 2:
+                            text = re.sub(
+                                r"^={1,5}\s+", "", lines[0]
+                            ).strip()
+                            key = f"{lvl}:{text}"
+                            if key in dedup_seen:
+                                ds = i
+                                de = len(new_contents)
+                                for j in range(i + 1, len(new_contents)):
+                                    jbt, jl = new_contents[j]
+                                    if jbt == "section_header" and jl:
+                                        jm = re.match(
+                                            r"^(={1,5})\s", jl[0]
+                                        )
+                                        if jm and len(jm.group(1)) <= lvl:
+                                            de = j
+                                            break
+                                for k in range(ds, de):
+                                    dedup_indices.add(k)
+                            else:
+                                dedup_seen[key] = i
+                if dedup_indices:
+                    new_contents = [
+                        entry for i, entry in enumerate(new_contents)
+                        if i not in dedup_indices
+                    ]
+                    changed = True
+
+        if changed:
+            blocks_corrected = sum(
+                1 for (bt1, l1), (bt2, l2) in zip(
+                    [(b.block_type, list(b.lines)) for b in blocks],
+                    new_contents,
+                )
+                if bt1 != bt2 or l1 != l2
+            ) + abs(len(blocks) - len(new_contents))
             with open(adoc_path, "w", encoding="utf-8") as fh:
                 fh.write(_reconstruct_file(new_contents))
             print(
                 f"POSTFIX     {adoc_path} "
-                f"({corrected} blocks corrected)"
+                f"({blocks_corrected} blocks corrected)"
             )
             files_fixed += 1
 
@@ -2768,13 +2847,6 @@ def main() -> None:
         return
 
     # ---- step 7: process each file with changes ----
-    modules_processed: set[str] = set()
-
-    for fpath in new_files + del_files:
-        parts = fpath.split("/")
-        if len(parts) >= 2:
-            modules_processed.add("/".join(parts[:2]))
-
     for rel_path, file_entry in files_to_process:
         if rel_path in completed_files:
             print(f"SKIP        {rel_path} (already translated)")
@@ -2788,16 +2860,13 @@ def main() -> None:
             progress["completed_files"] = sorted(completed_files)
             save_manifest(manifest)
             _save_progress(progress)
-        parts = rel_path.split("/")
-        if len(parts) >= 2:
-            modules_processed.add("/".join(parts[:2]))
 
-    # ---- step 7i/7j: asset sync for processed modules ----
-    for mod in sorted(modules_processed):
+    # ---- step 7i/7j: asset sync for all managed modules ----
+    all_mods = _upstream_modules(UPSTREAM_REF) & _ja_modules()
+    for mod in sorted(all_mods):
         _sync_module_assets(mod, UPSTREAM_REF, stats, args.dry_run)
 
     # ---- step 8: nav.adoc sync ----
-    all_mods = _upstream_modules(UPSTREAM_REF) & _ja_modules()
     for mod in sorted(all_mods):
         _sync_nav(
             mod, UPSTREAM_REF, gemini_info, stats, skipped, args.dry_run,

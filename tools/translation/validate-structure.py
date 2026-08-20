@@ -184,7 +184,7 @@ def _validate_file(en_content: str, ja_content: str, rel_path: str) -> list[str]
                     f"           (ja: {line_info}{hint})"
                 )
 
-    # --- (f) コードブロックの内容が同一か検証 ---
+    # --- (f) コードブロックの内容が同一か検証 (コメント行は翻訳対象のため除外) ---
     for idx in range(min(len(en_secs), len(ja_secs))):
         en_label, en_group = en_secs[idx]
         ja_label, ja_group = ja_secs[idx]
@@ -195,8 +195,12 @@ def _validate_file(en_content: str, ja_content: str, rel_path: str) -> list[str]
 
         pairs = min(len(en_code), len(ja_code))
         for i in range(pairs):
-            en_hash = compute_block_hash(en_code[i].lines)
-            ja_hash = compute_block_hash(ja_code[i].lines)
+            en_non_comment = [l for l in en_code[i].lines
+                              if not l.lstrip().startswith("#")]
+            ja_non_comment = [l for l in ja_code[i].lines
+                              if not l.lstrip().startswith("#")]
+            en_hash = compute_block_hash(en_non_comment)
+            ja_hash = compute_block_hash(ja_non_comment)
             if en_hash != ja_hash:
                 violations.append(
                     f'  WARNING  section "{display_label}": '

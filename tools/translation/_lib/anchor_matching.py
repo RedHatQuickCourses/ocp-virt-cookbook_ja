@@ -122,7 +122,8 @@ def extract_fingerprint(block: Block) -> tuple | None:
     # --- code_block ---
     if bt == "code_block":
         content = _extract_delimited_content(block.lines, _RE_CODE_DELIM)
-        return ("code", compute_block_hash(content))
+        code_only = [l for l in content if not l.lstrip().startswith("#")]
+        return ("code", compute_block_hash(code_only))
 
     # --- literal_block ---
     if bt == "literal_block":
