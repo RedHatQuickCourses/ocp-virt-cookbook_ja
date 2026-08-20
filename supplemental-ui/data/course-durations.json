@@ -1,6 +1,6 @@
 {
-  "totalSeconds": 7706,
-  "pageCount": 53,
+  "totalSeconds": 11686,
+  "pageCount": 77,
   "pages": [
     {
       "module": "ROOT",
@@ -14,13 +14,28 @@
     },
     {
       "module": "getting-started",
+      "page": "vm-quick-start.adoc",
+      "seconds": 73
+    },
+    {
+      "module": "getting-started",
       "page": "prerequisites.adoc",
       "seconds": 31
     },
     {
       "module": "getting-started",
+      "page": "architecture-overview.adoc",
+      "seconds": 194
+    },
+    {
+      "module": "getting-started",
       "page": "install-openshift-virtualization.adoc",
       "seconds": 74
+    },
+    {
+      "module": "getting-started",
+      "page": "installing-qemu-guest-agent.adoc",
+      "seconds": 208
     },
     {
       "module": "getting-started",
@@ -31,6 +46,11 @@
       "module": "getting-started",
       "page": "create-vm-web-console.adoc",
       "seconds": 60
+    },
+    {
+      "module": "getting-started",
+      "page": "create-vm-cli-yaml.adoc",
+      "seconds": 181
     },
     {
       "module": "getting-started",
@@ -64,18 +84,38 @@
     },
     {
       "module": "storage",
+      "page": "odf-ceph-storage.adoc",
+      "seconds": 179
+    },
+    {
+      "module": "storage",
       "page": "hostpath-provisioner.adoc",
       "seconds": 195
     },
     {
       "module": "storage",
       "page": "creating-managing-storage-class.adoc",
-      "seconds": 125
+      "seconds": 126
     },
     {
       "module": "storage",
       "page": "multi-disk-configuration.adoc",
       "seconds": 101
+    },
+    {
+      "module": "storage",
+      "page": "expanding-vm-disk-size.adoc",
+      "seconds": 146
+    },
+    {
+      "module": "storage",
+      "page": "cdi-operations.adoc",
+      "seconds": 185
+    },
+    {
+      "module": "storage",
+      "page": "disk-io-tuning.adoc",
+      "seconds": 245
     },
     {
       "module": "networking",
@@ -129,6 +169,21 @@
     },
     {
       "module": "networking",
+      "page": "network-policies-vms.adoc",
+      "seconds": 174
+    },
+    {
+      "module": "networking",
+      "page": "metallb-loadbalancer.adoc",
+      "seconds": 150
+    },
+    {
+      "module": "networking",
+      "page": "dual-stack-vms.adoc",
+      "seconds": 189
+    },
+    {
+      "module": "networking",
       "page": "vm-ingress-routes.adoc",
       "seconds": 83
     },
@@ -164,7 +219,17 @@
     },
     {
       "module": "vm-configuration",
+      "page": "ssh-access-windows-vms.adoc",
+      "seconds": 148
+    },
+    {
+      "module": "vm-configuration",
       "page": "windows-vm-virtio-drivers.adoc",
+      "seconds": 107
+    },
+    {
+      "module": "vm-configuration",
+      "page": "legacy-windows-versions.adoc",
       "seconds": 107
     },
     {
@@ -186,6 +251,11 @@
       "module": "vm-configuration",
       "page": "vm-templates.adoc",
       "seconds": 474
+    },
+    {
+      "module": "vm-configuration",
+      "page": "instancetype-preference.adoc",
+      "seconds": 190
     },
     {
       "module": "performance",
@@ -213,6 +283,11 @@
       "seconds": 298
     },
     {
+      "module": "performance",
+      "page": "vm-monitoring-metrics.adoc",
+      "seconds": 168
+    },
+    {
       "module": "vm-lifecycle",
       "page": "index.adoc",
       "seconds": 32
@@ -226,6 +301,11 @@
       "module": "vm-lifecycle",
       "page": "custom-golden-images.adoc",
       "seconds": 110
+    },
+    {
+      "module": "vm-lifecycle",
+      "page": "windows-golden-images.adoc",
+      "seconds": 193
     },
     {
       "module": "vm-lifecycle",
@@ -255,12 +335,52 @@
     {
       "module": "api",
       "page": "index.adoc",
-      "seconds": 26
+      "seconds": 25
     },
     {
       "module": "api",
       "page": "api-component-overview.adoc",
-      "seconds": 362
+      "seconds": 365
+    },
+    {
+      "module": "agentic-vm-management",
+      "page": "index.adoc",
+      "seconds": 46
+    },
+    {
+      "module": "agentic-vm-management",
+      "page": "getting-started.adoc",
+      "seconds": 91
+    },
+    {
+      "module": "agentic-vm-management",
+      "page": "natural-language-vm-create.adoc",
+      "seconds": 118
+    },
+    {
+      "module": "agentic-vm-management",
+      "page": "ai-vm-lifecycle.adoc",
+      "seconds": 195
+    },
+    {
+      "module": "agentic-vm-management",
+      "page": "vm-clone.adoc",
+      "seconds": 107
+    },
+    {
+      "module": "agentic-vm-management",
+      "page": "ai-vm-snapshot-management.adoc",
+      "seconds": 255
+    },
+    {
+      "module": "agentic-vm-management",
+      "page": "ai-skill-chaining.adoc",
+      "seconds": 191
+    },
+    {
+      "module": "agentic-vm-management",
+      "page": "ai-vm-rebalance.adoc",
+      "seconds": 244
     },
     {
       "module": "appendix",
