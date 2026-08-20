@@ -669,12 +669,16 @@ def _ensure_admonition_case(
 _RE_ATTR_LINE = re.compile(r"^:([^:]+):\s*(.*)")
 
 
+_TRANSLATABLE_ATTRS = {"navtitle"}
+
+
 def _ensure_doc_header_attrs(
     en_lines: list[str], ja_lines: list[str]
 ) -> list[str]:
     """document_header の属性行を EN 側と一致させる。
 
-    EN にある属性は EN の値で上書き（:navtitle: 等は翻訳不要）。
+    EN にある属性のうち翻訳対象 (:navtitle:) は JA の値を保持する。
+    その他の属性は EN の値で上書きする。
     EN にあって JA にない属性は追加する。
     """
     if not en_lines or not ja_lines:
@@ -695,7 +699,10 @@ def _ensure_doc_header_attrs(
         m = _RE_ATTR_LINE.match(line)
         if m and m.group(1) in en_attrs:
             if m.group(1) not in seen_attrs:
-                result.append(en_attrs[m.group(1)])
+                if m.group(1) in _TRANSLATABLE_ATTRS:
+                    result.append(line)
+                else:
+                    result.append(en_attrs[m.group(1)])
                 seen_attrs.add(m.group(1))
         else:
             result.append(line)
@@ -1703,6 +1710,82 @@ def _fix_translated_admonition(lines: list[str]) -> list[str] | None:
     return [f"{en_kw}: {rest}"] + lines[1:]
 
 
+_RE_CALLOUT = re.compile(r"\s<(\d+)>$")
+
+
+def _verify_code_block_content(
+    ja_lines: list[str], en_lines: list[str]
+) -> list[str]:
+    """Restore non-comment code block content to match EN original.
+
+    Skips lines that are delimiters, comments, block attributes, titles,
+    or where only the inline comment portion differs (translated comments).
+    Callout markers (# <N>) are always restored.
+    Other code content is restored only if <=30% of code lines differ.
+    """
+    if len(ja_lines) != len(en_lines):
+        return ja_lines
+
+    callout_fixes: list[int] = []
+    code_diffs: list[int] = []
+    total_code = 0
+
+    for idx, (ja_line, en_line) in enumerate(zip(ja_lines, en_lines)):
+        is_delim = ja_line.rstrip() == "----"
+        is_comment = ja_line.lstrip().startswith("#")
+        is_attr = ja_line.startswith("[")
+        is_title = ja_line.startswith(".")
+        if is_delim or is_comment or is_attr or is_title:
+            continue
+
+        en_callout = _RE_CALLOUT.search(en_line)
+        ja_callout = _RE_CALLOUT.search(ja_line)
+        if en_callout and " #" in en_line:
+            en_before = en_line[:en_line.rfind(" #")]
+            ja_before = (
+                ja_line[:ja_callout.start()]
+                if ja_callout
+                else ja_line
+            )
+            if en_before.rstrip() == ja_before.rstrip():
+                if ja_line != en_line:
+                    callout_fixes.append(idx)
+                continue
+
+        if " #" in en_line:
+            en_code = en_line.split(" #")[0]
+            ja_code = ja_line.split(" #")[0]
+            if en_code == ja_code:
+                continue
+        elif " //" in en_line:
+            en_code = en_line.split(" //")[0]
+            ja_code = ja_line.split(" //")[0]
+            if en_code == ja_code:
+                continue
+
+        total_code += 1
+        if ja_line != en_line:
+            code_diffs.append(idx)
+
+    result = list(ja_lines)
+    modified = False
+
+    for idx in callout_fixes:
+        result[idx] = en_lines[idx]
+        modified = True
+
+    if (
+        code_diffs
+        and total_code > 0
+        and len(code_diffs) / total_code <= 0.3
+    ):
+        for idx in code_diffs:
+            result[idx] = en_lines[idx]
+            modified = True
+
+    return result if modified else ja_lines
+
+
 def _postprocess_admonitions_and_headings() -> int:
     """Walk all JA .adoc files, fix admonition keywords and heading glossary.
 
@@ -1719,6 +1802,7 @@ def _postprocess_admonitions_and_headings() -> int:
 
         en_headers: list[list[str]] = []
         en_doc_header: list[str] = []
+        en_code_blocks: list[list[str]] = []
         snap_path = os.path.join(ORIGINALS_DIR, adoc_path)
         if os.path.exists(snap_path):
             with open(snap_path, encoding="utf-8") as fh:
@@ -1726,6 +1810,10 @@ def _postprocess_admonitions_and_headings() -> int:
             en_headers = [
                 list(b.lines) for b in en_blocks
                 if b.block_type == "section_header"
+            ]
+            en_code_blocks = [
+                list(b.lines) for b in en_blocks
+                if b.block_type == "code_block"
             ]
             for b in en_blocks:
                 if b.block_type == "document_header":
@@ -1747,6 +1835,7 @@ def _postprocess_admonitions_and_headings() -> int:
         changed = False
         new_contents: list[tuple[str, list[str]]] = []
         header_idx = 0
+        code_block_idx = 0
         doc_header_attrs: set[str] = set()
 
         for block in blocks:
@@ -1859,6 +1948,21 @@ def _postprocess_admonitions_and_headings() -> int:
                     new_contents.append(
                         (block.block_type, list(block.lines))
                     )
+            elif block.block_type == "code_block":
+                fixed = list(block.lines)
+                if code_block_idx < len(en_code_blocks):
+                    en_lines = en_code_blocks[code_block_idx]
+                    fixed = _verify_code_block_content(
+                        fixed, en_lines
+                    )
+                if fixed != list(block.lines):
+                    new_contents.append(("code_block", fixed))
+                    changed = True
+                else:
+                    new_contents.append(
+                        ("code_block", list(block.lines))
+                    )
+                code_block_idx += 1
             else:
                 new_contents.append(
                     (block.block_type, list(block.lines))
