@@ -596,9 +596,6 @@ python3 tools/translation/sync-translate.py --model gemini-2.5-pro
 # dry-run (翻訳結果を表示するが適用しない、ブランチも作成しない)
 python3 tools/translation/sync-translate.py --dry-run
 
-# 既存の書式整形ツールも自動実行
-python3 tools/translation/sync-translate.py --format
-
 # ブランチ名を指定
 python3 tools/translation/sync-translate.py --branch translate/2026-08-12
 
@@ -611,7 +608,6 @@ python3 tools/translation/sync-translate.py --resume
 | 引数 | 説明 |
 |---|---|
 | `--dry-run` | 翻訳結果を stdout に表示するが、ファイルへの書き込み・ブランチ作成・`sync-mark.py` の実行を行わない |
-| `--format` | 翻訳適用後に `add-jp-lat-spaces.py` と `convert-fullwidth-parens.py` を自動実行 |
 | `--model` | Gemini モデル。デフォルト: `gemini-3.7-flash` |
 | `--branch` | 作成するブランチ名。デフォルト: `translate/<YYYY-MM-DD>` (実行日) |
 | `--resume` | 中断した翻訳を再開する。既存の translate ブランチに切り替え、プログレスファイルから翻訳済みファイルをスキップして続行する |
@@ -656,8 +652,8 @@ python3 tools/translation/sync-translate.py --resume
 8. **nav.adoc の同期**: 各モジュールの `nav.adoc` を upstream と比較し、差分を反映する。新規ページへの xref 行を追加し、削除されたページの xref 行を削除する。xref の表示テキスト (`[]` 内) がある場合は AI API で翻訳する
 9. **antora.yml の同期**: upstream の `antora.yml` と比較し、`nav` セクションに新規モジュールの追加・削除を反映する。`name` フィールドなどリポジトリ固有の値は変更しない
 9a. **antora-playbook.yml の同期**: upstream の `antora-playbook.yml` をベースに、JA 固有フィールド (`site.start_page` のコンポーネント名、`asciidoc.attributes.build-date`) のみ上書き保持して同期する (9.14.1 参照)
-10. `--format` 指定時は書式整形ツールを実行
-10a. `--format` 指定時は既存翻訳の事後補正 (アドモニションキーワード復元、見出し用語集適用) を全ファイルに対して実行 (9.20 参照)
+10. 書式整形ツール (`add-jp-lat-spaces.py`, `convert-fullwidth-parens.py`) を実行
+10a. 既存翻訳の事後補正 (アドモニションキーワード復元、見出し用語集適用) を全ファイルに対して実行 (9.20 参照)
 11. `sync-mark.py` を内部的に呼び出してマニフェストとスナップショットを更新 (`removed` ブロックはマニフェストから除去)
 11a. プログレスファイルを削除する (正常完了時のみ)
 12. 完了メッセージを表示 (レビュー手順のガイドを含む)
@@ -1324,7 +1320,7 @@ def _restore_code_fences(
 
 ### 9.20 既存翻訳の事後補正 (アドモニション・見出し用語集)
 
-9.17 (アドモニションキーワード保護) と 9.18 (見出し用語集) は翻訳実行時に適用されるが、upstream で変更がなく再翻訳されなかったブロックには効かない。これらの保護機能が追加される前に翻訳されたブロックに残る不整合を修正するため、`--format` 実行時に全ファイルを対象とした事後補正パスを追加する。
+9.17 (アドモニションキーワード保護) と 9.18 (見出し用語集) は翻訳実行時に適用されるが、upstream で変更がなく再翻訳されなかったブロックには効かない。これらの保護機能が追加される前に翻訳されたブロックに残る不整合を修正するため、翻訳実行時に全ファイルを対象とした事後補正パスを実行する。
 
 #### 処理内容
 
@@ -1340,7 +1336,7 @@ def _restore_code_fences(
 
 #### 冪等性
 
-この処理は冪等である。既に正しいキーワード/見出しを持つブロックには変更を加えない。`--format` なしの実行では事後補正は行われない (翻訳時の保護のみ)。
+この処理は冪等である。既に正しいキーワード/見出しを持つブロックには変更を加えない。
 
 #### 出力
 
@@ -1581,7 +1577,7 @@ def _ensure_heading_level(en_lines: list[str], ja_lines: list[str]) -> list[str]
 
 #### 対策 3: 事後補正パスでの重複除去
 
-`--format` 実行時の事後補正パス (9.20) にもセクション重複検出を追加する。これにより、今回のバグで作成された既存翻訳ファイルの重複も修正できる:
+事後補正パス (9.20) にもセクション重複検出を追加する。これにより、今回のバグで作成された既存翻訳ファイルの重複も修正できる:
 
 1. 各 `.adoc` ファイルを読み込み、`== ` で始まる行を抽出する
 2. 同一テキストの重複を検出する
@@ -1713,7 +1709,7 @@ python3 tools/translation/validate-structure.py
 
 # 4. AI で差分を一括翻訳し、日本語ファイルに適用 + sync-mark.py 自動実行
 #    構造不一致 (欠損セクション・余剰ブロック) も自動修正される
-python3 tools/translation/sync-translate.py --format
+python3 tools/translation/sync-translate.py
 ```
 
 ### 10.3 各ステップの説明

@@ -18,7 +18,7 @@
 upstream の変更を日本語リポジトリに同期するには、`sync-translate.py` を実行するだけです。ブランチ作成、変更検知、翻訳、書式整形、マニフェスト更新まで全て自動で行われます。
 
 ```bash
-python3 tools/translation/sync-translate.py --format
+python3 tools/translation/sync-translate.py
 ```
 
 実行後は `git diff` で翻訳結果をレビューし、問題なければ手動でコミット・プッシュしてください。
@@ -29,7 +29,7 @@ python3 tools/translation/sync-translate.py --format
 
 upstream との差分を検出し、AI API で自動翻訳して日本語ファイルに適用する。通常はこのツールだけで全ての同期作業が完了する。
 
-内部的に `sync-check.py` と `sync-mark.py` を自動呼び出しするため、個別に実行する必要はない。`--format` を指定すると書式整形ツール (`add-jp-lat-spaces.py`, `convert-fullwidth-parens.py`) も自動実行される。
+内部的に `sync-check.py` と `sync-mark.py` を自動呼び出しするため、個別に実行する必要はない。書式整形ツール (`add-jp-lat-spaces.py`, `convert-fullwidth-parens.py`) と事後補正 (アドモニションキーワード復元、見出し用語集適用) も自動実行される。
 
 **処理内容:**
 - main ブランチから翻訳用ブランチを作成
@@ -44,11 +44,8 @@ upstream との差分を検出し、AI API で自動翻訳して日本語ファ�
 - マニフェスト・スナップショットの更新
 
 ```bash
-# デフォルト (Gemini API)
+# デフォルト (Gemini API、書式整形・事後補正含む)
 python3 tools/translation/sync-translate.py
-
-# 書式整形も含めて実行 (推奨)
-python3 tools/translation/sync-translate.py --format
 
 # dry-run (翻訳結果を表示するが適用しない、ブランチも作成しない)
 python3 tools/translation/sync-translate.py --dry-run
@@ -66,7 +63,6 @@ python3 tools/translation/sync-translate.py --resume
 | 引数 | 説明 |
 |---|---|
 | `--dry-run` | 翻訳結果を stdout に表示するが、ファイルへの書き込み・ブランチ作成を行わない |
-| `--format` | 翻訳適用後に `add-jp-lat-spaces.py` と `convert-fullwidth-parens.py` を自動実行 |
 | `--model` | Gemini モデル。デフォルト: `gemini-3.7-flash` |
 | `--branch` | 作成するブランチ名。デフォルト: `translate/<YYYY-MM-DD>` (実行日) |
 | `--resume` | 中断した翻訳を再開する。既存の translate ブランチに切り替え、翻訳済みファイルをスキップして続行する |
@@ -115,7 +111,7 @@ python3 tools/translation/validate-structure.py
 
 ### add-jp-lat-spaces.py — 日本語↔アルファベット間スペース挿入
 
-日本語文字 (ひらがな・カタカナ・漢字) とアルファベット/数字の間に半角スペースを挿入する。`sync-translate.py --format` で自動実行される。
+日本語文字 (ひらがな・カタカナ・漢字) とアルファベット/数字の間に半角スペースを挿入する。`sync-translate.py` で自動実行される。
 
 | 変換前 | 変換後 |
 |---|---|
@@ -136,7 +132,7 @@ python3 tools/translation/add-jp-lat-spaces.py modules/networking/
 
 ### convert-fullwidth-parens.py — 全角括弧→半角括弧変換
 
-全角括弧 `（）` を半角括弧 `()` に変換する。`sync-translate.py --format` で自動実行される。
+全角括弧 `（）` を半角括弧 `()` に変換する。`sync-translate.py` で自動実行される。
 
 ```bash
 # 単体実行 (全ファイル)
@@ -158,8 +154,8 @@ export GEMINI_API_KEY="your-api-key-here"
 ### 定期的な upstream 同期
 
 ```bash
-# 1. upstream の変更を翻訳 (書式整形込み)
-python3 tools/translation/sync-translate.py --format
+# 1. upstream の変更を翻訳
+python3 tools/translation/sync-translate.py
 
 # 2. 翻訳結果をレビュー
 git diff
@@ -180,9 +176,6 @@ API タイムアウトや手動中断 (Ctrl+C) で翻訳が途中で止まった
 ```bash
 # 中断した翻訳を再開
 python3 tools/translation/sync-translate.py --resume
-
-# 書式整形込みで再開
-python3 tools/translation/sync-translate.py --resume --format
 ```
 
 プログレスの粒度はファイル単位です。翻訳途中のファイル (全ブロック完了前に中断) は最初から再翻訳されます。完全にやり直す場合は translate ブランチを削除してから `--resume` なしで実行してください。

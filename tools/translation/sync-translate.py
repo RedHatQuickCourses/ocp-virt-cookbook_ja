@@ -16,9 +16,6 @@ git push は行わない)。
   # dry-run (翻訳結果を表示するが適用しない、ブランチも作成しない)
   python3 tools/translation/sync-translate.py --dry-run
 
-  # 既存の書式整形ツールも自動実行
-  python3 tools/translation/sync-translate.py --format
-
   # ブランチ名を指定
   python3 tools/translation/sync-translate.py --branch translate/2026-08-12
 
@@ -2436,12 +2433,6 @@ def main() -> None:
         "ブランチ作成・sync-mark の実行を行わない",
     )
     parser.add_argument(
-        "--format",
-        action="store_true",
-        help="翻訳適用後に add-jp-lat-spaces.py と "
-        "convert-fullwidth-parens.py を自動実行",
-    )
-    parser.add_argument(
         "--model",
         default=None,
         help="Gemini モデル (デフォルト: gemini-3.7-flash)",
@@ -2698,7 +2689,7 @@ def main() -> None:
     _sync_antora_playbook_yml(UPSTREAM_REF, stats, args.dry_run)
 
     # ---- step 10: format ----
-    if args.format and not args.dry_run:
+    if not args.dry_run:
         for script in ("add-jp-lat-spaces.py", "convert-fullwidth-parens.py"):
             script_path = os.path.join("tools", "translation", script)
             if os.path.exists(script_path):
