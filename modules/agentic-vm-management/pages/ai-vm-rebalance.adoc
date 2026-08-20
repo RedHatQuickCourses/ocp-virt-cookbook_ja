@@ -1,0 +1,548 @@
+= ライブマイグレーションとクラスターのリバランス
+:navtitle: VM のリバランスとライブマイグレーション
+
+このチュートリアルでは、`vm-rebalance` エージェントスキルを通じて自然言語コマンドを使用し、クラスターノード間で仮想マシンを移行する方法を説明します。手動 (ユーザー主導) および自動 (AI 主導) で VM をリバランスする方法を学び、ライブマイグレーションとコールドマイグレーションの違いを理解し、メンテナンスのためのノードのドレインやクラスターの負荷分散の最適化などの一般的なシナリオを実践します。
+
+== 前提条件
+
+* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認が完了していること)
+* OpenShift Virtualization がインストールされた OpenShift クラスター
+* `KUBECONFIG` 環境変数が設定され、有効な kubeconfig ファイルを指していること
+* スケジューリング可能な Worker Node が少なくとも 2 つあるマルチノードクラスター
+* 複数のノードに分散して実行されている少なくとも 2 つの VM (作成方法については xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成] を参照)
+* ハードウェア仮想化 (KVM) をサポートする Worker Node、またはベアメタル以外の環境では HyperConverged CR でソフトウェアエミュレーションが有効になっていること
+* ライブマイグレーションの場合: `ReadWriteMany` (RWX) アクセスモードをサポートする StorageClass (例: Ceph RBD、ODF、CephFS)。`ReadWriteOnce` (RWO) ストレージはコールドマイグレーションのみをサポートします
+* ノード間のコールドマイグレーションの場合: Worker Node が同じ永続ストレージへのアクセスを共有している必要があります。ゾーンバインドストレージまたはノードローカルストレージでは、コールドマイグレーションが同じゾーン内のノードに制限されます
+
+このチュートリアルで使用する namespace が存在しない場合は、作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace my-vms
+----
+
+使用する VM がない場合は、IDE チャットで次のように入力し、`vm-create` スキルを使用して作成します。
+
+----
+Create a Fedora VM named web-01 in namespace my-vms
+----
+
+----
+Create a Fedora VM named web-02 in namespace my-vms
+----
+
+----
+Create a Fedora VM named db-01 in namespace my-vms
+----
+
+続行する前に、VM が存在し実行中であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm -n my-vms
+----
+
+出力例:
+
+----
+NAME   AGE  STATUS  READY
+db-01  3m  Running  True
+web-01  5m  Running  True
+web-02  4m  Running  True
+----
+
+VM が現在どのノードにスケジュールされているかを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi -n my-vms -o custom-columns="NAME:.metadata.name,NODE:.status.nodeName,PHASE:.status.phase"
+----
+
+想定される出力:
+
+----
+NAME   NODE    PHASE
+db-01  worker-02  Running
+web-01  worker-01  Running
+web-02  worker-01  Running
+----
+
+== 動作の仕組み
+
+`vm-rebalance` スキルは、手動と自動の 2 つの動作モードをサポートしています。どちらのモードも、前提条件を検証し、移行計画を提示し、VM を移動する前に明示的な確認を待つという安全第一のワークフローに従います。
+
+=== 手動リバランス
+
+手動モードでは、移動する VM とその移動先を指定します。エージェントは 4 つのステップからなるワークフローに従います:
+
+. **ソースとターゲットの検証** -- エージェントは VM が存在し稼働していることを確認し、ターゲットノードがスケジュール可能であること (cordon や taint が設定されていないこと) をチェックし、ターゲットノードに十分な CPU、メモリ、ストレージリソースがあることを確認します。
+. **ストレージ互換性の確認** -- エージェントは VM のストレージ設定を検査し、ライブマイグレーションが可能かどうかを判断します。ReadWriteMany (RWX) ストレージを使用する VM はライブマイグレーションをサポートします。ReadWriteOnce (RWO) ストレージを使用する VM はコールドマイグレーション (停止、ストレージの移行、起動) が必要です。
+. **マイグレーション計画の提示** -- エージェントはマイグレーションタイプ (ライブまたはコールド)、ソースノードおよびターゲットノード、予想される影響、推定所要時間を表示します。明示的な確認を待ちます。
+. **実行と監視** -- 確認後、エージェントはマイグレーションを開始し、状態の遷移を監視して、結果を報告します。
+
+=== 自動リバランシング
+
+自動モードでは、エージェントはクラスター全体のリソース使用率を分析し、VM をより均等に分散するための移行計画を提案します。このワークフローには分析ステップが追加されます。
+
+. **クラスターメトリクスの収集** -- エージェントはすべての Worker Node の CPU およびメモリ使用率データを収集し、不均衡を特定します。
+. **移行計画の生成** -- メトリクスに基づいて、エージェントはどの VM をどこに移動すべきかを決定します。ストレージの互換性、ノードのキャパシティー、アンチアフィニティールールを考慮します。
+. **レビュー用の計画の提示** -- エージェントは、提案された各移行、移行タイプ、各ノードへの予想されるリソースへの影響を示す表として、完全な移行計画を表示します。
+. **VM ごとの確認を伴う実行** -- 計画を承認すると、エージェントは各移行を個別に実行し、進捗状況を報告します。残りの移行はいつでもキャンセルできます。
+
+== ライブマイグレーションとコールドマイグレーションの比較
+
+`vm-rebalance` スキルは、VM のストレージ設定に基づいてマイグレーションタイプを選択します。
+
+[cols="1,2,2",options="header"]
+|===
+| 基準 | ライブマイグレーション | コールドマイグレーション
+| ストレージアクセスモード | ReadWriteMany (RWX) | ReadWriteOnce (RWO)
+| VM のダウンタイム | ゼロ -- マイグレーション中も VM は稼働を継続 | 短時間 -- VM が停止され、ストレージが移行され、VM が再起動される
+| 一般的な所要時間 | 30 秒から 5 分 (メモリサイズおよびダーティーページ率に依存) | 2 から 15 分 (ディスクサイズに依存)
+| ネットワーク接続 | 保持 -- アクティブな TCP 接続は維持される | 切断 -- クライアントは再起動後に再接続が必要
+| ユースケース | 本番ワークロード、ステートフルサービス | 開発用 VM、バッチジョブ、非クリティカルなワークロード
+|===
+
+=== ライブマイグレーションの仕組み
+
+KubeVirt のライブマイグレーションは、ゲストオペレーティングシステムを中断することなく、実行中の VM のメモリ状態を送信元ノードからターゲットノードに転送します。このプロセスは以下の段階に従います。
+
+. **スケジューリング** -- 新しい VirtualMachineInstance (VMI) Pod がターゲットノードにスケジュールされます。
+. **事前コピー** -- VM がソースノード上で実行され続けている間に、VM のメモリページがターゲットにコピーされます。
+. **反復コピー** -- ダーティーページ (コピー中に変更されたメモリ) は、残りの差分が迅速な切り替えに十分小さくなるまで、連続するラウンドで再送信されます。
+. **切り替え** -- ソースノードで VM が一時的に停止され、最後のダーティーページが転送された後、ターゲットノードで VM が再開されます。
+. **クリーンアップ** -- ソースの VMI Pod が終了されます。
+
+マイグレーション状態の遷移を監視できます:
+
+[source,bash,role=execute]
+----
+oc get vmim -n my-vms -w
+----
+
+=== コールドマイグレーションが必要な場合
+
+コールドマイグレーションは、VM のストレージがノード間での共有アクセスをサポートしていない場合に使用されます。一般的なシナリオには以下が含まれます:
+
+* VM が一度に 1 つのノードにのみマウントできる `ReadWriteOnce` (RWO) アクセスモードの PVC を使用している。
+* 基盤となる StorageClass がボリュームのクローン作成またはマルチアタッチをサポートしていない。
+* VM には共有できないローカルストレージ (hostPath または local-volume) があります。
+
+エージェントは、コールドマイグレーションが使用される場合に常に通知し、処理を進める前に予想されるダウンタイムについて警告します。
+
+== 例示シナリオ 1: 手動ライブマイグレーション
+
+この例では、ライブマイグレーションを使用して単一の VM を特定のターゲットノードに移動します。
+
+. IDE のチャットに次のように入力します。
++
+----
+Migrate VM web-01 from worker-01 to worker-02 in namespace my-vms
+----
+. エージェントは VM を検証し、ターゲットノードの準備状態と容量を確認し、ストレージのアクセスモードを検査して、移行計画を提示します。
++
+----
+## VM Migration Plan
+
+| Parameter  | Value                  |
+|--------------|------------------------------------------|
+| VM Name   | `web-01`                 |
+| Namespace  | `my-vms`                 |
+| Source Node | `worker-01`               |
+| Target Node | `worker-02`               |
+| Migration  | Live (zero downtime)           |
+| Storage   | web-01-rootdisk (30Gi, RWX) - compatible |
+| Est. Duration| ~1-2 minutes               |
+
+**Impact**: No downtime. Active connections preserved.
+
+Proceed with migration? (yes/no)
+----
+. 計画を確認し、承認します。
++
+----
+yes
+----
+. エージェントは VirtualMachineInstanceMigration を開始し、状態遷移を監視してレポートします。
++
+----
+## VM Migration Progress
+
+Scheduling... Target pod created on worker-02
+Pre-copy...  Memory transfer in progress (2.1 GiB)
+Iterative... Round 1: 45 MiB dirty pages
+Iterative... Round 2: 8 MiB dirty pages
+Switchover... VM paused on source, final pages transferred
+Running...  VM resumed on worker-02
+Cleanup...  Source pod terminated on worker-01
+
+## VM Migration Successful
+
+**VM**: `web-01` | **From**: worker-01 | **To**: worker-02
+**Duration**: 1m 23s | **Type**: Live (zero downtime)
+
+**Next**: "List VMs in namespace my-vms" or "Show status of VM web-01"
+----
+
+VM がターゲットノードで実行されていることを確認できます。
+
+[source,bash,role=execute]
+----
+oc get vmi web-01 -n my-vms -o jsonpath='{.status.nodeName}'
+----
+
+----
+worker-02
+----
+
+== シナリオ例 2: コールドマイグレーション (RWO ストレージ)
+
+この例では、ストレージが `ReadWriteOnce` アクセスモードを使用しているためライブマイグレーションができない VM に対するコールドマイグレーションを示します。
+
+. IDE チャットで次のように入力します。
++
+----
+Move VM db-01 to worker-01 in namespace my-vms
+----
+. エージェントは VM の PVC が RWO アクセスモードを使用していることを検出し、必要なダウンタイムについて警告します。
++
+----
+## VM Migration Plan
+
+| Parameter  | Value                     |
+|--------------|------------------------------------------------|
+| VM Name   | `db-01`                    |
+| Namespace  | `my-vms`                    |
+| Source Node | `worker-02`                  |
+| Target Node | `worker-01`                  |
+| Migration  | Cold (brief downtime required)         |
+| Storage   | db-01-rootdisk (30Gi, RWO) - live incompatible |
+| Est. Duration| ~3-5 minutes                  |
+
+WARNING: Cold migration requires stopping the VM. The VM will be
+unavailable for approximately 3-5 minutes. Active network connections
+will be dropped.
+
+**Cold migration steps**:
+1. Stop VM on worker-02
+2. Reschedule VM to worker-01
+3. Start VM on worker-01
+
+Proceed with cold migration? (yes/no)
+----
+. 次のように確認します。
++
+----
+yes
+----
+. エージェントは停止-移行-起動のシーケンスを実行し、次のように報告します。
++
+----
+## Cold Migration Progress
+
+Step 1/3: Stopping VM db-01 on worker-02... Stopped
+Step 2/3: Rescheduling to worker-01... Scheduled
+Step 3/3: Starting VM db-01 on worker-01... Running
+
+## VM Migration Successful
+
+**VM**: `db-01` | **From**: worker-02 | **To**: worker-01
+**Duration**: 3m 47s | **Type**: Cold (VM was stopped during migration)
+**Downtime**: ~3m 47s
+
+**Next**: Verify application connectivity. Clients may need to reconnect.
+----
+
+== サンプルシナリオ 3: ノードメンテナンスのドレイン
+
+この例では、メンテナンス前にノードからすべての VM をドレインします。エージェントは各 VM を個別に移行し、各 VM のストレージ設定に基づいてライブマイグレーションまたはコールドマイグレーションを選択します。
+
+. IDE チャットで以下を入力します。
++
+----
+Drain all VMs from worker-01 for maintenance in namespace my-vms
+----
+. エージェントは指定されたノード上のすべての VM の一覧を取得し、それぞれのストレージ互換性を確認して、ドレイン計画を提示します。
++
+----
+## Node Drain Plan: worker-01
+
+VMs on worker-01: 2
+
+| VM   | Storage Access | Migration Type | Target Node | Est. Duration |
+|--------|----------------|----------------|-------------|---------------|
+| web-01 | RWX      | Live      | worker-02  | ~1-2 min   |
+| web-02 | RWX      | Live      | worker-02  | ~1-2 min   |
+
+**Target node capacity check**:
+- worker-02: 4/8 vCPU used, 12Gi/32Gi memory used - sufficient for 2 additional VMs
+
+**Total estimated time**: ~3-5 minutes
+**Impact**: Zero downtime for all VMs (all eligible for live migration)
+
+Approve drain plan? (yes/no)
+----
+. 承認します。
++
+----
+yes
+----
+. エージェントは各 VM を順次移行し、進捗状況を報告します。
++
+----
+## Node Drain Progress
+
+[1/2] Migrating web-01 (live)... Completed in 1m 15s
+[2/2] Migrating web-02 (live)... Completed in 1m 32s
+
+## Node Drain Complete
+
+**Node**: worker-01 | **VMs migrated**: 2/2
+**Total duration**: 2m 47s | **Downtime**: None
+
+worker-01 is now free of VMs and ready for maintenance.
+
+**Next**: Cordon the node with "oc adm cordon worker-01" before
+starting maintenance to prevent new VMs from scheduling.
+----
+
+ドレインが完了したら、ノードを cordon して新しいワークロードがスケジュールされないようにします。
+
+[source,bash,role=execute]
+----
+oc adm cordon worker-01
+----
+
+メンテナンス後、ノードを uncordon して再びスケジュールできるようにします。
+
+[source,bash,role=execute]
+----
+oc adm uncordon worker-01
+----
+
+== シナリオ例 4: 自動リバランス
+
+この例では、自動モードを使用してエージェントがクラスターのリソース使用状況を分析し、VM をより均等に分散させる移行計画を提案します。
+
+. IDE チャットで、次のように入力します。
++
+----
+Rebalance VMs across nodes in namespace my-vms
+----
+. エージェントはノードのメトリクスを収集し、現在の VM の分散状況を分析して、リバランス計画を提案します。
++
+----
+## Cluster Analysis
+
+| Node   | vCPU Used | vCPU Total | Mem Used | Mem Total | VMs | Load |
+|-----------|-----------|------------|----------|-----------|-----|-------|
+| worker-01 | 1/8    | 12.5%   | 4Gi   | 32Gi   | 1  | Low  |
+| worker-02 | 3/8    | 37.5%   | 12Gi   | 32Gi   | 3  | High |
+
+**Imbalance detected**: worker-02 hosts 75% of VMs with 3x the resource
+utilization of worker-01.
+
+## Proposed Migration Plan
+
+| VM   | From   | To    | Type | Reason             |
+|--------|-----------|-----------|------|---------------------------------|
+| web-02 | worker-02 | worker-01 | Live | Balance CPU/memory utilization |
+
+**After rebalancing**:
+- worker-01: 2 VMs, ~25% CPU, ~25% memory
+- worker-02: 2 VMs, ~25% CPU, ~25% memory
+
+**Impact**: Zero downtime (all migrations are live)
+
+Approve rebalancing plan? (yes/no)
+----
+. 計画を確認し、承認します。
++
+----
+yes
+----
+. エージェントは移行を実行し、結果を報告します。
++
+----
+## Rebalancing Progress
+
+[1/1] Migrating web-02 from worker-02 to worker-01 (live)... Completed in 1m 18s
+
+## Rebalancing Complete
+
+| Node   | Before     | After     |
+|-----------|----------------|----------------|
+| worker-01 | 1 VM, 12.5% CPU | 2 VMs, 25% CPU |
+| worker-02 | 3 VMs, 37.5% CPU | 2 VMs, 25% CPU |
+
+**VMs migrated**: 1 | **Downtime**: None
+
+Cluster load is now balanced across worker nodes.
+----
+
+新しい分散状況を確認できます。
+
+[source,bash,role=execute]
+----
+oc get vmi -n my-vms -o custom-columns="NAME:.metadata.name,NODE:.status.nodeName,PHASE:.status.phase"
+----
+
+----
+NAME   NODE    PHASE
+db-01  worker-01  Running
+web-01  worker-02  Running
+web-02  worker-01  Running
+----
+
+== ストレージ互換性の検証
+
+移行を開始する前に、`vm-rebalance` スキルは VM のストレージ設定が要求された移行タイプをサポートしているかどうかを検証します。エージェントは以下のチェックを実行します:
+
+=== アクセスモードのチェック
+
+エージェントは PVC のアクセスモードを検査して、移行の適格性を判断します:
+
+[cols="1,2,2",options="header"]
+|===
+| アクセスモード | ライブマイグレーション | コールドマイグレーション
+| ReadWriteMany (RWX) | サポート対象 | サポート対象
+| ReadWriteOnce (RWO) | サポート対象外 | サポート対象
+| ReadOnlyMany (ROX) | サポート対象 (読み取り専用ディスク) | サポート対象
+|===
+
+VM の PVC アクセスモードを確認できます:
+
+[source,bash,role=execute]
+----
+oc get pvc -n my-vms -o custom-columns="NAME:.metadata.name,ACCESS:.status.accessModes[0],CAPACITY:.status.capacity.storage"
+----
+
+----
+NAME         ACCESS     CAPACITY
+db-01-rootdisk    ReadWriteOnce  30Gi
+web-01-rootdisk   ReadWriteMany  30Gi
+web-02-rootdisk   ReadWriteMany  30Gi
+----
+
+=== StorageClass の機能チェック
+
+エージェントは、StorageClass が移行に必要な操作をサポートしていることも確認します:
+
+[source,bash,role=execute]
+----
+oc get storageclass -o custom-columns="NAME:.metadata.name,PROVISIONER:.provisioner,BINDING:.volumeBindingMode"
+----
+
+マルチアタッチをサポートする CSI ドライバーを使用するストレージクラス (RWX を備えた Ceph RBD や CephFS など) は、ライブマイグレーションを可能にします。単一ノードへのアタッチに制限されているストレージクラス (local-volume や特定の LVM 実装など) では、コールドマイグレーションが必要です。
+
+== ノード準備状況チェック
+
+`vm-rebalance` スキルは、移行を提案または実行する前にターゲットノードを検証します。エージェントは以下の条件をチェックします。
+
+=== ノードのスケジュール可能性
+
+エージェントは、ターゲットノードが cordon されていないこと、またはスケジュール不可としてマークされていないことを検証します。
+
+[source,bash,role=execute]
+----
+oc get nodes -o custom-columns="NAME:.metadata.name,STATUS:.status.conditions[-1].type,SCHEDULABLE:.spec.unschedulable"
+----
+
+----
+NAME    STATUS  SCHEDULABLE
+worker-01  Ready  <none>
+worker-02  Ready  <none>
+----
+
+`SCHEDULABLE: true` (unschedulable フラグが設定されている) のノードは cordon されており、移行ターゲットから除外されます。
+
+=== taint の検証
+
+エージェントは、ターゲットノードに VM の Pod が許容 (tolerate) していないテイント (taint) があるかどうかを確認します。許容されない taint が存在する場合、エージェントは別のターゲットノードを選択するか、適切なターゲットが利用できないことを通知します。
+
+[source,bash,role=execute]
+----
+oc get nodes -o custom-columns="NAME:.metadata.name,TAINTS:.spec.taints[*].key"
+----
+
+=== リソース容量
+
+エージェントは、ターゲットノードに受信 VM 用の十分な割り当て可能 CPU およびメモリがあることを確認します。VM のリソース要求 (requests) とノードの残りの容量 (割り当て可能容量から現在割り当てられている容量を差し引いたもの) を比較します。
+
+[source,bash,role=execute]
+----
+oc describe node worker-01 | grep -A 5 "Allocated resources"
+----
+
+ターゲットノードのリソースが不足している場合、エージェントは不足分を報告し、代替ノードを提案するか、クラスターのスケーリングを推奨します。
+
+== Human-in-the-Loop による確認
+
+`vm-rebalance` スキルは、移行が VM の可用性に影響を与えるため、すべての段階で明示的な確認を要求します。
+
+**手動移行**:
+
+* エージェントは、続行する前に移行タイプ (ライブまたはコールド)、移行元ノード、移行先ノード、および予想される影響を提示します。
+* コールド移行には、ダウンタイムに関する明示的な警告が含まれます。
+* 移行を実行する前に、「yes」で確認する必要があります。
+
+**自動リバランス**:
+
+* エージェントは、移行が開始される前に完全な移行プランをテーブル形式で提示します。
+* プランを確認し、全体として承認または拒否します。
+* 承認されたプラン内の個々の移行は順次実行されます。いずれかの移行が失敗した場合、エージェントは停止し、残りの移行を実行せずに失敗を報告します。
+
+**ノードドレイン操作**:
+
+* エージェントはノード上のすべての VM のインベントリを作成し、完全なドレイン計画を提示します。
+* この計画には各 VM の移行タイプが表示されるため、全体的な影響を評価できます。
+* 実行が開始される前に、ドレイン計画全体を承認します。
+
+すべてのモードにおいて、いずれかの確認ステップで "no" または "cancel" と入力すると、操作がキャンセルされます。明示的に承認するまで VM は移動されません。
+
+== クリーンアップ
+
+このチュートリアル中に作成された VM を削除するには:
+
+[source,bash,role=execute]
+----
+oc delete vm web-01 web-02 db-01 -n my-vms
+----
+
+または、自然言語を使用することもできます。IDE チャットに "Delete VM web-01 in namespace my-vms" と入力します。`vm-delete` スキルが完全な安全ワークフローで削除を処理します。
+
+テスト中に cordon されたノードを uncordon するには:
+
+[source,bash,role=execute]
+----
+oc adm uncordon worker-01
+----
+
+namespace を削除するには:
+
+[source,bash,role=execute]
+----
+oc delete namespace my-vms
+----
+
+== まとめ
+
+* `vm-rebalance` スキルは、クラスターノード間での手動 (ユーザー主導) および自動 (AI 主導) の VM 移行をサポートします。
+* ライブマイグレーションは、ReadWriteMany (RWX) ストレージを持つ VM に対してダウンタイムなしの VM 移動を提供します。アクティブなネットワーク接続はライブマイグレーション中も維持されます。
+* コールドマイグレーションは、ReadWriteOnce (RWO) ストレージを使用する VM に使用され、短時間のダウンタイムを伴う停止、再スケジュール、起動のシーケンスが行われます。
+* ノードドレイン操作は、メンテナンス前にノードからすべての VM を移行し、ストレージ設定に基づいて各 VM に適したマイグレーションタイプを選択します。
+* 自動リバランスは、クラスターの CPU およびメモリ使用率を分析し、VM を均等に分散するためのマイグレーションプランを提案します。
+* エージェントは、マイグレーションを提案する前に、ターゲットノードの準備状態 (スケジューリング可能性、taint、リソース容量) およびストレージの互換性を検証します。
+* すべてのマイグレーション操作には、ユーザーによる明示的な確認が必要です。コールドマイグレーションにはダウンタイムの警告が含まれます。
+
+== 参照
+
+* xref:getting-started.adoc[Agentic VM 管理の開始]
+* xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]
+* xref:ai-vm-lifecycle.adoc[AI を活用した VM ライフサイクル操作]
+* xref:vm-clone.adoc[AI エージェントによる仮想マシンのクローン作成]
+* link:https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt[rh-virt スキルパックリポジトリ,window=_blank]
+* link:https://github.com/openshift/openshift-mcp-server[OpenShift MCP Server,window=_blank]
+* link:https://docs.openshift.com/container-platform/{ocp-docs-version}/virt/index.html[OpenShift Virtualization ドキュメント,window=_blank]
+* link:https://docs.openshift.com/container-platform/{ocp-docs-version}/virt/live_migration/virt-about-live-migration.html[OpenShift Live Migration ドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/compute/live_migration/[KubeVirt Live Migration ガイド,window=_blank]

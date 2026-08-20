@@ -1,0 +1,575 @@
+= 自然言語による仮想マシンの作成
+:navtitle: 自然言語による VM 作成
+
+このチュートリアルでは、`vm-create` エージェントスキルを使用して、自然言語コマンドで仮想マシンを作成する方法を説明します。エージェントは、VM 要件に関する人間が判読可能な説明を解釈し、不足しているパラメーターを対話形式の質問を通じて収集し、適切なインスタンスタイプ、OS の選択、ストレージ設定、スケジューリングを備えた完全な KubeVirt VirtualMachine リソースに変換します。
+
+== 前提条件
+
+* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックがインストール済み、MCP サーバーが設定済み、クラスターへの接続が確認済みであること)
+* OpenShift Virtualization がインストールされた OpenShift クラスター
+* `KUBECONFIG` 環境変数が設定され、有効な kubeconfig ファイルを参照していること
+* VirtualMachine リソースを作成する権限を持つ namespace
+
+このチュートリアルで使用する namespace がまだ存在しない場合は作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace my-vms
+oc create namespace development
+----
+
+== 仕組み
+
+`vm-create` スキルは、6 つのステップからなるワークフローに従います。
+
+. **要件の収集** — エージェントは対話型の質問を通じて VM パラメーターを収集します。単一のプロンプトですべてを指定することも (例: "Create a Fedora VM named web-01 in namespace dev")、エージェントに必要な詳細を 1 つずつ質問させることもできます。指定しなかったパラメーターには適切なデフォルト値が使用されます。
+. **競合の確認** — エージェントは、ターゲット namespace 内に同じ名前の VM がまだ存在していないことを検証します。競合が見つかった場合は、別の名前を選択するか、既存の VM を削除するか、キャンセルするかを選択できます。
+. **確認用の構成の提示** — エージェントは、使用されるすべてのパラメーターを示す概要テーブルを表示します。リソースが作成される前に、確認、キャンセル、または個々の値を変更できます。
+. **VM の作成** — 明示的な確認の後、エージェントは `vm_create` MCP ツールを呼び出して VirtualMachine リソースを作成します。
+. **検証と診断** — エージェントは VM のステータスを確認します。スケジューリングまたはストレージのエラー (例: `ErrorUnschedulable`、`ErrorDataVolumeNotReady`) が発生した場合、エージェントはトラブルシューティングナレッジベースを自動的に参照し、根本原因を診断して、承認用の回避策を提案します。
+. **ステータスのレポート** — エージェントは VM が正常に作成されたかどうかをレポートし、デフォルトの認証情報や接続方法を含むアクセス手順を提供します。
+
+== 例のシナリオ 1: 基本的な Fedora VM
+
+この例では、デフォルト設定を使用してシンプルな Fedora 仮想マシンを作成します。
+
+. IDE チャットで、次のように入力します。
++
+[source,text]
+----
+Create a Fedora VM in namespace my-vms
+----
+. エージェントはクラスター情報 (利用可能な StorageClass、namespace) を収集し、指定しなかったパラメーターにデフォルト値を割り当てます。次に、承認を求めるための設定概要を提示します。
++
+----
+Here's the full configuration before I proceed:
+
+Virtual Machine Configuration
+
+┌──────────────┬───────────┬───────────────────────────────────┐
+│ Parameter │ Value │    Notes    │
+├──────────────┼───────────┼───────────────────────────────────┤
+│ VM Name  │ fedora-vm │ validated       │
+├──────────────┼───────────┼───────────────────────────────────┤
+│ Namespace │ my-vms │ from request      │
+├──────────────┼───────────┼───────────────────────────────────┤
+│ OS   │ fedora │ Fedora Linux (latest)    │
+├──────────────┼───────────┼───────────────────────────────────┤
+│ Performance │ u1  │ General Purpose     │
+├──────────────┼───────────┼───────────────────────────────────┤
+│ Size   │ medium │ 1 vCPU, 4Gi RAM     │
+├──────────────┼───────────┼───────────────────────────────────┤
+│ Storage  │ 30Gi  │ root disk       │
+├──────────────┼───────────┼───────────────────────────────────┤
+│ StorageClass │ lvms-vg1 │ cluster default (topolvm.io)  │
+├──────────────┼───────────┼───────────────────────────────────┤
+│ Autostart │ no  │ start manually after creation  │
+└──────────────┴───────────┴───────────────────────────────────┘
+
+This will create a VirtualMachine and consume cluster resources.
+Confirm: yes / no / modify?
+----
+. 表を確認して、次のように承認します。
++
+[source,text]
+----
+yes
+----
+. エージェントは `vm_create` MCP ツールを使用して VM を作成します。生成される基盤となる VirtualMachine リソースは次のようになります。
++
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: fedora-vm
+ namespace: my-vms
+spec:
+ instancetype:
+ kind: VirtualMachineClusterInstancetype
+ name: u1.medium
+ preference:
+ kind: VirtualMachineClusterPreference
+ name: fedora
+ runStrategy: Always
+ dataVolumeTemplates:
+ - metadata:
+  name: fedora-vm-rootdisk
+ spec:
+  sourceRef:
+  kind: DataSource
+  name: fedora
+  namespace: openshift-virtualization-os-images
+  storage:
+  resources:
+   requests:
+   storage: 30Gi
+ template:
+ spec:
+  domain:
+  devices: {}
+  resources: {}
+  terminationGracePeriodSeconds: 180
+  volumes:
+  - dataVolume:
+   name: fedora-vm-rootdisk
+  name: fedora-vm-rootdisk
+----
+. エージェントは DataVolume のプロビジョニングを監視し (ゴールデンイメージからのクローン作成には約 2〜5 分かかります)、VM の準備ができると結果を報告します。
++
+----
+✓ Virtual Machine Created Successfully
+
+VM: fedora-vm (namespace: my-vms)
+OS: Fedora | Size: medium (u1) | Storage: 30Gi | Status: Running
+
+Accessing the VM
+1. Serial console: virtctl console fedora-vm -n my-vms
+2. VNC: OpenShift Console → Virtualization → VMs → fedora-vm → Console
+3. SSH: Get IP from VMI, ssh fedora@<ip>
+
+Default credentials: fedora
+----
+
+作成後、次のコマンドで VM を確認できます。
+
+[source,bash,role=execute]
+----
+oc get vm fedora-vm -n my-vms
+----
+
+出力例:
+
+----
+NAME  AGE STATUS READY
+fedora-vm 7m Running True
+----
+
+ルートディスク用に作成された DataVolume と PVC を確認することもできます。
+
+[source,bash,role=execute]
+----
+oc get datavolume -n my-vms
+----
+
+----
+NAME     PHASE  PROGRESS RESTARTS AGE
+fedora-vm-rootdisk Succeeded 100.0%    7m
+----
+
+[source,bash,role=execute]
+----
+oc get pvc -n my-vms
+----
+
+----
+NAME     STATUS VOLUME          CAPACITY ACCESS MODES STORAGECLASS
+fedora-vm-rootdisk Bound pvc-ebfcfd3d-f865-4186-b306-08dfc1d60272 30Gi  RWO   lvms-vg1
+----
+
+== サンプルシナリオ 2: カスタムストレージを使用した Fedora VM
+
+この例では、開発ワークロード向けにより大きなルートディスクとより多くのリソースを持つ Fedora VM を作成します。
+
+. IDE チャットで次のように入力します。
++
+[source,text]
+----
+Create a Fedora VM named fedora-dev with 2 vCPUs and 8GB RAM and a 50GB disk in the development namespace
+----
+. エージェントは 2 vCPU と 8Gi RAM を `u1.large` インスタンスタイプにマッピングし、クラスターで使用可能な StorageClass を照会して、設定を表示します。
++
+----
+Virtual Machine Configuration
+
+┌──────────────┬──────────────┬───────────────────────────────────┐
+│ Parameter │ Value  │    Notes    │
+├──────────────┼──────────────┼───────────────────────────────────┤
+│ VM Name  │ fedora-dev │ validated       │
+├──────────────┼──────────────┼───────────────────────────────────┤
+│ Namespace │ development │ from request      │
+├──────────────┼──────────────┼───────────────────────────────────┤
+│ OS   │ fedora  │ Fedora Linux (latest)    │
+├──────────────┼──────────────┼───────────────────────────────────┤
+│ Performance │ u1   │ General Purpose     │
+├──────────────┼──────────────┼───────────────────────────────────┤
+│ Size   │ large  │ 2 vCPU, 8Gi RAM     │
+├──────────────┼──────────────┼───────────────────────────────────┤
+│ Storage  │ 50Gi   │ root disk       │
+├──────────────┼──────────────┼───────────────────────────────────┤
+│ StorageClass │ lvms-vg1  │ cluster default (topolvm.io)  │
+├──────────────┼──────────────┼───────────────────────────────────┤
+│ Autostart │ no   │ start manually after creation  │
+└──────────────┴──────────────┴───────────────────────────────────┘
+
+This will create a VirtualMachine and consume cluster resources.
+Confirm: yes / no / modify?
+----
+. VM がすぐに起動するように autostart を有効にする場合:
++
+[source,text]
+----
+modify: change autostart to yes
+----
+. エージェントは autostart が変更された更新後の設定を表示し、再度確認を求めます。確認すると、VM を作成して次のように報告します。
++
+----
+✓ Virtual Machine Created and Starting
+
+VM: fedora-dev (namespace: development)
+OS: Fedora | Size: large (u1) | Storage: 50Gi | Status: Provisioning
+
+Provisioning: ~2-5 min (Provisioning → Running)
+
+Default credentials: fedora
+----
+
+プロビジョニングの完了後、VM を確認できます。
+
+[source,bash,role=execute]
+----
+oc get vm fedora-dev -n development
+----
+
+----
+NAME   AGE STATUS READY
+fedora-dev 7m Running True
+----
+
+PVC にはより大きなディスクサイズが表示されます。
+
+[source,bash,role=execute]
+----
+oc get pvc -n development
+----
+
+----
+NAME     STATUS VOLUME          CAPACITY ACCESS MODES STORAGECLASS
+fedora-dev-rootdisk Bound pvc-35dbc583-8f54-47a8-8497-f941b72633e9 50Gi  RWO   lvms-vg1
+----
+
+== サンプルシナリオ 3: マルチノードクラスターでのエラー診断
+
+NOTE: このシナリオでは、エージェントの自動エラー診断機能について説明します。これには、 Worker Node に taint が設定されている (例: `virtualization=true:NoSchedule`) マルチノードクラスターが必要です。taint のないシングルノードクラスターでは、VM は正常にスケジュールされ、このエラーは発生しません。
+
+この例では、VM 作成時にスケジューリングエラーが発生した場合の動作と、エージェントがそれを診断および解決する方法を示します。
+
+. IDE チャットで以下を入力します。
++
+[source,text]
+----
+Create a Fedora VM named fedora-db with 4 vCPUs and 16GB RAM in the production namespace, memory-optimized, with 100GB storage, and autostart
+----
+. エージェントはリクエストを `m1` (メモリ最適化) パフォーマンスプロファイルの `xlarge` サイズにマッピングし、確認テーブルを表示します。
++
+----
+Virtual Machine Configuration
+
+┌──────────────┬──────────────┬────────────────────────────────────┐
+│ Parameter │ Value  │    Notes    │
+├──────────────┼──────────────┼────────────────────────────────────┤
+│ VM Name  │ fedora-db │ validated       │
+├──────────────┼──────────────┼────────────────────────────────────┤
+│ Namespace │ production │ from request      │
+├──────────────┼──────────────┼────────────────────────────────────┤
+│ OS   │ fedora  │ Fedora Linux (latest)    │
+├──────────────┼──────────────┼────────────────────────────────────┤
+│ Performance │ m1   │ Memory Optimized     │
+├──────────────┼──────────────┼────────────────────────────────────┤
+│ Size   │ xlarge  │ 4 vCPU, 32Gi RAM     │
+├──────────────┼──────────────┼────────────────────────────────────┤
+│ Storage  │ 100Gi  │ root disk       │
+├──────────────┼──────────────┼────────────────────────────────────┤
+│ StorageClass │ lvms-vg1  │ cluster default (topolvm.io)  │
+├──────────────┼──────────────┼────────────────────────────────────┤
+│ Autostart │ yes   │ starts immediately after creation │
+└──────────────┴──────────────┴────────────────────────────────────┘
+
+This will create a VirtualMachine and consume cluster resources.
+Confirm: yes / no / modify?
+----
+. 確認後、エージェントは VM を作成しますが、スケジューリングエラーを検出します。
++
+----
+⚠️ VM Scheduling Issue Detected
+
+Status: ErrorUnschedulable
+Root Cause: Node taints — 0/3 nodes are available: 3 node(s) had taints
+   that the pod didn't tolerate
+
+I consulted the scheduling-errors troubleshooting guide and found that
+the worker nodes have a "virtualization=true:NoSchedule" taint.
+
+The vm_create tool does not support tolerations directly, but I can apply
+a post-creation workaround:
+
+Recommended Solution
+ Action: Add toleration for "virtualization=true:NoSchedule" to the VM
+   spec using resources_create_or_update, then restart the VM
+ Impact: The VM will be able to schedule on nodes with the
+   virtualization=true taint
+
+Options:
+ 1) Apply workaround (add toleration and restart)
+ 2) Manual fix (I'll show you the oc patch command)
+ 3) Cancel (delete the VM)
+----
+. 回避策の適用を承認します。
++
+[source,text]
+----
+apply workaround
+----
+. エージェントは VM spec にパッチを適用して toleration を追加し、再起動して確認します:
++
+----
+✓ Workaround Applied
+
+Action: Added toleration for virtualization=true:NoSchedule, restarted VM
+Status: Running
+
+VM: fedora-db (namespace: production)
+OS: Fedora | Size: xlarge (m1 - Memory) | Storage: 100Gi | Status: Running
+
+Accessing the VM
+1. Serial console: virtctl console fedora-db -n production
+2. VNC: OpenShift Console → Virtualization → VMs → fedora-db → Console
+3. SSH: Get IP from VMI, ssh fedora@<ip>
+
+Default credentials: fedora
+----
+
+== インスタンスタイプの解決
+
+エージェントは、適切な `VirtualMachineClusterInstancetype` を選択するために、パフォーマンスプロファイルとサイズの 2 つのディメンションを使用します。
+
+=== パフォーマンスプロファイル
+
+パフォーマンスプロファイルは、インスタンスタイプのワークロード最適化を決定します:
+
+[cols="1,2,3",options="header"]
+|===
+| プロファイル | 名前 | 最適な用途
+| `u1` | 汎用 (デフォルト) | バランスの取れた CPU とメモリ — ほとんどのワークロードに最適
+| `m1` | メモリ最適化 | データベースやキャッシュなどのメモリ集中型ワークロード
+| `o1` | オーバーコミット | 開発およびテスト — 物理リソースを共有
+|===
+
+NOTE: クラスターの設定によっては、追加のプロファイルが利用可能な場合があります。`oc get VirtualMachineClusterInstancetype` を実行して、クラスターにインストールされているすべてのインスタンスタイプを確認してください。
+
+=== サイズマッピング
+
+次の表は、OpenShift 4.22 にインストールされている各 `u1` (汎用) サイズの実際の CPU およびメモリ割り当てを示しています。
+
+[cols="2,1,1",options="header"]
+|===
+| サイズ | vCPU | RAM
+| nano | 1 | 512Mi
+| micro | 1 | 1Gi
+| small | 1 | 2Gi
+| medium (デフォルト) | 1 | 4Gi
+| large | 2 | 8Gi
+| xlarge | 4 | 16Gi
+| 2xlarge | 8 | 32Gi
+| 4xlarge | 16 | 64Gi
+| 8xlarge | 32 | 128Gi
+|===
+
+メモリ最適化 (`m1`) サイズは、vCPU あたりにより多くの RAM を割り当てます。たとえば、`m1.large` は 2 vCPU と 16Gi RAM を提供するのに対し、`u1.large` は 2 vCPU と 8Gi RAM を提供します。
+
+エージェントは、「2 vCPU と 8GB RAM」のような明示的なリソース要求を、最も近い一致するインスタンスタイプにマッピングします。クラスター上で利用可能なインスタンスタイプとその spec を確認できます。
+
+[source,bash,role=execute]
+----
+oc get VirtualMachineClusterInstancetype -o custom-columns="NAME:.metadata.name,CPU:.spec.cpu.guest,MEMORY:.spec.memory.guest" | grep u1
+----
+
+----
+u1.2xlarge 8 32Gi
+u1.2xmedium 2 4Gi
+u1.4xlarge 16 64Gi
+u1.8xlarge 32 128Gi
+u1.large  2 8Gi
+u1.medium  1 4Gi
+u1.micro  1 1Gi
+u1.nano  1 512Mi
+u1.small  1 2Gi
+u1.xlarge  4 16Gi
+----
+
+== OS の選択
+
+エージェントは複数の Linux オペレーティングシステムをサポートしています。自然言語で OS を指定すると (例:「Fedora VM を作成して」)、エージェントは `openshift-virtualization-os-images` namespace にあるゴールデンイメージから適切なコンテナディスクイメージを選択します。
+
+クラスター上でどの OS イメージが利用可能かを確認できます。
+
+[source,bash,role=execute]
+----
+oc get datasource -n openshift-virtualization-os-images
+----
+
+----
+NAME    AGE
+centos-stream10 17d
+centos-stream9 17d
+fedora   17d
+rhel10   17d
+rhel7    17d
+rhel8    17d
+rhel9    17d
+----
+
+[cols="2,2",options="header"]
+|===
+| オペレーティングシステム | デフォルトのユーザー名
+| Fedora (デフォルト) | `fedora`
+| RHEL | `cloud-user`
+| CentOS Stream | `centos`
+|===
+
+NOTE: コンテナディスクイメージは、DataSource 参照から `vm_create` ツールによって自動的に解決されます。必要に応じてカスタムコンテナディスクイメージの URL を指定することもできますが、エージェントは続行する前にイメージソースが信頼できることを確認するよう警告します。
+
+== ストレージ設定
+
+`vm-create` スキルは、以下のストレージオプションをサポートしています。
+
+[cols="1,3",options="header"]
+|===
+| ディスクサイズ | 説明
+| 30Gi (デフォルト) | ほとんどのワークロードに適しています
+| 50Gi | 中規模のストレージ要件
+| 100Gi | 大規模な要件 — データベース、アプリケーションデータ
+| カスタム | 任意のサイズを指定 (例: "200Gi")
+|===
+
+エージェントは自動的に以下を実行します。
+
+* クラスター内の利用可能な StorageClass を照会します
+* デフォルトの StorageClass (`storageclass.kubernetes.io/is-default-class` でアノテーションされているもの) を特定します
+* StorageClass の機能 (ボリュームバインディングモード、CSI プロビジョナー) を分析します
+* 適切なサイズの DataVolume をバックエンドとする PersistentVolumeClaim を作成します
+
+クラスターで利用可能な StorageClass を確認できます。
+
+[source,bash,role=execute]
+----
+oc get sc
+----
+
+----
+NAME    PROVISIONER RECLAIMPOLICY VOLUMEBINDINGMODE  ALLOWVOLUMEEXPANSION AGE
+lvms-vg1 (default) topolvm.io Delete   WaitForFirstConsumer true     17d
+----
+
+== ネットワークのセットアップ
+
+デフォルトでは、エージェントはクラスターのデフォルト Pod ネットワークに接続された VM を作成します。これにより、ほとんどのユースケースで基本的な接続性が提供されます。
+
+クラスターにセカンダリーネットワークアタッチメント定義が設定されている場合、自然言語プロンプトで追加のネットワークインターフェースを要求できます (例: "create a VM with a secondary network on vlan-100")。エージェントはネットワーク設定を `vm_create` ツールに渡します。
+
+== Human-in-the-Loop による確認
+
+すべての VM 作成には明示的な確認ステップが含まれます。エージェントが承認なしにクラスターリソースを作成することはありません。
+
+. エージェントは、プロンプト、対話型の質問、クラスターのデフォルトから、すべてのパラメーターを収集します。
+. 使用されるすべての値を示す設定テーブルが表示されます。
+. 次のいずれかを選択します。
+** **yes** — 作成を続行します
+** **no** — 操作をキャンセルする
+** **modify** — 特定のパラメーターを変更する (例: "modify: change storage to 50Gi")
+. 変更後、更新された表が表示され、再度確認を行います。
+
+この安全モデルにより、意図しないリソース消費を防ぎ、作成される対象を完全に把握できるようになります。
+
+== 自動エラー診断
+
+VM の作成後にエラー状態になった場合、エージェントは組み込みのトラブルシューティングナレッジベースを使用して問題を自動的に診断します。
+
+=== スケジューリングエラー (ErrorUnschedulable)
+
+最も一般的な 3 つの原因は次のとおりです。
+
+. **ノードの taint** (最も一般的) — Worker Node に、VM が許容 (tolerate) していない taint (例: `virtualization=true:NoSchedule`) が設定されています。エージェントは必要な toleration を VM spec に追加して再起動できます。
+. **リソース不足** — 要求された VM サイズに対して、クラスター内のいずれのノードにも十分な CPU、メモリ、またはストレージがありません。エージェントは、VM サイズの縮小またはノードのリソース空き状況の確認を提案します。
+. **Node selector mismatch** — VM はクラスター内に存在しない特定のノードラベルを必要としています。エージェントはセレクターを削除するか、ノードへのラベルの追加を提案できます。
+
+=== ストレージエラー (ErrorDataVolumeNotReady)
+
+一般的なストレージの問題は以下のとおりです。
+
+* **DataVolume still provisioning** — 大容量ディスクのインポートには数分かかる場合があります。エージェントは進捗状況を監視し、プロビジョニングが完了したときに報告します。
+* **StorageClass not found** — 要求された StorageClass が存在しません。エージェントは利用可能なオプションを一覧表示し、有効な StorageClass を使用して VM を再作成することを提案します。
+* **ストレージクォータ不足** — namespace のクォータで、要求されたディスクサイズが許可されていません。エージェントは現在のクォータ使用状況を報告し、代替案を提示します。
+
+いずれの場合も、エージェントは推奨される解決策とともに明確な診断結果を提示し、修正アクションを実行する前にユーザーの決定を待ちます。
+
+== VM へのアクセス
+
+VM が作成されて実行されたら、いくつかの方法を使用して接続できます。
+
+[cols="1,3",options="header"]
+|===
+| 方法 | コマンド
+| シリアルコンソール | `virtctl console <vm-name> -n <namespace>`
+| VNC コンソール | OpenShift Console -> Virtualization -> VirtualMachines -> VM を選択 -> Console タブ
+| SSH | VirtualMachineInstance から VM の IP を取得し、`ssh <user>@<ip>` を実行
+| ポートフォワーディング | `virtctl port-forward vmi/<vm-name> -n <namespace> 8080:80`
+|===
+
+VM の IP アドレスを確認するには:
+
+[source,bash,role=execute]
+----
+oc get vmi fedora-vm -n my-vms -o jsonpath='{.status.interfaces[0].ipAddress}'
+----
+
+----
+10.128.0.102
+----
+
+=== デフォルトの認証情報
+
+各 OS イメージにはデフォルトのユーザーアカウントが用意されています。コンソールアクセスはすぐに利用できます。SSH を使用する場合は、パスワードを設定するか SSH 鍵を挿入する必要があります。
+
+[source,bash,role=execute]
+----
+# シリアルコンソール経由で接続し、パスワードを設定
+virtctl console fedora-vm -n my-vms
+# ログイン後:
+sudo passwd fedora
+----
+
+[cols="2,1",options="header"]
+|===
+| オペレーティングシステム | デフォルトのユーザー名
+| Fedora | `fedora`
+| RHEL | `cloud-user`
+| CentOS Stream | `centos`
+|===
+
+== クリーンアップ
+
+VM と関連ストレージを削除するには:
+
+[source,bash,role=execute]
+----
+oc delete vm <vm-name> -n <namespace>
+----
+
+VirtualMachine リソースを削除すると、関連付けられている DataVolume および PersistentVolumeClaim も削除されます。このチュートリアルで作成したすべての VM を削除するには:
+
+[source,bash,role=execute]
+----
+oc delete vm fedora-vm -n my-vms
+oc delete vm fedora-dev -n development
+----
+
+自然言語を使用することもできます。「Delete VM fedora-vm in namespace my-vms」と入力すると、エージェントは削除前の名前確認セーフティチェックを含む `vm-delete` スキルを使用します。
+
+== 参照
+
+* xref:getting-started.adoc[Agentic VM 管理の開始]
+* link:https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt[rh-virt スキルパックリポジトリ,window=_blank]
+* link:https://github.com/openshift/openshift-mcp-server[OpenShift MCP Server,window=_blank]
+* link:https://docs.openshift.com/container-platform/{ocp-docs-version}/virt/index.html[OpenShift Virtualization ドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/[KubeVirt ユーザーガイド,window=_blank]

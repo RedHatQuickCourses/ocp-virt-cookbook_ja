@@ -1,0 +1,607 @@
+= スキルチェイニングを使用した Day-2 オペレーション
+:navtitle: Day-2 スキルチェイニング
+
+この高度なチュートリアルでは、単一の会話内で複数の `rh-virt` スキルを連携(チェーン)させて複雑な Day-2 オペレーションを実行する方法を説明します。6 つのスキル呼び出しを順番に行う完全なノードメンテナンスワークフローと、4 つのスキル呼び出しを順番に行うテスト環境のスケールアウトワークフローを順を追って体験します。その過程で、エージェントが各リクエストを適切なスキルにルーティングし、状態遷移間でコンテキストを保持し、プロセス全体を通じて human-in-the-loop(人間の介入による安全性確保)を維持する方法について学びます。
+
+== 前提条件
+
+* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認)
+* xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成] チュートリアルを完了していること
+* xref:ai-vm-lifecycle.adoc[AI を活用した VM ライフサイクル操作] および xref:vm-clone.adoc[AI エージェントを使用した仮想マシンのクローン作成] チュートリアルを理解していること
+* OpenShift Virtualization がインストールされ、少なくとも 2 つの Worker Node がある OpenShift クラスター
+* `KUBECONFIG` 環境変数が設定され、有効な kubeconfig ファイルを参照していること
+* VirtualMachine リソースを作成、一覧表示、スナップショット作成、移行、削除するための RBAC 権限
+
+このチュートリアルで使用する namespace がまだ存在しない場合は作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace production-vms
+----
+
+使用する VM がない場合は、IDE チャットに次のように入力して `vm-create` スキルを使用し、複数作成します。
+
+----
+Create a Fedora VM named web-frontend in namespace production-vms
+----
+
+----
+Create a Fedora VM named api-server in namespace production-vms
+----
+
+----
+Create a Fedora VM named cache-node in namespace production-vms
+----
+
+VM はデフォルトで `Stopped` 状態で作成されます。3 つすべてを起動します。
+
+----
+Start all three VMs in namespace production-vms
+----
+
+続行する前に、VM が存在し、実行中であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm -n production-vms
+----
+
+出力例:
+
+----
+NAME      AGE  STATUS  READY
+api-server   3m  Running  True
+cache-node   2m  Running  True
+web-frontend  5m  Running  True
+----
+
+== スキルチェーンとは
+
+スキルチェーンとは、単一の会話内で複数のエージェントスキルを順番に呼び出して、マルチステップの操作を完了する手法です。各自然言語プロンプトは異なるスキルにルーティングされますが、エージェントは遷移間でコンテキスト (VM 名、namespace、ノード割り当て、以前の結果) を保持します。
+
+単一のスキルは 1 つの関心事を処理します。たとえば、`vm-inventory` は VM を一覧表示し、`vm-snapshot-create` はスナップショットを作成します。どちらのスキルも互いを認識していません。これらを単一の会話でチェーンさせると、エージェントはインベントリ結果からの情報をスナップショットリクエストに引き継ぐため、VM 名や namespace を再指定する必要がありません。
+
+スキルのチェーン実行は、個別の会話でスキルを個別に実行する場合とは異なります。
+
+[cols="1,2,2",options="header"]
+|===
+| 観点 | チェーン実行 (単一の会話) | 個別実行 (個別の会話)
+
+| コンテキスト
+| エージェントは前のステップからの VM 名、namespace、ノード、結果を記憶します
+| 毎回すべてのパラメーターを再指定する必要があります
+
+| 効率性
+| プロンプト数が減り、重複したルックアップが発生しません
+| 各会話が最初から開始されます
+
+| エラーリカバリー
+| エージェントは以前の状態を参照して問題を診断できます
+| 以前のコンテキストは利用できません
+
+| 最適な用途
+| ノードメンテナンス、環境プロビジョニング、アップグレード前のバックアップなどのマルチステップワークフロー
+| 単一 VM の起動やスナップショットステータスの確認などの単発の操作
+|===
+
+== エージェントがスキルをルーティングする方法
+
+`rh-virt` スキルパックは、AGENTS.md 設定で定義されたスキルファーストのルーティングアーキテクチャーを使用します。自然言語のプロンプトを入力すると、エージェントはルーティングテーブルを使用して意図を 10 個のスキルのいずれかに一致させます。
+
+[cols="2,1",options="header"]
+|===
+| 意図 | ルーティングされるスキル
+
+| "すべての VM を一覧表示"、"worker-02 上の VM を表示"、"VM インベントリ"
+| `vm-inventory`
+
+| "web-01 という名前の Fedora VM を作成"
+| `vm-create`
+
+| "VM api-server を起動"、"cache ノードを停止"、"web-frontend を再起動"
+| `vm-lifecycle-manager`
+
+| "web-server を web-test にクローン"、"golden-image のコピーを 5 つ作成"
+| `vm-clone`
+
+| "namespace dev の VM old-test を削除"
+| `vm-delete`
+
+| "アップグレード前に api-server のスナップショットを作成"
+| `vm-snapshot-create`
+
+| "production-vms 内のスナップショットを一覧表示"
+| `vm-snapshot-list`
+
+| "先週の古いスナップショットを削除"
+| `vm-snapshot-delete`
+
+| "スナップショット pre-upgrade から api-server を復元"
+| `vm-snapshot-restore`
+
+| "worker-02 からすべての VM を移行"、"クラスター全体で VM をリバランス"
+| `vm-rebalance`
+|===
+
+ルーティングはキーワード駆動型です。「list」、「show」、「inventory」などの単語は `vm-inventory` にルーティングされます。「migrate」、「move」、「rebalance」、「drain」などの単語は `vm-rebalance` にルーティングされます。エージェントが MCP ツールを直接呼び出すことはなく、常に最初にスキルを選択し、そのスキルがワークフロー、安全性チェック、確認手順を定義します。
+
+一連の会話の中で、エージェントは新しいプロンプトごとにルーティングを再評価します。最初のプロンプトは `vm-inventory` に、2 番目は `vm-snapshot-create` に、3 番目は `vm-rebalance` にルーティングされる場合があります。エージェントは各遷移を透過的に処理します。
+
+== シナリオ 1: ノードメンテナンスのワークフロー
+
+これは主要なシナリオです。 Worker Node でメンテナンスを実行する必要があります (たとえば、カーネルパッチの適用と再起動など)。このワークフローでは、6 つのスキル呼び出しを順番に使用して、VM を安全に退避し、メンテナンスを実行して、その後にリバランスを行います。
+
+=== ステップ 1: vm-inventory によるフリートの監査
+
+まず、メンテナンス対象のノードで実行されている VM を特定します。
+
+. IDE チャットで次のように入力します。
++
+----
+List all VMs in namespace production-vms and show which node each VM is running on
+----
+. エージェントは `vm-inventory` にルーティングし、MCP サーバーを呼び出します。ノード配置を示すテーブルが返されます。
++
+----
+## Virtual Machines in production-vms
+
+| VM Name   | Status | Node   | vCPU | Memory | Age |
+|--------------|---------|-----------|------|--------|------|
+| web-frontend | Running | worker-01 | 1  | 4Gi  | 25m |
+| api-server  | Running | worker-02 | 1  | 4Gi  | 23m |
+| cache-node  | Running | worker-02 | 1  | 4Gi  | 22m |
+
+Summary:
+- Total VMs: 3
+- Running: 3
+- Stopped: 0
+- Nodes: worker-01 (1 VM), worker-02 (2 VMs)
+----
+
+これで、`worker-02` がメンテナンス前に退避させる必要のある 2 つの VM (`api-server` および `cache-node`) をホストしていることがわかりました。エージェントは後続のプロンプトのためにこのマッピングを記憶します。
+
+=== ステップ 2: vm-snapshot-create による重要な VM のスナップショット作成
+
+ノードから VM を移行する前に、メンテナンス中に問題が発生した場合のセーフティネットとしてスナップショットを作成します。
+
+. IDE チャットに以下を入力します。
++
+----
+Create snapshots of api-server and cache-node in namespace production-vms before maintenance
+----
+. エージェントは `vm-snapshot-create` にルーティングします。ストレージクラスがスナップショットをサポートしていることを検証し、確認のために各スナップショットを提示します。
++
+----
+## VM Snapshot - Pre-Maintenance Safety Net
+
+### Snapshot 1 of 2: api-server
+
+| Parameter    | Value             |
+|-----------------|--------------------------------|
+| VM Name     | api-server           |
+| Namespace    | production-vms         |
+| Snapshot Name  | api-server-pre-maintenance   |
+| Storage Class  | lvms-vg1 (CSI snapshots: yes) |
+| VM Status    | Running (online snapshot)   |
+
+Confirm: yes/no
+----
+. 各スナップショットを確認します。エージェントはそれらを順番に作成します。
++
+----
+## Snapshots Created
+
+api-server-pre-maintenance - Ready (32s)
+cache-node-pre-maintenance - Ready (28s)
+
+Both VMs have pre-maintenance snapshots.
+If maintenance causes issues, restore with:
+ "Restore api-server from snapshot api-server-pre-maintenance"
+----
+
+スナップショットは次のように確認できます。
+
+[source,bash,role=execute]
+----
+oc get virtualmachinesnapshot -n production-vms
+----
+
+----
+NAME             SOURCEKIND    SOURCENAME  PHASE    READYTOUSE  AGE
+api-server-pre-maintenance  VirtualMachine  api-server  Succeeded  true     1m
+cache-node-pre-maintenance  VirtualMachine  cache-node  Succeeded  true     1m
+----
+
+=== ステップ 3: vm-rebalance を使用してノードから VM を移行する
+
+手動移行モードを使用して、`worker-02` からすべての VM を退避します。
+
+. IDE チャットで次のように入力します。
++
+----
+Migrate all VMs off worker-02 in namespace production-vms
+----
+. エージェントは手動モードで `vm-rebalance` にルーティングします。`worker-02` 上の 2 つの VM を特定し、移行計画を提示します。
++
+----
+## VM Migration Plan - Node Evacuation
+
+**Source Node**: worker-02
+**Target**: Available nodes (worker-01, worker-03)
+
+| VM      | Current Node | Target Node | Migration Type |
+|--------------|--------------|-------------|----------------|
+| api-server  | worker-02  | worker-01  | Live      |
+| cache-node  | worker-02  | worker-03  | Live      |
+
+**Migration Type**: Live (zero downtime)
+**Impact**: VMs remain running during migration. Brief network blip possible.
+
+Proceed with migration? (yes/no)
+----
+. 確認すると、エージェントはライブマイグレーションを実行し、進捗状況を報告します。
++
+----
+## Migration Complete
+
+api-server - Migrated to worker-01 (live, 45s)
+cache-node - Migrated to worker-03 (live, 38s)
+
+worker-02 now has 0 VMs. Safe for maintenance.
+----
+
+NOTE: `vm-rebalance` スキルは、可能な場合はライブマイグレーション (ダウンタイムなし) を使用します。VM がライブマイグレーションをサポートしていない場合 (例えば、ローカルの非共有ボリュームを使用している場合など)、エージェントはコールドマイグレーションにフォールバックし、処理を続行する前に一時的なダウンタイムについて警告します。
+
+=== ステップ 4: vm-inventory で退避を確認する
+
+メンテナンス対象のノードに VM が残っていないことを確認します。
+
+. IDE のチャットに以下を入力します。
++
+----
+Verify no VMs are running on worker-02
+----
+. エージェントは `vm-inventory` に戻り、ノードの配置を確認します。
++
+----
+## Virtual Machines in production-vms
+
+| VM Name   | Status | Node   | vCPU | Memory | Age |
+|--------------|---------|-----------|------|--------|------|
+| web-frontend | Running | worker-01 | 1  | 4Gi  | 35m |
+| api-server  | Running | worker-01 | 1  | 4Gi  | 33m |
+| cache-node  | Running | worker-03 | 1  | 4Gi  | 32m |
+
+Summary:
+- worker-01: 2 VMs
+- worker-02: 0 VMs (safe for maintenance)
+- worker-03: 1 VM
+
+All VMs evacuated from worker-02.
+----
+
+=== ステップ 5: ノードメンテナンスの実行
+
+すべての VM が `worker-02` から安全に退避されたため、ノードの cordon、drain、パッチ適用、再起動を行えるようになりました。これらのステップでは、エージェント外で標準の OpenShift コマンドを使用します。
+
+[source,bash,role=execute]
+----
+oc adm cordon worker-02
+----
+
+[source,bash,role=execute]
+----
+oc adm drain worker-02 --ignore-daemonsets --delete-emptydir-data
+----
+
+メンテナンスを実行します (パッチの適用、ファームウェアの更新、再起動):
+
+[source,bash,role=execute]
+----
+# 例: パッチ適用後にノードを再起動する
+ssh core@worker-02 'sudo systemctl reboot'
+----
+
+ノードがオンラインに戻るのを待ち、uncordon します。
+
+[source,bash,role=execute]
+----
+oc adm uncordon worker-02
+----
+
+ノードが Ready であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get node worker-02
+----
+
+----
+NAME    STATUS  ROLES  AGE  VERSION
+worker-02  Ready  worker  30d  v1.28.6+openshift.1
+----
+
+=== ステップ 6: vm-rebalance による VM のリバランス
+
+メンテナンス後、復帰した `worker-02` を含むすべてのノード間で VM をリバランスします。
+
+. IDE チャットで次のように入力します。
++
+----
+Rebalance VMs in namespace production-vms across all nodes
+----
+. エージェントは自動モードで `vm-rebalance` にルーティングします。現在の分散状況を評価し、最適な配置を提案します。
++
+----
+## VM Rebalance Plan
+
+**Current Distribution**:
+ worker-01: 2 VMs (web-frontend, api-server)
+ worker-02: 0 VMs
+ worker-03: 1 VM (cache-node)
+
+**Proposed Distribution** (balanced):
+ worker-01: 1 VM (web-frontend)
+ worker-02: 1 VM (api-server)
+ worker-03: 1 VM (cache-node)
+
+| VM      | Current Node | Target Node | Migration Type |
+|--------------|--------------|-------------|----------------|
+| api-server  | worker-01  | worker-02  | Live      |
+
+**Migrations Required**: 1
+**Impact**: Live migration, zero downtime
+
+Proceed with rebalancing? (yes/no)
+----
+. 確認します。エージェントは `api-server` を `worker-02` に移行して戻します。
++
+----
+## Rebalance Complete
+
+api-server - Migrated to worker-02 (live, 42s)
+
+**Final Distribution**:
+ worker-01: 1 VM (web-frontend)
+ worker-02: 1 VM (api-server)
+ worker-03: 1 VM (cache-node)
+
+Cluster is balanced. All VMs running.
+----
+
+ノードメンテナンスのワークフローが完了しました。初期インベントリの取得後、VM 名、namespace、またはノード割り当てを再指定することなく、1 つの会話内で 6 回のスキル呼び出しを使用しました。
+
+== シナリオ 2: テスト環境のスケールアウト
+
+この 2 つ目のシナリオでは、4 つのチェーンしたスキルを使用して、ゴールデンイメージ VM を複数のテストインスタンスにクローンし、それらすべてを起動する方法を示します。
+
+=== ステップ 1: vm-inventory でゴールデンイメージ VM を検索する
+
+. IDE チャットで次のように入力します。
++
+----
+List VMs in namespace production-vms
+----
+. エージェントは `vm-inventory` にルーティングします。
++
+----
+## Virtual Machines in production-vms
+
+| VM Name   | Status | Node   | vCPU | Memory | Age |
+|--------------|---------|-----------|------|--------|------|
+| web-frontend | Running | worker-01 | 1  | 4Gi  | 1h  |
+| api-server  | Running | worker-02 | 1  | 4Gi  | 1h  |
+| cache-node  | Running | worker-03 | 1  | 4Gi  | 1h  |
+
+Summary: 3 VMs, all Running
+----
+
+ロードテスト用にクローンを作成するゴールデンイメージとして `web-frontend` を特定します。
+
+=== ステップ 2: vm-clone による一括クローン作成
+
+. IDE チャットで次のように入力します。
++
+----
+Create 5 clones of web-frontend named loadtest-01 through loadtest-05 in namespace production-vms
+----
+. エージェントはバッチモードで `vm-clone` にルーティングします。ソース VM を検証し、5 つのターゲット名がすべて利用可能であることを確認して、storage strategy を尋ねます。
++
+----
+## Batch Cloning: 5 VMs from `web-frontend`
+
+**Source**: `web-frontend` (production-vms) - u1.medium, 1 vCPU, 4Gi, 30Gi
+**Targets**: loadtest-01, loadtest-02, loadtest-03, loadtest-04, loadtest-05
+
+**Total Resource Impact**: 5 vCPU, 20Gi RAM, 150Gi disk
+
+**Select storage strategy (applied to all clones, 1-4):**
+1. Clone Storage - Full copy (~5-10 min each, 150Gi total)
+2. Reference Existing - Shared disk (dangerous)
+3. New Empty Storage - Fresh disks
+4. Cancel
+----
+. オプション 1 を選択します。エージェントは個別の確認とともに各クローンを作成し、レポートを出力します。
++
+----
+## Batch Cloning Complete
+
+**Results**:
+loadtest-01 (production-vms) - Cloned in 6m12s
+loadtest-02 (production-vms) - Cloned in 7m05s
+loadtest-03 (production-vms) - Cloned in 5m48s
+loadtest-04 (production-vms) - Cloned in 6m33s
+loadtest-05 (production-vms) - Cloned in 5m55s
+
+**Total Storage**: 150Gi cloned
+**Status**: All 5 clones created (Stopped)
+
+**Next**: Start all with "Start VMs loadtest-01 through loadtest-05"
+----
+
+=== ステップ 3: vm-lifecycle-manager を使用してすべてのクローンを起動
+
+. IDE チャットで次のように入力します。
++
+----
+Start all loadtest VMs in namespace production-vms
+----
+. エージェントは `vm-lifecycle-manager` にルーティングします。5 つのクローンを特定し、確認のためにそれぞれを表示します。
++
+----
+## VM Lifecycle Operation - Batch Start
+
+Starting 5 VMs in namespace production-vms:
+
+| VM Name   | Action | Impact       |
+|-------------|--------|---------------------|
+| loadtest-01 | start | consumes resources |
+| loadtest-02 | start | consumes resources |
+| loadtest-03 | start | consumes resources |
+| loadtest-04 | start | consumes resources |
+| loadtest-05 | start | consumes resources |
+
+**Total Impact**: 5 vCPU, 20Gi RAM
+
+Confirm starting all 5 VMs? (yes/no)
+----
+. 確認します。エージェントは各 VM を起動し、Running ステータスを確認します:
++
+----
+## Batch Start Complete
+
+loadtest-01 - Running (RunStrategy: Always)
+loadtest-02 - Running (RunStrategy: Always)
+loadtest-03 - Running (RunStrategy: Always)
+loadtest-04 - Running (RunStrategy: Always)
+loadtest-05 - Running (RunStrategy: Always)
+
+All 5 VMs started successfully.
+----
+
+=== ステップ 4: vm-inventory によるすべてのクローンの検証
+
+. IDE チャットに以下を入力します:
++
+----
+Show all loadtest VMs with their IPs
+----
+. エージェントは `vm-inventory` にルーティングし、VirtualMachineInstance リソースからの IP アドレスを出力に追加します:
++
+----
+## Virtual Machines - Load Test Fleet
+
+| VM Name   | Status | Node   | IP      | vCPU | Memory |
+|-------------|---------|-----------|---------------|------|--------|
+| loadtest-01 | Running | worker-01 | 10.128.0.110 | 1  | 4Gi  |
+| loadtest-02 | Running | worker-02 | 10.128.1.85  | 1  | 4Gi  |
+| loadtest-03 | Running | worker-03 | 10.128.2.42  | 1  | 4Gi  |
+| loadtest-04 | Running | worker-01 | 10.128.0.111 | 1  | 4Gi  |
+| loadtest-05 | Running | worker-02 | 10.128.1.86  | 1  | 4Gi  |
+
+Summary: 5 VMs, all Running, distributed across 3 nodes
+----
+
+テスト環境の準備が整いました。1 回の会話で 4 回のスキル呼び出しを使用しました。ソースを検索するための `vm-inventory`、コピーを作成するための `vm-clone`、それらを起動するための `vm-lifecycle-manager`、再度検証するための `vm-inventory` です。
+
+== スキル間でのコンテキストの保持
+
+単一の会話内でスキルをチェーンさせる場合、エージェントは前のステップからのコンテキストを保持します。これは以下を意味します。
+
+* **VM 名が引き継がれます。** `vm-inventory` がノード上の VM を一覧表示した後は、名前を繰り返すことなく「それらの VM のスナップショットを作成して」と指示できます。エージェントは、インベントリの結果からどの VM を指しているかを認識します。
+* **Namespace が記憶されます。** 最初のプロンプトで `production-vms` を指定すると、「worker-02 からすべての VM を移行して」などの後続のプロンプトでその Namespace が継承されます。変更する場合を除き、再度指定する必要はありません。
+* **ノードの割り当てが追跡されます。** `vm-rebalance` が VM を移行した後、エージェントは新しいノード配置で内部コンテキストを更新します。後続の `vm-inventory` の呼び出しには、移行後の状態が反映されます。
+* **スナップショット名が利用可能です。** `vm-snapshot-create` でスナップショットに `api-server-pre-maintenance` という名前が付けられた後、正確な名前を調べなくても、後から「restore api-server from its pre-maintenance snapshot」と指示して参照できます。
+* **操作結果が次のステップに反映されます。** `vm-rebalance` で移行の失敗が報告された場合、エージェントはその失敗のコンテキストを次のプロンプトに引き継ぎます。「try migrating it to worker-03 instead」と指示するだけで、エージェントはどの VM が失敗し、何がすでに試行されたかを把握します。
+
+このコンテキストの保持により、パラメーターを繰り返し入力する手間が省け、VM 名や namespace を手動で再入力することによるエラーのリスクが軽減されます。
+
+== チェーンさせる場合と個別に実行する場合の使い分け
+
+すべてのマルチステップタスクがチェーンによってメリットを得られるわけではありません。以下のガイドラインを参考にしてください。
+
+=== 次の場合にスキルをチェーンさせます
+
+* ノードメンテナンスや環境のプロビジョニングなど、各ステップが前のステップの出力に依存するマルチステップワークフローを実行している場合。
+* 前のステップの結果 (インベントリからの VM 名、スナップショット作成からのスナップショット名、移行からのノード割り当てなど) を参照する必要がある場合。
+* 完了したばかりの内容に基づいて、エージェントに次のステップを提案させたい場合。
+* トラブルシューティングを行っており、エージェントに複数のクエリーにわたる情報を関連付けさせる必要がある場合。
+
+=== 以下の場合に個別に実行
+
+* 単一の VM に対して 1 回限りの操作を実行する場合 (VM の起動、スナップショットの確認、古いリソースの削除など)。
+* 操作が完全に自己完結しており、事前のコンテキストに依存しない場合。
+* 蓄積された状態のないクリーンな会話が必要な場合 (例えば、関連のない目的で異なる namespace 内の VM を管理する場合など)。
+* 異なるパラメーターを使用して同じ操作を繰り返し実行する場合 (異なる namespace 内の無関係な複数の VM を削除するなど)。
+
+=== 一般的なスキルチェーン
+
+以下のチェーンは、最も頻繁に行われる Day-2 ワークフローに対応しています。
+
+[cols="2,3",options="header"]
+|===
+| ワークフロー | スキルチェーン
+
+| ノードのメンテナンス
+| `vm-inventory` -> `vm-snapshot-create` -> `vm-rebalance` (manual) -> `vm-inventory` -> maintenance -> `vm-rebalance` (automatic)
+
+| アップグレード前のバックアップ
+| `vm-snapshot-create` -> upgrade -> `vm-snapshot-restore` (if needed)
+
+| テスト環境のセットアップ
+| `vm-inventory` -> `vm-clone` (batch) -> `vm-lifecycle-manager` -> `vm-inventory`
+
+| スナップショットの整理
+| `vm-snapshot-list` -> `vm-snapshot-delete` (old snapshots)
+
+| VM の昇格
+| `vm-clone` (cross-namespace) -> `vm-lifecycle-manager` -> `vm-inventory`
+|===
+
+== クリーンアップ
+
+このチュートリアル中に作成されたリソースを削除するには:
+
+[source,bash,role=execute]
+----
+oc delete virtualmachinesnapshot api-server-pre-maintenance cache-node-pre-maintenance -n production-vms
+----
+
+[source,bash,role=execute]
+----
+oc delete vm loadtest-01 loadtest-02 loadtest-03 loadtest-04 loadtest-05 -n production-vms
+----
+
+[source,bash,role=execute]
+----
+oc delete vm web-frontend api-server cache-node -n production-vms
+----
+
+namespace を削除するには:
+
+[source,bash,role=execute]
+----
+oc delete namespace production-vms
+----
+
+または、自然言語を使用します。IDE チャットで「Delete VM loadtest-01 in namespace production-vms」と入力します。`vm-delete` スキルが、完全な安全ワークフローを使用して削除を処理します。
+
+== まとめ
+
+* スキルチェイニングは、パラメーターを再指定することなく複雑な Day-2 オペレーションを実行するために、単一の会話内で複数のエージェントスキルを順次実行します。
+* エージェントは、AGENTS.md ルーティングテーブルで定義されたインテントベースのキーワードマッチングを使用して、各プロンプトを適切なスキルにルーティングします。
+* ノードメンテナンスワークフローは、inventory、snapshot、migrate、verify、maintenance、rebalance の 6 つのスキル呼び出しをチェーンさせます。
+* テスト環境のスケールアウトワークフローは、inventory、batch clone、batch start、verify の 4 つのスキル呼び出しをチェーンさせます。
+* コンテキストの保持により、スキルの遷移間で VM 名、namespace、ノードの割り当て、操作結果が自動的に引き継がれます。
+* 依存関係のある複数ステップのワークフローではスキルをチェーンさせ、単発または関連のない操作では個別に実行します。
+
+== 参照
+
+* xref:getting-started.adoc[Agentic VM 管理の開始]
+* xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]
+* xref:ai-vm-lifecycle.adoc[AI を活用した VM ライフサイクル操作]
+* xref:vm-clone.adoc[AI エージェントを使用した仮想マシンのクローン作成]
+* link:https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt[rh-virt スキルパックリポジトリ,window=_blank]
+* link:https://github.com/openshift/openshift-mcp-server[OpenShift MCP Server,window=_blank]
+* link:https://docs.openshift.com/container-platform/{ocp-docs-version}/virt/index.html[OpenShift Virtualization ドキュメント,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/live-migration[OpenShift ライブマイグレーションのドキュメント,window=_blank]

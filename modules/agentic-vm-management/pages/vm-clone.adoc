@@ -1,0 +1,394 @@
+= AI エージェントを使用した仮想マシンのクローン作成
+:navtitle: VM のクローン作成
+
+このチュートリアルでは、`vm-clone` エージェントスキルを使用して、自然言語コマンドで既存の仮想マシンをクローン作成する方法を説明します。エージェントはソース VM の完全な設定とストレージレイアウトを取得し、ストレージクローン戦略の選択を求め、リソースへの影響の概要を提示して、クラスターリソースを作成する前に明示的な確認を待ちます。
+
+== 前提条件
+
+* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックがインストールされ、MCP サーバーが設定され、クラスターの接続性が確認されていること)
+* OpenShift Virtualization がインストールされている OpenShift クラスター
+* `KUBECONFIG` 環境変数が設定され、有効な kubeconfig ファイルを指していること
+* クローン元として使用する既存の仮想マシンが少なくとも 1 つ
+* ターゲット namespace 内で VirtualMachine および DataVolume/PVC リソースを作成するための RBAC 権限
+
+このチュートリアルで使用する namespace がまだ存在しない場合は作成します:
+
+[source,bash,role=execute]
+----
+oc create namespace my-vms
+oc create namespace qa-environment
+----
+
+ソース VM がない場合は、IDE チャットで次のように入力して `vm-create` スキルを使用して作成します:
+
+----
+Create a Fedora VM named web-server in namespace my-vms
+----
+
+続行する前に VM が存在することを確認します:
+
+[source,bash,role=execute]
+----
+oc get vm -n my-vms
+----
+
+期待される出力:
+
+----
+NAME     AGE  STATUS  READY
+web-server  5m  Running  True
+----
+
+== 仕組み
+
+`vm-clone` スキルは、5 段階のワークフローに従います。
+
+. **ソース情報の収集** — エージェントは、プロンプトからソース VM 名と namespace、ターゲット VM 名と namespace を収集します。パラメーターが不足している場合は、質問します。その後、完全なソース VM 仕様を取得し、関連付けられているすべてのストレージ (DataVolume、PVC) を検出します。
+. **競合のチェック** — エージェントは、ターゲット namespace にターゲット名の VM がすでに存在していないことを確認します。競合が見つかった場合は、別の名前を選択するか、既存の VM を削除するか、キャンセルすることができます。
+. **ストレージ戦略の確認** — エージェントはソース VM のストレージレイアウトを提示し、クローンのストレージをどのように処理するか (full copy、shared reference、new empty disk) の選択を求めます。この選択によって、クローンの独立性、コスト、および速度が決まります。
+. **確認のための設定提示** — エージェントは、ソース VM とターゲット VM、ストレージ戦略、リソースへの影響、変更される項目 (IP アドレス、MAC アドレス、ファームウェア UUID) と保持される項目 (インスタンスタイプ、CPU/メモリ、ネットワーク設定、cloud-init) を示すサマリーを表示します。また、namespace の ResourceQuota をチェックし、クローンによっていずれかの制限の使用率が 80% を超える場合は警告します。
+. **実行と検証** — 明示的な確認の後、エージェントはストレージリソースを作成し (該当する場合)、再生成された識別子を持つクローン VirtualMachine を作成し、ストレージクローンの進行状況を監視して結果を報告します。
+
+== ストレージクローン作成戦略
+
+VM をクローンする際、クローンのストレージをどのようにプロビジョニングするかを選択します。エージェントはソース VM のディスクレイアウトを検出した後、以下のオプションを提示します。
+
+[cols="1,2,1,1",options="header"]
+|===
+| 戦略 | 説明 | 独立性 | プロビジョニング時間
+| Clone Storage | クラスターの StorageProfile (CSI クローン、スナップショット、host-assisted copy) を介したソースディスクの完全なコピー | 完全に独立 — ソースまたはクローンへの変更は相互に影響しません | ディスクサイズに応じて約 5〜10 分
+| Reference Existing | クローンはソース VM と同じ PVC を共有 | 危険 — 両方の VM が同じデータにアクセスします。両方が同時に実行された場合、破損のリスクがあります | 即時
+| New Empty Storage | ソースと同じサイズおよびストレージクラスを持つ新規の空ディスク | 完全に独立 — ソースからのデータなし | 数秒
+|===
+
+エージェントは、デフォルトで「Clone Storage」を推奨オプションとして提示します。「Reference Existing」を選択した場合、エージェントはデータ破損のリスクに関する警告を発行し、処理を続行する前に明示的な確認を要求します。
+
+== サンプルシナリオ 1: 完全なストレージコピーを使用した VM のクローン作成
+
+この例では、ディスクの独立したコピーを使用して VM をクローンします。これは、テスト環境またはステージング環境を作成するための最も一般的なユースケースです。
+
+. IDE チャットで次のように入力します。
++
+----
+Clone web-server to web-server-test in namespace qa-environment
+----
+. エージェントはソース VM の設定を取得し、その 30Gi のルートディスクを検出し、`qa-environment` に `web-server-test` という名前の VM が存在しないことを確認して、ストレージオプションを提示します。
++
+----
+## VM Cloning - Storage Strategy
+
+**Source VM**: `web-server` (namespace: `my-vms`)
+**Source Storage**: web-server-rootdisk (30Gi)
+
+**Select cloning strategy:**
+
+1. **Clone Storage** - Full copy, independent storage (~5-10 min, 30Gi new allocation)
+2. **Reference Existing** - Shared disk (dangerous, both VMs access same storage)
+3. **New Empty Storage** - Fresh disk, no data copied (30Gi new allocation)
+4. **Cancel** - Abort operation
+
+**Select option (1-4):**
+----
+. 完全なコピーを作成するためにオプション 1 を選択します。
++
+----
+1
+----
+. エージェントはターゲット namespace の ResourceQuota を確認し、確認用のクローン設定を提示します。
++
+----
+## VM Clone Configuration - Review
+
+**Source**: `web-server` (my-vms) - u1.medium, 1 vCPU, 4Gi
+**Target**: `web-server-test` (qa-environment) - Same config, starts Stopped
+**Storage**: Clone Storage - 30Gi independent copy (~5-10 min)
+
+**Resource Impact**: 1 vCPU, 4Gi RAM, 30Gi disk
+
+**What changes**: IP addresses, hostname, MAC addresses, firmware UUID
+**What's preserved**: Instance type, vCPU/memory, network config, cloud-init
+
+**Proceed with VM cloning? (yes/no)**
+----
+. 確認します。
++
+----
+yes
+----
+. エージェントは DataVolume を作成してストレージクローンをトリガーし、VirtualMachine を作成してクローンの進行状況を監視し、結果を報告します。
++
+----
+## VM Cloned Successfully
+
+**Source**: `web-server` (my-vms)
+**Target**: `web-server-test` (qa-environment) - Status: Stopped (ready to start)
+**Config**: u1.medium, 1 vCPU, 4Gi, 30Gi
+
+**Storage**: Cloned in 7m23s - Independent storage, changes won't affect source
+
+**Next**: Start with "Start VM web-server-test in namespace qa-environment"
+----
+
+以下を使用してクローンを確認できます。
+
+[source,bash,role=execute]
+----
+oc get vm -n qa-environment
+----
+
+----
+NAME       AGE  STATUS  READY
+web-server-test  8m  Stopped  False
+----
+
+[source,bash,role=execute]
+----
+oc get datavolume -n qa-environment
+----
+
+----
+NAME            PHASE    PROGRESS  RESTARTS  AGE
+web-server-test-rootdisk  Succeeded  100.0%        8m
+----
+
+== サンプルシナリオ 2: 新しい空のストレージを使用したクローン作成
+
+この例では、VM 設定 (インスタンスタイプ、ネットワーク、cloud-init) を保持しつつ、空のディスクから開始するクローンを作成します。これは、同じ VM 構成を使用したいが、新しい OS をインストールしたり別のデータをアタッチしたりする場合に役立ちます。
+
+. IDE チャットで次のように入力します。
++
+----
+Clone web-server to clean-worker in namespace my-vms with empty storage
+----
+. エージェントによってストレージオプションが提示されます。オプション 3 を選択します。
++
+----
+3
+----
+. 確認後、エージェントは空の DataVolume を持つ VM を作成し、以下のように報告します。
++
+----
+## VM Cloned Successfully
+
+**Source**: `web-server` (my-vms)
+**Target**: `clean-worker` (my-vms) - Status: Stopped (ready to start)
+**Config**: u1.medium, 1 vCPU, 4Gi, 30Gi
+
+**Storage**: New empty storage created - OS installation may be required
+
+**Next**: Start with "Start VM clean-worker in namespace my-vms"
+----
+
+== シナリオ例 3: バッチクローン作成
+
+`vm-clone` スキルは、1 回のリクエストで単一のソース VM から複数のクローンを作成することをサポートしており、1 バッチあたり最大 5 つまで作成できます。
+
+. IDE チャットで次のように入力します。
++
+----
+Create 3 copies of web-server named app-01, app-02, app-03 in namespace qa-environment
+----
+. エージェントはソース VM を検証し、3 つのターゲット名がすべて使用可能であることを確認して、ストレージ戦略を 1 回尋ねます (すべてのクローンに適用されます)。
++
+----
+## Batch Cloning: 3 VMs from `web-server`
+
+**Source**: `web-server` (my-vms) - u1.medium, 1 vCPU, 4Gi, 30Gi
+**Targets**: app-01, app-02, app-03 (qa-environment)
+
+**Total Resource Impact**: 3 vCPU, 12Gi RAM, 90Gi disk
+
+**Select storage strategy (applied to all clones, 1-4):**
+----
+. オプション 1 (clone storage) を選択します。エージェントは各クローンを個別に処理し、個別の確認を求めます。
++
+----
+## Clone 1 of 3: app-01
+
+**Source**: web-server → **Target**: app-01 (qa-environment), 30Gi clone
+**Proceed with VM cloning? (yes/no)**
+----
+. 各クローンを確認します。エージェントはそれらを 1 つずつ作成し、最初の失敗で停止します。
++
+----
+## Batch Cloning Complete
+
+**Results**:
+app-01 (qa-environment) - Cloned in 6m12s
+app-02 (qa-environment) - Cloned in 7m05s
+app-03 (qa-environment) - Cloned in 5m48s
+
+**Total Storage**: 90Gi cloned
+
+**Next**: Start all with "Start VMs app-01, app-02, app-03 in namespace qa-environment"
+----
+
+すべてのクローンを確認できます。
+
+[source,bash,role=execute]
+----
+oc get vm -n qa-environment
+----
+
+----
+NAME       AGE  STATUS  READY
+app-01      20m  Stopped  False
+app-02      13m  Stopped  False
+app-03      6m  Stopped  False
+web-server-test  30m  Stopped  False
+----
+
+NOTE: リソースの枯渇を防ぐため、バッチクローンは 1 回のリクエストにつき 5 クローンに制限されています。さらに多くのコピーが必要な場合は、追加のバッチリクエストを実行してください。
+
+== シナリオ例 4: 共有ストレージの警告
+
+共有ストレージオプションを選択すると、両方の VM が基盤となる同じ PVC にアクセスすることになり、両方を同時に実行するとデータ破損につながる恐れがあるため、エージェントは目立つ警告を表示します。
+
+. IDE チャットに次のように入力します。
++
+----
+Clone web-server to web-server-shared in namespace my-vms
+----
+. エージェントはストレージオプションを提示します。オプション 2 を選択します。
++
+----
+2
+----
+. エージェントはリスクについて警告します。
++
+----
+WARNING: Shared Storage is Dangerous
+
+Both VMs will share the same physical disk. Running both simultaneously
+risks data corruption.
+
+This is only safe if the source VM remains stopped while the clone runs.
+
+Recommended: Use Option 1 (Clone Storage) for an independent copy instead.
+
+Proceed with shared storage anyway? (yes/cancel)
+----
+. 考え直してキャンセルします。
++
+----
+cancel
+----
+. エージェントは正常に中断します:
++
+----
+VM cloning cancelled by user. No resources were created.
+----
+
+== Namespace 間のクローン作成
+
+`vm-clone` スキルは、Namespace 間での VM のクローン作成をサポートしています。これは、開発環境からステージング環境や本番環境へ設定を昇格する際に便利です。
+
+Namespace 間でクローンを作成する場合は、以下の点に注意してください。
+
+* **ストレージ** はターゲット Namespace にクローン作成されます。クローンには移行先 Namespace に独自の PVC が作成されます。
+* **ネットワークポリシー** は namespace 間で異なる場合があるため、クローンが必要なサービスにアクセスできることを確認してください。
+* **ResourceQuota** は namespace スコープであるため、ターゲット namespace にクローンのリソース用の十分なクォータが必要です。
+* ソース namespace (VM とそのストレージの読み取り用) とターゲット namespace (クローンの作成用) の両方で **RBAC 権限** が必要です。
+
+例:
+
+----
+Clone production-db from production namespace to staging namespace as staging-db
+----
+
+エージェントは処理を続行する前に、両方の namespace の権限を検証します。
+
+NOTE: `vm-clone` スキルの将来の拡張により、クローン作成時に VM 設定 (インスタンスタイプ、ストレージサイズ、cloud-init 設定など) を変更できるようになる可能性があります。現在、クローンはソース VM の完全な設定を継承します。
+
+== Human-in-the-Loop の確認
+
+クローン作成によってクラスター容量を消費する新しいリソースが作成されるため、`vm-clone` スキルは厳格な確認モデルを適用します。
+
+* **ストレージ戦略の選択** — ストレージの処理方法を明示的に選択する必要があります。エージェントが自動的に戦略を想定することはありません。
+* **設定の確認** — リソースが作成される前に、エージェントはリソースへの影響を含む完全なクローン設定を表示し、明示的な確認を求めます。
+* **バッチ確認** — 複数の VM をクローンする場合、各クローンで個別の確認が必要です。これにより、バッチ処理の途中で停止する必要があることに気付いた場合に、誤ったリソース消費を防ぐことができます。
+* **共有ストレージの確認** — 共有ストレージを選択すると追加の警告が表示され、データ破損のリスクを明示的に了承する必要があります。
+
+いずれかの確認ステップで「no」、「wait」、「cancel」と応答した場合、操作は直ちにキャンセルされ、リソースは作成されません。
+
+== エラー処理
+
+クローン作成に失敗した場合、エージェントはエラーを報告し、トラブルシューティング手順を提案します。
+
+=== 一般的な失敗の原因
+
+[cols="1,2",options="header"]
+|===
+| エラー | 解決策
+| ターゲット VM 名がすでに存在する | 別の名前を選択するか、 (安全な場合) 既存の VM を削除するか、`vm-inventory` を使用して確認します
+| ストレージクォータの不足 | `oc get resourcequota -n <namespace>` でクォータを確認し、クォータの引き上げをリクエストするか、より小さいディスクを使用します
+| ストレージクラスにアクセスできない | ストレージクラスがターゲット namespace に存在し、CSI ボリュームクローン作成をサポートしていることを確認します
+| PVC クローンがサポートされていない | ストレージクラスが CSI ボリュームクローン作成をサポートしていません。代わりに「New Empty Storage」オプションを使用するか、ストレージクラスの機能についてクラスター管理者に問い合わせてください
+| クローン作成中にソース VM が実行中である | 一部のストレージバックエンドでは、クローン作成のためにソース VM を停止する必要があります。最初にソース VM を停止するか、スナップショットベースのクローン作成を使用してください
+|===
+
+=== 部分的なリソースのクリーンアップ
+
+クローン作成が途中で失敗した場合 (たとえば、DataVolume は作成されたが VirtualMachine の作成に失敗した場合)、エージェントは一部作成されたリソースを報告し、クリーンアップを提案します。
+
+----
+## VMのクローン作成に失敗しました
+
+**Error**: Insufficient storage quota in namespace qa-environment
+**Source**: `web-server` (my-vms) → **Target**: `web-server-test` (qa-environment)
+
+**Partial Resources** (may need cleanup):
+- DataVolume: `web-server-test-rootdisk`
+
+**Cleanup**: "Delete VM web-server-test in namespace qa-environment"
+
+Would you like help troubleshooting this error?
+----
+
+== クリーンアップ
+
+このチュートリアルで作成されたクローン VM を削除するには:
+
+[source,bash,role=execute]
+----
+oc delete vm web-server-test -n qa-environment
+oc delete vm clean-worker -n my-vms
+oc delete vm app-01 app-02 app-03 -n qa-environment
+----
+
+または自然言語を使用します: IDE チャットに "Delete VM web-server-test in namespace qa-environment" と入力します。`vm-delete` スキルが完全なセーフティワークフローで削除を処理します。
+
+ソース VM を削除するには:
+
+[source,bash,role=execute]
+----
+oc delete vm web-server -n my-vms
+----
+
+namespace を削除するには:
+
+[source,bash,role=execute]
+----
+oc delete namespace my-vms
+oc delete namespace qa-environment
+----
+
+== まとめ
+
+* `vm-clone` スキルは既存の VM から新しい VM を作成し、競合を回避するために MAC アドレス、ファームウェア UUID、およびホスト名を自動的に再生成します。
+* 3 つのストレージ戦略が利用可能です:full copy (独立)、shared reference (危険)、new empty disk。
+* エージェントはターゲット namespace の ResourceQuota を確認し、クローンによって制限に近づく場合に警告します。
+* 一括クローン作成はリクエストあたり最大 5 つのクローンをサポートし、各 VM について個別の確認を行います。
+* ソースおよびターゲットの両方の namespace における RBAC 検証により、クロス namespace のクローン作成がサポートされます。
+* 明示的に確認するまでリソースは作成されません。エージェントがストレージ戦略を推測したり、自動実行したりすることはありません。
+
+== 参照
+
+* xref:getting-started.adoc[Agentic VM 管理の開始]
+* xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]
+* xref:ai-vm-lifecycle.adoc[AI を活用した VM ライフサイクル操作]
+* link:https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt[rh-virt スキルパックリポジトリ,window=_blank]
+* link:https://github.com/openshift/openshift-mcp-server[OpenShift MCP Server,window=_blank]
+* link:https://docs.openshift.com/container-platform/{ocp-docs-version}/virt/index.html[OpenShift Virtualization ドキュメント,window=_blank]
+* link:https://kubevirt.io/api-reference/[KubeVirt VirtualMachine API Reference,window=_blank]
+* link:https://kubernetes.io/docs/concepts/storage/volume-pvc-datasource/[CSI Volume Cloning,window=_blank]
