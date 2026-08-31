@@ -138,7 +138,7 @@ oc create namespace cpu-pinning-demo
 
 == ステップ 4: 専用 CPU 配置で VM をデプロイする
 
-以下の VM 仕様は、`dedicatedCpuPlacement: true` を使用して 2 つの専用 vCPU をリクエストします。`nodeSelector` により、VM は `cpumanager=true` とラベル付けされたノードでのみスケジューリングされます。メモリの requests と limits は同一であり、Guaranteed QoS 要件を満たしています。
+以下の VM spec は、`dedicatedCpuPlacement: true` を使用して 2 つの専用 vCPU をリクエストします。`nodeSelector` により、VM は `cpumanager=true` とラベル付けされたノードでのみスケジューリングされます。メモリの requests と limits は同一であり、Guaranteed QoS 要件を満たしています。
 
 WARNING: この例の cloud-init パスワードはデモンストレーション目的のみです。本番環境では、SSH 鍵認証または強力でユニークなパスワードを使用してください。
 
@@ -202,7 +202,7 @@ spec:
 EOF
 ----
 
-NOTE: QEMU およびハイパーバイザーのオーバーヘッドを考慮し、メモリ制限 (2Gi) はゲストメモリ (1Gi) よりも高く設定されています。KubeVirt がどのように VM のメモリ仕様をコンテナリソース値に変換するかについては、xref:resource-limits-qos.adoc[]を参照してください。
+NOTE: QEMU およびハイパーバイザーのオーバーヘッドを考慮し、メモリ制限 (2Gi) はゲストメモリ (1Gi) よりも高く設定されています。KubeVirt がどのように VM のメモリ spec をコンテナリソース値に変換するかについては、xref:resource-limits-qos.adoc[]を参照してください。
 
 VM が Running 状態になるまで待ちます。
 

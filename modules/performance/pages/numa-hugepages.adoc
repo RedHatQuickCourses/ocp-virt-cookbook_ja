@@ -45,7 +45,7 @@ Hugepages は、より大きなページサイズを使用することでこの�
 |非常に大きなメモリを必要とする VM、データベース
 |===
 
-VM 仕様に `memory.hugepages.pageSize` が含まれている場合、KubeVirt はホストの事前割り当て済み Hugepages プールからすべてのゲストメモリを割り当てるように QEMU を設定します。このメモリは固定 (pinned) され、スワップされることはありません。
+VM spec に `memory.hugepages.pageSize` が含まれている場合、KubeVirt はホストの事前割り当て済み Hugepages プールからすべてのゲストメモリを割り当てるように QEMU を設定します。このメモリは固定 (pinned) され、スワップされることはありません。
 
 IMPORTANT: Hugepages はオーバーコミットできません。ホストは、VM がスケジュールされる NUMA ノード上に十分な空き Hugepages を持っている必要があります。そうでない場合、VM の起動は失敗します。NUMA パススルーを使用する場合、VM の CPU に割り当てられた特定の NUMA ノード上で Hugepages が利用可能である必要があります。NUMA ノードごとの分散と QEMU のオーバーヘッドを考慮し、すべての VM Memory requests の合計よりも多くの Hugepages を予約してください。
 
@@ -669,7 +669,7 @@ exit
 cmdline_openshift_node_hugepages=hugepagesz=1G hugepages=16
 ----
 
-そして VM 仕様を更新します。
+そして VM spec を更新します。
 
 [source,yaml]
 ----
@@ -716,7 +716,7 @@ oc get node <node-name> -o jsonpath='{.status.allocatable.hugepages-2Mi}{"\n"}'
 
 ホストが複数持っているにもかかわらず、ゲストが 1 つの NUMA ノードしか報告しない場合:
 
-* VMI 仕様で `guestMappingPassthrough` が設定されていることを確認します。
+* VMI spec で `guestMappingPassthrough` が設定されていることを確認します。
 * VM の専用 CPU が複数の物理 NUMA ノードにまたがっていることを確認します。割り当てられた CPU がすべて単一の NUMA ノード上にある場合、ゲストが 1 つしかノードを認識しないのは正常です。
 * NUMA ノードの境界を越えてより多くの物理 CPU を使用するように、VM の vCPU 数を増やしてください。
 

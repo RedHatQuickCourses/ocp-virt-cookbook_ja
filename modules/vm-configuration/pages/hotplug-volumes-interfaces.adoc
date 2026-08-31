@@ -326,7 +326,7 @@ OpenShift Virtualization はネットワークインターフェースのホッ�
 
 ボリュームのホットプラグ (`virtctl addvolume` を使用) とは異なり、ネットワークインターフェースのホットプラグは VM spec を編集することで行われます。
 
-. セカンダリネットワーク用の NetworkAttachmentDefinition (NAD) を作成します。
+. セカンダリーネットワーク用の NetworkAttachmentDefinition (NAD) を作成します。
 . VM spec を編集して、新しいインターフェースとネットワークの定義を追加します。
 . インターフェースは、実行中の VM に (thick Multus が利用可能な場合) アタッチされるか、ライブマイグレーション後にアタッチされます。
 

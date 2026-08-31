@@ -70,6 +70,7 @@ oc get pods -n openshift-cnv -o wide
 ----
 
 出力例:
+
 [source,text]
 ----
 NAME                                   READY   STATUS    NODE
@@ -615,7 +616,7 @@ oc adm taint node ip-10-0-43-58.ec2.internal node-role.kubernetes.io/infra:NoSch
 * クラスターサイズ別の一般的なデプロイメントパターン
 * Infrastructure の配置変更を検証およびトラブルシューティングする方法
 
-== 関連項目
+== 参照
 
 * xref:node-placement-affinity.adoc[VM ワークロードのノード配置]
 * xref:getting-started:vm-lifecycle-states.adoc[VM ライフサイクル管理]

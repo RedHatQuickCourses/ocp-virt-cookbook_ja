@@ -1,0 +1,256 @@
+= OpenShift Virtualization でのレガシー Windows バージョンの実行
+:navtitle: レガシー Windows バージョン
+
+== 概要
+
+Windows XP や Windows Server 2003 などのレガシー Windows バージョンは、`windows.xp` VirtualMachineClusterPreference を使用して OpenShift Virtualization 上で実行できます。この preference は、SATA ディスクバス、e1000e ネットワーク、互換タイマー、USB タブレット入力を備えた Q35 を設定します。
+
+レガシー Windows ゲストを OpenShift Virtualization に導入するには、次の 2 つの方法があります。
+
+* 既存のディスクイメージ (VMDK、VHD、VHDX) を qcow2 に変換してアップロードする。
+* SATA ドライバーを含む ISO から新規インストールを実行する。
+
+いずれの場合も、ゲストには SATA (AHCI) ストレージドライバーが必要です。IDE バスを使用する古いイメージでは、i440FX マシンタイプやその他の回避策が必要になる場合がありますが、これらは本チュートリアルの対象外です。
+
+WARNING: Windows XP および Server 2003 はそれぞれ 2014 年と 2015 年にサポート終了を迎えており、セキュリティアップデートは提供されなくなっています。これらのシステムは、テストまたはレガシーアプリケーションの互換性の目的でのみ、隔離されたラボ環境で実行してください。
+
+== 学習内容
+
+* レガシー Windows ディスクイメージを変換して OpenShift Virtualization にアップロードする方法
+* `windows.xp` preference を使用して VirtualMachine を作成する方法
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされた OpenShift {ocp-min-version}+
+* インストールおよび設定済みの `oc` および `virtctl` CLI ツール
+* ワークステーションにインストールされた `qemu-img` (RHEL/Fedora では `qemu-img` パッケージ、macOS では Homebrew 経由の `qemu` によって提供)
+* 既存のインストール環境からのレガシー Windows ディスクイメージ (VMDK、VHD、VHDX、raw)、または SATA ドライバーを含む Windows XP/Server 2003 インストール ISO
+* ディスクイメージに対して十分な利用可能容量を持つデフォルトの StorageClass
+
+== ステップ 1: ディスクイメージの変換
+
+ISO から新規インストールを行う場合は、このステップをスキップしてください。
+
+レガシー Windows ディスクイメージは、VMware (VMDK)、Hyper-V (VHD/VHDX)、または物理から仮想への Raw キャプチャーに由来することがよくあります。CDI が直接インポートできる qcow2 形式にソースイメージを変換します。
+
+VMDK からの変換:
+
+[source,bash]
+----
+qemu-img convert -f vmdk -O qcow2 filename.vmdk windows-legacy.qcow2
+----
+
+VHD からの変換 (`vpc` は VHD ファイルの qemu-img フォーマット名です):
+
+[source,bash]
+----
+qemu-img convert -f vpc -O qcow2 filename.vhd windows-legacy.qcow2
+----
+
+VHDX からの変換:
+
+[source,bash]
+----
+qemu-img convert -f vhdx -O qcow2 filename.vhdx windows-legacy.qcow2
+----
+
+変換後のイメージを確認します:
+
+[source,bash]
+----
+qemu-img info windows-legacy.qcow2
+----
+
+[source,text]
+.Expected output
+----
+image: windows-legacy.qcow2
+file format: qcow2
+virtual size: 20 GiB (21474836480 bytes)
+disk size: 3.2 GiB
+cluster_size: 65536
+Format specific information:
+    compat: 1.1
+    compression type: zlib
+----
+
+`virtual size` によって、次のステップで必要となる最小 PVC サイズが決まります。
+
+== ステップ 2: ディスクイメージのアップロード
+
+ISO から新規インストールを実行する場合は、このステップをスキップしてください。
+
+変換したイメージの仮想サイズを確認します。PVC は少なくともこのサイズ以上である必要があります。
+
+[source,bash]
+----
+qemu-img info windows-legacy.qcow2 | grep "virtual size"
+----
+
+レガシー Windows VM 用の namespace がまだない場合は作成します。
+
+[source,bash,role=execute]
+----
+oc new-project legacy-windows
+----
+
+`virtctl` を使用して qcow2 イメージをアップロードします。`--size` の値は、`qemu-img info` でレポートされた仮想サイズ以上のサイズに置き換えてください。
+
+[source,bash]
+----
+virtctl image-upload pvc windowsxp-dv \
+  --size=130Gi \
+  --image-path=windows-legacy.qcow2 \
+  --force-bind \
+  --insecure
+----
+
+NOTE: このコマンドは、PersistentVolumeClaim に直接アップロードするために `dv` ではなく `pvc` を使用します。これにより、`WaitForFirstConsumer` binding mode を使用する Storage Class での CDI volume populator フローに関する問題を回避できます。`--force-bind` フラグにより、PVC が即座にバインドされます。
+
+IMPORTANT: `--insecure` フラグは、CDI アップロードプロキシが自己署名証明書を使用する開発環境で必要になることがよくあります。本番環境では、代わりに適切な TLS 証明書を設定してください。
+
+アップロードが完了するのを待ちます。その後、PVC が `Bound` になっていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get pvc windowsxp-dv
+----
+
+[source,text]
+.Expected output
+----
+NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+windowsxp-dv   Bound    pvc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx   130Gi      RWO            lvms-vg1       5m
+----
+
+== ステップ 3: VirtualMachine の作成
+
+以下のマニフェストは `windows.xp` preference を使用します。これにより、Q35 マシンタイプ用の SATA ディスクバス、e1000e ネットワーク、互換タイマー、USB タブレット入力が設定されます。
+
+xref:attachment$legacy-windows-versions/windowsxp-vm.yaml[windowsxp-vm.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: windowsxp
+spec:
+  runStrategy: Always
+  instancetype:
+    name: u1.micro
+  preference:
+    name: windows.xp
+  template:
+    spec:
+      domain:
+        devices: {}
+      volumes:
+        - persistentVolumeClaim:
+            claimName: windowsxp-dv
+          name: rootdisk
+EOF
+----
+
+VM が起動するのを待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm windowsxp -w
+----
+
+[source,text]
+.Expected output
+----
+NAME        AGE   STATUS    READY
+windowsxp   10s   Running   True
+----
+
+ステータスが `Running` と表示されたら、`Ctrl+C` を押します。
+
+== ステップ 4: VM コンソールへのアクセス
+
+VNC コンソールを使用して VM に接続します。
+
+[source,bash,role=execute]
+----
+virtctl vnc windowsxp
+----
+
+または、OpenShift Web コンソールを使用します。**Virtualization** > **VirtualMachines** > **windowsxp** > **Console** タブに移動します。
+
+NOTE: 移行後の初回起動には、通常よりも時間がかかる場合があります。Windows がハードウェアの変更を検出し、エミュレートされたデバイス用の組み込みドライバーをインストールすることがあります。
+
+== ステップ 5: Windows Server 2003 向けの調整
+
+`windows.xp` preference は Windows XP と Server 2003 の両方で機能します。名前に一致させたい場合は、個別の `windows.2k3` preference も利用可能です。Server 2003 ワークロードの場合は、`u1.small` (1 CPU、2 Gi メモリ) などのより大きなインスタンスタイプを使用します。
+
+[source,yaml]
+----
+spec:
+  instancetype:
+    name: u1.small
+  preference:
+    name: windows.2k3
+----
+
+== トラブルシューティング
+
+=== ブートメニューの後に VM の再起動が繰り返される (0x0000007B)
+
+Windows ブートメニューが表示されるものの、システムに `STOP 0x0000007B` のブルースクリーンが表示されて再起動がループする場合、ゲストに SATA ドライバーが不足しています。これは、移行元 VM で IDE コントローラーが使用されていた場合に発生します。
+
+* ブートメニューで F8 を押し、**Disable automatic restart on system failure** (システム障害時の自動的な再起動を無効にする) を選択してエラーの詳細を確認します。
+* F8 を押して **Safe Mode** を選択し、汎用ドライバーで起動して Windows に SATA ハードウェアを検出させます
+* Safe Mode でも失敗する場合は、SATA ドライバーを含む ISO から新規インストールを実行します
+
+=== ネットワーク接続がない場合
+
+ゲストは起動するもののネットワーク接続がない場合は、インターフェースモデルを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi windowsxp -o jsonpath='{.spec.domain.devices.interfaces[0].model}'
+----
+
+ゲスト内で **Device Manager** を開き、ネットワークアダプターが認識されていることを確認します。
+
+=== VNC でマウスのトラッキングが正しく行われない
+
+VNC コンソールでマウスカーソルがクリック位置と一致しない場合は、USB タブレット入力デバイスが存在することを確認してください。`windows.xp` Preference はこれを自動的に有効にします。
+
+[source,bash,role=execute]
+----
+oc get vmi windowsxp -o jsonpath='{.spec.domain.devices.inputs}'
+----
+
+== クリーンアップ
+
+VM とその PVC を削除します。
+
+[source,bash,role=execute]
+----
+oc delete vm windowsxp
+oc delete pvc windowsxp-dv
+----
+
+プロジェクトが不要になった場合は削除します。
+
+[source,bash,role=execute]
+----
+oc delete project legacy-windows
+----
+
+== まとめ
+
+* ディスクイメージを qcow2 形式に変換し、OpenShift Virtualization にアップロードしました。
+* e1000e ネットワークおよび SATA 設定を持つ `windows.xp` Preference を使用して VirtualMachine を作成しました
+* VNC コンソール経由で実行中のレガシー Windows ゲストにアクセスしました
+
+== 参照
+
+* xref:windows-vm-virtio-drivers.adoc[VirtIO ドライバーを使用した Windows VM のデプロイ] -- 準仮想化ハードウェアをサポートする最新の Windows バージョン向け
+* xref:remote-access-windows-vms.adoc[RDP 経由での Windows VM へのリモートアクセス]
+* link:https://kubevirt.io/user-guide/compute/virtual_hardware/#machine-type[KubeVirt Machine Type リファレンス,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/about#about-virt[OpenShift Virtualization ドキュメント,window=_blank]

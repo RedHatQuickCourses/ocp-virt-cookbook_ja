@@ -1,0 +1,440 @@
+= SSH 経由での Windows VM への接続
+:navtitle: SSH 経由での Windows VM へのリモートアクセス
+
+== 概要
+
+Windows 10 (バージョン 1809 以降) および Windows Server 2019 以降には、オプション機能として OpenSSH Server が含まれています。Windows VM で SSH を有効にすると、Remote Desktop やグラフィカルセッションを必要とせずに、スクリプトで操作可能なコマンドラインインターフェースを利用できるようになります。
+
+これは、自動化ワークフロー、CI/CD パイプライン、SSH 経由で Windows ホストを管理できる Ansible などの構成管理ツールに役立ちます。
+
+== 学習内容
+
+* OpenShift Virtualization で実行されている Windows VM に OpenSSH Server をインストールして設定する方法
+* Kubernetes Service を使用して Windows VM の SSH ポートをクラスター外に公開する方法
+* パスワード認証および鍵ベースの認証を使用して SSH 経由で Windows VM に接続する方法
+* デフォルトの SSH シェルを PowerShell に変更する方法
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされている OpenShift {ocp-min-version}+
+* クラスター上で実行中の Windows VM (Windows 10 1809+、Windows 11、または Windows Server 2019/2022/2025)
+* 初期セットアップ用の Windows VM への VNC または RDP コンソールアクセス
+* インストール済みの CLI ツール: `oc` および `virtctl`
+* Windows VM は Pod ネットワーク上で `masquerade` network binding を使用している必要があります (デフォルト設定)
+* virt-launcher pod が NAT 転送ルールを作成できるように、VM spec で masquerade インターフェースのポート 22 を宣言している必要があります (以下を参照)
+
+== VM インターフェースでのポート 22 の宣言
+
+masquerade ネットワークを使用する場合、virt-launcher pod は VM spec で明示的にリストされているポートのトラフィックのみを転送します。ポート 22 が宣言されていない場合、VM 内で sshd が実行されていても、Kubernetes Service からのトラフィックはゲストに到達しません。
+
+VirtualMachine spec の masquerade インターフェースにポート 22 が含まれていることを確認します。
+
+[source,yaml]
+----
+spec:
+  template:
+    spec:
+      domain:
+        devices:
+          interfaces:
+            - masquerade: {}
+              name: default
+              ports:
+                - port: 22
+      networks:
+        - name: default
+          pod: {}
+----
+
+`ports` セクションがない場合は、VirtualMachine を編集して追加します。
+
+[source,bash,role=execute]
+----
+oc edit vm <your-windows-vm-name>
+----
+
+masquerade インターフェースの下に `ports` 配列を追加します。保存後、変更を有効にするために VM を再起動します。
+
+[source,bash,role=execute]
+----
+virtctl restart <your-windows-vm-name>
+----
+
+== Windows VM への OpenSSH Server のインストール
+
+初期セットアップコマンドを実行するために、OpenShift コンソールまたは VNC 経由で Windows VM に接続します。
+
+=== VM コンソールへのアクセス
+
+OpenShift Web コンソールから VM コンソールを開きます: **Virtualization** > **VirtualMachines** > 対象の VM を選択 > **Console** タブ。
+
+または、`virtctl` を使用します。
+
+[source,bash,role=execute]
+----
+virtctl vnc <your-windows-vm-name>
+----
+
+=== OpenSSH の利用可否の確認
+
+Windows VM で管理者として PowerShell を開き、OpenSSH Server が利用可能かどうかを確認します。
+
+[source,powershell]
+----
+Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH.Server*'
+----
+
+[source,text]
+.Expected output
+----
+Name  : OpenSSH.Server~~~~0.0.1.0
+State : NotPresent
+----
+
+状態が `Installed` と表示されている場合は、次のセクションに進んでください。
+
+=== OpenSSH Server のインストール
+
+OpenSSH Server 機能をインストールします。
+
+[source,powershell]
+----
+Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+----
+
+[source,text]
+.Expected output
+----
+Path          :
+Online        : True
+RestartNeeded : False
+----
+
+== SSH サービスの設定
+
+=== SSH サービスの開始
+
+`sshd` サービスを開始し、起動時に自動的に開始するように設定します。
+
+[source,powershell]
+----
+Start-Service sshd
+Set-Service -Name sshd -StartupType Automatic
+----
+
+=== サービスが実行されていることの確認
+
+[source,powershell]
+----
+Get-Service sshd
+----
+
+[source,text]
+.Expected output
+----
+Status   Name    DisplayName
+Running  sshd    OpenSSH SSH Server
+----
+
+=== ファイアウォールルールの確認
+
+OpenSSH Server のインストーラーは、Windows ファイアウォールルールを自動的に作成します。これが存在することを確認します。
+
+[source,powershell]
+----
+Get-NetFirewallRule -Name *OpenSSH-Server* | Select-Object Name, Enabled, Direction, Action
+----
+
+[source,text]
+.Expected output
+----
+Name                  Enabled Direction  Action
+OpenSSH-Server-In-TCP    True   Inbound  Allow
+----
+
+ルールがない場合は、作成します。
+
+[source,powershell]
+----
+New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
+----
+
+=== ファイアウォールルールプロファイルの修正
+
+デフォルトでは、OpenSSH ファイアウォールルールは **Private** ネットワークプロファイルにのみ適用されます。しかし、Windows は仮想アダプターを認識しないため、KubeVirt masquerade bridge を **Public** ネットワークとして分類します。この不一致により、sshd が実行中でルールが有効になっているように見えても、Windows Firewall はすべての受信 SSH 接続をサイレントにブロックします。
+
+ルールがどのプロファイルに適用されているかを確認します。
+
+[source,powershell]
+----
+Get-NetFirewallRule -DisplayName "OpenSSH SSH Server (sshd)" | Select-Object DisplayName, Profile
+----
+
+アクティブなネットワークプロファイルを確認します。
+
+[source,powershell]
+----
+Get-NetConnectionProfile | Select-Object InterfaceAlias, NetworkCategory
+----
+
+ルールプロファイルが `Private` であるにもかかわらず、ネットワークカテゴリーが `Public` の場合は、ルールを更新してすべてのプロファイルに適用されるようにします。
+
+[source,powershell]
+----
+Set-NetFirewallRule -DisplayName "OpenSSH SSH Server (sshd)" -Profile Any
+----
+
+WARNING: この手順を実行しないと、sshd が実行中でファイアウォールルールが存在していても、VM への SSH 接続がタイムアウトします。これは、OpenShift Virtualization の Windows VM で SSH 接続に失敗する最も一般的な原因です。
+
+== PowerShell をデフォルトシェルとして設定
+
+デフォルトでは、Windows の SSH セッションは `cmd.exe` を開きます。代わりに PowerShell を使用するには、以下を実行します。
+
+[source,powershell]
+----
+New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -PropertyType String -Force
+----
+
+この変更は、新しい SSH セッションで有効になります。既存のセッションでは現在のシェルが維持されます。
+
+== クラスター外への SSH ポートの公開
+
+Windows VM の Pod ネットワークはクラスター内部のものです。外部からポート 22 にアクセスするには、Kubernetes Service を作成します。
+
+=== オプション A: NodePort Service
+
+NodePort Service は、すべてのクラスターノード上の高番号ポートを VM のポート 22 にマッピングします。
+
+Service マニフェストを作成します。
+
+xref:attachment$ssh-access-windows-vms/windows-ssh-nodeport-service.yaml[windows-ssh-nodeport-service.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Service
+metadata:
+  name: windows-ssh-nodeport
+spec:
+  type: NodePort
+  selector:
+    vm.kubevirt.io/name: <your-windows-vm-name>
+  ports:
+    - protocol: TCP
+      port: 22
+      targetPort: 22
+      nodePort: 30022
+----
+
+NOTE: `<your-windows-vm-name>` を Windows VirtualMachine リソースの実際の名前に置き換えます。
+
+Service を適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f windows-ssh-nodeport-service.yaml
+----
+
+Service を確認します。
+
+[source,bash,role=execute]
+----
+oc get svc windows-ssh-nodeport
+----
+
+[source,text]
+.Expected output
+----
+NAME                   TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+windows-ssh-nodeport   NodePort   172.30.x.x      <none>        22:30022/TCP   5s
+----
+
+接続に使用するノード IP アドレスを取得します。
+
+[source,bash,role=execute]
+----
+NODE_IP=$(oc get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+echo $NODE_IP
+----
+
+NOTE: ノードの `InternalIP` は、クラスターノードのルーティング可能な IP アドレスです。名前に反して、これはクラスター外部から NodePort サービスにアクセスするために使用するアドレスです。`oc get nodes -o wide` の `ExternalIP` フィールドは、外部クラウドプロバイダーが割り当てた場合にのみ設定されます。
+
+=== オプション B: LoadBalancer サービス
+
+クラスターにロードバランサープロバイダー (MetalLB など) がある場合は、LoadBalancer サービスを使用して専用の外部 IP を取得します。
+
+xref:attachment$ssh-access-windows-vms/windows-ssh-lb-service.yaml[windows-ssh-lb-service.yaml のダウンロード]
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Service
+metadata:
+  name: windows-ssh-lb
+spec:
+  type: LoadBalancer
+  selector:
+    vm.kubevirt.io/name: <your-windows-vm-name>
+  ports:
+    - protocol: TCP
+      port: 22
+      targetPort: 22
+----
+
+NOTE: `<your-windows-vm-name>` を Windows VirtualMachine リソースの実際の名前に置き換えます。
+
+Service を適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f windows-ssh-lb-service.yaml
+----
+
+外部 IP が割り当てられるのを待ちます。
+
+[source,bash,role=execute]
+----
+oc get svc windows-ssh-lb -w
+----
+
+`EXTERNAL-IP` 列に IP アドレスが表示されたら、`Ctrl+C` を押してその IP を使用して接続します。
+
+== SSH による Windows VM への接続
+
+=== パスワード認証を使用した接続
+
+NodePort Service の場合は、以下を使用して接続します。
+
+[source,bash]
+----
+ssh <windows-username>@$NODE_IP -p 30022
+----
+
+LoadBalancer Service の場合は、以下を使用して接続します。
+
+[source,bash]
+----
+ssh <windows-username>@<external-ip>
+----
+
+`<windows-username>` を Windows アカウント名 (例: `Administrator`) に置き換え、プロンプトが表示されたら対応するパスワードを使用します。
+
+=== virtctl SSH を使用した接続
+
+クラスターへのアクセス権があり、外部への公開が不要な場合は、`virtctl` を使用して Kubernetes API サーバー経由で SSH 接続します。
+
+[source,bash,role=execute]
+----
+virtctl ssh <windows-username>@<your-windows-vm-name>
+----
+
+この方法では Service は不要です。API サーバーのポートフォワーディングを使用して、VM 上のポート 22 に接続します。
+
+== SSH 鍵認証の設定
+
+パスワード認証も使用できますが、安全性が低くなります。SSH 鍵を使用すると対話形式でのパスワード入力が不要になり、Ansible などの自動化ツールでは必須となります。
+
+=== SSH 鍵ペアの生成
+
+ローカルマシンにキーペアがまだない場合は、キーペアを生成します。
+
+[source,bash,role=execute]
+----
+ssh-keygen -t ed25519 -f ~/.ssh/windows-vm-key -N ""
+----
+
+=== 公開鍵を Windows VM にコピーする
+
+パスワード認証を使用して Windows VM に SSH 接続し (上記で説明)、SSH セッション内で以下のコマンドを実行します。
+
+標準 (非管理者) ユーザーの場合は、公開鍵を `authorized_keys` ファイルに追加します。
+
+[source,powershell]
+----
+mkdir -Force $env:USERPROFILE\.ssh
+# 公開鍵の内容を authorized_keys ファイルに貼り付けます
+Set-Content -Path "$env:USERPROFILE\.ssh\authorized_keys" -Value "ssh-ed25519 AAAA... your-key-here"
+----
+
+Administrator アカウントの場合、Windows は別のファイルを使用します。鍵を `administrators_authorized_keys` に追加します。
+
+[source,powershell]
+----
+Set-Content -Path "C:\ProgramData\ssh\administrators_authorized_keys" -Value "ssh-ed25519 AAAA... your-key-here"
+
+# Administrators と SYSTEM のみがファイルを読み取れるように権限を修正
+icacls "C:\ProgramData\ssh\administrators_authorized_keys" /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
+----
+
+IMPORTANT: `administrators_authorized_keys` ファイルには制限された権限が必要です。権限が開放的すぎる場合、SSH サーバーはそのファイルを無視し、パスワード認証にフォールバックします。
+
+=== 鍵ベースのログインのテスト
+
+ローカルマシンから、鍵を使用して接続します。
+
+[source,bash]
+----
+ssh -i ~/.ssh/windows-vm-key <windows-username>@$NODE_IP -p 30022
+----
+
+パスワードのプロンプトが表示されずに接続が成功した場合、鍵認証は機能しています。
+
+== Ansible での使用
+
+SSH を設定すると、WinRM の代わりに SSH 経由で Ansible を使用して Windows VM を管理できるようになります。インベントリーにホストを追加します。
+
+[source,ini]
+----
+[windows]
+windows-vm ansible_host=<NODE_IP> ansible_port=30022
+
+[windows:vars]
+ansible_user=Administrator
+ansible_ssh_private_key_file=~/.ssh/windows-vm-key
+ansible_shell_type=powershell
+ansible_become_method=runas
+----
+
+接続をテストします。
+
+[source,bash]
+----
+ansible windows -m ansible.windows.win_ping
+----
+
+SSH 経由で Ansible を使用して Windows を管理する方法の詳細については、link:https://docs.ansible.com/ansible/latest/os_guide/intro_windows.html#windows-ssh-setup[Ansible Windows SSH ドキュメント,window=_blank] を参照してください。
+
+== クリーンアップ
+
+このチュートリアルで作成したリソースを削除します。
+
+[source,bash,role=execute]
+----
+oc delete svc windows-ssh-nodeport windows-ssh-lb
+----
+
+Windows VM から OpenSSH Server を削除するには、VM 上で管理者として PowerShell を開き、以下を実行します。
+
+[source,powershell]
+----
+Stop-Service sshd
+Remove-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+----
+
+== まとめ
+
+* virt-launcher pod が SSH トラフィックを転送するように、masquerade インターフェースでポート 22 を宣言しました。
+* OpenShift Virtualization で実行されている Windows VM に OpenSSH Server をインストールしました。
+* SSH サービスが自動的に開始するように設定し、すべてのネットワークプロファイルに適用されるようにファイアウォールルールを修正しました。
+* デフォルトの SSH シェルを PowerShell に変更しました。
+* NodePort または LoadBalancer Service を使用して、VM の SSH ポートをクラスターの外部に公開しました。
+* パスワード認証とキーベース認証の両方を使用して、SSH 経由で Windows VM に接続しました。
+* SSH 経由で Windows VM を Ansible と統合する方法を確認しました。
+
+== 参照
+
+* xref:remote-access-windows-vms.adoc[RDP 経由での Windows VM へのリモートアクセス]
+* xref:remote-access-linux-vms.adoc[Linux VM へのリモートアクセス]
+* link:https://docs.ansible.com/ansible/latest/os_guide/intro_windows.html#windows-ssh-setup[Ansible Windows SSH セットアップ,window=_blank]
+* link:https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse[Microsoft OpenSSH インストールガイド,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/managing-vms[OpenShift Virtualization - 仮想マシンの管理,window=_blank]

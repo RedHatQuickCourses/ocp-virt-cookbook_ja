@@ -1,0 +1,599 @@
+= 仮想マシン定義の Instancetype と Preference
+:navtitle: Instancetype and Preference
+
+== 概要
+
+すべての VirtualMachine マニフェストには、コンピュートリソース (CPU、メモリ) と OS 固有のマシン設定 (ファームウェアタイプ、CPU トポロジー、デバイスバスのデフォルト値) が必要です。これらの設定は各 VM マニフェスト内にインラインで指定できますが、YAML が肥大化して重複が多くなり、VM の設定ミスが発生しやすくなります。
+
+Instancetype と Preference は、設定を再利用可能な名前付きオブジェクトに分割することで、この問題を解決します。
+
+* **instancetype** は、コンピュートサイズ (CPU 数、メモリ、オプションで GPU やホストデバイスの割り当て) を定義します。
+* **preference** は、OS 固有の動作 (ファームウェアタイプ (BIOS または UEFI)、CPU トポロジーの提示方法、ディスクバスのデフォルト値、Windows ゲスト向けの Hyper-V enlightenments などの機能) を定義します。
+
+これらを組み合わせることで、VM マニフェストにおける 30 行以上の domain spec を名前によるわずかな参照だけに削減できます。OpenShift Virtualization には事前定義されたクラスタースコープの instancetype と preference のセットが含まれており、特定のワークロード用に独自のものを作成することもできます。
+
+== 学習内容
+
+* instancetype と preference の概要、およびそれらがどのように連携するか
+* クラスタースコープと namespace スコープのバリアントの違い
+* クラスターで利用可能な instancetype および preference を確認・調査する方法
+* instancetype および preference を参照して VM を作成する方法
+* instancetype/preference で定義された VM と明示的な domain spec で定義された VM の違い
+* instancetype/preference の代わりに明示的な domain spec を使用すべき場合
+* 特定のワークロード用にカスタムの instancetype および preference を作成する方法
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされた OpenShift {ocp-min-version}+ クラスター
+* `oc` CLI および `virtctl` CLI がインストールされていること
+* デフォルトの StorageClass が設定されていること
+* `openshift-virtualization-os-images` namespace で利用可能な Fedora または RHEL ブートソース (DataSource)
+
+ブートソースが利用可能であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get datasources -n openshift-virtualization-os-images
+----
+
+== コアコンセプト
+
+=== インスタンスタイプとは
+
+インスタンスタイプとは、コンピュートリソースの再利用可能な定義です。すべての VM マニフェストで CPU 数、メモリ、GPU 割り当て、および関連設定を指定する代わりに、インスタンスタイプを名前で参照します。
+
+OpenShift Virtualization には、ワークロードカテゴリおよびサイズごとに整理された、事前定義済みのインスタンスタイプのセットが同梱されています。命名規則は次のパターンに従います。
+
+....
+<letter><generation>.<size>
+
+Examples:
+ u1.medium   — General Purpose, generation 1, medium size
+ cx1.xlarge  — Compute Exclusive, generation 1, extra-large size
+ m1.2xlarge  — Memory Intensive, generation 1, 2x extra-large size
+....
+
+利用可能なカテゴリは以下のとおりです。
+
+* **U (General Purpose)** -- 共有 CPU コア、1:4 の CPU 対 RAM 比率。ほとんどのワークロードに適しています。
+* **O (Overcommitted)** -- ホストメモリのオーバープロビジョニングを許可し、CPU 対 RAM の比率は 1:4 です。VM が割り当てられたメモリ全体を消費しない場合に使用します。
+* **CX (Compute Exclusive)** -- 専用の CPU コアを使用し、CPU 対 RAM の比率は 1:2 です。CPU 集約型のワークロード向けです。
+* **M (Memory Intensive)** -- メモリのオーバーコミットを行わず、CPU 対 RAM の比率は 1:8 です。データベースやキャッシュ向けです。
+* **N (Network)** -- DPDK が有効なノードが必要で、CPU 対 RAM の比率は 1:2 です。ネットワーク集約型のワークロード向けです。
+
+各カテゴリーには `nano` から `8xlarge` までのサイズが含まれ、カテゴリーの比率に従って CPU とメモリがスケーリングされます。
+
+=== クラスタースコープと namespace スコープの Instancetype
+
+Instancetype には 2 つのスコープがあります。
+
+* **VirtualMachineClusterInstancetype** -- クラスタースコープ。すべての namespace で使用可能です。OpenShift Virtualization に付属する事前定義された Instancetype はクラスタースコープです。
+* **VirtualMachineInstancetype** -- namespace スコープ。作成された namespace 内でのみ使用可能です。クラスターの他の部分に影響を与えずに、特定のプロジェクト用にカスタム Instancetype が必要な場合に使用します。
+
+=== Preference とは
+
+Preference は、instancetype がカバーしない OS 固有のマシン設定を保存します。これらは、VM サイズ間ではなくオペレーティングシステム間で異なる設定です。
+
+* **ファームウェアタイプ** -- BIOS または UEFI、SecureBoot の有効/無効
+* **CPU トポロジー** -- ゲストに vCPU をどのように認識させるか (ソケット、コア、またはスレッドとして)
+* **デバイスバスのデフォルト** -- ディスクのデフォルトを virtio、SATA、SCSI のいずれにするか
+* **クロックおよびタイマー設定** -- OS 固有のタイマー設定
+* **Hyper-V enlightenments** -- Windows ゲスト向けのパフォーマンス最適化
+
+OpenShift Virtualization には、対象となる OS にちなんで命名された cluster preferences (`fedora`、`rhel9`、`rhel10`、`windows.11` など) が同梱されています。
+
+Preference の値は「推奨される」デフォルト値であり、必須要件ではありません。VM マニフェストで直接競合する値を設定した場合、明示的に設定された値が優先されます。
+
+=== クラスタースコープ vs. Namespace スコープの Preferences
+
+instancetype と同様に、preference にも 2 つのスコープがあります。
+
+* **VirtualMachineClusterPreference** -- クラスタースコープ。事前定義された OS Preference はクラスタースコープです。
+* **VirtualMachinePreference** -- namespace スコープ。カスタム OS イメージや組織固有のファームウェア要件に対して作成します。
+
+=== Instancetype と Preference の連携の仕組み
+
+instancetype は「サイズ」 (コンピュートリソースの量) を定義し、preference は「動作」 (OS が期待するハードウェアの構成) を定義します。VM はその両方を参照します。
+
+....
+VirtualMachine manifest
+├── spec.instancetype     → u1.medium (1 vCPU, 4Gi RAM)
+├── spec.preference      → fedora (EFI firmware, virtio bus, prefer-cores topology)
+└── spec.template.spec   → disks, networks, volumes (your workload-specific config)
+....
+
+VM が起動すると、OpenShift Virtualization は instancetype と preference の設定を VirtualMachineInstance にマージし、完全に解決された domain spec を生成します。この解決された spec は、実行中の VMI で確認できます。
+
+== ステップ 1: 利用可能なインスタンスタイプの確認
+
+クラスター全体を対象とするすべてのインスタンスタイプを一覧表示します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachineclusterinstancetypes
+----
+
+出力には、事前定義されたすべてのインスタンスタイプが表示されます。特定のカテゴリーに絞り込むには、`grep` を使用します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachineclusterinstancetypes | grep '^u1\.'
+----
+
+これにより、汎用 (U) インスタンスタイプとそのサイズのみが表示されます。
+
+特定のインスタンスタイプを検査して、定義されているリソースを確認します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachineclusterinstancetype u1.medium -o yaml
+----
+
+`spec` セクションには、CPU およびメモリの設定が表示されます。`u1.medium` では、General Purpose カテゴリーの 1:4 の比率に一致する 1 vCPU および 4Gi のメモリが表示されます。
+
+== ステップ 2: 使用可能な Preference の確認
+
+すべてのクラスタースコープの Preference を一覧表示します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachineclusterpreferences
+----
+
+Fedora の Preference を調べて、どの OS 設定が構成されているかを確認します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachineclusterpreference fedora -o yaml
+----
+
+`spec` セクションを確認します。ファームウェアタイプ (EFI)、推奨 CPU トポロジー、推奨ディスクバス (virtio)、その他の OS 固有のデフォルトの設定が表示されます。
+
+== ステップ 3: Instancetype および Preference を使用した VM の作成
+
+このチュートリアルの例で使用する namespace を作成します。
+
+[source,bash,role=execute]
+----
+oc new-project instancetype-demo
+----
+
+以下のマニフェストは、`u1.medium` instancetype と `fedora` preference を使用して Fedora VM を作成します。マニフェストの domain spec には `cpu`、`memory`、`firmware`、`machine` フィールドが含まれていない点に注意してください。これらはすべて instancetype と preference によって提供されます。
+
+xref:attachment$instancetype-preference/vm-with-instancetype.yaml[vm-with-instancetype.yaml のダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: fedora-instancetype-demo
+ namespace: instancetype-demo
+spec:
+ instancetype:
+  name: u1.medium
+  kind: VirtualMachineClusterInstancetype
+ preference:
+  name: fedora
+  kind: VirtualMachineClusterPreference
+ runStrategy: Always
+ dataVolumeTemplates:
+  - metadata:
+    name: fedora-instancetype-demo
+  spec:
+    sourceRef:
+     kind: DataSource
+     name: fedora
+     namespace: openshift-virtualization-os-images
+    storage:
+     resources:
+      requests:
+       storage: 30Gi
+ template:
+  metadata:
+   labels:
+    kubevirt.io/domain: fedora-instancetype-demo
+ spec:
+   domain:
+    devices:
+     disks:
+      - name: rootdisk
+       disk:
+        bus: virtio
+      - name: cloudinitdisk
+       disk:
+        bus: virtio
+     interfaces:
+      - name: default
+       masquerade: {}
+   networks:
+    - name: default
+     pod: {}
+   volumes:
+    - name: rootdisk
+     dataVolume:
+      name: fedora-instancetype-demo
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |
+       #cloud-config
+       user: fedora
+       password: changeme123
+       chpasswd:
+        expire: false
+       ssh_pwauth: true
+----
+
+WARNING: この例の cloud-init パスワードはデモ目的のみに使用されます。本番環境では SSH 鍵認証を使用してください。
+
+マニフェストを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f vm-with-instancetype.yaml
+----
+
+VM が Running 状態になるまで待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm fedora-instancetype-demo -n instancetype-demo -w
+----
+
+VM に `Running` と表示されたら `Ctrl+C` を押します。
+
+== ステップ 4: 実行中の VMI で解決された spec の確認
+
+VirtualMachine マニフェストには CPU やメモリのフィールドが含まれていませんが、実行中の VirtualMachineInstance には含まれています。instancetype と preference の値は、起動時に VMI にマージされます。
+
+VMI 上で解決された domain spec を表示します。
+
+[source,bash,role=execute]
+----
+oc get vmi fedora-instancetype-demo -n instancetype-demo -o yaml
+----
+
+出力で `spec.domain` を確認します。`u1.medium` instancetype および `fedora` preference から取得された CPU、メモリ、ファームウェア、マシンの設定が表示されます。これは QEMU/KVM が使用している実際の設定です。
+
+CPU とメモリの値のみを表示するには、以下を実行します。
+
+[source,bash,role=execute]
+----
+oc get vmi fedora-instancetype-demo -n instancetype-demo -o jsonpath='{.spec.domain.cpu}' | python3 -m json.tool
+----
+
+[source,bash,role=execute]
+----
+oc get vmi fedora-instancetype-demo -n instancetype-demo -o jsonpath='{.spec.domain.memory}' | python3 -m json.tool
+----
+
+このようにして、instancetype と preference が使用されている場合に、VM が実際にどのように設定されているかを確認します。
+
+== ステップ 5: Instancetype と明示的な Domain Spec の比較
+
+instancetype と preference が何を行っているかを理解するために、前のマニフェストを、明示的な domain spec フィールドで定義された同等の VM と比較してください。
+
+次のマニフェストは同じ VM を作成しますが、すべてのコンピュートおよび OS 設定がインラインで指定されています。
+
+xref:attachment$instancetype-preference/vm-with-explicit-domain.yaml[vm-with-explicit-domain.yaml のダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: fedora-explicit-demo
+ namespace: instancetype-demo
+spec:
+ runStrategy: Always
+ dataVolumeTemplates:
+  - metadata:
+    name: fedora-explicit-demo
+  spec:
+    sourceRef:
+     kind: DataSource
+     name: fedora
+     namespace: openshift-virtualization-os-images
+    storage:
+     resources:
+      requests:
+       storage: 30Gi
+ template:
+  metadata:
+   labels:
+    kubevirt.io/domain: fedora-explicit-demo
+ spec:
+   domain:
+    cpu:
+     sockets: 1
+     cores: 1
+     threads: 1
+    memory:
+     guest: 4Gi
+    devices:
+     disks:
+      - name: rootdisk
+       disk:
+        bus: virtio
+      - name: cloudinitdisk
+       disk:
+        bus: virtio
+     interfaces:
+      - name: default
+       masquerade: {}
+     rng: {}
+    features:
+     smm:
+      enabled: true
+    firmware:
+     bootloader:
+      efi: {}
+    machine:
+     type: pc-q35-rhel9.4.0
+    resources:
+     requests:
+      memory: 4Gi
+   networks:
+    - name: default
+     pod: {}
+   volumes:
+    - name: rootdisk
+     dataVolume:
+      name: fedora-explicit-demo
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |
+       #cloud-config
+       user: fedora
+       password: changeme123
+       chpasswd:
+        expire: false
+       ssh_pwauth: true
+----
+
+明示的なバージョンにおいて、instancetype と preference が置き換える内容は以下のとおりです。
+
+[cols="1,1"]
+|===
+| 明示的な domain spec フィールド | 提供元
+
+| `spec.template.spec.domain.cpu` (sockets, cores, threads)
+| Instancetype (`u1.medium`) + Preference (`fedora`) トポロジー
+
+| `spec.template.spec.domain.memory.guest`
+| Instancetype (`u1.medium`)
+
+| `spec.template.spec.domain.resources.requests.memory`
+| Instancetype (`u1.medium`)
+
+| `spec.template.spec.domain.features.smm`
+| Preference (`fedora`)
+
+| `spec.template.spec.domain.firmware.bootloader`
+| Preference (`fedora`)
+
+| `spec.template.spec.domain.machine.type`
+| Preference (`fedora`)
+
+| `spec.template.spec.domain.devices.rng`
+| Preference (`fedora`)
+|===
+
+instancetype を使用したバージョンの方が短く、エラーが発生しにくくなります。後から組織が "medium" VM の標準メモリを変更する場合でも、`u1.medium` instancetype を更新すれば、それを参照するすべての VM に変更が適用されます。
+
+IMPORTANT: `spec.instancetype` フィールドと `spec.template.spec.domain.cpu` / `spec.template.spec.domain.memory` フィールドは排他的です。両方を設定すると検証エラーが発生します。特定の VM に対しては、いずれか一方のアプローチを選択してください。
+
+== ステップ 6: Instancetype および Preference を使用すべきではない場合
+
+Instancetype と preference は一般的なユースケースを十分にカバーしていますが、domain spec を直接制御する必要がある状況もあります。
+
+* **専用 CPU ピニング** -- VM が特定の NUMA トポロジーを持つ `dedicatedCPUPlacement: true` を必要とする場合、CPU フィールドを直接設定するか、これらの設定を定義したカスタム instancetype を使用する必要がある場合があります。
+* **Hugepages** -- Hugepage 設定は、明示的な制御を必要とする形でメモリ設定と連携します。
+* **リアルタイムワークロード** -- リアルタイム VM には、標準の instancetype が提供する機能を超えた CPU 分離、エミュレータースレッドのピニング、カーネルチューニングが必要です。
+* **カスタムファームウェア設定** -- 既存の preference では対応していない特定の BIOS/UEFI 設定が必要であり、単一の VM のためにカスタム preference を作成するのが妥当ではない場合。
+* **VM 設定のデバッグ** -- ハードウェアレベルの問題をトラブルシューティングする際、(起動時に解決されるのではなく) すべての設定が VM マニフェストに表示されていると、診断を簡素化できます。ステップ 4 で示すように、VMI を検査して解決された spec を確認してください。
+* **一意のコンピュート設定** -- VM が既存の instancetype では提供されていない CPU、メモリ、デバイス設定の組み合わせを必要とし、その設定が真に一度限りのものである場合、単一の VM 用にカスタム instancetype を作成するよりも、明示的な domain spec を使用する方がシンプルです。
+
+これらの場合は、上記の明示的な domain spec の例に示されているように、VM マニフェスト内に完全な domain spec をインラインで定義します。
+
+== ステップ 7: カスタム Instancetype の作成
+
+事前定義された instancetype で要件を満たすものがなく、その構成を複数の VM 間で再利用する予定がある場合は、カスタム instancetype を作成します。
+
+この例では、4 つの vCPU と 8Gi のメモリを備えたアプリケーションサーバー用の namespace スコープの instancetype を作成します。
+
+xref:attachment$instancetype-preference/custom-instancetype.yaml[custom-instancetype.yaml をダウンロード]
+
+[source,yaml]
+----
+apiVersion: instancetype.kubevirt.io/v1beta1
+kind: VirtualMachineInstancetype
+metadata:
+ name: app-server-4c8g
+ namespace: instancetype-demo
+spec:
+ cpu:
+  guest: 4
+ memory:
+  guest: 8Gi
+----
+
+カスタム instancetype を適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f custom-instancetype.yaml
+----
+
+作成されたことを確認します。
+
+[source,bash,role=execute]
+----
+oc get virtualmachineinstancetypes -n instancetype-demo
+----
+
+== ステップ 8: カスタム Preference の作成
+
+EFI (SecureBoot なし) で起動し、virtio デバイスを使用し、vCPU をコアとして認識させる Linux サーバー用の namespace スコープの Preference を作成します。
+
+xref:attachment$instancetype-preference/custom-preference.yaml[custom-preference.yaml のダウンロード]
+
+[source,yaml]
+----
+apiVersion: instancetype.kubevirt.io/v1beta1
+kind: VirtualMachinePreference
+metadata:
+ name: my-linux-server
+ namespace: instancetype-demo
+spec:
+ cpu:
+  preferredCPUTopology: cores
+ firmware:
+  preferredUseEfi: true
+  preferredUseSecureBoot: false
+ devices:
+  preferredDiskBus: virtio
+  preferredInterfaceModel: virtio
+----
+
+カスタム preference を適用します:
+
+[source,bash,role=execute]
+----
+oc apply -f custom-preference.yaml
+----
+
+作成されたことを確認します:
+
+[source,bash,role=execute]
+----
+oc get virtualmachinepreferences -n instancetype-demo
+----
+
+== ステップ 9: カスタム Instancetype と Preference を使用した VM の作成
+
+ここで、先ほど定義したカスタム instancetype と preference を使用する VM を作成します:
+
+xref:attachment$instancetype-preference/vm-with-custom-instancetype.yaml[vm-with-custom-instancetype.yaml のダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: custom-instancetype-demo
+ namespace: instancetype-demo
+spec:
+ instancetype:
+  name: app-server-4c8g
+  kind: VirtualMachineInstancetype
+ preference:
+  name: my-linux-server
+  kind: VirtualMachinePreference
+ runStrategy: Always
+ dataVolumeTemplates:
+  - metadata:
+    name: custom-instancetype-demo
+  spec:
+    sourceRef:
+     kind: DataSource
+     name: fedora
+     namespace: openshift-virtualization-os-images
+    storage:
+     resources:
+      requests:
+       storage: 30Gi
+ template:
+  metadata:
+   labels:
+    kubevirt.io/domain: custom-instancetype-demo
+ spec:
+   domain:
+    devices:
+     disks:
+      - name: rootdisk
+       disk:
+        bus: virtio
+      - name: cloudinitdisk
+       disk:
+        bus: virtio
+     interfaces:
+      - name: default
+       masquerade: {}
+   networks:
+    - name: default
+     pod: {}
+   volumes:
+    - name: rootdisk
+     dataVolume:
+      name: custom-instancetype-demo
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |
+       #cloud-config
+       user: fedora
+       password: changeme123
+       chpasswd:
+        expire: false
+       ssh_pwauth: true
+----
+
+マニフェストを適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f vm-with-custom-instancetype.yaml
+----
+
+VM が起動するのを待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm custom-instancetype-demo -n instancetype-demo -w
+----
+
+VM が `Running` と表示されたら、`Ctrl+C` を押します。
+
+VMI を確認して、カスタム instancetype の値が適用されたことを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi custom-instancetype-demo -n instancetype-demo -o jsonpath='{.spec.domain.cpu.cores}' && echo " cores"
+----
+
+[source,bash,role=execute]
+----
+oc get vmi custom-instancetype-demo -n instancetype-demo -o jsonpath='{.spec.domain.memory.guest}' && echo ""
+----
+
+カスタム instancetype 定義に一致する `4 cores` および `8Gi` が表示されます。
+
+== クリーンアップ
+
+このチュートリアルで作成された namespace およびすべてのリソースを削除します。
+
+[source,bash,role=execute]
+----
+oc delete project instancetype-demo
+----
+
+== まとめ
+
+このチュートリアルでは、以下の内容を学びました。
+
+* Instancetype は再利用可能なコンピュートサイズ (CPU、メモリ) を定義し、Preference は OS 固有のマシン設定 (ファームウェア、CPU トポロジー、デバイスのデフォルト設定) を定義します。
+* OpenShift Virtualization には、事前定義されたクラスター単位の instancetype (U、O、CX、M、N カテゴリー) および preference (OS ごと) が付属しています。
+* `oc get` を使用して利用可能な instancetype および preference を検出し、`-o yaml` を使用してそれらを検査し、設定を確認できます。
+* VM マニフェストで instancetype と preference を使用すると、インラインの domain spec フィールドが置き換えられ、マニフェストがより短く、一貫性のあるものになります。
+* `spec.instancetype` フィールドと `spec.template.spec.domain.cpu` / `memory` フィールドは相互排他的です。
+* 実行中の VirtualMachineInstance を確認することで、完全に解決された domain spec を確認できます。
+* 明示的な domain spec は、専用の CPU ピニング、HugePages、リアルタイムワークロード、および一度限りのコンピュート構成に適しています。
+* カスタムの namespace スコープの instancetype および preference を使用すると、組織固有またはワークロード固有の構成を定義できます。
+
+== 参照
+
+* xref:api:api-component-overview.adoc[API コンポーネントの概要] -- CPU トポロジースプレッドオプションおよびフィールド仕様を含む、instancetype および preference オブジェクトの詳細な API リファレンス
+* xref:vm-templates.adoc[仮想マシンテンプレート] -- 再現可能なデプロイのために VM テンプレート内で instancetype および preference を使用する方法
+* xref:getting-started:create-vm-cli-yaml.adoc[YAML マニフェストを使用した CLI からの VM の作成] -- YAML を使用して VM を作成するための基礎ガイド
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/managing-vms#virt-creating-vms-from-instance-types[インスタンスタイプからの VM の作成 - 公式ドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/virtual_machines/instancetypes/[KubeVirt Instancetypes ユーザーガイド,window=_blank]
