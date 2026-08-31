@@ -35,7 +35,7 @@ xref:virtctl-basics.adoc[]::
 仮想マシンを管理するための重要な `virtctl` コマンドの学習
 
 xref:default-storage-class.adoc[]::
-仮想マシンのデプロイを簡素化するためのデフォルトストレージクラスの設定
+仮想マシンのデプロイを簡素化するためのデフォルト Storage Class の設定
 
 xref:create-vm-web-console.adoc[]::
 テンプレートを使用し、OpenShift Web コンソールから VM を作成

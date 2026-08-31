@@ -433,7 +433,7 @@ web-02-rootdisk   ReadWriteMany  30Gi
 oc get storageclass -o custom-columns="NAME:.metadata.name,PROVISIONER:.provisioner,BINDING:.volumeBindingMode"
 ----
 
-マルチアタッチをサポートする CSI ドライバーを使用するストレージクラス (RWX を備えた Ceph RBD や CephFS など) は、ライブマイグレーションを可能にします。単一ノードへのアタッチに制限されているストレージクラス (local-volume や特定の LVM 実装など) では、コールドマイグレーションが必要です。
+マルチアタッチをサポートする CSI ドライバーを使用する StorageClass (RWX を備えた Ceph RBD や CephFS など) は、ライブマイグレーションを可能にします。単一ノードへのアタッチに制限されている StorageClass (local-volume や特定の LVM 実装など) では、コールドマイグレーションが必要です。
 
 == ノード準備状況チェック
 

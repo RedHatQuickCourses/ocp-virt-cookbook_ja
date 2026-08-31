@@ -1,9 +1,9 @@
-= デフォルトストレージクラスの設定
+= デフォルト Storage Class の設定
 :navtitle: ストレージ設定
 
 == 概要
 
-このチュートリアルでは、OpenShift Virtualization 用のデフォルトストレージクラスを設定する方法を学習します。組み込みの DataSource イメージ (Fedora、RHEL、CentOS Stream、Windows) からブートソースを自動的にプロビジョニングするには、デフォルトストレージクラスが必要です。これがない場合、DataSource は保留状態のままとなり、仮想マシン (VM) を作成できません。デフォルトストレージクラスを設定すると、明示的な指定がない場合でも、仮想マシンやデータボリュームが指定したストレージを自動的に使用するようになるため、デプロイメントと管理が簡素化されます。
+このチュートリアルでは、OpenShift Virtualization 用のデフォルト Storage Class を設定する方法を学習します。組み込みの DataSource イメージ (Fedora、RHEL、CentOS Stream、Windows) からブートソースを自動的にプロビジョニングするには、デフォルト Storage Class が必要です。これがない場合、DataSource は保留状態のままとなり、仮想マシン (VM) を作成できません。デフォルト Storage Class を設定すると、明示的な指定がない場合でも、仮想マシンやデータボリュームが指定したストレージを自動的に使用するようになるため、デプロイメントと管理が簡素化されます。
 
 テスト済みのバージョン:
 
@@ -17,21 +17,21 @@ OpenShift 4.19, 4.20
 
 * **OpenShift クラスター**: OpenShift Virtualization がインストールされた OpenShift クラスター
 * **クラスター管理者のアクセス権**: cluster-admin 権限を持つクラスターへのアクセス権
-* **ストレージクラス**: クラスター内に設定済みのストレージクラスが少なくとも 1 つあること
+* **Storage Class**: クラスター内に設定済みの Storage Class が少なくとも 1 つあること
 * **ストレージプロビジョナー**: 動的プロビジョニングをサポートするストレージプロビジョナー
 
-== ステップ 1: 利用可能なストレージクラスの確認
+== ステップ 1: 利用可能な Storage Class の確認
 
-まず、クラスター内で利用可能なストレージクラスを確認し、既にデフォルトとして設定されているストレージクラスがあるかどうかを特定します。
+まず、クラスター内で利用可能な Storage Class を確認し、既にデフォルトとして設定されている Storage Class があるかどうかを特定します。
 
 [source,bash,role=execute]
 ----
 oc get sc
 ----
 
-このコマンドを実行すると、すべてのストレージクラスが名前とプロビジョナーとともに一覧表示されます。名前の横に `(default)` と表示されているストレージクラスがあれば、それが現在デフォルトとして設定されています。
+このコマンドを実行すると、すべての Storage Class が名前とプロビジョナーとともに一覧表示されます。名前の横に `(default)` と表示されている Storage Class があれば、それが現在デフォルトとして設定されています。
 
-デフォルトストレージクラスが存在しない場合の出力例:
+デフォルト Storage Class が存在しない場合の出力例:
 
 ----
 NAME                    PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
@@ -40,7 +40,7 @@ hostpath-provisioner    kubevirt.io/hostpath-provisioner        Delete          
 local-storage           kubernetes.io/no-provisioner            Delete          WaitForFirstConsumer   false                  1d
 ----
 
-既存のデフォルトストレージクラスが存在する場合の出力例:
+既存のデフォルト Storage Class が存在する場合の出力例:
 
 ----
 NAME                    PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
@@ -51,14 +51,14 @@ local-storage           kubernetes.io/no-provisioner            Delete          
 
 以下の点を確認してください。
 
-. デフォルトとして設定したいストレージクラスの名前
-. 既にデフォルトストレージクラスが設定されているかどうか
+. デフォルトとして設定したい Storage Class の名前
+. 既にデフォルト Storage Class が設定されているかどうか
 
 == ステップ 2: 既存のデフォルトの削除 (必要な場合)
 
-別のストレージクラスが既にデフォルトとして設定されている場合は、新しいデフォルトを設定する前にそのアノテーションを削除する必要があります。1 つのクラスターには、デフォルトストレージクラスを 1 つしか設定できません。
+別の Storage Class が既にデフォルトとして設定されている場合は、新しいデフォルトを設定する前にそのアノテーションを削除する必要があります。1 つのクラスターには、デフォルト Storage Class を 1 つしか設定できません。
 
-ストレージクラスからデフォルトのアノテーションを削除するには、以下を実行します。
+Storage Class からデフォルトのアノテーションを削除するには、以下を実行します。
 
 [source,bash,role=execute]
 ----
@@ -67,9 +67,9 @@ oc annotate sc <the-old-default-storage-class-name> storageclass.kubernetes.io/i
 
 NOTE: アノテーションキーの末尾にあるハイフンが、アノテーションを削除する役割を果たします。
 
-== ステップ 3: ストレージクラスへのアノテーション追加
+== ステップ 3: Storage Class へのアノテーション追加
 
-選択したストレージクラスにアノテーションを追加します。このアノテーションにより、そのストレージクラスをデフォルトとして使用するよう OpenShift に指示します。
+選択した Storage Class にアノテーションを追加します。このアノテーションにより、その Storage Class をデフォルトとして使用するよう OpenShift に指示します。
 
 アノテーションは以下の通りです: `storageclass.kubernetes.io/is-default-class: "true"`
 
@@ -78,14 +78,14 @@ NOTE: アノテーションキーの末尾にあるハイフンが、アノテ�
 oc annotate sc <your-storage-class-name> storageclass.kubernetes.io/is-default-class="true"
 ----
 
-例えば、ストレージクラス名が `ceph-rbd-sc` の場合:
+例えば、Storage Class 名が `ceph-rbd-sc` の場合:
 
 [source,bash,role=execute]
 ----
 oc annotate sc ceph-rbd-sc storageclass.kubernetes.io/is-default-class="true"
 ----
 
-== ステップ 4: デフォルトストレージクラスの確認
+== ステップ 4: デフォルト Storage Class の確認
 
 アノテーションを適用した後、変更が反映されたことを確認します。
 
@@ -103,11 +103,11 @@ hostpath-provisioner    kubevirt.io/hostpath-provisioner        Delete          
 local-storage           kubernetes.io/no-provisioner            Delete          WaitForFirstConsumer   false                  1d
 ----
 
-選択したストレージクラス名の横に `(default)` と表示されていることを確認してください。
+選択した Storage Class 名の横に `(default)` と表示されていることを確認してください。
 
-== ステップ 5: デフォルトストレージクラスのテスト
+== ステップ 5: デフォルト Storage Class のテスト
 
-デフォルトストレージクラスが正しく機能しているかを確認するためのテストを行います。ストレージクラスを指定せずに PVC を作成します。
+デフォルト Storage Class が正しく機能しているかを確認するためのテストを行います。Storage Class を指定せずに PVC を作成します。
 
 [source,bash,role=execute]
 ----
@@ -126,7 +126,7 @@ spec:
 EOF
 ----
 
-次に、PVC が正しいストレージクラスで作成されたことを確認します。
+次に、PVC が正しい Storage Class で作成されたことを確認します。
 
 [source,bash,role=execute]
 ----
@@ -140,11 +140,11 @@ NAME                   STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS
 test-default-storage   Pending                                      lvms-vg1       0s
 ----
 
-PVC のステータスが `Pending` になっていますが、デフォルトストレージクラス (この例では `lvms-vg1`) が自動的に割り当てられています。
+PVC のステータスが `Pending` になっていますが、デフォルト Storage Class (この例では `lvms-vg1`) が自動的に割り当てられています。
 
 === ボリュームバインディングモードの理解
 
-PVC が `Pending` ステータスのままになるのは、ほとんどのストレージクラスで `WaitForFirstConsumer` ボリュームバインディングモードが使用されているためであり、想定動作です。
+PVC が `Pending` ステータスのままになるのは、ほとんどの Storage Class で `WaitForFirstConsumer` ボリュームバインディングモードが使用されているためであり、想定動作です。
 
 [cols="1,2,2"]
 |===
@@ -159,7 +159,7 @@ PVC が `Pending` ステータスのままになるのは、ほとんどのス�
 |どのノードからでもアクセス可能なネットワーク接続ストレージ (NFS、Ceph、クラウドストレージ) に適している
 |===
 
-ストレージクラスのバインディングモードを確認するには、以下を実行します。
+Storage Class のバインディングモードを確認するには、以下を実行します。
 
 [source,bash,role=execute]
 ----
@@ -168,7 +168,7 @@ oc get sc <storage-class-name> -o jsonpath='{.volumeBindingMode}'
 
 == ステップ 6: デフォルトストレージを使用した VM のデプロイ
 
-これで、デフォルトストレージクラスをデータボリュームに使用する仮想マシンをデプロイできるようになりました。
+これで、デフォルト Storage Class をデータボリュームに使用する仮想マシンをデプロイできるようになりました。
 
 [source,bash,role=execute]
 ----
@@ -223,18 +223,18 @@ EOF
 
 === 一般的な問題
 
-==== 複数のデフォルトストレージクラス
+==== 複数のデフォルト Storage Class
 
-複数のストレージクラスがデフォルトとしてマークされている場合は、1 つを除いてすべてのアノテーションを削除してください。
+複数の Storage Class がデフォルトとしてマークされている場合は、1 つを除いてすべてのアノテーションを削除してください。
 
 [source,bash,role=execute]
 ----
 oc get sc -o custom-columns=NAME:.metadata.name,DEFAULT:.metadata.annotations.storageclass\.kubernetes\.io/is-default-class
 ----
 
-==== ストレージクラスが見つからない
+==== Storage Class が見つからない
 
-ストレージクラスにアノテーションを付ける前に、それが存在することを確認してください。
+Storage Class にアノテーションを付ける前に、それが存在することを確認してください。
 
 [source,bash,role=execute]
 ----
@@ -252,21 +252,21 @@ oc auth can-i create storageclass --all-namespaces
 
 === 確認コマンド
 
-すべてのストレージクラスとデフォルトステータスを確認します。
+すべての Storage Class とデフォルトステータスを確認します。
 
 [source,bash,role=execute]
 ----
 oc get sc -o wide
 ----
 
-特定のストレージクラスの詳細情報を表示します。
+特定の Storage Class の詳細情報を表示します。
 
 [source,bash,role=execute]
 ----
 oc describe sc <storage-class-name>
 ----
 
-PVC の一覧とそのストレージクラスを表示します。
+PVC の一覧とその Storage Class を表示します。
 
 [source,bash,role=execute]
 ----
@@ -275,20 +275,20 @@ oc get pvc --all-namespaces -o custom-columns=NAMESPACE:.metadata.namespace,NAME
 
 == ベストプラクティス
 
-. **適切なストレージの選択**: 仮想マシンに必要なパフォーマンスと機能 (高速な I/O、スナップショット、暗号化など) を提供するストレージクラスを選択してください。
-. **ワークロード要件の検討**: ワークロードによって必要なストレージ特性が異なる場合があります。デフォルトに頼るだけでなく、重要なワークロードに対しては特定のストレージクラスを使用することを検討してください。
-. **ストレージ使用量の監視**: デフォルトストレージクラスがニーズを満たしていることを確認するため、ストレージの使用量とパフォーマンスを定期的に監視してください。
-. **選択の文書化**: 今後の参考およびトラブルシューティングのために、なぜそのストレージクラスをデフォルトとして選択したのかを文書化してください。
+. **適切なストレージの選択**: 仮想マシンに必要なパフォーマンスと機能 (高速な I/O、スナップショット、暗号化など) を提供する Storage Class を選択してください。
+. **ワークロード要件の検討**: ワークロードによって必要なストレージ特性が異なる場合があります。デフォルトに頼るだけでなく、重要なワークロードに対しては特定の Storage Class を使用することを検討してください。
+. **ストレージ使用量の監視**: デフォルト Storage Class がニーズを満たしていることを確認するため、ストレージの使用量とパフォーマンスを定期的に監視してください。
+. **選択の文書化**: 今後の参考およびトラブルシューティングのために、なぜその Storage Class をデフォルトとして選択したのかを文書化してください。
 
 == まとめ
 
 このチュートリアルでは、以下の内容を学習しました。
 
-* 利用可能なストレージクラスを表示し、既存のデフォルトを特定する方法
-* 既存のデフォルトストレージクラスのアノテーションを削除する方法
-* `storageclass.kubernetes.io/is-default-class` を使用してストレージクラスをデフォルトとしてアノテーションする方法
-* テスト PVC の作成と VM のデプロイによるデフォルトストレージクラスの検証方法
-* OpenShift Virtualization におけるデフォルトストレージクラスの選択と管理に関するベストプラクティス
+* 利用可能な Storage Class を表示し、既存のデフォルトを特定する方法
+* 既存のデフォルト Storage Class のアノテーションを削除する方法
+* `storageclass.kubernetes.io/is-default-class` を使用して Storage Class をデフォルトとしてアノテーションする方法
+* テスト PVC の作成と VM のデプロイによるデフォルト Storage Class の検証方法
+* OpenShift Virtualization におけるデフォルト Storage Class の選択と管理に関するベストプラクティス
 
 == 参照
 

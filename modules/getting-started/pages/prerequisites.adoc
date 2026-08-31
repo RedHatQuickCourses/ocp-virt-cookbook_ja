@@ -79,7 +79,7 @@ virtctl version
 * VM ディスク用に十分なストレージ容量があること
 * 動的プロビジョニングをサポートするストレージプロビジョナーがあること
 
-利用可能なストレージクラスの確認:
+利用可能な StorageClass の確認:
 
 [source,bash,role=execute]
 ----
