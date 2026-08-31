@@ -1,4 +1,4 @@
-= 仮想マシン用 Linux bridge セカンダリネットワークの作成
+= 仮想マシン用 Linux bridge セカンダリーネットワークの作成
 :navtitle: Linux bridge
 
 テスト済みバージョン:
@@ -6,12 +6,12 @@
 OpenShift 4.20,4.21
 ----
 
-Linux bridge セカンダリネットワークは、 https://nmstate.io/kubernetes-nmstate/[Kubernetes NMState Operator,_window=blank]を使用してクラスターノード上に新しい Linux bridge デバイスを作成し、 https://github.com/k8snetworkplumbingwg/multus-cni[Multus CNI,window=_blank]を https://www.cni.dev/plugins/current/main/bridge/[bridge CNI プラグイン,_window=blank]と組み合わせて、Pod および `VirtualMachine` (VM) をブリッジに接続します。
+Linux bridge セカンダリーネットワークは、 https://nmstate.io/kubernetes-nmstate/[Kubernetes NMState Operator,_window=blank]を使用してクラスターノード上に新しい Linux bridge デバイスを作成し、 https://github.com/k8snetworkplumbingwg/multus-cni[Multus CNI,window=_blank]を https://www.cni.dev/plugins/current/main/bridge/[bridge CNI プラグイン,_window=blank]と組み合わせて、Pod および `VirtualMachine` (VM) をブリッジに接続します。
 
 この Linux bridge はノードのネットワーク namespace で実行され、同じノード上で実行されている Pod や VM 間のレイヤー 2 ネットワークスイッチとして機能します。
 また、Linux bridge を物理ホストインターフェースにリンクすることで、クラスター内の他のノードで実行されている VM や Pod への接続を含め、外部ネットワークへの接続を可能にすることもできます。
 
-要約すると、以下の条件が適用される場合に Linux bridge セカンダリネットワークを使用できます。
+要約すると、以下の条件が適用される場合に Linux bridge セカンダリーネットワークを使用できます。
 
 * プライマリネットワークとして使用する予定がない場合 (現在、OpenShift で bridge CNI プラグインを使用してこれを行うことはできません) 
 * VM をクラスター外部のネットワーク (または NAT ゲートウェイを介さずにローカル/物理ネットワーク) に接続する必要がある場合
@@ -33,10 +33,10 @@ NOTE: Linux bridge の `NetworkAttachmentDefinition` は、`VirtualMachine` を 
 
 * <<create_linux_bridge_nncp,Linux bridge ノードネットワーク設定ポリシーの作成>>
 * <<create_net_attach_def,NetworkAttachmentDefinition の作成>> (ブリッジネットワークを Pod および VM に公開) 
-* <<attach_virtual_machines,VirtualMachine の接続>> (Linux bridge セカンダリネットワークへ VM を接続) 
+* <<attach_virtual_machines,VirtualMachine の接続>> (Linux bridge セカンダリーネットワークへ VM を接続) 
 ** <<create_first_vm,最初の VirtualMachine の作成>>
 ** <<create_second_vm,2 つ目の VirtualMachine の作成>>
-* <<test_secondary_network,Linux bridge セカンダリネットワークのテスト>>
+* <<test_secondary_network,Linux bridge セカンダリーネットワークのテスト>>
 
 == Linux bridge Node Network Configuration Policy の作成 [[create_linux_bridge_nncp]]
 
@@ -49,11 +49,11 @@ NOTE: Linux bridge の `NetworkAttachmentDefinition` は、`VirtualMachine` を 
 ====
 .必要な手順:
 * `NodeNetworkConfigurationPolicy` を作成するには、Kubernetes NMState Operator をインストールしておく必要があります。
-* `nncp` の作成をスキップしてセカンダリブリッジアダプターで VM を起動しようとすると、起動に失敗します。
+* `nncp` の作成をスキップしてセカンダリーブリッジアダプターで VM を起動しようとすると、起動に失敗します。
 ====
 
 以下の `NodeNetworkConfigurationPolicy` をコピーし、`lnbr0-bridge.nncp.yaml` という名前の新しいファイルに貼り付けます。
-外部ネットワークに接続するには、最後の 2 行のコメントを外し、ノード上の 2 つ目、または 3 つ目 (プライマリとセカンダリがボンディングされている場合) のデバイス名と一致するようにデバイス名を変更する必要があります。
+外部ネットワークに接続するには、最後の 2 行のコメントを外し、ノード上の 2 つ目、または 3 つ目 (プライマリとセカンダリーがボンディングされている場合) のデバイス名と一致するようにデバイス名を変更する必要があります。
 
 [source,yaml]
 ----
@@ -123,7 +123,7 @@ NOTE: `nmstate` オブジェクト (NMState Operator をトリガーするもの
 
 == Linux bridge NetworkAttachmentDefinition の作成 [[create_net_attach_def]]
 次のステップは、Pod/VM に L2 ネットワーキングを提供する `NetworkAttachmentDefinition` を作成することです。
-`NetworkAttachmentDefinition` は、特定のプロジェクト/namespace 内の Pod/VM がセカンダリネットワークに接続できるようにするためのものです。
+`NetworkAttachmentDefinition` は、特定のプロジェクト/namespace 内の Pod/VM がセカンダリーネットワークに接続できるようにするためのものです。
 
 IMPORTANT: `NetworkAttachmentDefinition` を作成するために必須ではありませんが、`VirtualMachine` をブリッジネットワークに接続する前に、ブリッジインターフェースを定義する `nncp` オブジェクトがクラスター内に存在している必要があります。
 これを怠ると、ブリッジベースの NIC を持つ VM は起動できなくなります。
@@ -210,9 +210,9 @@ oc get net-attach-def lnbr0-bridge
 
 3 つのコンポーネントのうち 2 つが揃ったので、最後のコンポーネントである <<attach_virtual_machines,VirtualMachine の接続>> に進みます。
 
-== VirtualMachine のセカンダリネットワークへの接続 [[attach_virtual_machines]]
+== VirtualMachine のセカンダリーネットワークへの接続 [[attach_virtual_machines]]
 
-このステップでは、ブリッジにセカンダリネットワークとして接続される 2 つの新しい VirtualMachine を作成します。
+このステップでは、ブリッジにセカンダリーネットワークとして接続される 2 つの新しい VirtualMachine を作成します。
 
 これまでの作業をまとめると、以下の通りです。
 
@@ -230,7 +230,7 @@ oc get net-attach-def lnbr0-bridge
 
 以下の VirtualMachine マニフェストを使用して、YAML コンテンツを `fedora-bridge-demo.vm.yaml` という名前の新しいファイルにコピーして貼り付けます。
 
-WARNING: この例の cloud-init パスワードはデモ目的専用です。本番環境では常に強力でユニークなパスワードまたは SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的専用です。本番環境では常に強力でユニークなパスワードまたは SSH 鍵認証を使用してください。
 
 [source,yaml]
 ----
@@ -305,7 +305,7 @@ spec:
 
 上記の例の特定のフィールドを確認します (すべてのフィールドパスは `spec.template.spec` からの相対パスです) 。
 
-* *`domain.devices.interfaces`*: プライマリの `default` とセカンダリの `nic-linux-bridge` という 2 つのインターフェースがリストされています。
+* *`domain.devices.interfaces`*: プライマリの `default` とセカンダリーの `nic-linux-bridge` という 2 つのインターフェースがリストされています。
 ** *`bridge`*: VM の NIC をホストコンテナに接続する 2 つの方法のうちの 1 つ (もう 1 つは IP `masquerade`)。
 これは vm-to-container ブリッジを使用しますが、`lnbr0` ブリッジは container-to-node を接続します (これで接続が完了します) 。
 ** *`name`*: 後で `network` セクションで参照される任意の識別子
@@ -314,8 +314,8 @@ spec:
 ** *`multus.networkName`*: Pod/VM にブリッジネットワークへのアクセスを提供する `NetworkAttachmentDefinition` (NAD) の名前
 * *`volumes`*: 2 つの名前付きボリュームがあります。1 つはルートの `datavolumedisk`、もう 1 つは `cloudinitdisk` です。
 ** *`CloudInitNoCloud`*: これが cloud-init ディスクであり、 https://cloudinit.readthedocs.io/en/latest/reference/datasources/nocloud.html[NoCloud,window=_blank]データソースを使用することを KubeVirt に通知します。
-*** *`networkData`*: 上記では、セカンダリインターフェース (`enp2s0`) に静的 IP (`192.168.50.10/24`) が構成されます。
-**** *`ethernets`*: セカンダリインターフェース名 `enp2s0` は、KubeVirt の 2 番目のネットワークインターフェースに対する予測可能な命名規則に従います。
+*** *`networkData`*: 上記では、セカンダリーインターフェース (`enp2s0`) に静的 IP (`192.168.50.10/24`) が構成されます。
+**** *`ethernets`*: セカンダリーインターフェース名 `enp2s0` は、KubeVirt の 2 番目のネットワークインターフェースに対する想定可能な命名規則に従います。
 
 NOTE: プライマリインターフェース (`enp1s0`) は Masquerade を使用し、Pod ネットワークから IP を取得します。
 
@@ -429,17 +429,17 @@ oc get vmi fedora-bridge-demo2 -n bridge-demo -o jsonpath='{.status.interfaces}'
 2 つ目の VM が実行されアクティブになったら、<<test_secondary_network,テスト>> に進みます。
 
 
-== Linux bridge セカンダリネットワークのテスト [[test_secondary_network]]
+== Linux bridge セカンダリーネットワークのテスト [[test_secondary_network]]
 
-変更されていない例では、Linux bridge セカンダリネットワークは単純な仮想スイッチとして機能し、 (物理ノードインターフェースにブリッジされていない場合は) 同じノード内の Pod、VM、namespace にまたがります。
+変更されていない例では、Linux bridge セカンダリーネットワークは単純な仮想スイッチとして機能し、(物理ノードインターフェースにブリッジされていない場合は) 同じノード内の Pod、VM、namespace にまたがります。
 
 Linux bridge を介した接続性をテストする最も簡単な方法は、ある `VirtualMachine` から別の `VirtualMachine` への基本的な接続性をテストすることです。
 
 テストを進める前に、`bridge-demo` namespace に以下のリソースが存在している必要があります。
 
 * `NetworkAttachmentDefinition`: `lnbr0-bridge`
-* `VirtualMachine`: `fedora-bridge-demo` (セカンダリ NIC IP アドレス: 192.168.50.10)
-* `VirtualMachine`: `fedora-bridge-demo2` (セカンダリ NIC IP アドレス: 192.168.50.20)
+* `VirtualMachine`: `fedora-bridge-demo` (セカンダリー NIC IP アドレス: 192.168.50.10)
+* `VirtualMachine`: `fedora-bridge-demo2` (セカンダリー NIC IP アドレス: 192.168.50.20)
 
 テストする最も簡単な方法は、一方の VM (または必要に応じて両方の VM) のコンソールに接続し、もう一方に ping を送信することです。
 
@@ -457,7 +457,7 @@ VirtualMachine の IP アドレスを確認します。以下のコマンドで�
 ip addr show
 ----
 
-最初の VM のコンソールから、`fedora-bridge-demo2` (IP アドレス: `192.168.50.20`) の `VirtualMachine` に ping を送信します。応答が表示されれば、セカンダリネットワークは動作しています (`CTRL+C` を押すと ping を停止します) 。
+最初の VM のコンソールから、`fedora-bridge-demo2` (IP アドレス: `192.168.50.20`) の `VirtualMachine` に ping を送信します。応答が表示されれば、セカンダリーネットワークは動作しています (`CTRL+C` を押すと ping を停止します) 。
 
 [source,bash]
 ----
@@ -480,9 +480,9 @@ oc delete namespace bridge-demo
 
 * NMState Operator を使用して `NodeNetworkConfigurationPolicy` でクラスターノード上に Linux bridge を作成する方法
 * bridge CNI プラグインを使用して `NetworkAttachmentDefinition` を作成し、ブリッジネットワークを VM に公開する方法
-* プライマリ masquerade インターフェースとセカンダリブリッジインターフェースの両方で VirtualMachine を構成する方法
+* Primary masquerade インターフェースと Secoudary bridge インターフェースの両方で VirtualMachine を構成する方法
 * cloud-init `networkData` を使用してブリッジネットワークに静的 IP アドレスを割り当てる方法
-* Linux bridge セカンダリネットワーク上の VM 間の L2 接続性を確認する方法
+* Linux bridge セカンダリーネットワーク上の VM 間の L2 接続性を確認する方法
 
 == 参照
 

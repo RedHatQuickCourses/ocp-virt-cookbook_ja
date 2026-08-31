@@ -324,10 +324,10 @@ ping -c 1 192.168.1.1
 
 === シナリオ 3: 複数のネットワークインターフェース
 
-==== 問題: セカンダリインターフェースが設定されない
+==== 問題: セカンダリーインターフェースが設定されない
 
 **事象**:
-プライマリインターフェースのみ IP を取得し、セカンダリインターフェースがダウンしているか未設定の状態。
+プライマリインターフェースのみ IP を取得し、セカンダリーインターフェースがダウンしているか未設定の状態。
 
 **調査**:
 
@@ -342,9 +342,9 @@ nmcli connection show
 
 **一般的な原因**:
 
-* networkData にセカンダリインターフェースが定義されていない
-* セカンダリインターフェースの名前が間違っている
-* セカンダリネットワーク接続が機能していない
+* networkData にセカンダリーインターフェースが定義されていない
+* セカンダリーインターフェースの名前が間違っている
+* セカンダリーネットワーク接続が機能していない
 
 **解決策**:
 
@@ -362,7 +362,7 @@ spec:
           multus:
             networkName: my-nad
 ----
-. networkData 内のインターフェース両方を確認:
+. networkData 内の両方のインターフェースを確認:
 +
 [source,yaml]
 ----
@@ -371,7 +371,7 @@ networkData: |
   ethernets:
     enp1s0:
       dhcp4: true
-    enp2s0:  # セカンダリインターフェース
+    enp2s0:  # セカンダリーインターフェース
       dhcp4: false
       addresses:
         - 192.168.100.10/24
@@ -405,11 +405,11 @@ ip route show
 
 * 両方のインターフェースがデフォルトゲートウェイで構成されている
 * DHCP がプライマリインターフェースにデフォルトルートを追加している
-* 静的設定がセカンダリインターフェースにデフォルトルートを追加している
+* 静的設定がセカンダリーインターフェースにデフォルトルートを追加している
 
 **解決策**:
 
-. networkData でセカンダリインターフェースからデフォルトルートを削除:
+. networkData でセカンダリーインターフェースからデフォルトルートを削除:
 +
 [source,yaml]
 ----
@@ -651,10 +651,10 @@ ip route show
 echo "=== DNS ==="
 cat /etc/resolv.conf
 
-echo "=== cloud-init Status ==="
+echo "=== Cloud-init Status ==="
 cloud-init status --long
 
-echo "=== cloud-init Network Config ==="
+echo "=== Cloud-init Network Config ==="
 sudo cat /var/lib/cloud/instance/network-config.txt
 
 echo "=== NetworkManager Connections ==="
@@ -704,7 +704,7 @@ cloud-init status --long
 
 == インターフェース命名リファレンス
 
-VM 内の最新 Linux ディストリビューションは、PCI スロット位置に基づいた予測可能なインターフェース名を使用します。
+VM 内の最新の Linux ディストリビューションは、PCI スロット位置に基づいた予測可能なインターフェース名を使用します。
 
 [cols="1,1,2"]
 |===
@@ -716,7 +716,7 @@ VM 内の最新 Linux ディストリビューションは、PCI スロット位
 
 |2 番目 (Multus/NAD)
 |`enp2s0`
-|セカンダリネットワーク
+|セカンダリーネットワーク
 
 |3 番目 (Multus/NAD)
 |`enp3s0`
@@ -759,7 +759,7 @@ networkData: |
 
 **推奨**: 新しい設定には必ずバージョン 2 を使用してください。
 
-== 参考資料
+== 追加リソース
 
 * link:https://cloudinit.readthedocs.io/en/latest/reference/network-config.html[cloud-init ドキュメント - ネットワーク設定,window=_blank]
 * link:https://netplan.io/examples/[Netplan 設定例,window=_blank]
@@ -813,4 +813,4 @@ cloud-init ステータス:
 status: done
 ----
 
-これは、適切なインターフェース命名を行うことで DHCP シナリオが正しく機能することを確認しています。
+これにより、適切なインターフェース命名を行えば DHCP シナリオが正しく機能することが確認できます。

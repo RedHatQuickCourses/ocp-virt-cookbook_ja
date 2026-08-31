@@ -1,7 +1,7 @@
-= OpenShift Virtualization における NetworkAttachmentDefinition を使用した VLAN 対応の localnet セカンダリネットワークの構成
-:navtitle: NAD を使用した VLAN 対応の localnet セカンダリネットワーク
+= OpenShift Virtualization における NetworkAttachmentDefinition を使用した VLAN 対応の localnet セカンダリーネットワークの構成
+:navtitle: NAD を使用した VLAN 対応の localnet セカンダリーネットワーク
 
-本チュートリアルでは、OpenShift Virtualization において、NetworkAttachmentDefinition (NAD) を使用して VLAN タグ付けを行う localnet セカンダリネットワークを構成する方法を解説します。このアプローチでは、VLAN セグメンテーションを伴う物理ネットワークインフラへの直接アクセスが提供され、Pod ネットワークの接続性を維持したまま、仮想マシン (VM) が特定の VLAN タグ付きネットワークと通信できるようになります。これは、既存の VLAN ベースのネットワークと統合する場合や、ネットワークセグメンテーションが必要な場合に最適です。
+本チュートリアルでは、OpenShift Virtualization において、NetworkAttachmentDefinition (NAD) を使用して VLAN タグ付けを行う localnet セカンダリーネットワークを構成する方法を解説します。このアプローチでは、VLAN セグメンテーションを伴う物理ネットワークインフラへの直接アクセスが提供され、Pod ネットワークの接続性を維持したまま、仮想マシン (VM) が特定の VLAN タグ付きネットワークと通信できるようになります。これは、既存の VLAN ベースのネットワークと統合する場合や、ネットワークセグメンテーションが必要な場合に最適です。
 
 == 前提条件
 
@@ -24,11 +24,11 @@ OpenShift Worker Node に接続されている物理スイッチポートは、l
 
 * **トランクモード**: スイッチポートが複数の VLAN のトラフィックを運ぶことを許可します
 * **VLAN タグ付け**: 各 VLAN は一意の VLAN ID (例: 100, 200, 300) によって識別されます
-* **複数のネットワーク**: 複数の VLAN ベースのセカンダリネットワークをサポートするために不可欠です
+* **複数のネットワーク**: 複数の VLAN ベースのセカンダリーネットワークをサポートするために不可欠です
 
 == 手順 1: VM の namespace の作成
 
-VLAN 構成対応の localnet セカンダリネットワークを使用する VM 用の namespace を作成します。
+VLAN 構成対応の localnet セカンダリーネットワークを使用する VM 用の namespace を作成します。
 
 xref:attachment$localnet-vlan/localnet-vlan-namespace.yaml[localnet-vlan-namespace.yaml をダウンロード]
 
@@ -69,7 +69,7 @@ EOF
 
 == 手順 3: VLAN 対応の NetworkAttachmentDefinition の作成
 
-セカンダリネットワーク接続用に、VLAN タグ付けを伴う localnet トポロジーを構成する NetworkAttachmentDefinition を作成します。
+セカンダリーネットワーク接続用に、VLAN タグ付けを伴う localnet トポロジーを構成する NetworkAttachmentDefinition を作成します。
 
 xref:attachment$localnet-vlan/localnet-vlan-100-nad.yaml[localnet-vlan-100-nad.yaml をダウンロード]
 
@@ -106,9 +106,9 @@ EOF
 
 == 手順 4: VLAN ネットワーク接続を備えた VM のデプロイ
 
-Pod ネットワークと VLAN タグ付き localnet セカンダリネットワークの両方に接続する VM を作成します。
+Pod ネットワークと VLAN タグ付き localnet セカンダリーネットワークの両方に接続する VM を作成します。
 
-WARNING: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、常に強力で一意なパスワード、または SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、常に強力で一意なパスワード、または SSH 鍵認証を使用してください。
 
 xref:attachment$localnet-vlan/fedora-vlan-vm.yaml[fedora-vlan-vm.yaml をダウンロード]
 

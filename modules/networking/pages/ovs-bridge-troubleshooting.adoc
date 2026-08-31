@@ -6,7 +6,7 @@
 OpenShift 4.20
 ----
 
-このガイドは、OpenShift Virtualization において、Localnet セカンダリネットワーク用の OVS (Open vSwitch) bridge が正しく作成および構成されていることを確認するのに役立ちます。
+このガイドは、OpenShift Virtualization において、Localnet セカンダリーネットワーク用の OVS (Open vSwitch) bridge が正しく作成および構成されていることを確認するのに役立ちます。
 
 == OVS bridge と Linux bridge の理解
 
@@ -178,7 +178,7 @@ Device "br-vlan" does not exist.
 # NNCPの条件を確認
 oc get nncp br-vlan-creation -o jsonpath='{.status.conditions[?(@.type=="Available")]}' | jq
 
-# NMState Operatorのログを確認
+# NMState Operator のログを確認
 oc logs -n openshift-nmstate -l app=kubernetes-nmstate-operator
 
 # 問題のあるノードネットワーク状態があるか確認
@@ -391,7 +391,7 @@ bridge mapping を介したトラフィックフローの理解:
 ----
 ┌─────────────────────────────────────────────────────────────────┐
 │ Virtual Machine                                                  │
-│   └─> eth1 (セカンダリネットワークインターフェース)                │
+│   └─> eth1 (セカンダリーネットワークインターフェース)                │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          ▼

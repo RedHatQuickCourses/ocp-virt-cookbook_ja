@@ -1,7 +1,7 @@
-= OpenShift Virtualization における ClusterUserDefinedNetwork を使用した VLAN 対応の Localnet セカンダリネットワークの構成
-:navtitle: CUDN を使用した VLAN 対応の localnet セカンダリネットワーク
+= OpenShift Virtualization における ClusterUserDefinedNetwork を使用した VLAN 対応の Localnet セカンダリーネットワークの構成
+:navtitle: CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク
 
-本チュートリアルでは、OpenShift Virtualization において、ClusterUserDefinedNetwork (CUDN) を使用して VLAN タグ付けを行う Localnet セカンダリネットワークを構成する方法を解説します。このアプローチでは、物理ネットワークインフラへの直接アクセスと、複数の namespace にまたがる VLAN セグメンテーションを提供し、Pod ネットワークの接続性を維持したまま、仮想マシン (VM) が特定の VLAN タグ付きネットワークと通信できるようにします。CUDN は一元的な管理と namespace 間のネットワーク可用性を提供するため、一貫した VLAN ベースのネットワークインフラを必要とするエンタープライズ環境に最適です。
+本チュートリアルでは、OpenShift Virtualization において、ClusterUserDefinedNetwork (CUDN) を使用して VLAN タグ付けを行う Localnet セカンダリーネットワークを構成する方法を解説します。このアプローチでは、物理ネットワークインフラへの直接アクセスと、複数の namespace にまたがる VLAN セグメンテーションを提供し、Pod ネットワークの接続性を維持したまま、仮想マシン (VM) が特定の VLAN タグ付きネットワークと通信できるようにします。CUDN は一元的な管理と namespace 間のネットワーク可用性を提供するため、一貫した VLAN ベースのネットワークインフラを必要とするエンタープライズ環境に最適です。
 
 == 前提条件
 
@@ -24,11 +24,11 @@ Localnet VLAN 構成が正しく機能するためには、OpenShift Worker Node
 
 * **トランクモード**: スイッチポートが複数の VLAN のトラフィックを伝送できるようにする
 * **VLAN タグ付け**: 各 VLAN は一意の VLAN ID (例: 100, 200, 300) によって識別される
-* **マルチネットワーク**: 複数の VLAN ベースのセカンダリネットワークをサポートするために不可欠
+* **マルチネットワーク**: 複数の VLAN ベースのセカンダリーネットワークをサポートするために不可欠
 
 == ステップ 1: VM namespace の作成
 
-VLAN 構成の Localnet セカンダリネットワークを使用する VM 用の namespace を作成します。ClusterUserDefinedNetwork (CUDN) を使用すると、同一のネットワークを複数の namespace で利用可能にできます。
+VLAN 構成の Localnet セカンダリーネットワークを使用する VM 用の namespace を作成します。ClusterUserDefinedNetwork (CUDN) を使用すると、同一のネットワークを複数の namespace で利用可能にできます。
 
 [source,bash,role=execute]
 ----
@@ -123,7 +123,7 @@ EOF
 
 == ステップ 4: VLAN 対応の ClusterUserDefinedNetwork 作成
 
-複数の namespace にまたがるセカンダリネットワーク接続のために、VLAN タグ付けを伴う Localnet トポロジーを構成する ClusterUserDefinedNetwork を作成します。
+複数の namespace にまたがるセカンダリーネットワーク接続のために、VLAN タグ付けを伴う Localnet トポロジーを構成する ClusterUserDefinedNetwork を作成します。
 
 [source,bash,role=execute]
 ----
@@ -153,13 +153,13 @@ EOF
 
 * `vlanID: 100`: ネットワークセグメンテーション用に VLAN タグ 100 を指定
 * `physicalNetworkName`: bridge mapping の論理ネットワークインターフェース名 (`localnet-vlan`) を参照
-* `role: Secondary`: セカンダリネットワークとして定義 (VM は Pod ネットワークをプライマリとして保持)
+* `role: Secondary`: セカンダリーネットワークとして定義 (VM は Pod ネットワークをプライマリとして保持)
 * `namespaceSelector`: このネットワークを使用できる namespace を定義
 * **IPAM Disabled**: IP アドレスは cloud-init (静的) または外部 DHCP サーバーを介して構成する必要がある
 
 == ステップ 5: VLAN ネットワーク接続と静的 IP を持つ VM のデプロイ
 
-構成済みの namespace の 1 つに、Pod ネットワークと VLAN タグ付き Localnet セカンダリネットワークの両方に接続する VM を作成します。
+構成済みの namespace の 1 つに、Pod ネットワークと VLAN タグ付き Localnet セカンダリーネットワークの両方に接続する VM を作成します。
 
 WARNING: 本例の cloud-init パスワードはデモ目的のみです。本番環境では必ず強力で一意のパスワードを使用するか、SSH 鍵認証を使用してください。
 
@@ -506,7 +506,7 @@ oc get network-attachment-definitions -A | grep cudn-localnet-vlan-100
 
 * 追加の物理 NIC 上にカスタム OVS ブリッジを作成し、VLAN トラフィック用の bridge mapping を構成する方法
 * 複数の namespace にまたがる VLAN タグ付きの `ClusterUserDefinedNetwork` を作成する方法
-* CUDN VLAN セカンダリネットワーク上で、cloud-init を使用して静的 IP アドレスを持つ VM をデプロイする方法
+* CUDN VLAN セカンダリーネットワーク上で、cloud-init を使用して静的 IP アドレスを持つ VM をデプロイする方法
 * 同じ CUDN VLAN ネットワークを共有する VM 間で、namespace 間の接続性を確認する方法
 * VLAN ベースのネットワークにおける CUDN と NetworkAttachmentDefinition のアプローチの違い
 

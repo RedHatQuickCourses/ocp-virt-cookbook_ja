@@ -1,9 +1,9 @@
-= Layer 2 セカンダリネットワークの設定
-:navtitle: Layer 2 セカンダリネットワーク
+= Layer 2 セカンダリーネットワークの設定
+:navtitle: Layer 2 セカンダリーネットワーク
 
 == 概要
 
-本ガイドでは、クラスター全体の論理スイッチを介して `VirtualMachines` を接続するための `layer2` セカンダリネットワークの設定方法を説明します。
+本ガイドでは、クラスター全体の論理スイッチを介して `VirtualMachines` を接続するための `layer2` セカンダリーネットワークの設定方法を説明します。
 
 これを行うことで、`VirtualMachines` はデフォルトの Pod ネットワークをプライマリネットワークとして継続的に使用できます。これは、以下の条件が当てはまる場合に有効です。
 
@@ -11,8 +11,8 @@
 * namespace 内の VM 間でネットワークの分離が不要な場合
 * VM 間のネットワーク接続を複数の namespace にまたがって拡張する必要がない場合
 * クラスター内のノードの物理ネットワークインターフェースへのアクセスが不要な場合
-* インターネットからセカンダリネットワークへのイングレス接続をルーティングする必要がない場合
-* 最後に、セカンダリネットワークから外部ネットワークへのアクセスが不要な場合
+* インターネットからセカンダリーネットワークへのイングレス接続をルーティングする必要がない場合
+* 最後に、セカンダリーネットワークから外部ネットワークへのアクセスが不要な場合
 
 検証済みバージョン:
 
@@ -36,7 +36,7 @@ OpenShift 4.20,4.21
 * <<attaching_vms,VirtualMachines のネットワークへの接続>>
 ** <<creating_first_vm,最初の VirtualMachine の作成>>
 ** <<creating_second_vm,2 つ目の VirtualMachine の作成>>
-* <<testing_secondary_network,セカンダリネットワークのテスト>>
+* <<testing_secondary_network,セカンダリーネットワークのテスト>>
 
 
 == namespace の作成 [[creating_a_namespace]]
@@ -106,7 +106,7 @@ oc get net-attach-def l2-network -n example-l2-secondary
 次のステップは、`VirtualMachines` を作成し、作成したばかりの `layer2` ネットワークに接続することです。
 これは、一般的な OpenShift (Kubernetes) のやり方に従い、`VirtualMachine` API オブジェクトを作成してクラスターに適用することで行います。
 
-このセクションでは、どちらもセカンダリの `l2-network` に接続される 2 つの新しい VM を作成します。
+このセクションでは、どちらもセカンダリーの `l2-network` に接続される 2 つの新しい VM を作成します。
 
 === 最初の VirtualMachine の作成 [[creating_first_vm]]
 
@@ -189,7 +189,7 @@ spec:
 **domain.devices.interfaces** - インターフェース定義のリストを受け入れ、それぞれに 2 つのフィールドが定義されています。
 
 * **name** - インターフェース名を指定します。ここでは `networks` で関連付けられたネットワーク名に合わせて `secondary` と命名しました。
-* **bridge** または **masquerade** - セカンダリインターフェースは `bridge` を使用してハイパーバイザー Pod のインターフェースに接続されます。どちらのフィールドも空のオブジェクト (`{}`) を受け入れます。
+* **bridge** または **masquerade** - セカンダリーインターフェースは `bridge` を使用してハイパーバイザー Pod のインターフェースに接続されます。どちらのフィールドも空のオブジェクト (`{}`) を受け入れます。
 
 **networks** - インターフェースの接続に使用するネットワークをリストアップする場所です。`interfaces` と同様に、各ネットワークには 2 つのフィールドがあります。
 
@@ -229,7 +229,7 @@ oc get vm fedora-l2-secondary -n example-l2-secondary
 
 === 2 つ目の VirtualMachine の作成 [[creating_second_vm]]
 
-テストを行う前に、セカンダリネットワークを介した接続を確立するために 2 つ目の VM が必要です。
+テストを行う前に、セカンダリーネットワークを介した接続を確立するために 2 つ目の VM が必要です。
 
 以下は、2 つ目の `VirtualMachine` の YAML ソース定義です。
 提供された内容を `fedora-l2-secondary2.vm.yaml` という名前のファイルに保存してください。
@@ -316,15 +316,15 @@ oc get vm fedora-l2-secondary2 -n example-l2-secondary
 ----
 
 
-== セカンダリネットワークのテスト [[testing_secondary_network]]
+== セカンダリーネットワークのテスト [[testing_secondary_network]]
 
-セカンダリネットワークは `layer2` 専用であり、クラスターと namespace 内の仮想ネットワークとしてのみ存在するため、ある VM から別の VM への接続性をテストする必要があります。
+セカンダリーネットワークは `layer2` 専用であり、クラスターと namespace 内の仮想ネットワークとしてのみ存在するため、ある VM から別の VM への接続性をテストする必要があります。
 
 テストを進めるには、`example-l2-secondary` namespace に以下のリソースが存在している必要があります。
 
 * `NetworkAttachmentDefinition`: `l2-network`
-* `VirtualMachine`: `fedora-l2-secondary` (セカンダリ NIC IP アドレス: 192.168.20.10)
-* `VirtualMachine`: `fedora-l2-secondary2` (セカンダリ NIC IP アドレス: 192.168.20.20)
+* `VirtualMachine`: `fedora-l2-secondary` (セカンダリー NIC IP アドレス: 192.168.20.10)
+* `VirtualMachine`: `fedora-l2-secondary2` (セカンダリー NIC IP アドレス: 192.168.20.20)
 
 最も簡単なテスト方法は、一方の VM (または両方の VM) のコンソールに接続し、もう一方の VM に ping を送信することです。
 
@@ -342,7 +342,7 @@ virtctl console fedora-l2-secondary
 ip addr show
 ----
 
-最初の VM のコンソールから `fedora-l2-secondary2` (IP アドレス: `192.168.20.20`) VM に ping を送信します。応答があれば、セカンダリネットワークは機能しています (`CTRL+C` を押すと ping がキャンセルされます)。
+最初の VM のコンソールから `fedora-l2-secondary2` (IP アドレス: `192.168.20.20`) VM に ping を送信します。応答があれば、セカンダリーネットワークは機能しています (`CTRL+C` を押すと ping がキャンセルされます)。
 
 [source,bash]
 ----
@@ -364,12 +364,12 @@ oc delete namespace example-l2-secondary
 このチュートリアルでは、以下の内容を学びました。
 
 * `ovn-k8s-cni-overlay` CNI プラグインを使用して `layer2` トポロジーの `NetworkAttachmentDefinition` を作成する方法
-* プライマリ masquerade インターフェースとセカンダリ bridge インターフェースの両方を持つ VirtualMachines を設定する方法
-* cloud-init `networkData` を使用してセカンダリネットワークに静的 IP アドレスを割り当てる方法
+* プライマリ masquerade インターフェースとセカンダリー bridge インターフェースの両方を持つ VirtualMachines を設定する方法
+* cloud-init `networkData` を使用してセカンダリーネットワークに静的 IP アドレスを割り当てる方法
 * 同じ OVN 管理の論理スイッチ上の VM 間の Layer 2 接続を確認する方法
-* Linux bridge や localnet などの他のネットワークオプションと比較して、いつ Layer 2 セカンダリネットワークを使用すべきか判断する方法
+* Linux bridge や localnet などの他のネットワークオプションと比較して、いつ Layer 2 セカンダリーネットワークを使用すべきか判断する方法
 
 == 関連リソース
 
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-connecting-vm-to-ovn-secondary-network[OpenShift Virtualization - OVN セカンダリネットワークへの VM の接続,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-connecting-vm-to-ovn-secondary-network[OpenShift Virtualization - OVN セカンダリーネットワークへの VM の接続,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/multiple_networks/understanding-multiple-networks[OpenShift - 複数のネットワークの理解,window=_blank]
