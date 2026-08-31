@@ -6,6 +6,7 @@
 このチュートリアルでは、OpenShift Virtualization 用のデフォルトストレージクラスを設定する方法を学習します。組み込みの DataSource イメージ (Fedora、RHEL、CentOS Stream、Windows) からブートソースを自動的にプロビジョニングするには、デフォルトストレージクラスが必要です。これがない場合、DataSource は保留状態のままとなり、仮想マシン (VM) を作成できません。デフォルトストレージクラスを設定すると、明示的な指定がない場合でも、仮想マシンやデータボリュームが指定したストレージを自動的に使用するようになるため、デプロイメントと管理が簡素化されます。
 
 テスト済みのバージョン:
+
 ----
 OpenShift 4.19, 4.20
 ----
@@ -31,14 +32,16 @@ oc get sc
 このコマンドを実行すると、すべてのストレージクラスが名前とプロビジョナーとともに一覧表示されます。名前の横に `(default)` と表示されているストレージクラスがあれば、それが現在デフォルトとして設定されています。
 
 デフォルトストレージクラスが存在しない場合の出力例:
+
 ----
 NAME                    PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-ceph-rbd-sc             rbd.csi.ceph.com                        Delete          Immediate              true                   2d
+ceph-rbd-sc (default)   rbd.csi.ceph.com                        Delete          Immediate              true                   2d
 hostpath-provisioner    kubevirt.io/hostpath-provisioner        Delete          WaitForFirstConsumer   false                  1d
 local-storage           kubernetes.io/no-provisioner            Delete          WaitForFirstConsumer   false                  1d
 ----
 
 既存のデフォルトストレージクラスが存在する場合の出力例:
+
 ----
 NAME                    PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 ceph-rbd-sc (default)   rbd.csi.ceph.com                        Delete          Immediate              true                   2d
@@ -92,6 +95,7 @@ oc get sc
 ----
 
 デフォルト設定後の出力例:
+
 ----
 NAME                    PROVISIONER                             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 ceph-rbd-sc (default)   rbd.csi.ceph.com                        Delete          Immediate              true                   2d
@@ -272,11 +276,8 @@ oc get pvc --all-namespaces -o custom-columns=NAMESPACE:.metadata.namespace,NAME
 == ベストプラクティス
 
 . **適切なストレージの選択**: 仮想マシンに必要なパフォーマンスと機能 (高速な I/O、スナップショット、暗号化など) を提供するストレージクラスを選択してください。
-
 . **ワークロード要件の検討**: ワークロードによって必要なストレージ特性が異なる場合があります。デフォルトに頼るだけでなく、重要なワークロードに対しては特定のストレージクラスを使用することを検討してください。
-
 . **ストレージ使用量の監視**: デフォルトストレージクラスがニーズを満たしていることを確認するため、ストレージの使用量とパフォーマンスを定期的に監視してください。
-
 . **選択の文書化**: 今後の参考およびトラブルシューティングのために、なぜそのストレージクラスをデフォルトとして選択したのかを文書化してください。
 
 == まとめ
@@ -289,7 +290,7 @@ oc get pvc --all-namespaces -o custom-columns=NAMESPACE:.metadata.namespace,NAME
 * テスト PVC の作成と VM のデプロイによるデフォルトストレージクラスの検証方法
 * OpenShift Virtualization におけるデフォルトストレージクラスの選択と管理に関するベストプラクティス
 
-== 関連資料
+== 参照
 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage/understanding-persistent-storage#persistent-storage-overview_storage-classes[OpenShift - Persistent Storage,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/storage[OpenShift Virtualization - Storage,window=_blank]

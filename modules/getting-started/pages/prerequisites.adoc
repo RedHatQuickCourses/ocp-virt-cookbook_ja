@@ -3,7 +3,7 @@
 
 == 概要
 
-このページでは、本クックブックで説明する OpenShift Virtualization を扱うための前提条件と要件の概要を説明します。
+このページでは、本クックブックで扱う OpenShift Virtualization の前提条件と要件の概要を説明します。
 
 == クラスター要件
 
@@ -29,6 +29,7 @@ OpenShift コマンドラインインターフェースは、クラスターと�
 インストール元: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/cli_tools/openshift-cli-oc#cli-getting-started[OpenShift CLI ドキュメント,window=_blank]
 
 インストールの確認:
+
 [source,bash,role=execute]
 ----
 oc version
@@ -41,6 +42,7 @@ oc version
 インストール元: link:https://kubernetes.io/docs/tasks/tools/[Kubernetes ドキュメント,window=_blank]
 
 インストールの確認:
+
 [source,bash,role=execute]
 ----
 kubectl version
@@ -53,6 +55,7 @@ kubectl version
 インストール元: link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/getting-started#virt-using-the-cli-tools[OpenShift Virtualization ドキュメント,window=_blank]
 
 インストールの確認:
+
 [source,bash,role=execute]
 ----
 virtctl version
@@ -77,6 +80,7 @@ virtctl version
 * 動的プロビジョニングをサポートするストレージプロビジョナーがあること
 
 利用可能なストレージクラスの確認:
+
 [source,bash,role=execute]
 ----
 oc get storageclass
@@ -113,7 +117,7 @@ oc get datasources -n openshift-virtualization-os-images
 * xref:virtctl-basics.adoc[virtctl の基本を学ぶ]
 * xref:default-storage-class.adoc[デフォルトストレージの構成]
 
-== 関連項目
+== 参照
 
 * link:https://docs.openshift.com/container-platform/latest/virt/about_virt/about-virt.html[OpenShift Virtualization ドキュメント,window=_blank]
 * link:https://kubevirt.io/[KubeVirt プロジェクト,window=_blank]

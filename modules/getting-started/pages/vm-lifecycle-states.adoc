@@ -3,7 +3,7 @@
 
 == 概要
 
-OpenShift Virtualization における仮想マシンのライフサイクルを理解することは、効果的な VM 管理、トラブルシューティング、および自動化に不可欠です。本ガイドでは、VirtualMachine リソースと VirtualMachineInstance リソースの関係、VM のさまざまな状態、ライフサイクル全体を通じて VM を管理する方法について説明します。
+OpenShift Virtualization における仮想マシンのライフサイクルを理解することは、効果的な VM 管理、トラブルシューティング、自動化に不可欠です。本ガイドでは、VirtualMachine リソースと VirtualMachineInstance リソースの関係、VM のさまざまな状態、ライフサイクル全体を通じて VM を管理する方法について説明します。
 
 テスト済みバージョン:
 ----

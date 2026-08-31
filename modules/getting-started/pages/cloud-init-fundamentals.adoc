@@ -1,23 +1,23 @@
 = OpenShift Virtualization VM のための cloud-init 基礎
-
-:navtitle: cloud-init 基礎
+:navtitle: cloud-init の基礎
 
 == 概要
 
 cloud-init は、仮想マシンの初回起動時の初期化を自動化するための業界標準ツールです。
-OpenShift Virtualization では、ほぼすべての VM が cloud-init を使用して、ユーザー設定、パスワード設定、SSH キーの注入、パッケージのインストール、ネットワークアドレスの割り当てを行います。
+OpenShift Virtualization では、ほぼすべての VM が cloud-init を使用して、ユーザー設定、パスワード設定、SSH 鍵の設定、パッケージのインストール、ネットワークアドレスの割り当てを行います。
 本チュートリアルでは、cloud-init の動作原理、KubeVirt による VM への cloud-init データの配信方法、VirtualMachine マニフェストへの cloud-init 設定の埋め込み方法について解説します。
 
 === 学習内容
 
 * cloud-init とは何か、なぜ VM の自動化に重要なのか
 * 3 つの cloud-init データタイプ：userData、networkData、metadata
-* KubeVirt が NoCloud データソースを介した cloud-init データの VM への配信
+* KubeVirt が NoCloud データソースを介して cloud-init データを VM に配信する仕組み
 * ユーザー作成、パッケージインストール、スクリプト実行のための一般的な cloud-config モジュール
 * VirtualMachine マニフェストに cloud-init を埋め込む 2 つのパターン (インライン記述と Secret 参照)
 * cloud-init が正常に実行されたことを確認する方法
 
 検証済みバージョン：
+
 [source,text]
 ----
 OpenShift 4.18+
@@ -70,6 +70,7 @@ spec:
                 lock_passwd: false
                 plain_text_passwd: changeme
 ----
+
 <1> `cloudInitNoCloud` ボリュームタイプを指定することで、KubeVirt に NoCloud データソースディスクを作成するよう指示。
 
 == cloud-init のデータタイプ
@@ -136,6 +137,7 @@ cloudInitNoCloud:
           - to: 10.0.0.0/8
             via: 192.168.1.254           # <4>
 ----
+
 <1> CIDR 表記でのサブネットマスク付きの静的 IP アドレス
 <2> DNS リゾルバのアドレス
 <3> ルートとして定義されたデフォルトゲートウェイ (`gateway4` は非推奨)
@@ -199,7 +201,7 @@ cloud-init は起動プロセス中に 5 つのステージで実行されます
 
 |Config
 |Network ステージの後
-|設定モジュールの実行：ユーザー作成、ファイル書き込み、SSH キーのインストール
+|設定モジュールの実行：ユーザー作成、ファイル書き込み、SSH 鍵のインストール
 
 |Final
 |起動の終了付近
@@ -372,6 +374,7 @@ spec:
             requests:
               storage: 30Gi
 ----
+
 <1> `cloudInitNoCloud` ボリュームタイプが NoCloud データソースディスクを作成します。
 <2> `userData` フィールドに `#cloud-config` で始まる cloud-config YAML を含めます。
 
@@ -419,6 +422,7 @@ volumes:
         name: my-vm-cloud-init         # <1>
     name: cloudinitdisk
 ----
+
 <1> KubeVirt は Secret から `userdata` キーを読み取り、それを cloud-init の userData として提供します。
 
 == cloud-init の実行確認
@@ -463,16 +467,12 @@ cat /var/log/cloud-init.log | tail -50
 
 *`#cloud-config` ヘッダーの欠落*::
 userData の 1 行目は、正確に `#cloud-config` である必要があります。これがないと、cloud-init はエラーメッセージを出さずに userData ブロック全体を無視します。
-
 *YAML のインデントエラー*::
 Cloud-config は YAML です。インデントの不整合 (タブとスペースの混在、ネストの深さ間違い) は解析失敗の原因となります。VM 内で `cloud-init devel schema --config-file /path/to/config.yaml` を使用して構文を検証してください。
-
 *ネットワーク設定を userData に記述*::
 ネットワークインターフェースの設定は `userData` ではなく `networkData` に記述します。userData 内に network-config v2 の YAML を配置しても反映されません。
-
 *再起動時に cloud-init が再実行されるという期待*::
 cloud-init は初回起動時に一度だけ実行されます。再実行させるには、`cloud-init clean` を実行してから再起動する必要があります。
-
 *Secret キー名の間違い*::
 `secretRef` を使用する場合、Secret は `userdata` という名前のキー (すべて小文字) を持つ必要があります。`userData` や `user-data` という名前のキーは検出されません。
 
@@ -505,7 +505,7 @@ oc delete namespace demo
 * 2 つのマニフェストパターン：シンプルな構成にはインライン `cloudInitNoCloud`、複雑なデータや機密データには Secret 参照
 * `cloud-init status --long` および `/var/log/cloud-init.log` を使用した検証
 
-== 関連項目
+== 参照
 
 * xref:networking:static-ip-configuration.adoc[] - cloud-init による静的 IP、DHCP、マルチインターフェース、VLAN の詳細解説
 * xref:networking:cloud-init-troubleshooting.adoc[] - cloud-init の問題に対する診断手順と解決策
