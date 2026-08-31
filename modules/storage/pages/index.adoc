@@ -51,11 +51,11 @@ xref:hostpath-provisioner.adoc[]::
 xref:multi-disk-configuration.adoc[]::
 異なる StorageClass を使用して複数のディスクを持つ VM の設定ガイドです。
 
-== デフォルトストレージクラスの重要性
+== デフォルト Storage Class の重要性
 
-デフォルトストレージクラスの設定は、OpenShift Virtualization にとって非常に重要です。
+デフォルト Storage Class の設定は、OpenShift Virtualization にとって非常に重要です。
 
-* **ブートソースイメージ**: DataSource OS イメージにはデフォルトのストレージクラスが必要です
+* **ブートソースイメージ**: DataSource OS イメージにはデフォルト Storage Class が必要です
 * **自動プロビジョニング**: ストレージを明示的に指定しなくても VM を作成できます
 * **テンプレートのサポート**: VM テンプレートがすぐに使用できます
 * **運用管理の簡素化**: クラスター全体で一貫したストレージプロビジョニングが可能になります
@@ -71,5 +71,5 @@ xref:multi-disk-configuration.adoc[]::
 
 == 関連情報
 
-* xref:getting-started:default-storage-class.adoc[デフォルトストレージクラスの設定]
+* xref:getting-started:default-storage-class.adoc[デフォルト Storage Class の設定]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage/persistent-storage-using-local-storage#persistent-storage-using-lvms[OpenShift LVM Storage ドキュメント,window=_blank]

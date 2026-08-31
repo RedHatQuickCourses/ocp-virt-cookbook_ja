@@ -1,0 +1,733 @@
+= CDI の操作: DataVolume、インポート、およびアップロード
+:navtitle: CDI Operations
+
+== 概要
+
+Containerized Data Importer (CDI) は、OpenShift Virtualization におけるすべての VM ディスクプロビジョニングを担当するコンポーネントです。HTTP URL、コンテナレジストリ、ローカルファイルのアップロード、既存 PVC のクローンのいずれからディスクイメージを使用して VM を作成する場合でも、CDI がバックグラウンドでデータ転送、フォーマット変換、PVC へのデータ設定を処理します。
+
+このチュートリアルでは、CDI のアーキテクチャについて説明し、各インポートソースタイプの手順を解説します。また、進捗状況の監視、DataImportCron による自動ブートソース更新、スクラッチスペース、リソース制限、スタックしたインポートのトラブルシューティングなどの運用上のトピックについても取り上げます。
+
+== 学習内容
+
+* CDI が OpenShift Virtualization スタックにどのように適合するか
+* HTTP、レジストリ、アップロード、PVC クローンソースからディスクイメージをインポートする方法
+* DataVolume の進行状況を監視し、再試行動作を理解する方法
+* DataImportCron を使用してブートソースの更新を自動化する方法
+* CDI スクラッチ領域、リソース制限、ファイルシステムオーバーヘッドを設定する方法
+* 一般的な CDI の障害を診断し、修正する方法
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされた **OpenShift {ocp-min-version}+**
+* **クラスター管理者アクセス権** (`system:admin` または同等の権限)
+* インストール済みの **`oc` CLI** および **`virtctl` CLI**
+* 設定済みの**デフォルト StorageClass** (例: `lvms-vg1`)
+
+== ステップ 1: CDI アーキテクチャーの理解
+
+CDI は `openshift-cnv` namespace で一連の Pod として実行されます。主なコンポーネントは以下のとおりです。
+
+* **cdi-operator** -- CDI 自体のライフサイクル (アップグレード、設定) を管理します
+* **cdi-apiserver** -- DataVolume および DataImportCron リソースを検証します
+* **cdi-deployment (cdi-controller)** -- DataVolume オブジェクトを監視し、PVC にデータを設定するための importer または cloner pod を作成します
+* **cdi-uploadproxy** -- `virtctl image-upload` からのディスクイメージのアップロードを受け入れ、データをターゲット PVC にルーティングします
+
+DataVolume を作成すると、CDI コントローラーはターゲット PVC をマウントし、ディスクデータを書き込んで終了する短期間の worker pod (importer、cloner または uploader) を作成します。worker pod が完了すると、DataVolume は `Succeeded` に遷移し、PVC は VM で使用できるようになります。
+
+クラスター上で CDI pod が実行されていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get pods -n openshift-cnv -l app.kubernetes.io/component=storage
+----
+
+[source,text]
+.Expected output
+----
+NAME                READY  STATUS  RESTARTS  AGE
+cdi-apiserver-7f9c7b5b4-xk2lm   1/1   Running  0     5d
+cdi-deployment-6b8c5d8f9-r4tnp   1/1   Running  0     5d
+cdi-operator-5f4c7d8b6-jh9wz    1/1   Running  0     5d
+cdi-uploadproxy-7d9f8c6b5-m3kpq  1/1   Running  0     5d
+----
+
+現在の設定について CDI カスタムリソースを確認します。
+
+[source,bash,role=execute]
+----
+oc get cdi cdi-kubevirt-hyperconverged
+----
+
+CDI リソースは、リソース制限、スクラッチスペースのオーバーヘッド、アップロードプロキシ設定などのグローバル設定を制御します。このチュートリアルの後半で、これらの設定の一部を変更します。
+
+== ステップ 2: DataVolume とそのライフサイクルの理解
+
+DataVolume は、PVC へのデータ投入手順で PVC をラップする CDI カスタムリソースです。DataVolume を作成すると、CDI は以下を実行します。
+
+. 要求されたサイズとアクセスモードで PVC を作成します。
+. PVC をマウントする importer (または cloner/uploader) pod を起動します。
+. 必要に応じてフォーマットを変換しながら (qcow2 から raw への変換、gzip 解凍など)、ソースからデータをストリーミングします。
+. DataVolume のステータスを通じて進捗状況を報告します。
+. データ転送が完了すると、DataVolume を `Succeeded` に設定します。
+
+DataVolume は以下のフェーズを経過します:
+
+[cols="1,2",options="header"]
+|===
+| フェーズ
+| 説明
+
+| Pending
+| PVC の作成中であるか、ストレージのプロビジョニングを待機しています。
+
+| WaitForFirstConsumer
+| PVC が `WaitForFirstConsumer` バインディングモードを使用しており、まだどの Pod にも要求されていません。
+
+| ImportScheduled
+| CDI がインポートをスケジュールしましたが、worker pod はまだ実行されていません。
+
+| ImportInProgress
+| worker pod がアクティブにデータを転送しています。進捗率が更新されます。
+
+| CloneScheduled / CloneInProgress
+| インポートフェーズと同様ですが、PVC 間クローンの場合です。
+
+| UploadScheduled / UploadReady
+| DataVolume が `virtctl image-upload` 経由でのデータアップロードを待機しています。
+
+| Succeeded
+| データ転送が完了しました。PVC は使用準備ができています。
+
+| Failed
+| データ転送に失敗しました。イベントと worker pod のログを確認してください。
+|===
+
+このチュートリアルの演習用の namespace を作成します:
+
+[source,bash,role=execute]
+----
+oc create namespace cdi-operations-demo
+----
+
+== ステップ 3: HTTP ソースからのインポート
+
+HTTP インポートは、一般に公開されているディスクイメージをプルするための最も一般的な方法です。CDI はファイルをダウンロードし、そのフォーマット (raw、qcow2、vmdk、gzip、xz) を検出して、ターゲット PVC 上で raw フォーマットに変換します。
+
+xref:attachment$cdi-operations/dv-http-import.yaml[dv-http-import.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+ name: fedora-http
+ namespace: cdi-operations-demo
+ annotations:
+  cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+ source:
+  http:
+   url: "https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2"
+ storage:
+  resources:
+   requests:
+    storage: 10Gi
+EOF
+----
+
+NOTE: アノテーション `cdi.kubevirt.io/storage.bind.immediate.requested: "true"` は、PVC を即時にバインドするように強制します。これがない場合、`WaitForFirstConsumer` binding mode を使用する StorageClass では、Pod がノードにスケジュールされるまで PVC が Pending 状態のままになります。
+
+インポートの進捗を監視します。
+
+[source,bash,role=execute]
+----
+oc get dv fedora-http -n cdi-operations-demo -w
+----
+
+[source,text]
+.Expected output
+----
+NAME     PHASE       PROGRESS  RESTARTS  AGE
+fedora-http ImportScheduled  N/A          5s
+fedora-http ImportInProgress  0.00%         15s
+fedora-http ImportInProgress  22.45%         30s
+fedora-http ImportInProgress  67.89%         60s
+fedora-http Succeeded     100.0%         90s
+----
+
+DataVolume が `Succeeded` と表示されたら、`Ctrl+C` を押します。
+
+importer pod を直接確認して、ダウンロード速度や変換アクティビティを確認することもできます:
+
+[source,bash,role=execute]
+----
+oc get pods -n cdi-operations-demo -l cdi.kubevirt.io/storage.import.importPvcName=fedora-http
+----
+
+[source,bash,role=execute]
+----
+oc logs -n cdi-operations-demo -l cdi.kubevirt.io/storage.import.importPvcName=fedora-http
+----
+
+成功したら、作成された PVC を確認します:
+
+[source,bash,role=execute]
+----
+oc get pvc fedora-http -n cdi-operations-demo
+----
+
+[source,text]
+.Expected output
+----
+NAME     STATUS  VOLUME    CAPACITY  ACCESS MODES  STORAGECLASS  AGE
+fedora-http Bound  pvc-xxxx   10Gi    RWO      lvms-vg1    2m
+----
+
+=== 認証を伴う HTTP インポート
+
+認証が必要な HTTP ソースの場合は、認証情報を含む Secret を作成し、DataVolume で参照します:
+
+[source,bash,role=execute]
+----
+oc create secret generic http-auth-secret \
+ --from-literal=username=myuser \
+ --from-literal=password=mypassword \
+ -n cdi-operations-demo
+----
+
+次に、DataVolume spec で Secret を参照します:
+
+[source,yaml]
+----
+spec:
+ source:
+  http:
+   url: "https://private-server.example.com/images/rhel9.qcow2"
+   secretRef: http-auth-secret
+----
+
+=== カスタム証明書を使用した HTTP インポート
+
+HTTP サーバーが自己署名証明書または内部 CA 証明書を使用している場合は、CA バンドルを含む ConfigMap を作成してそれを参照します。
+
+[source,bash,role=execute]
+----
+oc create configmap http-ca-cert \
+ --from-file=ca-bundle.crt=/path/to/ca-bundle.crt \
+ -n cdi-operations-demo
+----
+
+次に、それを DataVolume に追加します。
+
+[source,yaml]
+----
+spec:
+ source:
+  http:
+   url: "https://internal-server.example.com/images/rhel9.qcow2"
+   certConfigMap: http-ca-cert
+----
+
+== ステップ 4: コンテナレジストリからのインポート
+
+コンテナレジストリは、コンテナイメージとしてパッケージ化されたディスクイメージ (ContainerDisk) をホストできます。CDI はノードのコンテナランタイムを使用してイメージを pull し、ディスクファイルを抽出します。
+
+xref:attachment$cdi-operations/dv-registry-import.yaml[dv-registry-import.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+ name: fedora-registry
+ namespace: cdi-operations-demo
+ annotations:
+  cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+ source:
+  registry:
+   url: "docker://quay.io/containerdisks/fedora:latest"
+   pullMethod: node
+ storage:
+  resources:
+   requests:
+    storage: 10Gi
+EOF
+----
+
+`pullMethod` フィールドは、CDI がイメージを取得する方法を制御します。
+
+* **`node`** -- ノードのコンテナランタイム (CRI-O) を使用してイメージを pull します。この方法では、ノードのプルシークレットおよびレジストリミラーを再利用します。
+* **`pod`** -- CDI が importer pod 内から直接イメージを pull します。ノードがレジストリにアクセスできない場合に使用します。
+
+`Succeeded` になるまで監視します。
+
+[source,bash,role=execute]
+----
+oc get dv fedora-registry -n cdi-operations-demo -w
+----
+
+DataVolume が `Succeeded` になったら `Ctrl+C` を押します。
+
+== ステップ 5: ワークステーションからのディスクイメージのアップロード
+
+`virtctl image-upload` コマンドは、ローカルのディスクイメージファイルを CDI アップロードプロキシにストリーミングし、CDI アップロードプロキシはそれを PVC に書き込みます。この方法は、イメージがワークステーション上に存在し、Web サーバーやレジストリでホストされていない場合の、1 回限りのインポートに最適です。
+
+アップロードするには、ローカルの qcow2 または raw イメージが必要です。この例では、まず小さな Fedora Cloud イメージをダウンロードします。
+
+[source,bash]
+----
+curl -LO https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
+----
+
+次に、それをアップロードします。
+
+[source,bash,role=execute]
+----
+virtctl image-upload dv fedora-upload \
+ --image-path=./Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2 \
+ --size=10Gi \
+ --namespace=cdi-operations-demo \
+ --insecure \
+ --force-bind
+----
+
+主要なフラグ:
+
+* **`dv fedora-upload`** -- `fedora-upload` という名前の DataVolume を作成します (`dv` の代わりに `pvc` を使用してベア PVC を作成することもできます)
+* **`--size`** -- PVC のサイズ。イメージの仮想サイズ以上である必要があります
+* **`--insecure`** -- アップロードプロキシエンドポイントの TLS 検証をスキップします (自己署名証明書を使用している場合に必要です)
+* **`--force-bind`** -- `WaitForFirstConsumer` StorageClass の PVC バインディングを即時に強制します
+
+[source,text]
+.Expected output
+----
+PVC cdi-operations-demo/fedora-upload created
+Uploading data to https://cdi-uploadproxy-openshift-cnv.apps...
+
+ 420.00 MiB / 420.00 MiB [=================================] 100.00% 1m30s
+
+Uploading data completed successfully, waiting for processing to complete
+Processing completed successfully
+----
+
+確認:
+
+[source,bash,role=execute]
+----
+oc get dv fedora-upload -n cdi-operations-demo
+----
+
+== ステップ 6: 既存の PVC のクローン作成
+
+PVC のクローン作成では、既存のディスクのコピーを作成します。CDI は 2 つのクローン作成ストラテジーをサポートしています。
+
+* **Host-assisted cloning** -- CDI はソース pod とターゲット pod を作成し、それらの間でデータをストリーミングします。これは任意のストレージバックエンドで機能します。
+* **Smart cloning** -- CSI ドライバーがスナップショットベースのクローンを実行します。これはより高速で、データのストリーミングを必要としません。CSI ドライバーがボリュームスナップショットをサポートしている場合、CDI は自動的にスマートクローン作成を使用します。
+
+ステップ 3 で作成した `fedora-http` PVC をクローンします。
+
+xref:attachment$cdi-operations/dv-pvc-clone.yaml[dv-pvc-clone.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+ name: fedora-clone
+ namespace: cdi-operations-demo
+ annotations:
+  cdi.kubevirt.io/storage.bind.immediate.requested: "true"
+spec:
+ source:
+  pvc:
+   name: fedora-http
+   namespace: cdi-operations-demo
+ storage:
+  resources:
+   requests:
+    storage: 10Gi
+EOF
+----
+
+クローンを監視します。
+
+[source,bash,role=execute]
+----
+oc get dv fedora-clone -n cdi-operations-demo -w
+----
+
+[source,text]
+.Expected output
+----
+NAME      PHASE       PROGRESS  RESTARTS  AGE
+fedora-clone  CloneScheduled   N/A          5s
+fedora-clone  CloneInProgress  10.00%         15s
+fedora-clone  Succeeded     100.0%         45s
+----
+
+クローンが `Succeeded` になったら `Ctrl+C` を押します。
+
+=== namespace 間のクローン作成
+
+異なる namespace から PVC をクローンするには、`spec.source.pvc.namespace` にソース namespace を指定します。CDI サービスアカウントには、ソース namespace 内の PVC を読み取る権限が必要です。要求元のユーザーがソース namespace 内の PVC に対する `get` および `list` 権限を持っている場合、CDI は必要な RBAC を自動的に作成します。
+
+== ステップ 7: DataVolume の進行状況の監視と再試行の処理
+
+CDI は DataVolume の `.status` フィールドを通じて進行状況を報告します。これらはプログラムからクエリできます。
+
+[source,bash,role=execute]
+----
+oc get dv -n cdi-operations-demo -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,PROGRESS:.status.progress,CONDITIONS:.status.conditions[0].reason
+----
+
+=== 再試行の動作
+
+インポートが失敗した場合 (ネットワークタイムアウト、HTTP 500、一時的なエラー)、CDI は自動的に再試行します。デフォルトの再試行回数は 3 回です。再試行の間隔には、CDI はエクスポネンシャルバックオフ (指数バックオフ) を使用します。
+
+DataVolume のステータスで再試行回数を確認できます。
+
+[source,bash,role=execute]
+----
+oc get dv -n cdi-operations-demo -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,RESTARTS:.status.restartCount
+----
+
+すべての再試行が失敗すると、DataVolume は `Failed` に遷移します。失敗した DataVolume を再試行するには、削除して再作成します。
+
+[source,bash,role=execute]
+----
+oc delete dv <failed-dv-name> -n cdi-operations-demo
+----
+
+その後、DataVolume マニフェストを再適用します。
+
+=== イベントの確認
+
+DataVolume イベントは、CDI が何を実行しているかに関する詳細な情報を提供します。
+
+[source,bash,role=execute]
+----
+oc describe dv fedora-http -n cdi-operations-demo
+----
+
+出力の下部にある `Events` セクションで、`Import into PVC started`、`Import Complete`、またはエラーメッセージなどのメッセージを確認します。
+
+== ステップ 8: DataImportCron を使用したブートソース更新の自動化
+
+DataImportCron は、スケジュールに従ってディスクイメージを自動的にインポートします。OpenShift Virtualization では、これを使用して `openshift-virtualization-os-images` namespace 内のブートソースイメージ (Fedora、RHEL、CentOS Stream、Windows) を最新の状態に保ちます。カスタムイメージ用に独自の DataImportCron オブジェクトを作成することもできます。
+
+xref:attachment$cdi-operations/dataimportcron-fedora.yaml[dataimportcron-fedora.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataImportCron
+metadata:
+ name: fedora-image-cron
+ namespace: cdi-operations-demo
+spec:
+ schedule: "0 3 * * 1"
+ managedDataSource: fedora-latest
+ garbageCollect: Outdated
+ importsToKeep: 2
+ template:
+ spec:
+   source:
+    registry:
+     url: "docker://quay.io/containerdisks/fedora:latest"
+     pullMethod: node
+   storage:
+    resources:
+     requests:
+      storage: 10Gi
+EOF
+----
+
+主要なフィールド:
+
+* **`schedule`** -- cron 式。`0 3 * * 1` は毎週月曜日の 03:00 UTC に実行されます。
+* **`managedDataSource`** -- DataImportCron が管理する DataSource の名前。VM は最新のイメージを取得するためにこの DataSource を参照します。
+* **`garbageCollect: Outdated`** -- 新しいインポートが完了したときに古い DataVolume を自動的に削除します。
+* **`importsToKeep: 2`** -- 最新の 2 つのインポートを保持します。これにより、必要に応じて以前のバージョンにロールバックできます。
+
+DataImportCron を確認します。
+
+[source,bash,role=execute]
+----
+oc get dataimportcron -n cdi-operations-demo
+----
+
+[source,text]
+.Expected output
+----
+NAME        LASTIMPORT  NEXTIMPORT      LASTIMPORTNAMESPACE
+fedora-image-cron        Mon, 21 Jul 03:00  cdi-operations-demo
+----
+
+DataImportCron は、インポートされた最新の PVC を常に参照する DataSource を作成します。この DataSource を参照する VM は、作成時に最新のイメージを自動的に取得します。
+
+[source,yaml]
+----
+spec:
+ dataVolumeTemplates:
+  - spec:
+    sourceRef:
+     kind: DataSource
+     name: fedora-latest
+     namespace: cdi-operations-demo
+    storage:
+     resources:
+      requests:
+       storage: 10Gi
+----
+
+=== システムブートソース Cron の表示
+
+OpenShift Virtualization は、組み込みのブートソース用に `openshift-virtualization-os-images` namespace 内に DataImportCron オブジェクトを作成します。これらを表示するには:
+
+[source,bash,role=execute]
+----
+oc get dataimportcron -n openshift-virtualization-os-images
+----
+
+== ステップ 9: CDI スクラッチスペースおよびファイルシステムオーバーヘッドの設定
+
+=== スクラッチスペース
+
+CDI は、フォーマット変換中にスクラッチスペース (一時 PVC) を使用します。qcow2 イメージをインポートする場合、CDI はまず qcow2 データをスクラッチ PVC に書き込み、ターゲット PVC 上で raw フォーマットに変換します。スクラッチスペースは、gzip および xz の解凍にも使用されます。
+
+スクラッチスペース PVC のプロビジョニングに失敗した場合 (StorageClass がない、容量不足など)、インポートはスクラッチスペースに関するエラーで失敗します。CDI がスクラッチスペースに使用する StorageClass を指定するには、以下を実行します。
+
+[source,bash,role=execute]
+----
+oc patch cdi cdi-kubevirt-hyperconverged --type merge -p '{"spec":{"config":{"scratchSpaceStorageClass":"lvms-vg1"}}}'
+----
+
+これを設定しない場合、CDI はスクラッチ PVC にデフォルト StorageClass を使用します。
+
+現在のスクラッチスペース設定を確認します。
+
+[source,bash,role=execute]
+----
+oc get cdi cdi-kubevirt-hyperconverged -o jsonpath='{.spec.config.scratchSpaceStorageClass}'
+echo
+----
+
+NOTE: すべてのインポートでスクラッチスペースが必要なわけではありません。raw イメージのインポートや PVC クローンでは、通常スクラッチスペースは必要ありません。スクラッチスペースは、qcow2 から raw への変換や、圧縮イメージの解凍で必要になります。
+
+=== ファイルシステムのオーバーヘッド
+
+`Filesystem` モードの PVC (ほとんどの StorageClass のデフォルト) を使用する場合、基盤となるストレージファイルシステムはボリュームの一定の割合をメタデータ用に予約します。CDI は、イメージが必要とする容量よりもわずかに多い容量を要求することで、これを考慮します。
+
+デフォルトのファイルシステムオーバーヘッドは 5.5% です。グローバル、または StorageClass ごとに調整できます。
+
+[source,bash,role=execute]
+----
+oc get cdi cdi-kubevirt-hyperconverged -o jsonpath='{.spec.config.filesystemOverhead}'
+echo
+----
+
+グローバルのオーバーヘッドの割合を変更するには:
+
+[source,bash,role=execute]
+----
+oc patch cdi cdi-kubevirt-hyperconverged --type merge -p '{"spec":{"config":{"filesystemOverhead":{"global":"0.055"}}}}'
+----
+
+StorageClass ごとのオーバーライドを設定するには:
+
+[source,bash,role=execute]
+----
+oc patch cdi cdi-kubevirt-hyperconverged --type merge -p '{"spec":{"config":{"filesystemOverhead":{"storageClass":{"lvms-vg1":"0.05"}}}}}'
+----
+
+== ステップ 10: CDI リソース制限の設定
+
+CDI の importer および cloner pod は、データ転送中に CPU とメモリを消費します。ビジーなクラスターでは、インポートジョブによって他のワークロードのリソースが枯渇するのを防ぐために、これらのリソースを制限することが推奨されます。
+
+xref:attachment$cdi-operations/cdi-resource-config.yaml[cdi-resource-config.yaml のダウンロード]
+
+現在のリソース設定を表示します。
+
+[source,bash,role=execute]
+----
+oc get cdi cdi-kubevirt-hyperconverged -o json | jq '.spec.config.podResourceRequirements'
+----
+
+CDI worker pod のリソース制限を設定します。
+
+[source,bash,role=execute]
+----
+oc patch cdi cdi-kubevirt-hyperconverged --type merge -p '{
+ "spec": {
+  "config": {
+   "podResourceRequirements": {
+    "limits": {
+     "cpu": "2",
+     "memory": "1Gi"
+    },
+    "requests": {
+     "cpu": "100m",
+     "memory": "60Mi"
+    }
+   }
+  }
+ }
+}'
+----
+
+これらの制限は、すべての CDI worker pod (importer、cloner、uploader) に適用されます。CPU 制限を低く設定しすぎると、フォーマット変換が遅くなります。メモリ制限を低く設定しすぎると、サイズの大きい圧縮イメージの展開中に OOMKilled エラーが発生する可能性があります。
+
+== ステップ 11: 一般的な CDI の問題のトラブルシューティング
+
+=== DataVolume が ImportScheduled でスタックする
+
+DataVolume が `ImportScheduled` のままになり、importer pod が表示されません。
+
+PVC がバインドされているか確認します。
+
+[source,bash,role=execute]
+----
+oc get pvc -n cdi-operations-demo
+----
+
+PVC が `Pending` と表示されている場合は、イベントを確認します。
+
+[source,bash,role=execute]
+----
+oc describe pvc <pvc-name> -n cdi-operations-demo
+----
+
+一般的な原因:
+
+* **デフォルト StorageClass がない** -- `oc patch storageclass <name> -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'` で設定します
+* **WaitForFirstConsumer** -- DataVolume に `cdi.kubevirt.io/storage.bind.immediate.requested: "true"` アノテーションを追加します
+* **ストレージ容量不足** -- `oc get pv` で空き容量を確認します
+
+=== DataVolume が 0% の ImportInProgress で停止する
+
+importer pod は実行中ですが、進行状況が 0% のままになります。
+
+importer pod のログを確認します。
+
+[source,bash,role=execute]
+----
+oc logs -n cdi-operations-demo -l cdi.kubevirt.io/storage.import.importPvcName=<dv-name>
+----
+
+一般的な原因:
+
+* **ソース URL が遅い、または到達不能** -- クラスター内から URL をテストします: `oc run curl-test --rm -it --image=curlimages/curl -- curl -sI <url>`
+* **TLS 証明書エラー** -- CA 証明書 ConfigMap を追加するか、DataVolume spec で `certConfigMap` を使用します
+* **DNS 解決の失敗** -- クラスター内から DNS を確認します
+
+=== スクラッチスペースエラー
+
+スクラッチスペースに関するメッセージでインポートが失敗した場合:
+
+[source,text]
+----
+Unable to create scratch space PVC: no default storage class found
+----
+
+スクラッチスペースの StorageClass を設定します:
+
+[source,bash,role=execute]
+----
+oc patch cdi cdi-kubevirt-hyperconverged --type merge -p '{"spec":{"config":{"scratchSpaceStorageClass":"lvms-vg1"}}}'
+----
+
+その後、失敗した DataVolume を削除して再作成します。
+
+=== Importer Pod の OOMKilled
+
+importer pod が `OOMKilled` ステータスで強制終了された場合、解凍または変換操作に対してメモリ制限が低すぎます。メモリ制限を増やします。
+
+[source,bash,role=execute]
+----
+oc patch cdi cdi-kubevirt-hyperconverged --type merge -p '{"spec":{"config":{"podResourceRequirements":{"limits":{"memory":"2Gi"}}}}}'
+----
+
+=== 転送が遅い場合
+
+インポートに予想以上に時間がかかる場合:
+
+. CDI worker pod のリソース制限を確認します。CPU 制限が低いと、qcow2 から raw への変換が遅くなります。
+. importer pod とソース間のネットワーク接続を確認します。
+. HTTP ソースの場合、サーバーが範囲リクエストをサポートしているかどうかを確認します。サーバーが HTTP `Range` ヘッダーをサポートしている場合、CDI は中断されたダウンロードを再開できます。
+
+=== CDI のバージョンと健全性の確認
+
+CDI Operator が正常であることを確認します:
+
+[source,bash,role=execute]
+----
+oc get cdi cdi-kubevirt-hyperconverged -o jsonpath='{.status.phase}'
+echo
+----
+
+出力は `Deployed` になるはずです。`Error` または `Upgrading` と表示されている場合は、 Operator pod のログを確認してください。
+
+[source,bash,role=execute]
+----
+oc logs -n openshift-cnv -l name=cdi-operator
+----
+
+== クリーンアップ
+
+Namespace を削除して、このチュートリアルで作成されたすべてのリソースを削除します。
+
+[source,bash,role=execute]
+----
+oc delete namespace cdi-operations-demo
+----
+
+確認します。
+
+[source,bash,role=execute]
+----
+oc get namespace cdi-operations-demo
+----
+
+[source,text]
+.Expected output
+----
+Error from server (NotFound): namespaces "cdi-operations-demo" not found
+----
+
+CDI のグローバル設定 (スクラッチ領域、リソース制限、ファイルシステムのオーバーヘッド) を変更し、元に戻したい場合は、CDI リソースにパッチを適用してデフォルトに戻すか、追加したフィールドを削除します。
+
+[source,bash,role=execute]
+----
+oc patch cdi cdi-kubevirt-hyperconverged --type json -p '[
+ {"op": "remove", "path": "/spec/config/scratchSpaceStorageClass"},
+ {"op": "remove", "path": "/spec/config/podResourceRequirements"}
+]'
+----
+
+NOTE: CDI 設定をデフォルトに戻したい場合にのみ、上記のクリーンアップパッチを実行してください。お使いの環境に合わせてこれらの値を意図的に設定した場合は、そのままにしておいてください。
+
+== まとめ
+
+このチュートリアルでは、次の方法について学習しました。
+
+* CDI コンポーネントを特定し、それらが `openshift-cnv` namespace で実行されていることを確認する
+* DataVolume のライフサイクルと、Pending から Succeeded までのフェーズを理解する
+* HTTP URL、コンテナレジストリ、ローカルアップロード、PVC クローンからディスクイメージをインポートする
+* インポートの進捗状況を監視し、CDI の再試行動作を理解する
+* DataImportCron を使用したブートソース更新の自動化
+* スクラッチスペース、ファイルシステムオーバーヘッド、CDI worker pod リソース制限の設定
+* スタックしたインポート、スクラッチスペースエラー、OOMKilled pod を含む一般的な CDI 障害の診断と修正
+
+== 参照
+
+* link:https://github.com/kubevirt/containerized-data-importer[Containerized Data Importer (CDI) プロジェクト,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/storage#virt-configuring-storage-profile[ストレージプロファイルの設定 - OpenShift ドキュメント,window=_blank]
+* xref:vm-lifecycle:import-qcow2-boot-volume.adoc[qcow2 ブートボリュームのインポート]
+* xref:vm-lifecycle:custom-golden-images.adoc[カスタムゴールデンイメージ]
+* xref:multi-disk-configuration.adoc[マルチディスク VM 構成]
+* xref:expanding-vm-disk-size.adoc[VM ディスクサイズの拡張]

@@ -1,9 +1,9 @@
-= 異なるストレージクラスを使用したマルチディスク VM の構成
+= 異なる Storage Class を使用したマルチディスク VM の構成
 :navtitle: マルチディスク VM
 
 == 概要
 
-本チュートリアルでは、それぞれ異なるストレージクラスを使用する複数のディスクを持つ仮想マシン (VM) を構成する方法を解説します。マルチディスク構成により、OS のブートディスクには高速なストレージを、データボリュームには低速で安価なストレージを使用するといったストレージの階層化が可能になります。このパターンは、データベースのワークロード、アプリケーションサーバー、OS とアプリケーションデータを分離するあらゆる VM で一般的です。
+本チュートリアルでは、それぞれ異なる Storage Class を使用する複数のディスクを持つ仮想マシン (VM) を構成する方法を解説します。マルチディスク構成により、OS のブートディスクには高速なストレージを、データボリュームには低速で安価なストレージを使用するといったストレージの階層化が可能になります。このパターンは、データベースのワークロード、アプリケーションサーバー、OS とアプリケーションデータを分離するあらゆる VM で一般的です。
 
 2 つのディスクを持つ VM を作成します。1 つは default StorageClass を使用するブートディスク、もう 1 つは 2 番目の StorageClass を使用するデータディスクです。その後、ゲスト OS 内で両方のディスクがアクセス可能であることを確認します。
 
@@ -21,7 +21,7 @@ OpenShift 4.20, 4.21
 
 == ステップ 1: ディスクとボリュームのマッピングを理解する
 
-KubeVirt の VM 仕様では、ディスクとボリュームは連携して動作します。
+KubeVirt の VM spec では、ディスクとボリュームは連携して動作します。
 
 * **`spec.template.spec.domain.devices.disks`**: 各ディスクがゲスト OS にどのように提示されるか (バスの種類、ディスクの順序) を定義します。
 * **`spec.template.spec.volumes`**: 各ディスクのバックエンドストレージ (PVC、DataVolume、containerDisk、cloudInitNoCloud) を定義します。
@@ -80,7 +80,7 @@ lvms-vg1-retain      topolvm.io    Retain          WaitForFirstConsumer   true  
 * **datadisk**: データディスク (10Gi、2 番目の StorageClass)。空のボリュームとして作成します。
 * **cloudinitdisk**: cloud-init 構成ディスク。
 
-WARNING: この例で使用されている cloud-init のパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードを使用するか、SSH キー認証を使用してください。
+WARNING: この例で使用されている cloud-init のパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードを使用するか、SSH 鍵認証を使用してください。
 
 xref:attachment$multi-disk-configuration/vm-multi-disk.yaml[vm-multi-disk.yaml をダウンロード]
 
@@ -347,7 +347,7 @@ oc delete namespace multi-disk-demo
 oc delete storageclass lvms-vg1-retain
 ----
 
-`lvms-vg1-retain` ストレージクラスは `reclaimPolicy: Retain` を使用しているため、PVC が削除されても基盤となる PersistentVolume は自動的に削除されません。`Released` 状態の PV がないか確認します。
+`lvms-vg1-retain` StorageClass は `reclaimPolicy: Retain` を使用しているため、PVC が削除されても基盤となる PersistentVolume は自動的に削除されません。`Released` 状態の PV がないか確認します。
 
 [source,bash,role=execute]
 ----

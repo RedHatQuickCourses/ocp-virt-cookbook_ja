@@ -1,5 +1,5 @@
 {
-  "totalSeconds": 11686,
+  "totalSeconds": 11723,
   "pageCount": 77,
   "pages": [
     {
@@ -10,7 +10,7 @@
     {
       "module": "getting-started",
       "page": "index.adoc",
-      "seconds": 24
+      "seconds": 25
     },
     {
       "module": "getting-started",
@@ -25,12 +25,12 @@
     {
       "module": "getting-started",
       "page": "architecture-overview.adoc",
-      "seconds": 194
+      "seconds": 198
     },
     {
       "module": "getting-started",
       "page": "install-openshift-virtualization.adoc",
-      "seconds": 74
+      "seconds": 75
     },
     {
       "module": "getting-started",
@@ -40,7 +40,7 @@
     {
       "module": "getting-started",
       "page": "default-storage-class.adoc",
-      "seconds": 82
+      "seconds": 98
     },
     {
       "module": "getting-started",
@@ -70,12 +70,12 @@
     {
       "module": "storage",
       "page": "index.adoc",
-      "seconds": 41
+      "seconds": 43
     },
     {
       "module": "storage",
       "page": "lvm-operator.adoc",
-      "seconds": 158
+      "seconds": 161
     },
     {
       "module": "storage",
@@ -85,7 +85,7 @@
     {
       "module": "storage",
       "page": "odf-ceph-storage.adoc",
-      "seconds": 179
+      "seconds": 182
     },
     {
       "module": "storage",
@@ -170,7 +170,7 @@
     {
       "module": "networking",
       "page": "network-policies-vms.adoc",
-      "seconds": 174
+      "seconds": 175
     },
     {
       "module": "networking",
@@ -180,7 +180,7 @@
     {
       "module": "networking",
       "page": "dual-stack-vms.adoc",
-      "seconds": 189
+      "seconds": 190
     },
     {
       "module": "networking",
@@ -305,7 +305,7 @@
     {
       "module": "vm-lifecycle",
       "page": "windows-golden-images.adoc",
-      "seconds": 193
+      "seconds": 194
     },
     {
       "module": "vm-lifecycle",
@@ -320,7 +320,7 @@
     {
       "module": "vm-lifecycle",
       "page": "vm-snapshots.adoc",
-      "seconds": 126
+      "seconds": 127
     },
     {
       "module": "vm-lifecycle",
@@ -345,17 +345,17 @@
     {
       "module": "agentic-vm-management",
       "page": "index.adoc",
-      "seconds": 46
+      "seconds": 47
     },
     {
       "module": "agentic-vm-management",
       "page": "getting-started.adoc",
-      "seconds": 91
+      "seconds": 94
     },
     {
       "module": "agentic-vm-management",
       "page": "natural-language-vm-create.adoc",
-      "seconds": 118
+      "seconds": 117
     },
     {
       "module": "agentic-vm-management",
@@ -365,12 +365,12 @@
     {
       "module": "agentic-vm-management",
       "page": "vm-clone.adoc",
-      "seconds": 107
+      "seconds": 109
     },
     {
       "module": "agentic-vm-management",
       "page": "ai-vm-snapshot-management.adoc",
-      "seconds": 255
+      "seconds": 254
     },
     {
       "module": "agentic-vm-management",
@@ -380,7 +380,7 @@
     {
       "module": "agentic-vm-management",
       "page": "ai-vm-rebalance.adoc",
-      "seconds": 244
+      "seconds": 243
     },
     {
       "module": "appendix",

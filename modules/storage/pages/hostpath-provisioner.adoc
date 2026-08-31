@@ -409,7 +409,7 @@ oc delete pvc hpp-test-pvc
 
 HPP ベースのストレージを使用する VM を作成します。
 
-WARNING: この例の cloud-init パスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSH 鍵認証を使用してください。
 
 xref:attachment$hostpath-provisioner/hpp-test-vm.yaml[hpp-test-vm.yaml をダウンロード]
 

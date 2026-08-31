@@ -157,7 +157,7 @@ NAME                             READY   STATUS    RESTARTS   AGE
 lvms-operator-864b6975bb-kxt4t   1/1     Running   0          2m
 ----
 
-NOTE: この段階では `lvms-operator` Pod のみが表示されるはずです。`vg-manager` Pod は、ステップ 3 で LVMCluster リソースを作成した後に自動的に作成されます。
+NOTE: この段階では `lvms-operator` pod のみが表示されるはずです。`vg-manager` pod は、ステップ 3 で LVMCluster リソースを作成した後に自動的に作成されます。
 
 期待される出力 (ステップ 3 で LVMCluster を作成した後):
 [source,text]
@@ -251,7 +251,7 @@ EOF
 * **`name: vg1`**: ボリュームグループ名 (ディスク上に作成されます)
 * **`default: true`**: deviceClass をクラスターのデフォルトに設定
   ** **目的**: デフォルトの deviceClass がないという警告を防止
-  ** **効果**: PVC で明示的に指定しなくても、生成された Storage Class を利用可能に設定
+  ** **効果**: PVC で明示的に指定しなくても、生成された StorageClass を利用可能に設定
   ** **注意**: 複数の deviceClass を持つ場合、デフォルトに設定できるのは 1 つのみ
 * **`thinPoolConfig`**: 効率的なストレージ使用のためのシンプロビジョニングを設定
   ** `sizePercent: 90`: thin pool にディスク領域の 90%を使用
@@ -290,11 +290,11 @@ oc debug node/<node-name> -- chroot /host lvs
 詳細な確認手順、期待される出力、トラブルシューティングについては、xref:lvm-troubleshooting.adoc[LVM Storage トラブルシューティングガイド]を参照してください。
 
 [[_step_5_set_default_storageclass]]
-== ステップ 5: デフォルトストレージクラスの設定
+== ステップ 5: デフォルト StorageClass の設定
 
-LVM Operator は `lvms-vg1` という名前の Storage Class を自動的に作成しますが、デフォルトには設定しません。OpenShift Virtualization が VM ディスクおよび DataVolume 用のストレージを自動的にプロビジョニングするためには、`lvms-vg1` をデフォルトストレージクラスに設定することが不可欠です。
+LVM Operator は `lvms-vg1` という名前の StorageClass を自動的に作成しますが、デフォルトには設定しません。OpenShift Virtualization が VM ディスクおよび DataVolume 用のストレージを自動的にプロビジョニングするためには、`lvms-vg1` をデフォルト StorageClass に設定することが不可欠です。
 
-=== Storage Class が存在することの確認
+=== StorageClass が存在することの確認
 
 [source,bash,role=execute]
 ----
@@ -310,9 +310,9 @@ lvms-vg1   topolvm.io    Delete          WaitForFirstConsumer   true            
 
 NOTE: `(default)` アノテーションが表示されていません。この StorageClass はまだデフォルトではありません。
 
-=== デフォルトストレージクラスの設定
+=== デフォルト StorageClass の設定
 
-LVM Storage Class をクラスターのデフォルトに設定します。
+LVM StorageClass をクラスターのデフォルトに設定します。
 
 [source,bash,role=execute]
 ----
@@ -333,15 +333,15 @@ NAME                 PROVISIONER   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWV
 lvms-vg1 (default)   topolvm.io    Delete          WaitForFirstConsumer   true                   6m
 ----
 
-`(default)` アノテーションにより、これがデフォルトストレージクラスであることが確認できます。
+`(default)` アノテーションにより、これがデフォルト StorageClass であることが確認できます。
 
 === OpenShift Virtualization にとって重要な理由
 
-デフォルトストレージクラスの設定は、OpenShift Virtualization にとって非常に重要です。
+デフォルト StorageClass の設定は、OpenShift Virtualization にとって非常に重要です。
 
 ==== DataSource OS イメージはデフォルトストレージが必要
 
-OpenShift Virtualization の DataSource OS イメージ (Fedora、RHEL、CentOS Stream、Windows) は、ブートソースボリュームを自動的に作成するためにデフォルトストレージクラスを必要とします。
+OpenShift Virtualization の DataSource OS イメージ (Fedora、RHEL、CentOS Stream、Windows) は、ブートソースボリュームを自動的に作成するためにデフォルト StorageClass を必要とします。
 
 [source,bash,role=execute]
 ----
@@ -349,11 +349,11 @@ OpenShift Virtualization の DataSource OS イメージ (Fedora、RHEL、CentOS 
 oc get datasources -n openshift-virtualization-os-images
 ----
 
-デフォルトストレージクラスがない場合、これらの DataSource は保留状態のままとなり、VM 作成に使用できません。
+デフォルト StorageClass がない場合、これらの DataSource は保留状態のままとなり、VM 作成に使用できません。
 
 ==== VM 用の自動 PVC 作成
 
-`dataVolumeTemplates` を使用して VM を作成する際、`storageClassName` が指定されていない場合は、デフォルトストレージクラスが使用されます。
+`dataVolumeTemplates` を使用して VM を作成する際、`storageClassName` が指定されていない場合は、デフォルト StorageClass が使用されます。
 
 [source,yaml]
 ----
@@ -373,11 +373,11 @@ dataVolumeTemplates:
       namespace: openshift-virtualization-os-images
 ----
 
-これにより、明示的に指定しなくても、デフォルトストレージクラス (`lvms-vg1`) が自動的に使用されます。
+これにより、明示的に指定しなくても、デフォルト StorageClass (`lvms-vg1`) が自動的に使用されます。
 
 ==== VM 作成の簡素化
 
-デフォルトストレージクラスがあれば、以下のメリットがあります。
+デフォルト StorageClass があれば、以下のメリットがあります。
 
 * VM テンプレートがそのまま動作する
 * DataSource のクローンが自動的に行われる
@@ -386,7 +386,7 @@ dataVolumeTemplates:
 
 ==== ブートソースの準備
 
-デフォルトストレージクラスが利用可能な場合、OpenShift Virtualization Operator は一般的な OS イメージのブートソースを自動的に準備できます。
+デフォルト StorageClass が利用可能な場合、OpenShift Virtualization Operator は一般的な OS イメージのブートソースを自動的に準備できます。
 
 [source,bash,role=execute]
 ----
@@ -394,9 +394,9 @@ dataVolumeTemplates:
 oc get DataImportCron -n openshift-virtualization-os-images
 ----
 
-=== 代替手段：VM 内での Storage Class の明示的指定
+=== 代替手段：VM 内での StorageClass の明示的指定
 
-デフォルトストレージクラスを設定しない場合は、すべての VM 定義で明示的に指定する必要があります。
+デフォルト StorageClass を設定しない場合は、すべての VM 定義で明示的に指定する必要があります。
 
 [source,yaml]
 ----
@@ -417,7 +417,7 @@ dataVolumeTemplates:
       namespace: openshift-virtualization-os-images
 ----
 
-NOTE: 運用を簡素化し、ブートソースの自動プロビジョニングを有効にするため、OpenShift Virtualization クラスターには必ずデフォルトストレージクラスを設定してください。
+NOTE: 運用を簡素化し、ブートソースの自動プロビジョニングを有効にするため、OpenShift Virtualization クラスターには必ずデフォルト StorageClass を設定してください。
 
 == ステップ 6: ストレージプロビジョニングのテスト
 
@@ -566,7 +566,7 @@ oc debug node/<node-name> -- chroot /host lsblk -d -o NAME,SERIAL /dev/sda
 * LVM ストレージのためにクラスターノード上の未使用の空きディスクを特定する方法
 * namespace、OperatorGroup、Subscription を作成して LVM Storage Operator をインストールする方法
 * 既存データがあるディスク向けの `forceWipeDevicesAndDestroyAllData` パラメーターを含め、LVMCluster リソースを作成および設定する方法
-* 自動生成された `lvms-vg1` Storage Class を OpenShift Virtualization のデフォルトとして設定する方法
+* 自動生成された `lvms-vg1` StorageClass を OpenShift Virtualization のデフォルトとして設定する方法
 * PVC と Pod を使用してストレージプロビジョニングをテストし、LVMCluster の健全性を確認する方法
 
 == 参照

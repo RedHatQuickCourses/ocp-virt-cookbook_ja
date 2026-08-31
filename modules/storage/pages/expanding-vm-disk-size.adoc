@@ -1,0 +1,490 @@
+= VM ディスクサイズの拡張 (PVC ボリューム拡張)
+:navtitle: VM ディスクサイズの拡張
+
+== 概要
+
+このチュートリアルでは、基盤となる PersistentVolumeClaim (PVC) のサイズを変更して、OpenShift Virtualization の仮想マシンのディスクサイズを拡張する方法を説明します。ディスクの拡張は、VM 管理者にとって最も一般的な Day 2 オペレーションの 1 つです。このガイドがない場合、ユーザーは Kubernetes の PVC 拡張ドキュメントと KubeVirt 固有のゲスト OS 手順を組み合わせる必要があります。
+
+オフライン (VM 停止中) とオンライン (VM 実行中) の両方で VM ディスクを拡張する方法、クラスターとゲストの両方の観点から拡張を確認する方法、およびゲスト OS 内で手動のファイルシステムサイズ変更がいつ必要になるかを学びます。
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされている **OpenShift {ocp-min-version}+**
+* **クラスター管理者アクセス** (`system:admin` または同等)
+* インストール済みの **`oc` CLI** および **`virtctl` CLI**
+* `allowVolumeExpansion: true` が設定された **StorageClass**
+* PVC を基盤とするディスクを備えた**実行中の VM**
+
+== ステップ 1: StorageClass の拡張サポートの確認
+
+VM ディスクの拡張を試行する前に、PVC の基盤となる StorageClass がボリューム拡張をサポートしていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get storageclass -o custom-columns=NAME:.metadata.name,PROVISIONER:.provisioner,EXPANSION:.allowVolumeExpansion
+----
+
+出力例:
+
+----
+NAME         PROVISIONER    EXPANSION
+lvms-vg1     topolvm.io     true
+----
+
+NOTE: クラスターに追加の StorageClass が表示される場合があります。重要な点は、VM の PVC で使用されている StorageClass の EXPANSION 列に `true` が表示されていることです。
+
+StorageClass の EXPANSION 列に `false` または `<none>` と表示されている場合は、次に進む前に有効にしてください。
+
+[source,bash,role=execute]
+----
+oc patch storageclass <your-storage-class> -p '{"allowVolumeExpansion": true}'
+----
+
+NOTE: StorageClass で `allowVolumeExpansion` を `true` に設定することは必要ですが、十分ではありません。CSI ドライバー自体もサイズ変更に対応している必要があります。一部のプロビジョナー (HostPath など) は、この設定に関係なくドライバーレベルでボリュームのサイズを変更できません。不明な場合は、ストレージプロバイダーのドキュメントを確認してください。
+
+== ステップ 2: Namespace の作成とデモ VM のデプロイ
+
+このチュートリアル専用の namespace を作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace pvc-expansion-demo
+----
+
+1 つの 10Gi ブートディスクを持つ Fedora VM をデプロイします。これは、以降のステップで拡張するディスクです。
+
+* **rootdisk**: Fedora ブートソースからクローンされたブートディスク (10Gi、`lvms-vg1` StorageClass)
+* **cloudinitdisk**: コンソールログイン用の Cloud-init 設定
+
+WARNING: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードまたは SSH 鍵認証を使用してください。
+
+xref:attachment$expanding-vm-disk-size/vm-expansion.yaml[vm-expansion.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: expansion-vm
+  namespace: pvc-expansion-demo
+spec:
+  instancetype:
+    name: u1.small
+  preference:
+    name: fedora
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: expansion-vm
+    spec:
+      domain:
+        devices:
+          disks:
+          - disk: {}
+            name: rootdisk
+          - disk: {}
+            name: cloudinitdisk
+          interfaces:
+          - masquerade: {}
+            name: default
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: expansion-vm-rootdisk
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+  dataVolumeTemplates:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: expansion-vm-rootdisk
+    spec:
+      sourceRef:
+        kind: DataSource
+        name: fedora
+        namespace: openshift-virtualization-os-images
+      storage:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: lvms-vg1
+EOF
+----
+
+DataVolume のインポートと VM の起動を待ちます。
+
+[source,bash,role=execute]
+----
+oc get dv -n pvc-expansion-demo -w
+----
+
+DataVolume に `Succeeded` と表示されたら、VM が実行中であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm -n pvc-expansion-demo
+----
+
+出力例:
+
+----
+NAME           AGE   STATUS    READY
+expansion-vm   3m    Running   True
+----
+
+初期の PVC サイズを確認します。
+
+[source,bash,role=execute]
+----
+oc get pvc -n pvc-expansion-demo
+----
+
+出力例:
+
+----
+NAME                      STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+expansion-vm-rootdisk     Bound    pvc-xxxx     10Gi       RWO            lvms-vg1       3m
+----
+
+NOTE: PVC 名は、`dataVolumeTemplates` で定義された DataVolume 名と一致します。マニフェストを作成していない既存の VM の場合は、`oc get vm <vm-name> -n <namespace> -o jsonpath='{.spec.template.spec.volumes}'` を使用して、各ディスクをバッキングしている PVC を特定します。
+
+== ステップ 3: オフライン拡張 (VM 停止状態)
+
+オフライン拡張は最も安全な方法です。PVC のサイズを変更する前に VM を停止します。
+
+. VM を停止します。
++
+[source,bash,role=execute]
+----
+virtctl stop expansion-vm -n pvc-expansion-demo
+----
+. VM が停止していることを確認します:
++
+[source,bash,role=execute]
+----
+oc get vm expansion-vm -n pvc-expansion-demo
+----
++
+出力例:
+----
+NAME           AGE   STATUS    READY
+expansion-vm   5m    Stopped   False
+----
+. PVC にパッチを適用して、ディスクサイズを 10Gi から 20Gi に増やします:
++
+[source,bash,role=execute]
+----
+oc patch pvc expansion-vm-rootdisk -n pvc-expansion-demo --type merge -p '{"spec":{"resources":{"requests":{"storage":"20Gi"}}}}'
+----
++
+NOTE: パッチ適用直後には PVC の容量は更新されません。`FileSystemResizePending` condition は、ボリュームのサイズ変更が Pod による PVC のマウントを待機していることを示しています。次のステップで VM を起動するとマウントがトリガーされ、サイズ変更が完了します。
+. VM を起動します:
++
+[source,bash,role=execute]
+----
+virtctl start expansion-vm -n pvc-expansion-demo
+----
+. VM が実行中であり、PVC が拡張されたことを確認します:
++
+[source,bash,role=execute]
+----
+oc get vm expansion-vm -n pvc-expansion-demo
+----
++
+出力例:
+----
+NAME           AGE   STATUS    READY
+expansion-vm   6m    Running   True
+----
++
+[source,bash,role=execute]
+----
+oc get pvc expansion-vm-rootdisk -n pvc-expansion-demo
+----
++
+出力例:
+----
+NAME                      STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+expansion-vm-rootdisk     Bound    pvc-xxxx     20Gi       RWO            lvms-vg1       6m
+----
+
+== ステップ 4: オンライン拡張 (VM 実行中)
+
+CSI ドライバーが使用中ボリュームの拡張をサポートしている場合は、VM を停止せずに PVC のサイズを変更できます。これは、ダウンタイムが許容されない状況におけるステップ 3 の代替手段です。
+
+WARNING: すべての CSI ドライバーがオンライン拡張をサポートしているわけではありません。ドライバーがサポートしていない場合、サイズ変更は受け入れられますが、次回ボリュームがマウントされるまで (つまり、VM の再起動後まで) 保留されます。
+
+NOTE: このステップはステップ 3 の代替であり、後続のステップではありません。ステップ 3 でオフライン拡張をすでに実行している場合は、ステップ 5 に進んでください。以下のコマンドは、PVC が元の 10Gi サイズのままであることを前提としています。
+
+VM の実行中に PVC を拡張するには、VM を停止せずに PVC に直接パッチを適用します。
+
+[source,bash,role=execute]
+----
+oc patch pvc expansion-vm-rootdisk -n pvc-expansion-demo --type merge -p '{"spec":{"resources":{"requests":{"storage":"20Gi"}}}}'
+----
+
+PVC ステータスでサイズ変更の条件を確認します。
+
+[source,bash,role=execute]
+----
+oc describe pvc expansion-vm-rootdisk -n pvc-expansion-demo | grep -A 5 Conditions
+----
+
+CSI ドライバーがオンライン拡張をサポートしている場合、リサイズが完了すると PVC の容量が更新されます。
+
+----
+Conditions:
+  Type                      Status
+  ----                      ------
+  FileSystemResizePending   False
+----
+
+ドライバーがオンライン拡張をサポートしていない場合、またはリサイズがまだ進行中の場合は、ボリュームが再マウントされるまで `FileSystemResizePending: True` が表示されます。
+
+----
+Conditions:
+  Type                      Status
+  ----                      ------
+  FileSystemResizePending   True
+----
+
+NOTE: Filesystem PVC の場合、KubeVirt はボリュームサイズの変更を検出すると、バッキングディスクイメージファイルを自動的に拡張します。ステップ 5 で説明するように、ゲスト OS のファイルシステムは手動でリサイズする必要がある場合があります。
+
+== ステップ 5: ゲスト OS ファイルシステムのリサイズ
+
+PVC を拡張すると、VM に提供されるブロックデバイスのサイズが大きくなります。ゲスト OS イメージによっては、起動時にパーティションテーブルとファイルシステムが自動的に拡張される場合と、されない場合があります。
+
+VM コンソールにアクセスします。
+
+[source,bash,role=execute]
+----
+virtctl console expansion-vm -n pvc-expansion-demo
+----
+
+ユーザー名 `fedora`、パスワード `redhat` でログインします。
+
+現在のディスクとパーティションのレイアウトを確認します。
+
+[source,bash]
+----
+lsblk
+----
+
+=== 自動リサイズ (Fedora および類似のイメージ)
+
+最新の Fedora クラウドイメージは、`cloud-utils-growpart` および `systemd-growfs` サービスを使用して、起動時にルートパーティションとファイルシステムを自動的に拡張します。イメージがこれを自動的に処理する場合、`lsblk` ではルートパーティションがすでに拡張後のディスク全体を占有していることが示されます。
+
+----
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+zram0  251:0    0  883M  0 disk [SWAP]
+vda    253:0    0 18.6G  0 disk
+|-vda1 253:1    0    2M  0 part
+|-vda2 253:2    0  100M  0 part /boot/efi
+`-vda3 253:3    0 18.5G  0 part /var
+                                /home
+                                /boot
+                                /
+vdb    253:16   0    1M  0 disk
+----
+
+NOTE: ストレージプロバイダーがメタデータ用に少量の領域を予約するため、ディスクの表示が 20G よりわずかに少なくなる場合があります (例: 18.6G)。これは、シンプロビジョニングされたストレージにおける想定通りの動作です。
+
+ファイルシステムに拡張されたサイズが反映されていることを確認します。
+
+[source,bash]
+----
+df -h /
+----
+
+出力例:
+
+----
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda3        19G  759M   18G   5% /
+----
+
+ファイルシステムに拡張されたサイズがすでに表示されている場合、ゲスト OS が自動的にサイズ変更を処理しています。以下の手動でのサイズ変更手順をスキップして、ステップ 6 に進むことができます。
+
+=== 手動でのサイズ変更 (RHEL、CentOS、およびその他のイメージ)
+
+ゲスト OS がパーティションとファイルシステムを自動的に拡張しない場合、`lsblk` はディスクを新しいサイズで表示しますが、ルートパーティションは元のサイズのままで、末尾に未割り当て領域が存在します。この場合、パーティションの拡張とファイルシステムの拡張という 2 つの手動操作が必要になります。
+
+`lsblk` を使用してルートパーティション番号を特定します。ルートパーティションは `/` にマウントされているパーティションです。一般的なレイアウトには、パーティション 3 (Fedora)、パーティション 4 (RHEL/CentOS)、またはパーティション 2 (minimal イメージ) があります。以下の例では `/dev/vda4` を使用していますが、お使いのイメージに合わせてパーティション番号を調整してください。
+
+==== パーティションの拡張
+
+`growpart` を使用して、ルートパーティションを利用可能な領域に合わせて拡張します。
+
+[source,bash]
+----
+sudo growpart /dev/vda 4
+----
+
+想定される出力例:
+
+----
+CHANGED: partition=4 start=6094848 old: size=14882816 end=20977664 new: size=35756032 end=41850880
+----
+
+NOTE: `growpart` が `NOCHANGE: partition cannot be grown` と報告した場合、パーティションはすでにディスク全体を占有しており、拡張は不要です。これは、起動時にパーティションを自動拡張するイメージでは正常な動作です。
+
+==== ファイルシステムの拡張
+
+パーティションは拡張されましたが、ファイルシステムはまだ元の領域を使用しています。拡張したパーティション全体を占有するようにファイルシステムをリサイズします。
+
+XFS (Fedora/RHEL のデフォルト) の場合は、`xfs_growfs` を使用します。XFS はアンマウント不要のオンラインリサイズをサポートしています。
+
+[source,bash]
+----
+sudo xfs_growfs /
+----
+
+ext4 ファイルシステムの場合は、代わりに `resize2fs` を使用します。
+
+[source,bash]
+----
+sudo resize2fs /dev/vda4
+----
+
+NOTE: `xfs_growfs` と `resize2fs` は両方とも、読み書き可能でマウントされたファイルシステムのオンラインサイズ変更をサポートしています。アンマウントや再起動は不要です。
+
+==== ゲスト内での確認
+
+ファイルシステムに拡張されたサイズが反映されていることを確認します。
+
+[source,bash]
+----
+df -h /
+----
+
+イメージのパーティションレイアウトおよびストレージプロバイダーのオーバーヘッドに応じて、ルートファイルシステムには約 17-19G の使用可能な領域が表示されるはずです。
+
+`Ctrl+]` を押してコンソールを終了します。
+
+== ステップ 6: ルートディスクとデータディスクの拡張の比較
+
+ステップ 3〜5 の手順では、ルート (ブート) ディスクを拡張しました。追加のデータディスクの拡張も同じ PVC パッチ適用プロセスに従いますが、ゲスト OS での手順はデータディスクの構成方法によって異なります。
+
+[cols="1,2,2",options="header"]
+|===
+| シナリオ
+| ゲスト OS での手順
+| 備考
+
+| ルートディスク (パーティションあり)
+| ルートパーティションに対して `growpart` を実行し、その後 `xfs_growfs` または `resize2fs` を実行 (自動拡張されない場合)
+| `lsblk` を使用して正しいパーティション番号を特定する必要があります。ブート、スワップ、EFI パーティションは影響を受けません。
+
+| データディスク (パーティションあり)
+| データパーティションに対して `growpart` を実行し、その後 `xfs_growfs` または `resize2fs` を実行
+| ルートディスクと同じプロセスです。`lsblk` を使用して正しいデバイス (例: `/dev/vdb1`) を見つけます。
+
+| データディスク (パーティションなし、ディスク全体のファイルシステム)
+| `xfs_growfs` または `resize2fs` のみ
+| ファイルシステムがパーティションテーブルなしでブロックデバイス上に直接配置されているため、`growpart` は不要です。
+
+| データディスク (空、未フォーマット)
+| `mkfs.xfs /dev/vdb` (または `mkfs.ext4`)、その後にマウント
+| ホットプラグまたはマルチディスク構成によって追加された新しいディスクです。拡張は不要で、フォーマットしてマウントするだけです。xref:multi-disk-configuration.adoc[Multi-Disk VM Configuration] を参照してください。
+|===
+
+NOTE: データディスクがパーティション分割されているかどうかわからない場合は、ゲスト内で `lsblk` を実行します。`vdb1` や `vdb2` のようなエントリーがあるディスクはパーティション分割されています。子要素がなく単に `vdb` としてリストされているディスクは、パーティション分割されていないか、空のディスクです。
+
+== ステップ 7: 検証
+
+クラスターとゲストの両方の観点から、拡張が成功したことを確認します。
+
+クラスター側から、PVC の容量を確認します。
+
+[source,bash,role=execute]
+----
+oc get pvc expansion-vm-rootdisk -n pvc-expansion-demo
+----
+
+出力例:
+
+----
+NAME                      STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+expansion-vm-rootdisk     Bound    pvc-xxxx     20Gi       RWO            lvms-vg1       10m
+----
+
+ゲスト内から、ファイルシステムを確認します。
+
+[source,bash,role=execute]
+----
+virtctl console expansion-vm -n pvc-expansion-demo
+----
+
+[source,bash]
+----
+lsblk
+df -h /
+----
+
+ディスク (`vda`) に約 20G (ストレージプロバイダーのオーバーヘッドを除く) が表示され、`df -h /` でルートファイルシステムが拡張された領域を使用していることを確認できるはずです。正確なサイズとパーティションレイアウトは、ゲスト OS イメージによって異なります。
+
+PVC が 20Gi と表示されているにもかかわらず、ゲストファイルシステムで元のサイズが表示されたままになっている場合は、ステップ 5 のパーティションおよびファイルシステムのサイズ変更手順が完了しておらず、ゲスト OS によっても自動的に処理されていません。ステップ 5 に戻り、手動でのサイズ変更手順に従ってください。
+
+`Ctrl+]` を押してコンソールを終了します。
+
+== 制限事項とよくある問題
+
+* **縮小はサポートされていません。** PVC のボリューム拡張は一方向の操作です。一度拡張した PVC のサイズを縮小することはできません。
+* **すべての CSI ドライバーがオンライン拡張をサポートしているわけではありません。** ドライバーがサポートしていない場合、サイズ変更はボリュームが再マウントされるまで延期されます。
+* **PVC 容量はすぐには更新されません。** パッチ適用後、Pod がボリュームをマウントするまで、PVC に `FileSystemResizePending` が表示される場合があります。オフライン拡張の場合、VM を起動することでマウントがトリガーされ、サイズ変更が完了します。
+* **ファイルシステムの自動サイズ変更はイメージによって異なります。** 最新の Fedora およびクラウドイメージでは、起動時にパーティションとファイルシステムが自動的に拡張されます。RHEL、CentOS、およびその他のイメージでは、ステップ 5 で説明されているように、手動での `growpart` および `xfs_growfs`/`resize2fs` の手順が必要になる場合があります。
+* **VM が新しいサイズを認識しません。** ゲスト OS が新しいディスクサイズを検出しない場合は、VM を再起動するか、ゲスト内で SCSI バスの再スキャンを試行してください。
+
+== クリーンアップ
+
+Namespace を削除します。これにより、VM、PVC、DataVolume が削除されます。
+
+[source,bash,role=execute]
+----
+oc delete namespace pvc-expansion-demo
+----
+
+Namespace が削除されたことを確認します。
+
+[source,bash,role=execute]
+----
+oc get namespace pvc-expansion-demo
+----
+
+期待される出力:
+
+----
+Error from server (NotFound): namespaces "pvc-expansion-demo" not found
+----
+
+== まとめ
+
+このチュートリアルでは、以下の方法を学びました。
+
+* StorageClass がボリューム拡張をサポートしているかどうかを確認する
+* PVC 名が VM ディスクボリュームにどのようにマッピングされるかを理解する
+* 安全性を最大限に高めるために、オフライン (VM 停止状態) で VM ディスクを拡張する
+* ダウンタイムなしで VM ディスクをオンライン (VM 実行中) で拡張する
+* ゲスト OS がファイルシステムを自動拡張するか、手動でのサイズ変更が必要かを判断する
+* `growpart`、`xfs_growfs` (XFS)、または `resize2fs` (ext4) を使用して、ゲスト OS のファイルシステムのサイズを手動で変更する
+* ルートディスクの拡張とデータディスクの拡張の違いを理解する
+* PVC ボリューム拡張の一般的な問題と制限事項を理解する
+
+== 参照
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/storage/expanding-persistent-volumes[PersistentVolume の拡張 - OpenShift ドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/storage/disks_and_volumes/[ディスクとボリューム - KubeVirt ユーザーガイド,window=_blank]
+* xref:creating-managing-storage-class.adoc[StorageClass の作成と管理]
+* xref:multi-disk-configuration.adoc[マルチディスク VM の設定]

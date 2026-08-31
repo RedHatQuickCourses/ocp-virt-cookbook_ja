@@ -1,0 +1,663 @@
+= Ceph Storage を使用した OpenShift Data Foundation (ODF)
+:navtitle: ODF/Ceph Storage
+
+== 概要
+
+このチュートリアルでは、OpenShift Virtualization 仮想マシンのストレージバックエンドとして Ceph を使用した OpenShift Data Foundation (ODF) をインストールおよび設定する方法を説明します。ODF は、高可用性とスケーラビリティを必要とする本番マルチノードクラスターに最適な分散ブロックおよびファイルストレージを提供します。
+
+OpenShift Data Foundation は、主に 3 つのストレージタイプを提供します。
+
+* **Block Storage (Ceph RBD)**: VM ブートディスクおよびデータベース向けの高性能な ReadWriteOnce ボリューム
+* **File Storage (CephFS)**: ライブマイグレーションおよび共有データ用の ReadWriteMany アクセスをサポートする共有ファイルシステムストレージ
+* **Object Storage**: バックアップおよびアーティファクト用の S3 互換ストレージ
+
+== 前提条件
+
+* **OpenShift {ocp-min-version}+**
+* **最低 3 台の Worker Node **: Ceph クォーラムと高可用性のために必要
+* **クラスター管理者アクセス**: Operator のインストールおよびストレージの設定に必要
+* **ストレージバックエンド**: 動的 StorageClass (AWS 上の `gp3-csi`、Azure 上の `managed-csi` など) またはベアメタルノード上のローカル raw ブロックデバイスのいずれか
+* Worker Node あたり **最小 16 GB の RAM** (本番環境では 32 GB を推奨)
+* Worker Node あたり **最小 8 CPU コア**
+
+IMPORTANT: ODF で Ceph クラスターのクォーラムを維持するには、3 台以上の Worker Node が必要です。Single Node または 2 Node のクラスターはサポートされていません。
+
+NOTE: すべての Worker Node が同じアベイラビリティーゾーンにある場合、障害ドメインとして `zone` の代わりに `host` を使用するために、StorageCluster で `flexibleScaling: true` を設定する必要があります。
+
+== ステップ 1: Worker Node の準備
+
+ODF ストレージコンポーネントをホストする Worker Node にラベルを付けます。
+
+まず、Worker Node を特定します。
+
+[source,bash,role=execute]
+----
+oc get nodes --selector='!node-role.kubernetes.io/master'
+----
+
+ストレージ用に少なくとも 3 つの Worker Node にラベルを付けます。
+
+[source,bash,role=execute]
+----
+oc label node <worker-node-1> cluster.ocs.openshift.io/openshift-storage=''
+----
+
+[source,bash,role=execute]
+----
+oc label node <worker-node-2> cluster.ocs.openshift.io/openshift-storage=''
+----
+
+[source,bash,role=execute]
+----
+oc label node <worker-node-3> cluster.ocs.openshift.io/openshift-storage=''
+----
+
+ラベルを確認します。
+
+[source,bash,role=execute]
+----
+oc get nodes -l cluster.ocs.openshift.io/openshift-storage
+----
+
+== ステップ 2: OpenShift Data Foundation Operator のインストール
+
+ODF namespace を作成します。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+ name: openshift-storage
+ labels:
+  openshift.io/cluster-monitoring: "true"
+EOF
+----
+
+OperatorGroup を作成します。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+ name: openshift-storage
+ namespace: openshift-storage
+spec:
+ targetNamespaces:
+  - openshift-storage
+EOF
+----
+
+ODF Operator をインストールします。`<version>` をお使いの OpenShift バージョンに一致するチャネル (例: OpenShift 4.21 の場合は `stable-4.21`) に置き換えてください。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+ name: odf-operator
+ namespace: openshift-storage
+spec:
+ channel: stable-4.21
+ name: odf-operator
+ source: redhat-operators
+ sourceNamespace: openshift-marketplace
+EOF
+----
+
+クラスターで利用可能なチャネルを確認するには、以下を実行します。
+
+[source,bash,role=execute]
+----
+oc get packagemanifest odf-operator -n openshift-marketplace -o jsonpath='{.status.channels[*].name}'
+----
+
+Operator のインストールが完了するまで待ちます。すべての CSV が `Succeeded` になる必要があります。
+
+[source,bash,role=execute]
+----
+oc get csv -n openshift-storage
+----
+
+== ステップ 3: StorageCluster の作成
+
+StorageCluster を作成して Ceph クラスターをデプロイします。この例では、ODF のバッキングストレージとして動的 StorageClass (`gp3-csi`) を使用します。異なる場合は、`gp3-csi` をクラスターで利用可能な StorageClass に置き換えてください。
+
+NOTE: ローカルディスクを備えたベアメタルクラスターの場合は、最初に Local Storage Operator をインストールし、代わりにローカルブロック StorageClass を使用してください。詳細は link:https://docs.redhat.com/en/documentation/red_hat_openshift_data_foundation/4.18/html/deploying_openshift_data_foundation_using_bare_metal_infrastructure/[ODF bare-metal deployment guide,window=_blank] を参照してください。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: ocs.openshift.io/v1
+kind: StorageCluster
+metadata:
+ name: ocs-storagecluster
+ namespace: openshift-storage
+spec:
+ flexibleScaling: true
+ enableCephTools: true
+ storageDeviceSets:
+  - name: ocs-deviceset-gp3-csi
+   count: 1
+   portable: true
+   replica: 3
+   resources:
+    requests:
+     cpu: "1"
+     memory: 5Gi
+    limits:
+     cpu: "2"
+     memory: 5Gi
+   placement:
+    nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+       - matchExpressions:
+         - key: cluster.ocs.openshift.io/openshift-storage
+          operator: In
+          values:
+           - ""
+    tolerations:
+     - effect: NoSchedule
+      key: node.ocs.openshift.io/storage
+      operator: Equal
+      value: "true"
+   dataPVCTemplate:
+    spec:
+     accessModes:
+      - ReadWriteOnce
+     resources:
+      requests:
+       storage: 512Gi
+     storageClassName: gp3-csi
+     volumeMode: Block
+ managedResources:
+  cephBlockPools: {}
+  cephFilesystems: {}
+  cephObjectStoreUsers: {}
+  cephObjectStores: {}
+EOF
+----
+
+IMPORTANT: すべての Worker Node が同じアベイラビリティーゾーンにある場合は、`flexibleScaling: true` を設定します。これにより、障害ドメインとして `zone` の代わりに `host` を使用するように Ceph が設定され、配置グループが `undersized+peered` 状態から進まなくなるのを防ぎます。
+
+デプロイの進行状況を監視します。
+
+[source,bash,role=execute]
+----
+oc get storagecluster ocs-storagecluster -n openshift-storage -w
+----
+
+ステータスが `Ready` と表示されるまで待ちます。このプロセスには通常 5〜10 分かかります。
+
+== ステップ 4: StorageClass の確認
+
+ODF が必要な StorageClass を作成したことを確認します。
+
+[source,bash,role=execute]
+----
+oc get storageclass | grep ocs
+----
+
+想定される StorageClass:
+
+----
+ocs-storagecluster-ceph-rbd         Block storage (RBD) for VM boot disks
+ocs-storagecluster-ceph-rbd-virtualization  Block storage optimized for virtualization workloads
+ocs-storagecluster-cephfs          File storage (CephFS) for shared access
+----
+
+`ocs-storagecluster-ceph-rbd-virtualization` StorageClass は、OpenShift Virtualization が ODF と共にインストールされている場合に自動的に作成されます。
+
+== ステップ 5: デフォルト Storage Class の設定
+
+VM ブートディスクのデフォルトとして Ceph RBD Storage Class を設定します。
+
+[source,bash,role=execute]
+----
+oc patch storageclass ocs-storagecluster-ceph-rbd -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
+----
+
+現在どの Storage Class がデフォルトとしてマークされているかを確認します。
+
+[source,bash,role=execute]
+----
+oc get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}'
+----
+
+別の Storage Class もデフォルトとしてマークされている場合は、そのデフォルトのアノテーションを削除します。
+
+[source,bash,role=execute]
+----
+oc patch storageclass <existing-default-sc> -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": null}}}'
+----
+
+Ceph RBD Storage Class のみがデフォルトになっていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get storageclass | grep "(default)"
+----
+
+期待される出力:
+
+----
+ocs-storagecluster-ceph-rbd (default)  openshift-storage.rbd.csi.ceph.com  Delete  Immediate  true
+----
+
+== ステップ 6: ストレージプロビジョニングのテスト
+
+Ceph RBD ブロックストレージを使用してテスト用 PVC を作成します。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: test-rbd-pvc
+ namespace: default
+spec:
+ accessModes:
+  - ReadWriteOnce
+ resources:
+  requests:
+   storage: 1Gi
+ storageClassName: ocs-storagecluster-ceph-rbd
+EOF
+----
+
+PVC がバインドされていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get pvc test-rbd-pvc
+----
+
+CephFS ファイルストレージを使用してテスト用 PVC を作成します。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: test-cephfs-pvc
+ namespace: default
+spec:
+ accessModes:
+  - ReadWriteMany
+ resources:
+  requests:
+   storage: 1Gi
+ storageClassName: ocs-storagecluster-cephfs
+EOF
+----
+
+両方の PVC がバインドされていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get pvc test-rbd-pvc test-cephfs-pvc
+----
+
+== ステップ 7: テスト仮想マシンのデプロイ
+
+ODF ストレージの統合を検証するために、シンプルな VM を作成します。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: test-vm-odf
+ namespace: default
+spec:
+ instancetype:
+  name: u1.small
+ preference:
+  name: fedora
+ runStrategy: Halted
+ template:
+  metadata:
+   labels:
+    kubevirt.io/vm: test-vm-odf
+  spec:
+   domain:
+    devices:
+     disks:
+     - disk: {}
+      name: boot-disk
+     interfaces:
+     - masquerade: {}
+      name: default
+   networks:
+   - name: default
+    pod: {}
+   volumes:
+   - name: boot-disk
+    dataVolume:
+     name: test-vm-odf-boot
+ dataVolumeTemplates:
+ - apiVersion: cdi.kubevirt.io/v1beta1
+  kind: DataVolume
+  metadata:
+   name: test-vm-odf-boot
+  spec:
+   source:
+    registry:
+     url: docker://quay.io/containerdisks/fedora:latest
+   storage:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+     requests:
+      storage: 10Gi
+    storageClassName: ocs-storagecluster-ceph-rbd
+EOF
+----
+
+DataVolume のインポートを監視します。
+
+[source,bash,role=execute]
+----
+oc get dv test-vm-odf-boot -w
+----
+
+DataVolume の準備が完了したら VM を起動します。
+
+[source,bash,role=execute]
+----
+virtctl start test-vm-odf
+----
+
+VM が実行中であることを確認します:
+
+[source,bash,role=execute]
+----
+oc get vm test-vm-odf
+----
+
+== アクセスモードの影響
+
+アクセスモードを理解することは、VM ストレージ設計において極めて重要です:
+
+=== ReadWriteOnce (RWO) - Ceph RBD
+
+* **ユースケース**: VM ブートディスク、データベース、ハイパフォーマンスワークロード
+* **特性**: 一度に 1 つのノードでのみマウント可能
+* **ライブマイグレーション**: KubeVirt がノード間のブロックデバイスのハンドオフを処理するため、Ceph RBD でサポートされます
+* **パフォーマンス**: 直接ブロックアクセスによる高いパフォーマンス
+
+=== ReadWriteMany (RWX) - CephFS
+
+* **ユースケース**: 共有データボリューム、ログ、設定ファイル
+* **特徴**: 複数のノードから同時にマウント可能
+* **ライブマイグレーション**: ハンドオフが不要で、シームレスなライブマイグレーションに対応
+* **パフォーマンス**: ファイルシステムのオーバーヘッドにより、パフォーマンスがわずかに低下
+
+両方のストレージタイプを持つ VM の例:
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: vm-boot-rbd
+spec:
+ accessModes:
+  - ReadWriteOnce
+ resources:
+  requests:
+   storage: 10Gi
+ storageClassName: ocs-storagecluster-ceph-rbd
+EOF
+----
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: vm-shared-cephfs
+spec:
+ accessModes:
+  - ReadWriteMany
+ resources:
+  requests:
+   storage: 5Gi
+ storageClassName: ocs-storagecluster-cephfs
+EOF
+----
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: multi-storage-vm
+spec:
+ instancetype:
+  name: u1.small
+ preference:
+  name: fedora
+ runStrategy: Halted
+ template:
+  spec:
+   domain:
+    devices:
+     disks:
+     - disk: {}
+      name: boot-disk
+     - disk: {}
+      name: shared-data
+   volumes:
+   - name: boot-disk
+    persistentVolumeClaim:
+     claimName: vm-boot-rbd
+   - name: shared-data
+    persistentVolumeClaim:
+     claimName: vm-shared-cephfs
+EOF
+----
+
+== ボリュームモードの比較
+
+=== ブロックモード
+
+* **ストレージタイプ**: RAW ブロックデバイス (Ceph RBD)
+* **パフォーマンス**: データベースおよび I/O 集約型ワークロード向けの高いパフォーマンス
+* **ファイルシステム**: ゲスト OS がファイルシステムを直接管理
+* **スナップショット**: ブロックレベルのスナップショットをサポート
+
+=== ファイルシステムモード
+
+* **ストレージタイプ**: マウントされたファイルシステム (CephFS)
+* **パフォーマンス**: 一般的なワークロードに適したパフォーマンス
+* **ファイルシステム**: ストレージレイヤーがファイルシステムを管理
+* **スナップショット**: ファイルシステムレベルのスナップショット
+
+== ODF ストレージのモニタリング
+
+ODF ダッシュボードにアクセスして Ceph クラスターの健全性をモニタリングします。
+
+[source,bash,role=execute]
+----
+oc get route console -n openshift-console -o jsonpath='{.spec.host}'
+----
+
+OpenShift Web コンソールで **Storage -> Data Foundation** に移動して、以下を確認します。
+
+* Ceph クラスターの健全性ステータス
+* ストレージ容量と使用状況
+* パフォーマンスメトリクス
+* アラート通知
+
+CLI 経由で Ceph クラスターのステータスを監視します:
+
+[source,bash,role=execute]
+----
+oc get cephcluster -n openshift-storage -o jsonpath='{.items[0].status.ceph.health}'
+----
+
+Ceph toolbox pod は、StorageCluster で `enableCephTools: true` を設定することで有効になります。実行中であることを確認します:
+
+[source,bash,role=execute]
+----
+oc get pods -n openshift-storage -l app=rook-ceph-tools
+----
+
+Ceph クラスター全体のヘルスを確認します:
+
+[source,bash,role=execute]
+----
+oc rsh -n openshift-storage deployment/rook-ceph-tools ceph status
+----
+
+OSD のステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc rsh -n openshift-storage deployment/rook-ceph-tools ceph osd status
+----
+
+ストレージ容量を確認します。
+
+[source,bash,role=execute]
+----
+oc rsh -n openshift-storage deployment/rook-ceph-tools ceph df
+----
+
+== トラブルシューティング
+
+=== 一般的な問題と解決策
+
+==== PVC が Pending 状態でスタックする
+
+エラーの詳細について PVC イベントを確認します。
+
+[source,bash,role=execute]
+----
+oc describe pvc <pvc-name>
+----
+
+Storage Class が存在し、設定されていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get storageclass ocs-storagecluster-ceph-rbd
+----
+
+==== Ceph ヘルス警告
+
+Ceph toolbox pod にアクセスし、ヘルスの詳細を確認します。
+
+[source,bash,role=execute]
+----
+oc rsh -n openshift-storage deployment/rook-ceph-tools ceph health detail
+----
+
+OSD ツリーを確認して、すべての OSD が up であることを確認します。
+
+[source,bash,role=execute]
+----
+oc rsh -n openshift-storage deployment/rook-ceph-tools ceph osd tree
+----
+
+プレースメントグループのステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc rsh -n openshift-storage deployment/rook-ceph-tools ceph pg stat
+----
+
+==== Placement Group が undersized+peered の状態でスタックする
+
+これは通常、すべての Worker Node が同じアベイラビリティーゾーンにあるにもかかわらず、CRUSH ルールがゾーン間での分散を想定している場合に発生します。StorageCluster で `flexibleScaling: true` を設定します。
+
+[source,bash,role=execute]
+----
+oc patch storagecluster ocs-storagecluster -n openshift-storage --type merge -p '{"spec":{"flexibleScaling": true}}'
+----
+
+==== OSD のパフォーマンス低下
+
+OSD pod を一覧表示します。
+
+[source,bash,role=execute]
+----
+oc get pods -n openshift-storage | grep osd
+----
+
+特定の OSD pod の詳細を表示します。
+
+[source,bash,role=execute]
+----
+oc describe pod <osd-pod-name> -n openshift-storage
+----
+
+==== Storage Cluster が準備完了状態でない
+
+StorageCluster のステータスとイベントを確認します。
+
+[source,bash,role=execute]
+----
+oc describe storagecluster ocs-storagecluster -n openshift-storage
+----
+
+必要なすべての Pod が実行中であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get pods -n openshift-storage
+----
+
+== クリーンアップ
+
+テストリソースを削除します。
+
+[source,bash,role=execute]
+----
+oc delete vm test-vm-odf multi-storage-vm
+----
+
+[source,bash,role=execute]
+----
+oc delete dv test-vm-odf-boot
+----
+
+[source,bash,role=execute]
+----
+oc delete pvc test-rbd-pvc test-cephfs-pvc vm-boot-rbd vm-shared-cephfs
+----
+
+WARNING: すべての ODF ストレージを完全に削除する場合を除き、ODF StorageCluster を削除しないでください。削除すると、ODF ストレージを使用しているすべての VM またはアプリケーションでデータ損失が発生します。
+
+== まとめ
+
+OpenShift Virtualization 用に Ceph ストレージを使用した OpenShift Data Foundation の設定が正常に完了しました。主な成果は以下のとおりです。
+
+* Ceph ストレージバックエンドを使用した ODF のインストールおよび設定
+* さまざまなユースケースに対応する Ceph RBD および CephFS Storage Class の作成
+* 自動 VM プロビジョニング用のデフォルト Storage Class の設定
+* ODF ストレージを使用したテスト VM のデプロイ
+* VM ストレージ設計におけるアクセスモードの影響の理解
+* モニタリングおよびトラブルシューティングツールの設定
+
+ODF は、本番環境の仮想マシンワークロードに不可欠な高可用性、スケーラビリティー、データ保護機能を備えたエンタープライズグレードの分散ストレージを提供します。
+
+== 参照
+
+* xref:lvm-operator.adoc[LVM Storage Operator のインストール]
+* xref:creating-managing-storage-class.adoc[Storage Class の作成と管理]
+* xref:multi-disk-configuration.adoc[マルチディスク VM 構成]
+* link:https://docs.redhat.com/en/documentation/red_hat_openshift_data_foundation/4.18/html-single/red_hat_openshift_data_foundation_architecture/index[OpenShift Data Foundation アーキテクチャー,window=_blank]
+* link:https://docs.redhat.com/en/documentation/red_hat_openshift_data_foundation/4.18/html/managing_and_allocating_storage_resources/[ストレージリソースの管理と割り当て,window=_blank]

@@ -1,0 +1,621 @@
+= VM ディスク I/O パフォーマンスチューニング
+:navtitle: ディスク I/O チューニング
+
+== 概要
+
+ディスク I/O パフォーマンスは、OpenShift Virtualization 上で仮想マシンを実行する際によく見られる懸念事項の 1 つです。デフォルトの VM 構成は一般的なワークロードに対応しますが、データベースサーバー、ロギングパイプライン、その他の I/O 負荷の高いアプリケーションでは、ディスクバスタイプ、キャッシュモード、I/O スレッディング、ボリュームモードをチューニングすることでメリットが得られます。
+
+このチュートリアルでは、各チューニングオプションを順を追って説明し、最適化された設定で VM をデプロイし、ゲスト内で `fio` を使用してその影響を測定します。また、ゲスト側とホスト側の両方から I/O ボトルネックを特定する方法についても学習します。
+
+== 学習内容
+
+* ディスクバスタイプ (VirtIO、SCSI、SATA) が I/O パフォーマンスに与える影響
+* ボリュームモード (Block と Filesystem) によって I/O パスがどのように変化するか
+* ディスクキャッシュモード、I/O スレッド、マルチキューを設定する方法
+* `fio` を使用して VM ディスク I/O のベンチマークを実行する方法
+* ゲストおよびホストのツールを使用して I/O ボトルネックを特定する方法
+* さまざまなワークロードタイプに対してどのチューニングオプションを適用すべきか
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされた **OpenShift {ocp-min-version}+**
+* **クラスター管理者アクセス** (`system:admin` または同等)
+* インストール済みの **`oc` CLI** および **`virtctl` CLI**
+* 設定済みの **デフォルト StorageClass** (例: `lvms-vg1`)
+* OpenShift Virtualization での基本的な VM 作成に関する知識
+
+== ディスクバスタイプ
+
+ディスクバスタイプは、仮想ディスクがゲストオペレーティングシステムにどのように提示されるかを決定します。タイプごとにパフォーマンス特性や互換性のトレードオフが異なります。
+
+[cols="1,1,1,1",options="header"]
+|===
+| バスタイプ
+| 説明
+| パフォーマンス
+| ユースケース
+
+| VirtIO
+| 準仮想化ディスクドライバー
+| 最も高いスループットと最も低いレイテンシー
+| Linux VM、VirtIO driver がインストールされた Windows VM
+
+| SCSI
+| エミュレートされた SCSI コントローラー (virtio-scsi 経由)
+| より広範な機能サポートを備えた優れたパフォーマンス
+| TRIM/discard や永続的予約などの SCSI 機能を必要とする VM
+
+| SATA
+| エミュレートされた SATA/AHCI コントローラー
+| 完全なエミュレーションのオーバーヘッドにより最も低いパフォーマンス
+| VirtIO または SCSI ドライバーのサポートがないレガシーゲストオペレーティングシステム
+|===
+
+VirtIO は、すべての Linux VM でデフォルトかつ推奨されるバスタイプです。デバイスエミュレーションをバイパスし、共有メモリのリングバッファーを介してハイパーバイザーと直接通信するため、I/O 操作ごとの CPU オーバーヘッドとレイテンシーが削減されます。
+
+シンプロビジョニングされたストレージの TRIM/discard などの機能が必要な場合や、SCSI デバイスを前提とするゲストワークロードを実行する場合は SCSI を使用します。SATA は、VirtIO および SCSI ドライバーがないレガシーオペレーティングシステムにのみ使用してください。
+
+=== VM Spec におけるバスタイプ
+
+バスタイプは `spec.template.spec.domain.devices.disks` の下で設定します。
+
+[source,yaml]
+----
+devices:
+  disks:
+  - name: rootdisk
+    disk:
+      bus: virtio
+----
+
+== ボリュームモード: Block vs Filesystem
+
+PersistentVolumeClaim のボリュームモードは、ストレージバックエンドが VM Pod にボリュームを提供する方法を制御します。
+
+* **Filesystem** (デフォルト): ストレージバックエンドは、基盤となるデバイス上にファイルシステム (通常は ext4) をプロビジョニングします。QEMU はそのファイルシステム上のファイルとして VM ディスクを保存します。これにより、QEMU と raw ストレージの間にファイルシステムのオーバーヘッドのレイヤーが追加されます。
+* **Block**: ストレージバックエンドは、raw ブロックデバイスを VM Pod に直接公開します。QEMU は中間ファイルシステムを介さずにブロックデバイスの読み取りおよび書き込みを行います。これによりファイルシステムのオーバーヘッドが排除され、レイテンシーが短縮されます。
+
+I/O 負荷の高いワークロードにおいて、Block モードは通常、Filesystem モードよりも 5〜15% 優れた IOPS と低いレイテンシーを提供します。具体的な向上幅はストレージバックエンドによって異なります。
+
+NOTE: すべての StorageClass が Block ボリュームモードをサポートしているわけではありません。ストレージプロバイダーのドキュメントを確認してください。LVM Storage と ODF (Ceph RBD) は両方とも Block モードをサポートしています。
+
+=== ボリュームモードの設定
+
+ボリュームモードは DataVolume または PVC で設定します。
+
+[source,yaml]
+----
+dataVolumeTemplates:
+- metadata:
+    name: my-disk
+  spec:
+    pvc:
+      accessModes:
+      - ReadWriteOnce
+      volumeMode: Block
+      resources:
+        requests:
+          storage: 30Gi
+    source:
+      registry:
+        pullMethod: node
+        url: docker://quay.io/containerdisks/fedora:latest
+----
+
+== ディスクキャッシュモード
+
+キャッシュモードは、ホストが VM ディスクの読み取りおよび書き込みキャッシュをどのように処理するかを制御します。KubeVirt は 3 つのキャッシュモードをサポートしています。
+
+[cols="1,2,1",options="header"]
+|===
+| キャッシュモード
+| 動作
+| 推奨用途
+
+| `none`
+| ホスト側のキャッシュはありません。読み取りと書き込みはストレージバックエンドに直接行われます。ゲスト OS が独自のページキャッシュを管理します。
+| データベース、共有ストレージ、独自のキャッシュを管理するワークロード
+
+| `writeback`
+| ホストは読み取りと書き込みの両方をキャッシュします。書き込みはストレージに到達する前に確認応答されます。ホスト障害時のデータ損失リスクが高くなります。
+| 書き込みの耐久性よりもパフォーマンスが重視される汎用 VM
+
+| `writethrough`
+| ホストは読み取りをキャッシュしますが、書き込みはストレージに直接行われます。ホスト側のデータ損失に対して安全ですが、書き込みパフォーマンスは低下します。
+| 書き込みの安全性を必要とし、読み取りキャッシュのメリットを享受できるワークロード
+|===
+
+キャッシュモードが設定されていない場合、KubeVirt はデフォルトで Block ボリュームには `none` を、Filesystem ボリュームには `writethrough` を使用します。
+
+データベースワークロードの場合は、ホスト側のキャッシュからの干渉を受けずにデータベースエンジンが書き込み順序と fsync の動作を制御できるように、`cache: none` を使用してください。
+
+=== キャッシュモードの設定
+
+[source,yaml]
+----
+devices:
+  disks:
+  - name: rootdisk
+    cache: none
+    disk:
+      bus: virtio
+----
+
+== I/O スレッディングおよびマルチキュー
+
+デフォルトでは、すべての VM ディスク I/O はメインの QEMU スレッドで実行されます。I/O 負荷が高い場合、この単一スレッドがボトルネックになります。この問題には 2 つの設定で対処します。
+
+=== I/O スレッド
+
+`ioThreadsPolicy` フィールドは、メインの QEMU エミュレーションスレッドとは別に、ディスク I/O 用の専用スレッドを作成します。個々のディスクで `dedicatedIOThread: true` を設定して、これらのスレッドにディスクを割り当てます。
+
+* `auto`: KubeVirt は `dedicatedIOThread: true` が設定されたディスクごとに 1 つの I/O スレッドを作成します。
+* `shared`: `dedicatedIOThread: true` が設定されたすべてのディスクが単一の I/O スレッドを共有します。
+
+それぞれが最大の I/O スループットを必要とする複数のディスクを持つ VM には `auto` を使用します。ホスト上のスレッド数を削減したい場合は `shared` を使用します。
+
+=== Block Multi-Queue
+
+`blockMultiQueue` 設定は、VirtIO ブロックデバイス用に複数の virtqueue を作成します。各 vCPU は独自の I/O 送信キューを取得し、これにより CPU コア間での並列 I/O 処理が可能になります。これは、多くの並列クエリを実行するデータベースなど、高い I/O 並行性を持つワークロードに役立ちます。
+
+NOTE: ブロックマルチキューは VirtIO ディスクバスにのみ適用されます。SCSI または SATA ディスクには影響しません。
+
+== ステップ 1: Namespace の作成
+
+[source,bash,role=execute]
+----
+oc create namespace disk-io-tuning
+----
+
+== ステップ 2: ベースライン VM のデプロイ
+
+まず、パフォーマンスのベースラインを確立するために、デフォルトのディスク設定で VM をデプロイします。
+
+WARNING: この例の cloud-init パスワードはデモ目的のみに使用されます。本番環境では、常に強力で一意のパスワードまたは SSH 鍵認証を使用してください。
+
+xref:attachment$disk-io-tuning/vm-baseline.yaml[vm-baseline.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-baseline
+  namespace: disk-io-tuning
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-baseline
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        memory:
+          guest: 2Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+            bootOrder: 1
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 2Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: baseline-rootdisk
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+            packages:
+            - fio
+  dataVolumeTemplates:
+  - metadata:
+      name: baseline-rootdisk
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 30Gi
+      source:
+        registry:
+          pullMethod: node
+          url: docker://quay.io/containerdisks/fedora:latest
+EOF
+----
+
+VM が起動するのを待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm -n disk-io-tuning -w
+----
+
+STATUS が `Running` と表示されたら、次のステップに進みます。
+
+== ステップ 3: チューニング済み VM のデプロイ
+
+すべての I/O チューニングオプション (VirtIO バス、`cache: none`、I/O スレッド、ブロックマルチキュー) を有効にして、2 つ目の VM をデプロイします。
+
+xref:attachment$disk-io-tuning/vm-tuned.yaml[vm-tuned.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-tuned
+  namespace: disk-io-tuning
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-tuned
+    spec:
+      domain:
+        ioThreadsPolicy: auto
+        cpu:
+          cores: 2
+        memory:
+          guest: 2Gi
+        devices:
+          blockMultiQueue: true
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+            bootOrder: 1
+            cache: none
+            io: native
+            dedicatedIOThread: true
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 2Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: tuned-rootdisk
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+            packages:
+            - fio
+  dataVolumeTemplates:
+  - metadata:
+      name: tuned-rootdisk
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        volumeMode: Block
+        resources:
+          requests:
+            storage: 30Gi
+      source:
+        registry:
+          pullMethod: node
+          url: docker://quay.io/containerdisks/fedora:latest
+EOF
+----
+
+=== この VM における主要なチューニング設定
+
+* **`ioThreadsPolicy: auto`**: 要求した各ディスクに対して専用の I/O スレッドを作成します。
+* **`blockMultiQueue: true`**: すべての VirtIO ブロックデバイスで vCPU ごとの I/O キューを有効にします。
+* **`cache: none`**: ゲスト OS が独自のキャッシュを制御できるように、ホスト側のキャッシュをバイパスします。
+* **`io: native`**: QEMU のスレッド I/O の代わりに Linux ネイティブの非同期 I/O (io_uring/libaio) を使用します。これにより、高 I/O 負荷下でのコンテキストスイッチが削減されます。
+* **`dedicatedIOThread: true`**: メインの QEMU スレッドを共有する代わりに、このディスクを専用の I/O スレッドに割り当てます。
+* **`volumeMode: Block`**: ファイルシステムのオーバーヘッドを回避して、raw ブロックデバイスを QEMU に公開します。
+
+両方の VM が実行状態になるまで待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm -n disk-io-tuning
+----
+
+[source,text]
+.Expected output
+----
+NAME          AGE   STATUS    READY
+vm-baseline   5m    Running   True
+vm-tuned      2m    Running   True
+----
+
+== ステップ 4: fio によるベンチマーク (ベースライン VM)
+
+WARNING: fio の書き込みテストは、ページキャッシュをバイパスしてストレージバックエンドに直接アクセスする持続的な I/O 負荷を生成します。共有ストレージ (Ceph、ODF、NFS) を備えた本番クラスターでは、これによりストレージの帯域幅が飽和し、他の VM やワークロードのパフォーマンスが低下する可能性があります。これらのベンチマークは、専用のテストクラスターまたはメンテナンスウィンドウ中に実行してください。
+
+ベースライン VM に接続し、`fio` ベンチマークを実行します。`fio` ツールは起動時に cloud-init によってインストールされています。
+
+[source,bash,role=execute]
+----
+virtctl console vm-baseline -n disk-io-tuning
+----
+
+ユーザー名 `fedora`、パスワード `redhat` でログインします。
+
+cloud-init による `fio` のインストールが完了するまで待ちます。ステータスは以下で確認できます。
+
+[source,bash]
+----
+cloud-init status --wait
+----
+
+=== ランダム読み取り IOPS テスト
+
+16 の同時 I/O 操作で 4K ランダム読み取りテストを実行します。
+
+[source,bash]
+----
+sudo fio --name=randread --ioengine=libaio --direct=1 --bs=4k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=randread --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Random Read IOPS:", $8, "| Avg Latency (usec):", $40}'
+----
+
+=== ランダム書き込み IOPS テスト
+
+[source,bash]
+----
+sudo fio --name=randwrite --ioengine=libaio --direct=1 --bs=4k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=randwrite --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Random Write IOPS:", $49, "| Avg Latency (usec):", $81}'
+----
+
+=== シーケンシャル読み取りスループットテスト
+
+[source,bash]
+----
+sudo fio --name=seqread --ioengine=libaio --direct=1 --bs=128k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=read --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Sequential Read BW (KiB/s):", $7}'
+----
+
+=== シーケンシャル書き込みスループットテスト
+
+[source,bash]
+----
+sudo fio --name=seqwrite --ioengine=libaio --direct=1 --bs=128k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=write --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Sequential Write BW (KiB/s):", $48}'
+----
+
+各テストの結果を記録します。`Ctrl+]` を押してコンソールを終了します。
+
+== ステップ 5: fio によるベンチマーク (チューニング済み VM)
+
+チューニング済みの VM に接続し、同じベンチマークを実行します。
+
+[source,bash,role=execute]
+----
+virtctl console vm-tuned -n disk-io-tuning
+----
+
+ユーザー名 `fedora`、パスワード `redhat` でログインします。cloud-init が完了するまで待ちます。
+
+[source,bash]
+----
+cloud-init status --wait
+----
+
+同じ 4 つの fio テストを実行します。
+
+[source,bash]
+----
+sudo fio --name=randread --ioengine=libaio --direct=1 --bs=4k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=randread --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Random Read IOPS:", $8, "| Avg Latency (usec):", $40}'
+----
+
+[source,bash]
+----
+sudo fio --name=randwrite --ioengine=libaio --direct=1 --bs=4k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=randwrite --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Random Write IOPS:", $49, "| Avg Latency (usec):", $81}'
+----
+
+[source,bash]
+----
+sudo fio --name=seqread --ioengine=libaio --direct=1 --bs=128k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=read --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Sequential Read BW (KiB/s):", $7}'
+----
+
+[source,bash]
+----
+sudo fio --name=seqwrite --ioengine=libaio --direct=1 --bs=128k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=write --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Sequential Write BW (KiB/s):", $48}'
+----
+
+ベースラインの VM とチューニング済みの VM の間で、IOPS、スループット、レイテンシーの数値を比較します。チューニング済みの VM では、特に I/O スレッディングと直接ブロックアクセスの効果が最も大きいランダム I/O ワークロードにおいて、IOPS の向上とレイテンシーの短縮が見られるはずです。
+
+`Ctrl+]` を押してコンソールを終了します。
+
+== ステップ 6: ホスト側からのチューニング設定の確認
+
+virt-launcher pod および QEMU プロセスを検査することで、チューニングオプションが適用されていることを確認できます。
+
+チューニングされた VM で I/O スレッドの割り当てを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi vm-tuned -n disk-io-tuning -o jsonpath='{.status.launcherContainerImageVersion}{"\n"}'
+----
+
+チューニングされた VM の QEMU コマンドライン引数を検査して、I/O スレッドおよびキャッシュ設定を確認します。
+
+[source,bash,role=execute]
+----
+TUNED_POD=$(oc get pod -n disk-io-tuning -l kubevirt.io/domain=vm-tuned -o jsonpath='{.items[0].metadata.name}')
+oc exec -n disk-io-tuning "$TUNED_POD" -- ps aux | grep -o '\-drive [^ ]*' | head -5
+----
+
+ドライブパラメーターで `cache=none`、`aio=native`、および `iothread` を探します。これらにより、QEMU レベルでチューニングが有効になっていることが確認できます。
+
+== ステップ 7: I/O ボトルネックの特定
+
+I/O パフォーマンスが期待を満たしていない場合は、以下のツールを使用してボトルネックを特定します。
+
+=== ゲスト側のツール
+
+VM コンソールに接続し、`iostat` を使用してデバイスごとの I/O 統計を監視します。
+
+[source,bash]
+----
+sudo dnf install -y sysstat
+iostat -xz 2
+----
+
+注目すべき主要な列:
+
+* **`%util`**: デバイスがビジー状態である時間の割合。100% に近い値は、デバイスが飽和状態にあることを示します。
+* **`await`**: キュー時間を含む、I/O リクエストが完了するまでの平均時間 (ミリ秒)。高い値は輻輳を示します。
+* **`r_await` / `w_await`**: 読み取りと書き込みそれぞれの待機時間。大きな差がある場合は、非対称なワークロードパターンを示唆しています。
+* **`avgqu-sz`**: 平均 I/O キュー深度。シングルスピンドルデバイスで値が常に 1 を超えている場合は、キューイングが発生していることを示します。
+
+=== ホスト側のツール
+
+OpenShift ノードから、virt-launcher pod のリソース消費量を確認します。
+
+[source,bash,role=execute]
+----
+oc adm top pod -n disk-io-tuning -l kubevirt.io/domain=vm-tuned
+----
+
+OpenShift のモニタリングを使用してノードレベルのディスク I/O プレッシャーを確認します。ノードでの高い `iowait` CPU 値は、VM の設定ではなくホストレベルのストレージがボトルネックであることを示しています。
+
+[source,bash,role=execute]
+----
+oc adm top node
+----
+
+VM をホストしているノードで顕著な `iowait` を伴う高い CPU 使用率が示されている場合、VM ディスク設定ではなくストレージバックエンド自体が制限要因となっている可能性があります。
+
+== ストレージバックエンドの影響
+
+ストレージバックエンドは、ほとんどの VM レベルのチューニングオプションよりも I/O パフォーマンスに大きな影響を与えます。一般的なバックエンドの比較は以下のとおりです。
+
+[cols="1,1,1,1",options="header"]
+|===
+| バックエンド
+| ランダム IOPS (標準的)
+| レイテンシー
+| 最適な用途
+
+| LVM thin pool (local NVMe)
+| 50,000-200,000+
+| 1 ミリ秒未満
+| 高パフォーマンスデータベース、レイテンシーの影響を受けやすいワークロード
+
+| ODF / Ceph RBD
+| 10,000-50,000
+| 1-5 ms
+| 汎用、レプリケーションおよびスナップショットを必要とするワークロード
+
+| NFS
+| 1,000-10,000
+| 2-10 ms
+| 共有ストレージ、読み取り中心のワークロード、レイテンシーの影響を受けにくいアプリケーション
+
+| クラウドプロバイダーディスク (gp3、マネージド SSD)
+| 3,000-16,000 (プロビジョニング済み)
+| 1-3 ms
+| クラウドでホストされる OpenShift クラスター
+|===
+
+NOTE: これらの数値はおおよその範囲であり、ハードウェア、ネットワーク、および設定によって異なります。常に独自の環境でベンチマークを実行してください。
+
+== ワークロードタイプ別のチューニング推奨事項
+
+[cols="1,3",options="header"]
+|===
+| ワークロード
+| 推奨設定
+
+| データベース (PostgreSQL、MySQL)
+| VirtIO バス、`cache: none`、`io: native`、`dedicatedIOThread: true`、Block ボリュームモード、`blockMultiQueue: true`。データベースは独自のライトキャッシュを管理し、予測可能な fsync 動作を必要とします。
+
+| Web サーバー / アプリケーションサーバー
+| VirtIO バス、デフォルトのキャッシュモード、Filesystem ボリュームモード。Web サーバーは通常 I/O バウンドではありません。デフォルト設定で十分です。
+
+| ログ集約 / ストリーミング
+| VirtIO バス、`cache: writeback`、`dedicatedIOThread: true`。シーケンシャル書き込みワークロードはライトキャッシュの恩恵を受けます。ログは再収集できるため、データ損失のリスクは許容されます。
+
+| 汎用 / デスクトップ
+| VirtIO バス、デフォルトのキャッシュおよび I/O 設定。混在した負荷の低い I/O ワークロードでは、チューニングによるメリットは最小限です。
+
+| データ分析 / バッチ処理
+| VirtIO バス、`io: native`、Block ボリュームモード、`blockMultiQueue: true`。大規模なシーケンシャル読み取りは、ネイティブ I/O とブロックアクセスの恩恵を受けます。
+|===
+
+== クリーンアップ
+
+このチュートリアルで作成したすべてのリソースを削除します:
+
+[source,bash,role=execute]
+----
+oc delete namespace disk-io-tuning
+----
+
+== まとめ
+
+このチュートリアルでは、次の方法について学習しました:
+
+* ゲスト OS の互換性とパフォーマンスのニーズに基づいて適切なディスクバスタイプ (VirtIO、SCSI、SATA) を選択する
+* PVC のボリュームモード (Block または Filesystem) を選択する
+* ワークロードの要件に合わせてディスクキャッシュモード (`none`、`writeback`、`writethrough`) を設定する
+* より高い I/O 並行性を実現するために I/O スレッディングおよびブロックマルチキューを有効にする
+* ゲスト内で `fio` を使用して VM ディスクパフォーマンスをベンチマーク測定する
+* ゲスト側の `iostat` とホスト側のモニタリングを使用して I/O ボトルネックを特定する
+* ワークロードタイプに基づいてチューニングの推奨事項を適用する
+
+== 参照
+
+* xref:multi-disk-configuration.adoc[マルチディスク VM 構成]
+* xref:performance:resource-limits-qos.adoc[VM のリソース制限と QoS]
+* link:https://kubevirt.io/user-guide/storage/disks_and_volumes/[KubeVirt のディスクとボリューム,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/storage[OpenShift Virtualization ストレージ,window=_blank]
+* link:https://fio.readthedocs.io/en/latest/[fio ドキュメント,window=_blank]
