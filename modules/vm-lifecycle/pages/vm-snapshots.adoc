@@ -24,7 +24,7 @@ OpenShift 4.20
 
 * OpenShift Virtualization がインストールされた OpenShift 4.18 以降
 * スナップショット対象となる実行中または停止中の VM
-* CSI スナップショットをサポートするストレージクラス
+* CSI スナップショットをサポートする Storage Class
 * インストール済みの `oc` および `virtctl` CLI ツール
 
 === スナップショットストレージのサポート確認
@@ -409,11 +409,11 @@ VM スナップショットには、スナップショット機能をサポー�
 
 === VolumeSnapshotClass の設定
 
-VolumeSnapshotClass は、スナップショットの作成および管理方法を決定します。ストレージクラスに対応する snapshot class があることを確認してください。
+VolumeSnapshotClass は、スナップショットの作成および管理方法を決定します。Storage Class に対応する snapshot class があることを確認してください。
 
 [source,bash,role=execute]
 ----
-# ストレージクラスの確認
+# Storage Class の確認
 oc get storageclass
 
 # 対応する snapshot class の確認
@@ -500,7 +500,7 @@ oc wait vm database-vm -n vm-snapshots --for=jsonpath='{.status.printableStatus}
 
 **問題**: ストレージプロビジョナーに一致する VolumeSnapshotClass がないため、スナップショット作成が失敗する。
 
-**解決策**: ストレージクラスに対して VolumeSnapshotClass が存在することを確認します。
+**解決策**: Storage Class に対して VolumeSnapshotClass が存在することを確認します。
 
 [source,bash,role=execute]
 ----

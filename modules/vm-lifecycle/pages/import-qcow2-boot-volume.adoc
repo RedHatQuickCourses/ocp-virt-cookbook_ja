@@ -7,7 +7,7 @@
 
 qcow2 (QEMU Copy-On-Write version 2) は、KVM やその他の QEMU ベースの仮想化プラットフォームで一般的に使用されるディスクイメージ形式です。これらのイメージをインポートすることで、既存のワークロードを OpenShift Virtualization へ迅速に移行できます。
 
-NOTE: このチュートリアルは、OpenShift Virtualization を導入した OpenShift 4.18.33 環境で、AWS EBS gp3-csi ストレージクラスを使用してテストされています。
+NOTE: このチュートリアルは、OpenShift Virtualization を導入した OpenShift 4.18.33 環境で、AWS EBS gp3-csi StorageClass を使用してテストされています。
 
 == 前提条件
 
@@ -15,7 +15,7 @@ NOTE: このチュートリアルは、OpenShift Virtualization を導入した 
 * CLI ツール: `oc`, xref:getting-started:virtctl-basics.adoc[`virtctl`]
 * `qemu-img` (オプション) - qcow2 イメージの詳細をローカルで調査するために使用
 * ローカルで利用可能な (または HTTP/S3 経由でアクセス可能な) qcow2 イメージファイル
-* xref:getting-started:default-storage-class.adoc[ストレージクラスの設定] - 動的なボリュームプロビジョニング用
+* xref:getting-started:default-storage-class.adoc[StorageClass の設定] - 動的なボリュームプロビジョニング用
 * namespace 内の十分なストレージクォータ
 
 == インポート方法の概要
@@ -472,14 +472,14 @@ virtctl start vm-with-upload -n imported-vms
 
 === ストレージのサイジング
 * **拡張性を考慮** - VM 操作を見越して、Virtual size よりも多くのストレージを割り当て
-* **シンプロビジョニング** - 利用可能な場合、シンプロビジョニングをサポートするストレージクラスを使用
+* **シンプロビジョニング** - 利用可能な場合、シンプロビジョニングをサポートする StorageClass を使用
 * **使用状況の監視** - 定期的に PVC の使用状況を追跡
 
 === セキュリティ
 * **イメージスキャン** - インポート前に qcow2 イメージの脆弱性をスキャン
 * **TLS の利用** - 可能であれば `--insecure` フラグを外し、適切な証明書を設定
 * **アクセス制御** - RBAC を使用してイメージアップロード権限を制御
-* **暗号化ストレージ** - 保存時の暗号化をサポートするストレージクラスを検討
+* **暗号化ストレージ** - 保存時の暗号化をサポートする StorageClass を検討
 
 === パフォーマンス
 * **ローカルアップロード** - 速度を向上させるため、クラスターネットワーク内からアップロード

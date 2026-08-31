@@ -25,7 +25,7 @@
 
 - OpenShift Virtualization Operator がインストールされた OpenShift 4.18 以上
 - CLI ツール: `oc`, `virtctl`, `kubectl`
-- ストレージクラスが構成済みであること (本チュートリアルでは `lvms-vg1` を使用) 
+- Storage Class が構成済みであること (本チュートリアルでは `lvms-vg1` を使用) 
 - Linux システム管理に関する基本的な理解
 - cloud-init に関する基本的な理解
 
