@@ -325,7 +325,7 @@ oc create namespace realtime-demo
 * `autoattachMemBalloon: false` -- メモリ管理割り込みを回避するためにバルーンデバイスを無効化
 * `autoattachGraphicsDevice: false` -- 割り込みソースを減らすためにグラフィックスデバイスを無効化
 
-WARNING: この例の cloud-init パスワードはデモンストレーション専用です。本番環境では、SSH キー認証または強力で固有のパスワードを使用してください。
+WARNING: この例の cloud-init パスワードはデモンストレーション専用です。本番環境では、SSH 鍵認証または強力で固有のパスワードを使用してください。
 
 xref:attachment$realtime-vms/vm-realtime.yaml[vm-realtime.yaml をダウンロード]
 

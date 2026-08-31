@@ -54,7 +54,7 @@ Kubernetes は、リソース構成に基づいてすべての Pod に 3 つの 
 
 リソースの requests のみがあり、limits がない VM は Burstable QoS を取得します。これは OpenShift Virtualization VM のデフォルトの動作です。
 
-WARNING: この例の cloud-init パスワードはデモ用です。本番環境では、常に強力で一意なパスワードまたは SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ用です。本番環境では、常に強力で一意なパスワードまたは SSH 鍵認証を使用してください。
 
 xref:attachment$resource-limits-qos/vm-burstable.yaml[vm-burstable.yaml をダウンロード]
 

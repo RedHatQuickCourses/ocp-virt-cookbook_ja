@@ -140,7 +140,7 @@ oc create namespace cpu-pinning-demo
 
 以下の VM 仕様は、`dedicatedCpuPlacement: true` を使用して 2 つの専用 vCPU をリクエストします。`nodeSelector` により、VM は `cpumanager=true` とラベル付けされたノードでのみスケジューリングされます。メモリの requests と limits は同一であり、Guaranteed QoS 要件を満たしています。
 
-WARNING: この例の cloud-init パスワードはデモンストレーション目的のみです。本番環境では、SSH キー認証または強力でユニークなパスワードを使用してください。
+WARNING: この例の cloud-init パスワードはデモンストレーション目的のみです。本番環境では、SSH 鍵認証または強力でユニークなパスワードを使用してください。
 
 xref:attachment$cpu-pinning/vm-dedicated-cpu.yaml[vm-dedicated-cpu.yaml をダウンロード]
 
