@@ -5,7 +5,7 @@
 
 == 前提条件
 
-* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認)
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始] チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認)
 * xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成] チュートリアルを完了していること
 * xref:ai-vm-lifecycle.adoc[AI を活用した VM ライフサイクル操作] および xref:vm-clone.adoc[AI エージェントを使用した仮想マシンのクローン作成] チュートリアルを理解していること
 * OpenShift Virtualization がインストールされ、少なくとも 2 つの Worker Node がある OpenShift クラスター
@@ -597,7 +597,7 @@ oc delete namespace production-vms
 
 == 参照
 
-* xref:getting-started.adoc[Agentic VM 管理の開始]
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始]
 * xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]
 * xref:ai-vm-lifecycle.adoc[AI を活用した VM ライフサイクル操作]
 * xref:vm-clone.adoc[AI エージェントを使用した仮想マシンのクローン作成]

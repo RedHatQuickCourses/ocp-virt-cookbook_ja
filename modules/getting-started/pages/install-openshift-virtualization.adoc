@@ -5,8 +5,95 @@
 
 このチュートリアルでは、OpenShift クラスター上でコンテナワークロードと並行して仮想マシンを実行できるようにする、OpenShift Virtualization Operator のインストールおよび設定方法を説明します。OpenShift Virtualization は、アップストリームの KubeVirt プロジェクトをベースにしており、エンタープライズグレードの仮想化機能を提供します。
 
-* <<Web コンソールを使用したインストール>>
-* <<コマンドラインを使用したインストール>>
+* <<web-console-install,Web コンソールを使用したインストール>>
+* <<cli-install,コマンドラインを使用したインストール>>
+
+== OpenShift Virtualization を使用する理由
+
+インストールに進む前に、OpenShift 上で仮想マシンを実行するビジネス上の動機を理解しておくと役立ちます。
+
+インフラストラクチャーの統合::
+コンピュート、ストレージ、ネットワークのリソースを共有しながら、同じ OpenShift クラスター上で VM とコンテナを実行します。これにより、個別のハイパーバイザープラットフォームが不要になり、ハードウェアコストとライセンスコストが削減されます。
+
+VMware の移行パス::
+Migration Toolkit for Virtualization (MTV) を使用すると、組織は既存の VMware vSphere VM を OpenShift Virtualization に移行できます。これにより、アプリケーションを書き直すことなく段階的な移行パスが提供され、コールド移行とウォーム移行の両方の戦略がサポートされます。
+
+モダナイゼーションへの架け橋::
+レガシーな VM ワークロードの実行を継続しながら、アプリケーションをコンテナへとモダナイズします。Kubernetes を導入したものの、コンテナ化できないワークロードを保持しているチームは、両方を単一のプラットフォームで管理できます。
+
+統合管理::
+単一のコントロールプレーンで VM とコンテナの両方を処理します。OpenShift RBAC、モニタリング (Prometheus)、ロギング、ネットワークポリシーがすべてのワークロードタイプに一律に適用されます。Web コンソールは、VM とコンテナを並べて管理するための単一のインターフェースを提供します。
+
+[[_what_gets_deployed]]
+== デプロイされるコンポーネント
+
+OpenShift Virtualization Operator をインストールすると、クラスター全体に連携する一連のコンポーネントがデプロイされます。このアーキテクチャーを理解することは、トラブルシューティングやキャパシティープランニングに役立ちます。
+
+....
+OpenShift Cluster
+│
+└─ openshift-cnv Namespace
+   └─ HyperConverged CR (単一のエントリーポイント)
+      ├─ KubeVirt Operator
+      │    ├─ virt-api        — API server & コンソールアクセス
+      │    └─ virt-controller — VMI ライフサイクル & スケジューリング
+      │         ├─ Worker Node 1
+      │         │    ├─ virt-handler (DaemonSet)
+      │         │    └─ virt-launcher Pod
+      │         │         ├─ libvirtd (session mode)
+      │         │         └─ QEMU/KVM
+      │         └─ Worker Node N
+      │              ├─ virt-handler (DaemonSet)
+      │              └─ virt-launcher Pod
+      │                   ├─ libvirtd (session mode)
+      │                   └─ QEMU/KVM
+      ├─ CDI Operator        — VM イメージ インポート/アップロード/クローン
+      ├─ SSP Operator        — テンプレート & ブートソース
+      └─ Network Addons Op   — Multus CNI セカンダリーネットワーク
+....
+
+=== Operator (`openshift-cnv` namespace)
+
+HyperConverged カスタムリソース (CR) は、スタック全体に対する単一のエントリーポイントです。1 つの `HyperConverged` CR を作成すると、4 つのサブ Operator のデプロイがトリガーされます。
+
+[cols="1,3",options="header"]
+|===
+| Operator | 役割
+
+| KubeVirt Operator
+| コア仮想化。`virt-api`、`virt-controller`、`virt-handler` をデプロイして管理します。
+
+| CDI Operator
+| Containerized Data Importer。VM イメージのインポート、アップロード、PersistentVolumeClaim へのクローン作成を処理します。
+
+| SSP Operator
+| スケジューリング、スケール、パフォーマンス。VM テンプレート、デフォルトのブートソース、テンプレートの検証をデプロイします。
+
+| Network Addons Operator
+| Multus CNI 経由でのセカンダリーネットワークサポートのためのネットワークコンポーネントをデプロイします。
+|===
+
+=== コントロールプレーン
+
+KubeVirt Operator は、非特権 Pod として実行される 2 つのクラスターレベルコンポーネントを作成します。
+
+* **virt-api** -- VM API リクエストを検証し、コンソール/VNC アクセスを提供する Kubernetes API 拡張機能。
+* **virt-controller** -- VirtualMachineInstance (VMI) オブジェクトを監視し、VM スケジューリング用の Pod を作成し、VM ライフサイクルの状態遷移を管理します。
+
+=== ノードレベルのコンポーネント
+
+**virt-handler** は、VM をホスト可能なすべてのノードで DaemonSet として実行されます。昇格された特権で動作し、デバイスの挿入、ネットワークブリッジの設定、VMI 状態のリコンサイルなどのホストレベルのセットアップを実行します。
+
+=== VM ごとのコンポーネント
+
+各仮想マシンは、専用の **virt-launcher** Pod 内で実行されます。この Pod には以下が含まれます。
+
+* セッションモードで実行される **libvirtd** (root 権限なし、VM ごとに分離)
+* ハードウェアアクセラレーションによる仮想化のための **QEMU/KVM**
+
+このアーキテクチャーにより、VM プロセスが相互に分離され、デフォルトで非特権ワークロードとして実行されることが保証されます。
+
+TIP: VM 実行フロー、ストレージ、ネットワークモデル、従来のハイパーバイザーとの比較など、より広範なアーキテクチャーの概要については、xref:architecture-overview.adoc[] を参照してください。
 
 == 前提条件
 
@@ -26,6 +113,7 @@ CPU 仕様、サポート対象プラットフォーム、ストレージに関�
 
 TIP: ストレージ設定については、 Operator のインストール完了後に xref:default-storage-class.adoc[] を参照してください。
 
+[[web-console-install]]
 == Web コンソールを使用したインストール
 
 Web コンソールを使用すると、OpenShift Virtualization のインストールをガイド付きで実行できます。
@@ -83,6 +171,7 @@ image::install-9-wait-for-conditions.png[デプロイ成功を示す HyperConver
 
 image::install-10-installed-operator.png[インストール済みの OpenShift Virtualization Operator]
 
+[[cli-install]]
 == コマンドラインを使用したインストール
 
 自動デプロイや Web コンソールにアクセスできない環境では、CLI によるインストール方法を使用します。
@@ -128,11 +217,11 @@ Operator がインストールされるのを待ち、ステータスを確認�
 
 [source,bash,role=execute]
 ----
-# Watch the CSV status until it shows Succeeded
+# CSVのステータスが Succeeded になるまで監視
 oc get csv -n openshift-cnv -w
 ----
 
-インストール完了時に期待される出力:
+インストール完了時に想定される出力:
 
 ----
 NAME                                       DISPLAY                    VERSION   REPLACES                                   PHASE
@@ -179,7 +268,7 @@ oc wait hyperconverged kubevirt-hyperconverged -n openshift-cnv --for=condition=
 oc get hyperconverged kubevirt-hyperconverged -n openshift-cnv -o jsonpath='{range .status.conditions[*]}{.type}: {.status}{"\n"}{end}'
 ----
 
-インストール完了時の期待される出力:
+インストール完了時の想定される出力:
 
 ----
 ReconcileComplete: True
@@ -188,6 +277,60 @@ Progressing: False
 Degraded: False
 Upgradeable: True
 ----
+
+== インストール後の検証チェックリスト
+
+インストール (Web コンソールまたは CLI 経由) の完了後、デプロイが正常であることを確認します。
+
+=== Pod ステータスの確認
+
+`openshift-cnv` namespace 内のすべての Pod が `Running` または `Completed` 状態である必要があります。
+
+[source,bash,role=execute]
+----
+oc get pods -n openshift-cnv
+----
+
+=== HyperConverged の Condition の確認
+
+すべての Condition が正常な状態を報告している必要があります。
+
+[source,bash,role=execute]
+----
+oc get hyperconverged kubevirt-hyperconverged -n openshift-cnv -o jsonpath='{range .status.conditions[*]}{.type}: {.status}{"\n"}{end}'
+----
+
+想定される出力:
+
+----
+ReconcileComplete: True
+Available: True
+Progressing: False
+Degraded: False
+Upgradeable: True
+----
+
+=== ブートソース DataSource の確認
+
+サポートされているオペレーティングシステムのデフォルトブートソースが利用可能である必要があります。
+
+[source,bash,role=execute]
+----
+oc get datasources -n openshift-virtualization-os-images
+----
+
+`Ready` Condition の RHEL、Fedora、CentOS、Windows ブートイメージのエントリが表示されるはずです。
+
+=== デフォルト StorageClass の確認
+
+VM ディスクのプロビジョニング用にデフォルト StorageClass が設定されている必要があります。
+
+[source,bash,role=execute]
+----
+oc get storageclass
+----
+
+`(default)` とマークされている StorageClass を探します。設定されていない場合は、VM を作成する前に xref:default-storage-class.adoc[デフォルト StorageClass の設定] を参照してください。
 
 == OpenShift Virtualization のアンインストール
 
@@ -201,10 +344,10 @@ IMPORTANT: Operator のサブスクリプションを削除するだけでは、
 
 [source,bash,role=execute]
 ----
-# List all VMs across namespaces
+# すべての namespace の VM を一覧表示する
 oc get vm -A
 
-# Delete VMs (repeat for each namespace)
+# VM を削除する (namespace ごとに繰り返し)
 oc delete vm --all -n <namespace>
 ----
 
@@ -223,7 +366,7 @@ oc delete hyperconverged kubevirt-hyperconverged -n openshift-cnv
 
 [source,bash,role=execute]
 ----
-# Watch pods being terminated (this may take 5-10 minutes)
+# Pod が終了するのを見守ってください（5〜10分かかる場合があります）
 oc get pods -n openshift-cnv -w
 ----
 
@@ -233,10 +376,10 @@ oc get pods -n openshift-cnv -w
 
 [source,bash,role=execute]
 ----
-# Delete the subscription
+# subscription を削除
 oc delete subscription hco-operatorhub -n openshift-cnv
 
-# Delete the ClusterServiceVersion
+# ClusterServiceVersion を削除
 oc delete csv -n openshift-cnv -l operators.coreos.com/kubevirt-hyperconverged.openshift-cnv
 ----
 
@@ -255,7 +398,7 @@ oc delete namespace openshift-cnv
 
 [source,bash,role=execute]
 ----
-# Should return empty or "No resources found"
+# 空、または "No resources found" が返される必要があります。
 oc get pods -n openshift-cnv
 oc get csv -n openshift-cnv
 ----

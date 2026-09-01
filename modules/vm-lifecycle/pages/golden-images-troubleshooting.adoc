@@ -5,10 +5,11 @@
 
 == 目次
 
-* <<クイックヘルスチェック>>
-* <<ステップ別詳細確認>>
-* <<一般的な問題と解決策>>
+* <<quick-health-check,クイックヘルスチェック>>
+* <<step-by-step-check,ステップ別詳細確認>>
+* <<common-issues,一般的な問題と解決策>>
 
+[[quick-health-check]]
 == クイックヘルスチェック
 
 === namespace の確認
@@ -18,7 +19,7 @@
 oc get namespace golden-images
 ----
 
-期待される出力:
+想定される出力:
 
 [source,text]
 ----
@@ -54,6 +55,7 @@ oc get dv,pvc -n golden-images
 oc get datasource -n golden-images
 ----
 
+[[step-by-step-check]]
 == ステップ別詳細確認
 
 === ステップ 1: ベース VM 作成の検証
@@ -65,7 +67,7 @@ oc get datasource -n golden-images
 oc get vm base-fedora-vm -n golden-images
 ----
 
-期待される出力:
+想定される出力:
 
 [source,text]
 ----
@@ -118,7 +120,7 @@ status:
 oc get dv base-fedora-vm-disk -n golden-images
 ----
 
-期待される出力:
+想定される出力:
 
 [source,text]
 ----
@@ -133,7 +135,7 @@ base-fedora-vm-disk   Succeeded   100.0%                5m
 oc get pvc base-fedora-vm-disk -n golden-images
 ----
 
-期待される出力には `Bound` ステータスと正しい Storage Class が表示されます:
+想定される出力には `Bound` ステータスと正しい Storage Class が表示されます:
 
 [source,text]
 ----
@@ -182,7 +184,7 @@ cat /var/log/cloud-init-output.log
 oc get vm base-fedora-vm -n golden-images
 ----
 
-期待される出力:
+想定される出力:
 
 [source,text]
 ----
@@ -197,7 +199,7 @@ base-fedora-vm   10m   Stopped   False
 oc get vmi base-fedora-vm -n golden-images 2>&1
 ----
 
-期待される出力:
+想定される出力:
 
 [source,text]
 ----
@@ -213,7 +215,7 @@ Error from server (NotFound): virtualmachineinstances.kubevirt.io "base-fedora-v
 oc get datasource fedora-nginx-golden -n golden-images
 ----
 
-期待される出力:
+想定される出力:
 
 [source,text]
 ----
@@ -248,7 +250,7 @@ spec:
 oc get vm webserver-vm-1 webserver-vm-2 -n golden-images
 ----
 
-期待される出力:
+想定される出力:
 
 [source,text]
 ----
@@ -264,7 +266,7 @@ webserver-vm-2    2m    Running   True
 oc get dv webserver-vm-1-disk webserver-vm-2-disk -n golden-images
 ----
 
-期待される出力:
+想定される出力:
 
 [source,text]
 ----
@@ -280,7 +282,7 @@ webserver-vm-2-disk    Succeeded   100.0%                2m
 oc get dv webserver-vm-1-disk -n golden-images -o jsonpath='{.spec.sourceRef}'
 ----
 
-期待される出力には DataSource への参照が表示されます:
+想定される出力には DataSource への参照が表示されます:
 
 [source,json]
 ----
@@ -338,6 +340,7 @@ webserver-vm-2-disk    Bound    pvc-ghi789...    30Gi       RWO            lvms-
 oc get lvmvolumegroup -n openshift-storage -o yaml | grep -A 10 status
 ----
 
+[[common-issues]]
 == 一般的な問題と解決策
 
 === 問題 1: ベース VM の DataVolume が ImportInProgress で停止している

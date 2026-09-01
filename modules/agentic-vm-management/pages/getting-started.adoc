@@ -1,11 +1,11 @@
-= Agentic VM 管理の開始
+= AI エージェントによる VM 管理の開始
 :navtitle: rh-virt の開始
 
 == 概要
 
 このチュートリアルでは、`rh-virt` agentic スキルパックのインストールと設定、コンテナ化された MCP サーバーを介した OpenShift クラスターへの接続、および `vm-inventory` スキルを使用した仮想マシンの一覧表示によるセットアップの検証手順を説明します。
 
-このチュートリアルを完了すると、Claude Code または Cursor IDE で自然言語プロンプトを使用して OpenShift Virtualization VM を管理できる、完全に設定された Agentic 環境が整います。
+このチュートリアルを完了すると、Claude Code または Cursor IDE で自然言語プロンプトを使用して OpenShift Virtualization VM を管理できる、完全に設定された AI エージェント環境が整います。
 
 == 前提条件
 
@@ -22,9 +22,9 @@
 oc get virtualmachines -A
 ----
 
-== Agentic VM 管理とは
+== AI エージェントによる VM 管理とは
 
-Agentic VM 管理により、手動での一連の `oc` コマンド実行が自然言語プロンプトに置き換えられます。実行したい内容を記述すると、AI エージェントが適切なスキルを選択し、Model Context Protocol (MCP) 経由で適切な API 操作を呼び出し、破壊的なアクションを実行する前に確認を求めます。
+AI エージェントによる VM 管理により、手動での一連の `oc` コマンド実行が自然言語プロンプトに置き換えられます。実行したい内容を記述すると、AI エージェントが適切なスキルを選択し、Model Context Protocol (MCP) 経由で適切な API 操作を呼び出し、破壊的なアクションを実行する前に確認を求めます。
 
 `rh-virt` スキルパックは、OpenShift Virtualization VM の管理方法をエージェントに教えるコンポーネントです。これには 10 個のスキル (vm-inventory、vm-create、vm-lifecycle-manager、vm-clone、vm-delete、vm-snapshot-create、vm-snapshot-list、vm-snapshot-restore、vm-snapshot-delete、vm-rebalance) と、ユーザーの意図を適切なスキルにマッピングする AGENTS.md ルーティングテーブルが含まれています。
 
@@ -302,7 +302,7 @@ oc auth can-i delete virtualmachines -A
 
 == 参照
 
-* xref:index.adoc[Agentic VM 管理モジュールの概要]
+* xref:index.adoc[AI エージェントによる VM 管理モジュールの概要]
 * link:https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt[rh-virt スキルパックリポジトリ,window=_blank]
 * link:https://github.com/LobsterTrap/lola[Lola Skill Pack Manager,window=_blank]
 * link:https://github.com/openshift/openshift-mcp-server[OpenShift MCP Server,window=_blank]

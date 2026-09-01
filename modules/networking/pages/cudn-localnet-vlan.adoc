@@ -95,7 +95,7 @@ oc debug node/<node-name> -- ip link show
 [source,bash,role=execute]
 ----
 oc get nncp br-vlan-creation
-# Expected output: STATUS: Available
+# 想定される出力: STATUS: Available
 ----
 
 == ステップ 3: bridge mapping の構成
@@ -376,7 +376,7 @@ ip addr show
 # Check routes
 ip route show
 
-# Expected output example (primary network via DHCP):
+# 想定される出力例 (プライマリネットワーク、DHCP 経由):
 default via 10.128.0.1 dev enp1s0 proto dhcp src 10.128.0.174 metric 100 
 
 # Test external connectivity

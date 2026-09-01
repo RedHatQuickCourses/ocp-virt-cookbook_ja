@@ -1,5 +1,5 @@
-= Agentic VM 管理
-:navtitle: Agentic VM 管理
+= AI エージェントによる VM 管理
+:navtitle: AI エージェントによる VM 管理
 
 == 概要
 
@@ -70,7 +70,7 @@
 
 == セクション
 
-xref:getting-started.adoc[Agentic VM 管理の開始]::
+xref:getting-started.adoc[AI エージェントによる VM 管理の開始]::
 `rh-virt` スキルパックをインストールし、MCP サーバーを設定して、`vm-inventory` スキルを使用してエンドツーエンドの接続性を検証します。
 xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]::
 `vm-create` スキルを使用して、自然言語で要件を記述して仮想マシンを作成する方法を学びます。

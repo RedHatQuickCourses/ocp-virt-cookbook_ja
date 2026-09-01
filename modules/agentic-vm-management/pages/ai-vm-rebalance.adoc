@@ -5,7 +5,7 @@
 
 == 前提条件
 
-* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認が完了していること)
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始] チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認が完了していること)
 * OpenShift Virtualization がインストールされた OpenShift クラスター
 * `KUBECONFIG` 環境変数が設定され、有効な kubeconfig ファイルを指していること
 * スケジューリング可能な Worker Node が少なくとも 2 つあるマルチノードクラスター
@@ -458,7 +458,7 @@ worker-02  Ready  <none>
 
 === taint の検証
 
-エージェントは、ターゲットノードに VM の Pod が許容 (tolerate) していないテイント (taint) があるかどうかを確認します。許容されない taint が存在する場合、エージェントは別のターゲットノードを選択するか、適切なターゲットが利用できないことを通知します。
+エージェントは、ターゲットノードに VM の Pod が許容 (tolerate) していない Taint があるかどうかを確認します。許容されない Taint が存在する場合、エージェントは別のターゲットノードを選択するか、適切なターゲットが利用できないことを通知します。
 
 [source,bash,role=execute]
 ----
@@ -537,7 +537,7 @@ oc delete namespace my-vms
 
 == 参照
 
-* xref:getting-started.adoc[Agentic VM 管理の開始]
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始]
 * xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]
 * xref:ai-vm-lifecycle.adoc[AI を活用した VM ライフサイクル操作]
 * xref:vm-clone.adoc[AI エージェントによる仮想マシンのクローン作成]

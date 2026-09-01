@@ -5,16 +5,17 @@
 
 == 目次
 
-* <<クイックヘルスチェック>>
-* <<メソッド 1: コンソールアクセス>>
-* <<メソッド 2: VNC アクセス>>
-* <<メソッド 3: virtctl 経由の SSH>>
-* <<メソッド 4: NodePort Service 経由の SSH>>
-* <<メソッド 5: LoadBalancer 経由の SSH>>
-* <<メソッド 6: ポートフォワード経由の SSH>>
-* <<メソッド 7: セカンダリーネットワーク経由の直接アクセス>>
-* <<調査コマンド>>
+* <<quick-health-check,クイックヘルスチェック>>
+* <<method-1-console,メソッド 1: コンソールアクセス>>
+* <<method-2-vnc,メソッド 2: VNC アクセス>>
+* <<method-3-virtctl-ssh,メソッド 3: virtctl 経由の SSH>>
+* <<method-4-nodeport,メソッド 4: NodePort Service 経由の SSH>>
+* <<method-5-loadbalancer,メソッド 5: LoadBalancer 経由の SSH>>
+* <<method-6-port-forward,メソッド 6: ポートフォワード経由の SSH>>
+* <<method-7-secondary-network,メソッド 7: セカンダリーネットワーク経由の直接アクセス>>
+* <<diagnostic-commands,調査コマンド>>
 
+[[quick-health-check]]
 == クイックヘルスチェック
 
 === VM ステータスの確認
@@ -25,7 +26,7 @@ oc get vm <vm-name> -n <namespace>
 oc get vmi <vm-name> -n <namespace>
 ----
 
-実行中の VM の期待される出力:
+実行中の VM の想定される出力:
 
 [source,text]
 ----
@@ -49,7 +50,7 @@ oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.interfaces[*].ipAddres
 oc get pods -n <namespace> -l kubevirt.io/domain=<vm-name>
 ----
 
-期待される出力:
+想定される出力:
 
 [source,text]
 ----
@@ -66,6 +67,7 @@ oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.guestOSInfo.id}'
 
 空の場合、guest agent は実行されていません。注: 基本的なアクセス方法 (コンソール、VNC、SSH、ポートフォワード、NodePort、LoadBalancer、セカンダリーネットワーク) には guest agent は必須ではありません。guest agent はゲスト OS の詳細情報を提供したり、動的な SSH 鍵注入のような機能を有効にしたりするために使用されます。
 
+[[method-1-console]]
 == メソッド 1: コンソールアクセス
 
 === 問題: コンソールに接続できない
@@ -192,6 +194,7 @@ cloudInitNoCloud:
 . または、SSH 鍵認証を使用し、キーを使用してコンソール経由でアクセスします。
 . VM 内の cloud-init ログを確認し、ユーザー作成のエラーがないか調査します。
 
+[[method-2-vnc]]
 == メソッド 2: VNC アクセス
 
 === 問題: virtctl vnc コマンドが動作しない
@@ -283,6 +286,7 @@ systemctl status lightdm  # For other DEs
 ----
 . GUI がない VM の場合は、コンソールアクセスを使用してください。
 
+[[method-3-virtctl-ssh]]
 == メソッド 3: virtctl 経由の SSH
 
 === 問題: virtctl ssh コマンドが失敗する
@@ -403,6 +407,7 @@ chmod 600 ~/.ssh/authorized_keys
 virtctl ssh --local-ssh-opts="-o GSSAPIAuthentication=no -o UseDNS=no" fedora@my-vm -n my-namespace
 ----
 
+[[method-4-nodeport]]
 == メソッド 4: NodePort Service 経由の SSH
 
 === 問題: NodePort Service にアクセスできない
@@ -527,6 +532,7 @@ VM_NODE=$(oc get vmi my-vm -n my-namespace -o jsonpath='{.status.nodeName}')
 oc get node $VM_NODE -o jsonpath='{.status.addresses[?(@.type=="InternalIP") ].address}'
 ----
 
+[[method-5-loadbalancer]]
 == メソッド 5: LoadBalancer 経由の SSH
 
 === 問題: LoadBalancer Service に外部 IP が割り当てられない
@@ -599,6 +605,7 @@ oc run test-curl --image=curlimages/curl --rm -it --restart=Never -- curl -v tel
 . ファイアウォールが LoadBalancer IP へのトラフィックを許可していることを確認します。
 . VM で SSH が実行されていることを確認します (メソッド 4 の解決策を参照) 。
 
+[[method-6-port-forward]]
 == メソッド 6: ポートフォワード経由の SSH
 
 === 問題: oc port-forward が開始できない
@@ -731,6 +738,7 @@ while true; do
 done &
 ----
 
+[[method-7-secondary-network]]
 == メソッド 7: セカンダリーネットワーク経由の直接アクセス
 
 === 問題: セカンダリーネットワーク上の VM に到達できない
@@ -848,6 +856,7 @@ POD=$(oc get pods -n my-namespace -l kubevirt.io/domain=my-vm -o name)
 oc describe $POD -n my-namespace
 ----
 
+[[diagnostic-commands]]
 == 調査コマンド
 
 === VM アクセスヘルスチェックスクリプト

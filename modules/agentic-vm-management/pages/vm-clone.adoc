@@ -5,7 +5,7 @@
 
 == 前提条件
 
-* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックがインストールされ、MCP サーバーが設定され、クラスターの接続性が確認されていること)
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始] チュートリアルを完了していること (スキルパックがインストールされ、MCP サーバーが設定され、クラスターの接続性が確認されていること)
 * OpenShift Virtualization がインストールされている OpenShift クラスター
 * `KUBECONFIG` 環境変数が設定され、有効な kubeconfig ファイルを指していること
 * クローン元として使用する既存の仮想マシンが少なくとも 1 つ
@@ -32,7 +32,7 @@ Create a Fedora VM named web-server in namespace my-vms
 oc get vm -n my-vms
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 NAME     AGE  STATUS  READY
@@ -384,7 +384,7 @@ oc delete namespace qa-environment
 
 == 参照
 
-* xref:getting-started.adoc[Agentic VM 管理の開始]
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始]
 * xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]
 * xref:ai-vm-lifecycle.adoc[AI を活用した VM ライフサイクル操作]
 * link:https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt[rh-virt スキルパックリポジトリ,window=_blank]

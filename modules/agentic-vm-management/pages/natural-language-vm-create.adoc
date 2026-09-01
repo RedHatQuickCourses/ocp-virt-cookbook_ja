@@ -5,7 +5,7 @@
 
 == 前提条件
 
-* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックがインストール済み、MCP サーバーが設定済み、クラスターへの接続が確認済みであること)
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始] チュートリアルを完了していること (スキルパックがインストール済み、MCP サーバーが設定済み、クラスターへの接続が確認済みであること)
 * OpenShift Virtualization がインストールされた OpenShift クラスター
 * `KUBECONFIG` 環境変数が設定され、有効な kubeconfig ファイルを参照していること
 * VirtualMachine リソースを作成する権限を持つ namespace
@@ -445,7 +445,7 @@ NOTE: コンテナディスクイメージは、DataSource 参照から `vm_crea
 エージェントは自動的に以下を実行します。
 
 * クラスター内の利用可能な StorageClass を照会します
-* デフォルトの StorageClass (`storageclass.kubernetes.io/is-default-class` でアノテーションされているもの) を特定します
+* デフォルト StorageClass (`storageclass.kubernetes.io/is-default-class` でアノテーションされているもの) を特定します
 * StorageClass の機能 (ボリュームバインディングモード、CSI プロビジョナー) を分析します
 * 適切なサイズの DataVolume をバックエンドとする PersistentVolumeClaim を作成します
 
@@ -568,7 +568,7 @@ oc delete vm fedora-dev -n development
 
 == 参照
 
-* xref:getting-started.adoc[Agentic VM 管理の開始]
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始]
 * link:https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt[rh-virt スキルパックリポジトリ,window=_blank]
 * link:https://github.com/openshift/openshift-mcp-server[OpenShift MCP Server,window=_blank]
 * link:https://docs.openshift.com/container-platform/{ocp-docs-version}/virt/index.html[OpenShift Virtualization ドキュメント,window=_blank]

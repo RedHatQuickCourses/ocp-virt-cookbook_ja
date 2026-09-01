@@ -31,7 +31,7 @@ oc get nncp
 oc get nncp br-vlan-creation
 ----
 
-**期待される出力:**
+**想定される出力:**
 
 ----
 NAME               STATUS      REASON
@@ -150,7 +150,7 @@ oc debug node/<node-name> -- chroot /host ip link show <interface-name>
 oc debug node/<node-name> -- chroot /host ip addr show br-vlan
 ----
 
-**期待される結果:**
+**想定される結果:**
 
 ----
 Device "br-vlan" does not exist.
@@ -291,7 +291,7 @@ oc get nncp | grep mapping
 oc get nncp localnet-vlan-bridge-mapping
 ----
 
-**期待される出力:**
+**想定される出力:**
 
 ----
 localnet-vlan-bridge-mapping   Available   SuccessfullyConfigured
@@ -334,7 +334,7 @@ status:
 oc debug node/<node-name> -- chroot /host ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings
 ----
 
-**期待される出力:**
+**想定される出力:**
 
 ----
 "localnet-vlan:br-vlan,physnet:br-ex"
@@ -376,7 +376,7 @@ external_ids        : {hostname=ocplab01, ovn-bridge-mappings="localnet-vlan:br-
 oc debug node/<node-name> -- chroot /host ovs-vsctl list-ports br-vlan
 ----
 
-**期待される出力:**
+**想定される出力:**
 
 ----
 enp11s0f0np0
@@ -510,7 +510,7 @@ bridge mapping 内の論理ネットワーク名は、NetworkAttachmentDefinitio
 oc debug node/<node-name> -- chroot /host ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings
 ----
 
-**期待される形式:**
+**想定される形式:**
 
 ----
 "mapping1:bridge1,mapping2:bridge2,mapping3:bridge3"
@@ -583,6 +583,7 @@ oc debug node/<node-name> -- chroot /host ovs-vsctl list bridge
 oc debug node/<node-name> -- chroot /host ovs-ofctl dump-ports br-vlan
 ----
 
+[[_clusteruserdefinednetwork_cudn_verification]]
 == ClusterUserDefinedNetwork (CUDN) の検証
 
 NetworkAttachmentDefinition の代わりに ClusterUserDefinedNetwork を使用する場合、追加の検証手順が必要です。
@@ -600,7 +601,7 @@ oc get clusteruserdefinednetwork
 oc get clusteruserdefinednetwork <cudn-name> -o yaml
 ----
 
-**期待される出力:**
+**想定される出力:**
 
 ----
 NAME                     AGE
@@ -649,7 +650,7 @@ oc get network-attachment-definitions -A | grep <cudn-name>
 oc get network-attachment-definitions -n <namespace>
 ----
 
-**期待される出力:**
+**想定される出力:**
 
 ----
 NAMESPACE             NAME                     AGE

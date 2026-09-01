@@ -7,7 +7,7 @@
 
 == VM クローンとは
 
-VM クローンは、既存の VM を複製して新しい仮想マシンを作成するものです。OpenShift Virtualization では、クローン作成のために主に 2 つの手法が用意されています。
+VM クローンは、既存の VM を複製して新しい仮想マシンを作成するものです。OpenShift Virtualization では、クローン作成のために主に 2 つの方法が用意されています。
 
 * **Web コンソールでのクローン作成**: VM をクローンするためのシンプルなポイント & クリック型のインターフェース
 * **CLI ベースのクローン作成**: PVC をクローンし、新しい VM を作成する手動プロセス
@@ -19,6 +19,16 @@ VM クローンの主な利点:
 * 開発およびテストワークフローの加速
 * 同一ワークロードの迅速なスケールアウト
 * デプロイから本番稼働可能な状態までの時間を短縮
+
+== ビジネスユースケース
+
+クローン作成は、ゼロから構築するのではなく、すでに設定済みの VM が必要な場合に最も効果的です。
+
+* **環境プロビジョニング**: QA テスト用に、完全に設定された本番環境同等の VM をクローンします。その結果、ゼロから構築された VM よりも迅速に作成でき、本番環境に近い状態が得られます。
+* **スケールアウトテスト**: Web サーバー VM を 10 回クローンして、複数の同一インスタンス全体で負荷をシミュレートします。
+* **クロス namespace デプロイ**: 検証済みの VM をステージング namespace から本番 namespace に昇格させ、RBAC でソースへのアクセスを制御します。<<namespace をまたぐクローンの作成>> を参照してください。
+* **ディザスターリカバリーテスト**: 本番 VM を DR namespace にクローンし、クローンに対してフェイルオーバー手順を実行してから削除することで、実行中の本番 VM に影響を与えません。
+* **開発者サンドボックス**: 必要なツールと設定がすでにインストールされているリファレンス VM のクローンを各開発者に提供します。
 
 == クローン作成とゴールデンイメージの比較
 
@@ -57,7 +67,7 @@ VM クローンの主な利点:
 * クローン元の VM (または作成する VM) 
 * PersistentVolumeClaim (PVC) に関する基本的な理解
 
-== クローン手法の理解
+== クローン方法の理解
 
 OpenShift Virtualization には、VM をクローンする 2 つのアプローチがあります。
 
@@ -77,7 +87,63 @@ Web コンソールは、効率的にクローンを作成できます。
 * ソース VM の PVC をクローン
 * クローンされた PVC を参照する新しい VM を作成
 * クローンプロセス中のカスタマイズが可能
-* namespace をまたぐクローン作成に有用
+* namespace をまたぐクローンの作成に有用
+
+=== クローン作成パスの比較
+
+上記の 2 つの方法は、xref:custom-golden-images.adoc[カスタムゴールデンイメージ] で説明されているゴールデンイメージパターンとともに、異なるリソースを通じて同じ結果を実現します。
+
+....
+Webコンソールのクローン — 最もシンプル、同一 namespace
+│
+└─ ソース VM
+   │
+   └─ コンソールでのクローン操作
+      │
+      └─ ソースディスクの完全なコピーを持つ新しいVM
+
+CLI DataVolume クローン — スクリプト化可能、namespace をまたいで動作
+│
+└─ ソース PVC
+   │
+   └─ DataVolume  — spec.source.pvc
+      │
+      └─ 新たな PVC
+         │
+         └─ そのPVCを参照する新しいVM
+
+ゴールデンイメージからのクローン作成 — 用意された1つのイメージから多数のVMを作成
+│
+└─ DataSource
+   │
+   └─ DataVolume  — spec.sourceRef
+      │
+      └─ 新たな VM
+....
+
+これらを選択する際の基準として以下を使用してください。
+
+[cols="1,2,1,1",options="header"]
+|===
+|方法 |最適な用途 |namespace |RBAC
+
+|Web コンソール
+|対話形式で実行する VM の単発コピー
+|同一 namespace
+|不要
+
+|CLI DataVolume
+|自動化、スクリプトによるクローン、または繰り返しのクローン作成
+|同一または異なる
+|クロス namespace で必要
+
+|ゴールデンイメージ
+|1 つの標準化および一般化されたイメージからの多数の VM 作成
+|同一または異なる
+|クロス namespace で必要
+|===
+
+IMPORTANT: 3 つのパスはすべて、ディスクの完全で独立したコピーを生成します。クローンはスナップショットではなく、ソースへの参照でもないため、それぞれがソースボリュームと同じ容量のストレージを消費します。クローン数にソースボリュームサイズを掛けた値として容量を計画してください。<<storage-capacity-requirements,ストレージ容量の要件>> を参照してください。
 
 === ストレージのクローン動作
 
@@ -243,9 +309,9 @@ virtctl console webserver-clone-1 -n vm-cloning-demo
 
 == CLI を使用した VM のクローン作成
 
-自動化やカスタマイズ、あるいは namespace をまたぐクローン作成には、CLI を使用します。
+自動化やカスタマイズ、あるいは namespace をまたぐクローンの作成には、CLI を使用します。
 
-=== 手法 1：PVC をクローンし、その後に VM を作成 (推奨) 
+=== 方法 1：PVC をクローンし、その後に VM を作成 (推奨) 
 
 これは CLI での推奨されるアプローチです。まず、ソース VM の PVC を特定します。
 
@@ -374,9 +440,9 @@ VM を開始します。
 virtctl start webserver-clone-2 -n vm-cloning-demo
 ----
 
-=== 手法 2：VM 全体をクローンする (代替アプローチ) 
+=== 方法 2：VM 全体をクローンする (代替アプローチ) 
 
-NOTE: この手法は手動での編集が必要であり、推奨されません。より信頼性が高くトラブルシューティングが容易な「手法 1」を使用してください。
+NOTE: この方法は手動での編集が必要であり、推奨されません。より信頼性が高くトラブルシューティングが容易な「方法 1」を使用してください。
 
 クリーンなクローンを作成するためにソース VM を停止します。
 
@@ -493,7 +559,7 @@ oc apply -f clone-base.yaml
 
 === 新しいホスト名とパスワードでのクローン作成
 
-DataVolume クローンを作成します (手法 2 と同様)。
+DataVolume クローンを作成します (方法 2 と同様)。
 
 [source,bash,role=execute]
 ----
@@ -622,7 +688,7 @@ curl localhost
 # カスタムHTMLを表示
 ----
 
-== namespace をまたぐクローン作成
+== namespace をまたぐクローンの作成
 
 環境分離 (開発、テスト、本番) のために、別の namespace へ VM をクローンします。
 
@@ -810,7 +876,7 @@ virtctl start webserver-production -n vm-cloning-production
   - スナップショットサポートがない Storage Class
   - フェーズ: 進捗率が表示される `CloneInProgress`
 
-どちらの手法が使用されているか確認します。
+どちらの方法が使用されているか確認します。
 
 [source,bash,role=execute]
 ----
@@ -825,6 +891,7 @@ cdi.kubevirt.io/cloneType: snapshot  # Smart cloning
 cdi.kubevirt.io/cloneType: copy      # Host-assisted cloning
 ----
 
+[[storage-capacity-requirements]]
 === ストレージ容量の要件
 
 各クローンには完全なストレージ割り当てが必要です。
@@ -1045,21 +1112,21 @@ oc describe vmi <vm-name> -n <namespace>
 
 [source,bash,role=execute]
 ----
-# demo namespace内のすべてのVMを削除
+# demo namespace 内のすべての VM を削除
 oc delete vm --all -n vm-cloning-demo
 
-# demo namespace内のすべてのDataVolumeを削除
+# demo namespace 内のすべての DataVolume を削除
 oc delete dv --all -n vm-cloning-demo
 
-# 本番VMを削除
+# 本番 VM を削除
 oc delete vm webserver-production -n vm-cloning-production
 oc delete dv --all -n vm-cloning-production
 
-# RBACリソースを削除
+# RBAC リソースを削除
 oc delete role datavolume-cloner -n vm-cloning-demo
 oc delete rolebinding allow-clone-from-demo -n vm-cloning-demo
 
-# namespaceを削除
+# namespace を削除
 oc delete namespace vm-cloning-demo
 oc delete namespace vm-cloning-production
 ----
@@ -1085,7 +1152,7 @@ oc get namespace | grep vm-cloning
 * ストレージの考慮事項：Smart cloning と Host-assisted cloning の違い
 * クローン後のカスタマイズに関するベストプラクティス
 * 認証情報とシステム ID に関するセキュリティプラクティス
-* よくある問題とトラブルシューティング手法
+* よくある問題とトラブルシューティング方法
 * VM クローンの本番ユースケース
 
 VM のクローン作成は、OpenShift Virtualization で事前設定済みの環境を迅速に作成できるようにすることで、開発、テスト、デプロイのワークフローを加速させます。

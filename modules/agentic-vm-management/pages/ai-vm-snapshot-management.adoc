@@ -1,11 +1,11 @@
-= Agentic ワークフローによる VM スナップショット管理
+= AI エージェントワークフローによる VM スナップショット管理
 :navtitle: VM スナップショット管理
 
 このチュートリアルでは、4 つのエージェントスキル (`vm-snapshot-create`、`vm-snapshot-list`、`vm-snapshot-restore`、`vm-snapshot-delete`) を通じて自然言語コマンドを使用し、仮想マシンスナップショットの完全なライフサイクルを管理する方法を説明します。アップグレード前のスナップショットの作成、利用可能なスナップショットの一覧表示、アップグレード失敗後のリストア、リストアされた VM の検証、古いスナップショットのクリーンアップという現実的なシナリオを一通り行います。
 
 == 前提条件
 
-* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックがインストール済み、MCP サーバーが設定済み、クラスターへの接続が確認済み)
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始] チュートリアルを完了していること (スキルパックがインストール済み、MCP サーバーが設定済み、クラスターへの接続が確認済み)
 * OpenShift Virtualization がインストールされた OpenShift クラスター
 * `KUBECONFIG` 環境変数が設定され、有効な kubeconfig ファイルを指していること
 * 管理対象となる 1 つ以上の VM (作成するには xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成] を参照)
@@ -708,7 +708,7 @@ oc delete namespace my-vms
 
 == 参照
 
-* xref:getting-started.adoc[Agentic VM 管理の開始]
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始]
 * xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]
 * xref:ai-vm-lifecycle.adoc[AI を活用した VM ライフサイクル操作]
 * xref:vm-clone.adoc[AI エージェントを使用した仮想マシンのクローン作成]

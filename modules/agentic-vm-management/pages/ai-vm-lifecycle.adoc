@@ -5,7 +5,7 @@
 
 == 前提条件
 
-* xref:getting-started.adoc[Agentic VM 管理の開始] チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認が完了していること)
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始] チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認が完了していること)
 * OpenShift Virtualization がインストールされた OpenShift クラスター
 * `KUBECONFIG` 環境変数が設定され、有効な kubeconfig ファイルを参照していること
 * 管理対象の VM が少なくとも 1 つ(作成方法については xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成] を参照)
@@ -442,7 +442,7 @@ oc delete namespace my-vms
 
 == 参照
 
-* xref:getting-started.adoc[Agentic VM 管理の開始]
+* xref:getting-started.adoc[AI エージェントによる VM 管理の開始]
 * xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]
 * xref:vm-clone.adoc[AI エージェントによる仮想マシンのクローン作成]
 * link:https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt[rh-virt スキルパックリポジトリ,window=_blank]
