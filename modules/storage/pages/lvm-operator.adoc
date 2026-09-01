@@ -27,10 +27,10 @@ LVM Operator を設定する前に、ストレージに使用するディスク�
 
 [source,bash,role=execute]
 ----
-# Get your node name
+# ノード名を取得
 oc get nodes
 
-# List all block devices on the node
+# ノード上のすべてのブロックデバイスを一覧表示
 oc debug node/<node-name> -- chroot /host lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT,MODEL
 ----
 
@@ -143,10 +143,10 @@ Operator のインストールを確認します。
 
 [source,bash,role=execute]
 ----
-# Wait for the operator to be installed (may take 2-3 minutes)
+# Operator がインストールされるまで待機 (2〜3 分かかる場合があります)
 oc get csv -n openshift-lvm-storage
 
-# Check operator pod is running
+# Operator Pod が Running であることを確認
 oc get pods -n openshift-lvm-storage
 ----
 
@@ -271,13 +271,13 @@ LVMCluster の準備ができているか、簡単なヘルスチェックを実
 
 [source,bash,role=execute]
 ----
-# Check LVMCluster status
+# LVMCluster ステータスを確認
 oc get lvmcluster -n openshift-lvm-storage
 
-# Verify volume group was created
+# volume group が作成されたことを確認
 oc debug node/<node-name> -- chroot /host vgs
 
-# Verify thin pool was created
+# thin pool が作成されたことを確認
 oc debug node/<node-name> -- chroot /host lvs
 ----
 
@@ -345,7 +345,7 @@ OpenShift Virtualization の DataSource OS イメージ (Fedora、RHEL、CentOS 
 
 [source,bash,role=execute]
 ----
-# Check available OS images
+# 利用可能な OS イメージを確認
 oc get datasources -n openshift-virtualization-os-images
 ----
 
@@ -390,7 +390,7 @@ dataVolumeTemplates:
 
 [source,bash,role=execute]
 ----
-# Check boot source preparation status
+# ブートソースの準備状況を確認
 oc get DataImportCron -n openshift-virtualization-os-images
 ----
 
@@ -476,17 +476,17 @@ PVC がバインドされていることを確認します。
 ----
 oc get pvc lvms-test-pvc
 
-# Should show STATUS as "Bound"
+# STATUS が "Bound" と表示されるはずです
 ----
 
 Pod が実行中で、ストレージに書き込めることを確認します。
 
 [source,bash,role=execute]
 ----
-# Wait for pod to start
+# Pod が起動するまで待機
 oc wait --for=condition=Ready pod/lvms-test-pod --timeout=120s
 
-# Test writing to the volume
+# ボリュームへの書き込みをテスト
 oc exec lvms-test-pod -- sh -c "echo 'LVM Storage Test' > /data/test.txt && cat /data/test.txt"
 
 # 想定される出力: LVM Storage Test
@@ -546,16 +546,16 @@ LVM ストレージのインストールや運用中に問題が発生した場�
 
 [source,bash,role=execute]
 ----
-# 1. Verify the disk path
+# 1. ディスクパスを確認
 oc debug node/<node-name> -- chroot /host lsblk -o NAME,SIZE,TYPE,MOUNTPOINT
 
-# 2. Ensure disk is NOT mounted
+# 2. ディスクがマウントされていないことを確認
 oc debug node/<node-name> -- chroot /host mount | grep /dev/sda
 
-# 3. Double-check you're not using the system disk
+# 3. システムディスクを使用していないことを再確認
 oc debug node/<node-name> -- chroot /host df -h | grep sda
 
-# 4. Review disk serial number
+# 4. ディスクのシリアル番号を確認
 oc debug node/<node-name> -- chroot /host lsblk -d -o NAME,SERIAL /dev/sda
 ----
 

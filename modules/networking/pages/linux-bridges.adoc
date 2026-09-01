@@ -74,8 +74,8 @@ spec:
         options:
           stp:
             enabled: false
-        # Uncomment below and change the interface name
-        # to match the desired physical host port
+        # 以下のコメントを解除し、インターフェース名を
+        # 目的の物理ホストポートに合わせて変更してください
         #port:
         #- name: ens1
 ----

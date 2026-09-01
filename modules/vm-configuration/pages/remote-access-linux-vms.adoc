@@ -514,10 +514,10 @@ volumes:
 
 [source,bash,role=execute]
 ----
-# VirtualMachine
+# VirtualMachine の確認
 oc get vm -n vm-access-demo
 
-# VirtualMachineInstance
+# VirtualMachineInstance の確認
 oc get vmi -n vm-access-demo
 
 # VMの詳細情報

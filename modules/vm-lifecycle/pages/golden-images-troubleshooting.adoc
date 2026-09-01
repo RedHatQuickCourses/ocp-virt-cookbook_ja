@@ -158,11 +158,11 @@ VM 内部にて:
 
 [source,bash]
 ----
-# For nginx
+# nginx の場合
 systemctl status nginx
 nginx -v
 
-# For custom configuration
+# カスタム設定の場合
 cat /etc/nginx/nginx.conf
 ls -la /usr/share/nginx/html/
 ----
@@ -336,7 +336,7 @@ webserver-vm-2-disk    Bound    pvc-ghi789...    30Gi       RWO            lvms-
 
 [source,bash,role=execute]
 ----
-# Get the LVM thin pool usage
+# LVM シンプールの使用状況を取得
 oc get lvmvolumegroup -n openshift-storage -o yaml | grep -A 10 status
 ----
 
@@ -358,10 +358,10 @@ base-fedora-vm-disk   ImportInProgress   10%        10m
 
 [source,bash,role=execute]
 ----
-# Check CDI importer pod
+# CDI importer pod を確認
 oc get pods -n golden-images | grep importer
 
-# Check importer logs
+# importer のログを確認
 oc logs -n golden-images <importer-pod-name>
 ----
 
@@ -408,10 +408,10 @@ base-fedora-vm   5m    WaitingForVolumeBinding                   False
 
 [source,bash,role=execute]
 ----
-# Check DataVolume status
+# DataVolume のステータスを確認
 oc get dv base-fedora-vm-disk -n golden-images
 
-# Check events
+# イベントを確認
 oc get events -n golden-images --sort-by='.lastTimestamp' | grep -i error
 ----
 
@@ -443,20 +443,20 @@ oc get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.
 [source,bash,role=execute]
 ----
 oc get vmi base-fedora-vm -n golden-images -o jsonpath='{.status.guestOSInfo}'
-# Returns empty
+# 空が返される
 ----
 
 **調査**:
 
 [source,bash,role=execute]
 ----
-# Access VM console
+# VM コンソールにアクセス
 virtctl console base-fedora-vm -n golden-images
 
-# Check if qemu-guest-agent is installed
+# qemu-guest-agent がインストールされているか確認
 rpm -qa | grep qemu-guest-agent
 
-# Check service status
+# サービスのステータスを確認
 systemctl status qemu-guest-agent
 ----
 
@@ -480,10 +480,10 @@ sudo systemctl enable --now qemu-guest-agent
 
 [source,bash,role=execute]
 ----
-# Access the VM
+# VM にアクセス
 virtctl console webserver-vm-1 -n golden-images
 
-# Check for nginx
+# nginx を確認
 which nginx
 systemctl status nginx
 ----
@@ -500,7 +500,7 @@ systemctl status nginx
 [source,bash,role=execute]
 ----
 virtctl console base-fedora-vm -n golden-images
-# Check manually for installed software
+# インストール済みソフトウェアを手動で確認
 ----
 . DataSource が正しい PVC を参照していることを確認します:
 +
@@ -549,10 +549,10 @@ Failed to create PVC: insufficient storage
 
 [source,bash,role=execute]
 ----
-# Check LVM volume group usage
+# LVM ボリュームグループの使用状況を確認
 oc get lvmvolumegroup -n openshift-storage -o yaml
 
-# Check PVC requests vs available
+# PVC のリクエストと利用可能容量を確認
 oc get pvc -n golden-images
 ----
 
@@ -576,10 +576,10 @@ oc delete pvc <unused-pvc> -n golden-images
 
 [source,bash,role=execute]
 ----
-# Check DataVolume progress
+# DataVolume の進捗を確認
 oc get dv webserver-vm-1-disk -n golden-images -w
 
-# Check CDI pod logs
+# CDI pod のログを確認
 oc logs -n golden-images -l app=containerized-data-importer --tail=100
 ----
 
@@ -608,13 +608,13 @@ spec:
 
 [source,bash,role=execute]
 ----
-# Everything in namespace
+# namespace 内のすべてのリソース
 oc get all,dv,pvc,datasource -n golden-images
 
-# With more details
+# 詳細を表示
 oc get all,dv,pvc,datasource -n golden-images -o wide
 
-# Watch for changes
+# 変更を監視
 oc get vm,vmi,dv -n golden-images -w
 ----
 
@@ -622,13 +622,13 @@ oc get vm,vmi,dv -n golden-images -w
 
 [source,bash,role=execute]
 ----
-# Recent events
+# 最近のイベント
 oc get events -n golden-images --sort-by='.lastTimestamp' | tail -20
 
-# VM events
+# VM のイベント
 oc describe vm base-fedora-vm -n golden-images | tail -20
 
-# CDI operator logs
+# CDI Operator のログ
 oc logs -n openshift-cnv -l app=cdi-operator --tail=50
 ----
 
@@ -636,13 +636,13 @@ oc logs -n openshift-cnv -l app=cdi-operator --tail=50
 
 [source,bash,role=execute]
 ----
-# PVC details
+# PVC の詳細
 oc describe pvc <pvc-name> -n golden-images
 
-# Storage class configuration
+# StorageClass の設定
 oc get storageclass -o yaml
 
-# LVM status (if using LVM)
+# LVM のステータス (LVM を使用している場合)
 oc get lvmvolumegroup,lvmvolumegroupnodestatus -n openshift-storage
 ----
 

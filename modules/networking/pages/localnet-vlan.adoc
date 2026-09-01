@@ -196,13 +196,13 @@ VM コンソールにアクセスし、VLAN 構成によるデュアルネット
 
 [source,bash,role=execute]
 ----
-# Check the VM status
+# VM のステータスを確認
 oc get vm -n vm-guests-vlan
 
-# Check the running VM instance
+# 実行中の VM インスタンスを確認
 oc get vmi -n vm-guests-vlan
 
-# Access the VM console (credentials: fedora/fedora via cloud-init)
+# VM コンソールにアクセス (認証情報: cloud-init 経由で fedora/fedora)
 virtctl console -n vm-guests-vlan fedora-vlan-vm
 ----
 
@@ -210,28 +210,28 @@ VM コンソール内で、VLAN ネットワーク構成を確認します:
 
 [source,bash,role=execute]
 ----
-# Check network interfaces - primary (pod network) and secondary (VLAN network)
+# ネットワークインターフェースを確認 - プライマリ (Pod ネットワーク) とセカンダリー (VLAN ネットワーク)
 ip addr show
 
-# Check routes - two default gateways (lower metric prioritized)
-# Primary network: metric 100, Secondary VLAN: metric 101
+# ルートを確認 - 2 つのデフォルトゲートウェイ (低い metric が優先)
+# プライマリネットワーク: metric 100、セカンダリー VLAN: metric 101
 ip route show
 
 # 想定される出力例:
 default via 10.128.0.1 dev enp1s0 proto dhcp src 10.128.0.172 metric 100 
 default via 192.168.100.1 dev enp2s0 proto dhcp src 192.168.100.50 metric 101 
 
-# Test external connectivity
+# 外部接続をテスト
 ping 8.8.8.8
 
-# Verify the web service is running
+# Web サービスが実行中であることを確認
 curl localhost:8080
 
-# Test VLAN interface connectivity (replace <vlan-ip> with actual IP)
+# VLAN インターフェースの接続をテスト (<vlan-ip> を実際の IP に置き換え)
 curl <vlan-ip>:8080
 
-# Verify VLAN tagging (if tcpdump is available)
-# This will show VLAN-tagged traffic on the secondary interface
+# VLAN タグ付けを確認 (tcpdump が利用可能な場合)
+# セカンダリーインターフェース上の VLAN タグ付きトラフィックを表示
 sudo tcpdump -i enp2s0 -nn vlan 100
 ----
 
@@ -255,16 +255,16 @@ sudo tcpdump -i enp2s0 -nn vlan 100
 
 [source,bash,role=execute]
 ----
-# Check NetworkAttachmentDefinition status
+# NetworkAttachmentDefinition のステータスを確認
 oc get network-attachment-definitions -n vm-guests-vlan
 
-# Verify bridge mapping on worker nodes
+# Worker Node 上の bridge mapping を確認
 oc get nncp localnet-vlan-bridge-mapping -o yaml
 
-# Check VM network status
+# VM のネットワークステータスを確認
 oc get vmi -n vm-guests-vlan -o yaml | grep -A 10 networks
 
-# View OVN-Kubernetes logs for troubleshooting
+# トラブルシューティング用に OVN-Kubernetes のログを表示
 oc logs -n openshift-ovn-kubernetes -l app=ovnkube-node
 ----
 

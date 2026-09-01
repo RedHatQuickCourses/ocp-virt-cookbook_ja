@@ -1,5 +1,5 @@
 {
-  "totalSeconds": 12312,
+  "totalSeconds": 12255,
   "pageCount": 77,
   "pages": [
     {
@@ -60,7 +60,7 @@
     {
       "module": "getting-started",
       "page": "virtctl-basics.adoc",
-      "seconds": 111
+      "seconds": 106
     },
     {
       "module": "getting-started",
@@ -75,12 +75,12 @@
     {
       "module": "storage",
       "page": "lvm-operator.adoc",
-      "seconds": 161
+      "seconds": 155
     },
     {
       "module": "storage",
       "page": "lvm-troubleshooting.adoc",
-      "seconds": 252
+      "seconds": 244
     },
     {
       "module": "storage",
@@ -145,12 +145,12 @@
     {
       "module": "networking",
       "page": "localnet-vlan.adoc",
-      "seconds": 91
+      "seconds": 88
     },
     {
       "module": "networking",
       "page": "cudn-localnet-vlan.adoc",
-      "seconds": 182
+      "seconds": 179
     },
     {
       "module": "networking",
@@ -160,7 +160,7 @@
     {
       "module": "networking",
       "page": "linux-bridges.adoc",
-      "seconds": 213
+      "seconds": 210
     },
     {
       "module": "networking",
@@ -205,12 +205,12 @@
     {
       "module": "vm-configuration",
       "page": "remote-access-linux-vms.adoc",
-      "seconds": 145
+      "seconds": 146
     },
     {
       "module": "vm-configuration",
       "page": "remote-access-linux-troubleshooting.adoc",
-      "seconds": 241
+      "seconds": 233
     },
     {
       "module": "vm-configuration",
@@ -235,12 +235,12 @@
     {
       "module": "vm-configuration",
       "page": "infrastructure-node-placement.adoc",
-      "seconds": 191
+      "seconds": 183
     },
     {
       "module": "vm-configuration",
       "page": "node-placement-affinity.adoc",
-      "seconds": 248
+      "seconds": 240
     },
     {
       "module": "vm-configuration",
@@ -295,7 +295,7 @@
     {
       "module": "vm-lifecycle",
       "page": "import-qcow2-boot-volume.adoc",
-      "seconds": 143
+      "seconds": 141
     },
     {
       "module": "vm-lifecycle",
@@ -310,7 +310,7 @@
     {
       "module": "vm-lifecycle",
       "page": "golden-images-troubleshooting.adoc",
-      "seconds": 108
+      "seconds": 104
     },
     {
       "module": "vm-lifecycle",

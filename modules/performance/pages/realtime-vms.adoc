@@ -572,7 +572,7 @@ sudo cyclictest --mlockall --smp --priority=80 --interval=200 --distance=0 --dur
 実行結果例:
 
 ----
-# /dev/cpu_dma_latency set to 0us
+# /dev/cpu_dma_latency が 0us に設定済み
 policy: fifo: loadavg: 0.92 0.42 0.18 1/148 1599
 
 T: 0 ( 1597) P:80 I:200 C: 156868 Min:      3 Act:    5 Avg:  191 Max:    9501

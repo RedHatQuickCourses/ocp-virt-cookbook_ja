@@ -183,7 +183,7 @@ image::vm-provisioning-status.png[VM プロビジョニングのステータス]
 
 [source,bash,role=execute]
 ----
-# Alternatively, watch events from CLI
+# CLI からイベントを監視することが可能
 oc get events -n <your-namespace> --field-selector involvedObject.name=<vm-name> -w
 ----
 
@@ -241,7 +241,7 @@ image::vm-actions-menu.png[VM アクションのドロップダウンメニュ�
 
 [source,bash,role=execute]
 ----
-# CLI equivalent
+# CLI での操作
 virtctl stop <vm-name>
 ----
 
@@ -252,7 +252,7 @@ virtctl stop <vm-name>
 
 [source,bash,role=execute]
 ----
-# CLI equivalent
+# CLI での操作
 virtctl restart <vm-name>
 ----
 

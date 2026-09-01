@@ -55,10 +55,10 @@ qcow2 イメージを OpenShift Virtualization にインポートする主な方
 
 [source,bash]
 ----
-# Download Fedora Cloud image (example)
+# Fedora Cloud イメージをダウンロード (例)
 curl -LO https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
 
-# Verify the image
+# イメージを確認
 ls -lh Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
 ----
 
@@ -260,10 +260,10 @@ cloud-init で設定した資格情報 (ユーザー: `fedora`、パスワード
 
 [source,bash]
 ----
-# Check OS version
+# OS バージョンを確認
 cat /etc/os-release
 
-# Check disk configuration
+# ディスク構成を確認
 lsblk
 ----
 
@@ -529,7 +529,7 @@ oc delete pvc fedora-imported-disk -n imported-vms
 
 [source,bash,role=execute]
 ----
-# Use PVC upload (not DataVolume)
+# PVC アップロードを使用 (DataVolume ではなく)
 virtctl image-upload pvc <pvc-name> \
   --image-path=./image.qcow2 \
   --size=10Gi \
@@ -575,7 +575,7 @@ qemu-img info image.qcow2 | grep "virtual size"
 ----
 oc delete pvc fedora-imported-disk -n imported-vms
 
-# Retry upload with larger --size parameter
+# より大きな --size パラメーターで再試行
 virtctl image-upload pvc fedora-imported-disk \
   --image-path=./image.qcow2 \
   --size=20Gi \
@@ -611,13 +611,13 @@ virtctl console fedora-imported-vm -n imported-vms
 
 [source,bash,role=execute]
 ----
-# Delete the VM
+# VM を削除
 oc delete vm fedora-imported-vm -n imported-vms
 
-# Delete the PVC
+# PVC を削除
 oc delete pvc fedora-imported-disk -n imported-vms
 
-# Delete the namespace
+# namespace を削除
 oc delete namespace imported-vms
 ----
 

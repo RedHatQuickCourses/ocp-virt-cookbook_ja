@@ -297,7 +297,7 @@ ip addr show enp1s0
 # 正しい IP が表示される
 
 ping 192.168.1.1
-# Network unreachable
+# ネットワークに到達不能
 ----
 
 **調査**:
@@ -592,7 +592,7 @@ ping 8.8.8.8
 # 成功
 
 ping google.com
-# Unknown host
+# ホストが不明
 ----
 
 **調査**:

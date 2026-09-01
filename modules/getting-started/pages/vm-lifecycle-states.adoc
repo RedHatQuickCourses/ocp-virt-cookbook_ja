@@ -55,7 +55,7 @@ fedora-app-vm   14m   Running   True
 
 [source,bash,role=execute]
 ----
-# List VirtualMachineInstance resources
+# VirtualMachineInstance リソースを一覧表示
 oc get vmi -n my-vms
 ----
 
@@ -348,10 +348,10 @@ oc delete vm fedora-app-vm -n my-vms
 
 [source,bash,role=execute]
 ----
-# VM should not exist
+# VM は存在しないはずです
 oc get vm fedora-app-vm -n my-vms
 
-# Check if PVCs were preserved (if desired)
+# PVC が保持されているか確認 (必要に応じて)
 oc get pvc -n my-vms
 ----
 
@@ -625,9 +625,9 @@ kind: VirtualMachine
 metadata:
   name: my-vm
 spec:
-  runStrategy: Always    # or RerunOnFailure, Manual, Halted
+  runStrategy: Always    # または RerunOnFailure、Manual、Halted
   template:
-    # ... VM template spec
+    # ... VM テンプレート spec
 ----
 
 **Web コンソール経由:**

@@ -142,7 +142,7 @@ StorageClass の一覧表示:
 [source,bash,role=execute]
 ----
 oc get sc
-# Look for the (default) marker next to the name
+# 名前の横にある (default) マーカーを確認
 ----
 
 クラスの詳細表示:

@@ -36,11 +36,11 @@ image::virtctl-versions.png[プラットフォームごとの virtctl バイナ�
 +
 [source,bash,role=execute]
 ----
-# Linux/Mac
+# Linux/Mac の場合
 chmod +x virtctl
 sudo mv virtctl /usr/local/bin/
 
-# Verify installation
+# インストールの確認
 virtctl version
 ----
 +
@@ -54,10 +54,10 @@ VM を管理する前に、`oc` コマンドを使用してクラスター内で
 
 [source,bash,role=execute]
 ----
-# List all VMs in a specific namespace
+# 特定の namespace 内のすべての VM を一覧表示
 oc get vm -n myapp
 
-# List all VMs across all namespaces
+# すべての namespace の VM を一覧表示
 oc get vm -A
 ----
 
@@ -92,13 +92,13 @@ VM の起動、停止、再起動を行います。
 
 [source,bash,role=execute]
 ----
-# Start a VM
+# VM を起動
 virtctl start fedora-app-vm -n myapp
 
-# Stop a VM
+# VM を停止
 virtctl stop fedora-app-vm -n myapp
 
-# Restart a VM
+# VM を再起動
 virtctl restart fedora-app-vm -n myapp
 ----
 
@@ -108,13 +108,13 @@ VM に接続します。
 
 [source,bash,role=execute]
 ----
-# Console access (press Ctrl+] to exit)
+# コンソールアクセス (Ctrl+] で終了)
 virtctl console fedora-app-vm -n myapp
 
-# SSH access (requires SSH configured)
+# SSH アクセス (SSH の設定が必要)
 virtctl ssh user@fedora-app-vm -n myapp
 
-# VNC access
+# VNC アクセス
 virtctl vnc fedora-app-vm -n myapp
 ----
 
@@ -124,7 +124,7 @@ VM の詳細を取得します (VM に QEMU guest agent がインストールさ
 
 [source,bash,role=execute]
 ----
-# Guest OS information
+# ゲスト OS 情報
 virtctl guestosinfo fedora-app-vm -n myapp
 ----
 
@@ -150,7 +150,7 @@ virtctl guestosinfo fedora-app-vm -n myapp
 
 [source,bash,role=execute]
 ----
-# List filesystems
+# ファイルシステムの一覧表示
 virtctl fslist fedora-app-vm -n myapp
 ----
 
@@ -187,7 +187,7 @@ virtctl fslist fedora-app-vm -n myapp
 
 [source,bash,role=execute]
 ----
-# List logged-in users
+# ログイン中のユーザーを一覧表示
 virtctl userlist fedora-app-vm -n myapp
 ----
 
@@ -200,13 +200,13 @@ virtctl userlist fedora-app-vm -n myapp
 
 [source,bash,role=execute]
 ----
-# Copy to VM (uses default SSH key)
+# VM へコピー (デフォルトの SSH 鍵を使用)
 virtctl scp local-file.txt fedora@fedora-app-vm:/tmp/remote.txt -n myapp
 
-# Copy from VM
+# VM からコピー
 virtctl scp fedora@fedora-app-vm:/tmp/remote.txt ./local.txt -n myapp
 
-# Specify a different SSH key
+# 別の SSH 鍵を指定
 virtctl scp -i ~/.ssh/my_key local-file.txt fedora@fedora-app-vm:/tmp/ -n myapp
 ----
 
@@ -230,7 +230,7 @@ VM を起動または停止した後は、操作を確認します。
 
 [source,bash,role=execute]
 ----
-# Check VM status
+# VM ステータスを確認
 oc get vm fedora-app-vm -n myapp
 ----
 
@@ -244,7 +244,7 @@ fedora-app-vm   7d3h   Running   True
 
 [source,bash,role=execute]
 ----
-# Check VMI (running instance)
+# VMI (実行中のインスタンス) を確認
 oc get vmi fedora-app-vm -n myapp
 ----
 
@@ -286,10 +286,10 @@ oc get nodes
 
 [source,bash,role=execute]
 ----
-# Access via console first
+# まずはコンソール経由でアクセス
 virtctl console fedora-app-vm -n myapp
 
-# Inside VM, check SSH status
+# VM 内で SSH ステータスを確認
 systemctl status sshd
 ----
 
