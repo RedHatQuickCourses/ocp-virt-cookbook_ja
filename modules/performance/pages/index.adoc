@@ -57,7 +57,7 @@ image::performance-tuning-ladder.svg[Performance Tuning Ladder - which level do 
 **通信 / 産業 / 金融**:: 4 つのステップすべて -- 最悪ケースのレイテンシーを制限します。
 **汎用 VM**:: ステップ 1 のみ -- 過度なチューニングは行わず、Kubernetes に効率的なスケジューリングを任せます。
 
-== 関連トピック
+== 参照
 
 * xref:vm-configuration:index.adoc[VM Configuration] - 仮想マシンの一般的な設定とアクセス
 * xref:storage:index.adoc[Storage Configuration] - 仮想マシン用の永続ストレージ

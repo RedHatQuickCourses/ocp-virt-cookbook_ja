@@ -138,7 +138,7 @@ xref:multi-disk-configuration.adoc[]::
 * VM の xref:networking:index.adoc[ネットワークの設定]
 * 仮想マシンの作成と設定
 
-== 関連情報
+== 参照
 
 * xref:getting-started:default-storage-class.adoc[デフォルト Storage Class の設定]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/storage/persistent-storage-using-local-storage#persistent-storage-using-lvms[OpenShift LVM Storage ドキュメント,window=_blank]

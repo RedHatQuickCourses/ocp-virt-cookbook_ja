@@ -51,7 +51,7 @@ xref:hotplug-volumes-interfaces.adoc[]::
 xref:vm-templates.adoc[]::
 OpenShift Virtualization コンソールおよびコマンドラインの両方から、迅速で繰り返し可能なデプロイを行うためのカスタム VM テンプレートを作成
 
-== 関連トピック
+== 参照
 
 * xref:getting-started:index.adoc[はじめに] - 初期設定と前提条件
 * xref:storage:index.adoc[ストレージ設定] - VM 用の永続ストレージ

@@ -810,7 +810,7 @@ WARNING: PerformanceProfile と MachineConfigPool を削除すると、ノード
 * `cyclictest` を使用して遅延を測定し、ベースラインを作成する方法
 * 各構成レイヤーが特定のジッターソースを排除する役割を理解すること
 
-== 参照資料
+== 参照
 
 * xref:cpu-pinning.adoc[専用 CPU の配置] -- 前提条件：CPU Manager static policy と専用 vCPU
 * xref:numa-hugepages.adoc[NUMA と Hugepages] -- 前提条件：Hugepages の予約と NUMA パススルー

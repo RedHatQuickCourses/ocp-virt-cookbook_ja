@@ -660,7 +660,7 @@ NOTE: `runStrategy` と非推奨の `running` フィールドを同時に使用�
 * 条件 (Conditions) とイベント (Events) を使用した VM 状態の監視方法
 * 実行戦略による VM の自動動作の制御と適切な戦略の選択方法
 
-== 関連情報
+== 参照
 
 * xref:create-vm-web-console.adoc[] - Web コンソールからの VM の作成
 * xref:virtctl-basics.adoc[] - VM 管理用 CLI コマンド

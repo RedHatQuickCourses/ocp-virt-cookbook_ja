@@ -247,7 +247,7 @@ UDN プライマリネットワークは、namespace レベルでカスタム IP
 * UDN プライマリネットワーク上で実行されている VM を LoadBalancer サービス経由で公開する方法
 * UDN プライマリネットワークがカスタム IP アドレス割り当てによって完全なネットワーク分離を提供する方法
 
-== 関連情報
+== 参照
 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/understanding-multiple-networks[OpenShift - 複数のネットワークの理解,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/primary-networks[プライマリネットワークの構成,window=_blank]

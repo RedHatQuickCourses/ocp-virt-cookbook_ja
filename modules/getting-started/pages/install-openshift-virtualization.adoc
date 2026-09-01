@@ -413,7 +413,7 @@ OpenShift Virtualization のインストールと設定が完了しました。�
 * xref:default-storage-class.adoc[デフォルトストレージの設定] - VM 用ストレージのセットアップ
 * xref:networking:static-ip-configuration.adoc[VM への静的 IP の設定] - cloud-init、DHCP 予約、ゲストエージェント、Sysprep を使用した静的 IP 設定
 
-== 関連情報
+== 参照
 
 トラブルシューティング、高度な設定オプション、Single Node OpenShift (SNO) に関する考慮事項については、公式ドキュメントを参照してください。
 

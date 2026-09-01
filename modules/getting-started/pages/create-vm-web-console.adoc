@@ -381,7 +381,7 @@ VirtualMachine マニフェストを直接記述し、`oc apply -f` を使用し
 * xref:networking:static-ip-configuration.adoc[静的 IP の設定] - VM 用の静的 IP 構成
 * xref:vm-configuration:remote-access-linux-vms.adoc[SSH アクセスのセットアップ] - SSH 経由での Linux VM への接続
 
-== 関連項目
+== 参照
 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/creating-a-virtual-machine[仮想マシンの作成 - 公式ドキュメント,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/managing-vms[仮想マシンの管理 - 公式ドキュメント,window=_blank]

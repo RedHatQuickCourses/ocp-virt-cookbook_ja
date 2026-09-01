@@ -400,7 +400,7 @@ Layer 2 セカンダリーネットワークは、外部ネットワークアク
 * 同じ OVN 管理の論理スイッチ上の VM 間の Layer 2 接続を確認する方法
 * Linux bridge や localnet などの他のネットワークオプションと比較して、いつ Layer 2 セカンダリーネットワークを使用すべきか判断する方法
 
-== 関連リソース
+== 参照
 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-connecting-vm-to-ovn-secondary-network[OpenShift Virtualization - OVN セカンダリーネットワークへの VM の接続,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/multiple_networks/understanding-multiple-networks[OpenShift - 複数のネットワークの理解,window=_blank]
