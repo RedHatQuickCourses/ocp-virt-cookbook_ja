@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>VM 用デュアルスタック IPv4/IPv6 ネットワーク :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="metallb-loadbalancer.html">
+    <link rel="next" href="vm-ingress-routes.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ネットワーク構成</a></li>
+    <li><a href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">VM 用デュアルスタック IPv4/IPv6 ネットワーク</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、OpenShift Virtualization 上でデュアルスタック (IPv4 + IPv6) ネットワークを使用する仮想マシンをデプロイする方法を説明します。マスカレードモードのデフォルト Pod ネットワークを使用して IPv4 と IPv6 の両方の接続性を持つ VM を設定し、プライマリネットワークの分離のためのデュアルスタック User Defined Networks (UDN) について学びます。</p>
+</div>
+<div class="paragraph">
+<p>デュアルスタックネットワークは、多くのエンタープライズや政府機関の環境 (米国連邦政府の OMB M-21-07)、テレコム/5G のデプロイメント、および IPv6 への移行を進める組織で必要とされています。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualization Operator がインストールされた <strong>OpenShift 4.18+</strong></p>
+</li>
+<li>
+<p>OVN-Kubernetes ネットワークプラグイン (デフォルト)</p>
+</li>
+<li>
+<p><strong>デュアルスタッククラスターネットワーク</strong>&#8201;&#8212;&#8201;クラスターの clusterNetwork および serviceNetwork に IPv4 と IPv6 の両方の CIDR が設定されている必要があります (OpenShift 4.18+ でインストール時または Day 2 操作として有効化できます)</p>
+</li>
+<li>
+<p><code>oc</code> CLI がインストールされていること</p>
+</li>
+<li>
+<p>クラスター管理者アクセス権</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_デュアルスタックネットワークの確認または有効化"><a class="anchor" href="#_デュアルスタックネットワークの確認または有効化"></a>デュアルスタックネットワークの確認または有効化</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>クラスターネットワークとサービスネットワークの両方に IPv4 および IPv6 の CIDR が設定されている必要があります。現在の設定を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get network.config cluster -o jsonpath='{.status.clusterNetwork[*].cidr}'</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get network.config cluster -o jsonpath='{.status.serviceNetwork[*]}'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">想定される出力</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">10.128.0.0/14 fd01::/48
+172.30.0.0/16 fd02::/112</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>IPv4 CIDR のみが表示される場合、クラスターはシングルスタックです。再インストールせずに Day-2 操作としてデュアルスタックを有効にできます。ネットワーク設定にパッチを適用して IPv6 CIDR を追加します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc patch network.config.openshift.io cluster --type=merge --patch='
+{
+  "spec": {
+    "clusterNetwork": [
+      {"cidr": "10.128.0.0/14", "hostPrefix": 23},
+      {"cidr": "fd01::/48", "hostPrefix": 64}
+    ],
+    "serviceNetwork": [
+      "172.30.0.0/16",
+      "fd02::/112"
+    ]
+  }
+}'</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+これにより、OVN-Kubernetes のローリング再起動がトリガーされます。単一ノードクラスターでは、API サーバーが数分間一時的に利用できなくなります。続行する前に、すべてのクラスター Operator が安定するまで待ちます。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>ロールアウトを監視します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get co network -o jsonpath='{.status.conditions[?(@.type=="Progressing")].status}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力に <code>False</code> が表示され、サービスネットワークに IPv6 CIDR が含まれていれば、変換は完了です。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get network.config cluster -o jsonpath='{.status.serviceNetwork[*]}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ノードに IPv4 アドレスと IPv6 アドレスの両方があることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nodes -o jsonpath='{range .items[*]}{.metadata.name}: {.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_namespace_の作成"><a class="anchor" href="#_ステップ_1_namespace_の作成"></a>ステップ 1: Namespace の作成</h2>
+<div class="sectionbody">
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace dualstack-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_pod_ネットワーク上へのデュアルスタック_vm_のデプロイ"><a class="anchor" href="#_ステップ_2_pod_ネットワーク上へのデュアルスタック_vm_のデプロイ"></a>ステップ 2: Pod ネットワーク上へのデュアルスタック VM のデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>マスカレードモードでは、VM は virt-launcher Pod から DHCP 経由で IPv4 を自動的に取得します。IPv4 とは異なり、IPv6 アドレスとデフォルトルートの設定は自動的には行われないため、cloud-init の <code>networkData</code> を介して設定する必要があります。virt-launcher は DHCPv6 サーバーを起動しますが、ルーターアドバタイズメント (RA) を送信しないため、ゲスト OS が DHCPv6 要請 (solicitation) をトリガーすることはありません。cloud-init を使用した静的 IPv6 アドレス設定は、<a href="https://kubevirt.io/user-guide/network/interfaces_and_networks/#masquerade-ipv4-and-ipv6-dual-stack-support" target="_blank" rel="noopener">KubeVirt user guide</a> および <a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/virtualization/networking#virt-configuring-masquerade-mode-dual-stack_virt-connecting-vm-to-default-pod-network" target="_blank" rel="noopener">OpenShift Virtualization documentation</a> の両方に記載されているアプローチです。</p>
+</div>
+<div class="paragraph">
+<p>virt-launcher Pod は、自身と VM の間で IPv6 トラフィックをルーティングするために内部サブネット <code>fd10:0:2::/120</code> を使用します。VM はアドレス <code>fd10:0:2::2/120</code> を取得し、ゲートウェイとして <code>fd10:0:2::1</code> を使用します。これらは <code>Network.pod.vmIPv6NetworkCIDR</code> フィールドによって決定される固定の内部アドレスであり、外部のクラスターネットワークには表示されません。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/dual-stack-vms/vm-dualstack-masquerade.yaml" class="xref attachment">vm-dualstack-masquerade.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: dualstack-vm
+  namespace: dualstack-demo
+spec:
+  runStrategy: Always
+  instancetype:
+    name: u1.small
+  preference:
+    name: fedora
+  template:
+    metadata:
+      labels:
+        app: dualstack-vm
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: containerdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
+          interfaces:
+            - name: default
+              masquerade: {}
+              ports:
+                - port: 80
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:40
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: changeme
+              chpasswd:
+                expire: false
+              packages:
+                - nginx
+              runcmd:
+                - systemctl enable --now nginx
+            networkData: |
+              version: 2
+              ethernets:
+                eth0:
+                  dhcp4: true
+                  addresses:
+                    - fd10:0:2::2/120
+                  gateway6: fd10:0:2::1
+EOF</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+netplan 0.103+ では <code>gateway6</code> は非推奨ですが、KubeVirt の cloud-init 実装はこれを正常に処理します。ゲスト OS で非推奨に関する警告が表示される場合は、代わりに <code>routes</code> エントリを使用できます (<a href="#_cloud_init_networkdata_reference">Cloud-init networkData リファレンス</a> を参照)。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>VM が準備完了になるまで待機します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc wait vm dualstack-vm -n dualstack-demo --for=condition=Ready --timeout=300s</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_vm_内でのデュアルスタック接続の確認"><a class="anchor" href="#_ステップ_3_vm_内でのデュアルスタック接続の確認"></a>ステップ 3: VM 内でのデュアルスタック接続の確認</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM コンソールにアクセスし、IPv4 と IPv6 の両方が設定されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console dualstack-vm -n dualstack-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ログイン後 (ユーザー: <code>fedora</code> または <code>root</code>、パスワード: <code>changeme</code>)、ネットワークインターフェースを確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ip -4 addr show eth0</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">想定される出力</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">inet 10.0.2.2/24 brd 10.0.2.255 scope global dynamic eth0</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ip -6 addr show eth0</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">想定される出力</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">inet6 fd10:0:2::2/120 scope global</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲートウェイに ping を実行して、IPv4 の接続性を確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ping -c 3 10.0.2.1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲートウェイに ping を実行して、IPv6 の接続性を確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ping6 -c 3 fd10:0:2::1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> でコンソールを終了します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_外部デュアルスタック到達性の確認"><a class="anchor" href="#_ステップ_4_外部デュアルスタック到達性の確認"></a>ステップ 4: 外部デュアルスタック到達性の確認</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>virt-launcher Pod はクラスターネットワーク上に IPv4 アドレスと IPv6 アドレスの両方を持っています。Pod の IP を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi dualstack-vm -n dualstack-demo -o jsonpath='{.status.interfaces[0].ipAddresses}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>デュアルスタッククラスターでは、IPv4 と IPv6 の両方のアドレスが表示されます。外部クライアントは、いずれかのアドレスを使用して (masquerade NAT 経由で) VM にアクセスできます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_デュアルスタック_service_の作成"><a class="anchor" href="#_ステップ_5_デュアルスタック_service_の作成"></a>ステップ 5: デュアルスタック Service の作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>IPv4 と IPv6 の両方のクラスター IP を割り当てる Service を介して VM を公開します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/dual-stack-vms/service-dualstack.yaml" class="xref attachment">service-dualstack.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: dualstack-web
+  namespace: dualstack-demo
+spec:
+  ipFamilyPolicy: RequireDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6
+  selector:
+    app: dualstack-vm
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Service にデュアルスタック ClusterIP が設定されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get svc dualstack-web -n dualstack-demo -o jsonpath='{.spec.clusterIPs}'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">想定される出力</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">["172.30.x.x","fd02::x"]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>両方のアドレスファミリー経由でサービスへの接続をテストします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc run test-v4 --rm -i --restart=Never -n dualstack-demo --image=registry.access.redhat.com/ubi9/ubi-minimal -- curl -4 -s --connect-timeout 5 http://dualstack-web.dualstack-demo.svc:80</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc run test-v6 --rm -i --restart=Never -n dualstack-demo --image=registry.access.redhat.com/ubi9/ubi-minimal -- curl -6 -s --connect-timeout 5 http://dualstack-web.dualstack-demo.svc:80</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_user_defined_network_を使用したデュアルスタック"><a class="anchor" href="#_user_defined_network_を使用したデュアルスタック"></a>User Defined Network を使用したデュアルスタック</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>デュアルスタックによるネットワーク分離が必要な環境では、IPv4 と IPv6 の両方のサブネットを持つ Primary UDN を設定できます。このアプローチにより、以下が提供されます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>namespace 間のネイティブな L2 分離</p>
+</li>
+<li>
+<p>ライブマイグレーションをまたいで永続する IP アドレス</p>
+</li>
+<li>
+<p>両アドレスファミリーのマネージド IPAM</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="_デュアルスタック_udn_の作成"><a class="anchor" href="#_デュアルスタック_udn_の作成"></a>デュアルスタック UDN の作成</h3>
+<div class="paragraph">
+<p><a href="_attachments/dual-stack-vms/udn-dualstack.yaml" class="xref attachment">udn-dualstack.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: dualstack-udn
+  namespace: dualstack-demo
+spec:
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets:
+      - "10.200.0.0/16"
+      - "2001:db8:abcd::/64"
+    ipam:
+      lifecycle: Persistent
+EOF</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Primary UDN を使用するには、namespace の作成時にラベル <code>k8s.ovn.org/primary-user-defined-network: ""</code> が設定されている必要があります。ValidatingAdmissionPolicy により、namespace の作成後にこのラベルを追加または削除することはできません。前の手順でこのラベルのない namespace を使用した場合は、削除して再作成してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace dualstack-demo</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dualstack-demo
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+EOF</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_デュアルスタック_udn_上への_vm_のデプロイ"><a class="anchor" href="#_デュアルスタック_udn_上への_vm_のデプロイ"></a>デュアルスタック UDN 上への VM のデプロイ</h3>
+<div class="paragraph">
+<p>IPAM を備えた Primary UDN 上の VM は、設定されたサブネットから IPv4 アドレスと IPv6 アドレスの両方を自動的に取得します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/dual-stack-vms/vm-dualstack-udn.yaml" class="xref attachment">vm-dualstack-udn.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: dualstack-udn-vm
+  namespace: dualstack-demo
+spec:
+  runStrategy: Always
+  instancetype:
+    name: u1.small
+  preference:
+    name: fedora
+  template:
+    metadata:
+      labels:
+        app: dualstack-udn-vm
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: containerdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
+          interfaces:
+            - name: primary-udn
+              binding:
+                name: l2bridge
+      networks:
+        - name: primary-udn
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:40
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: changeme
+              chpasswd:
+                expire: false
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>IPAM ライフサイクルが <code>Persistent</code> に設定されている場合、VM は再起動やライブマイグレーションをまたいでも IPv4 アドレスおよび IPv6 アドレスを保持します。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cloud_init_networkdata_reference"><a class="anchor" href="#_cloud_init_networkdata_reference"></a>Cloud-init networkData リファレンス</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>networkData</code> フィールドは netplan バージョン 2 形式を使用します。KubeVirt ユーザーガイドおよび OpenShift ドキュメントでは <code>gateway6</code> フィールドが使用されています。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">version: 2
+ethernets:
+  eth0:
+    dhcp4: true
+    addresses:
+      - fd10:0:2::2/120
+    gateway6: fd10:0:2::1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>gateway6</code> フィールドは netplan 0.103 および cloud-init 23.1 以降で非推奨です。ゲスト OS のバージョンで非推奨の警告が表示される場合は、代替として <code>routes</code> エントリを使用してください。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">version: 2
+ethernets:
+  eth0:
+    dhcp4: true
+    addresses:
+      - fd10:0:2::2/120
+    routes:
+      - to: "::/0"
+        via: "fd10:0:2::1"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>どちらの形式でも同じ結果になります。<code>gateway6</code> 形式はアップストリームの KubeVirt ドキュメントと一致しており、<code>routes</code> 形式は新しい netplan バージョンとの前方互換性があります。</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<code>networkData</code> をトップレベルの <code>network:</code> キーでラップしないでください。このフィールドは直接 <code>version: 2</code> で開始する必要があります。
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<code>networkData</code> 内のインターフェース名は、ゲスト OS 内のプライマリ名と一致している必要があります。ContainerDisk イメージ (例: <code>quay.io/containerdisks/fedora</code>) は <code>eth0</code> を使用します。OpenShift Virtualization DataSource イメージ (ゴールデンイメージ) は、予測可能な命名規則 (<code>enp1s0</code>) を使用する場合があります。VM 内で <code>ip link show</code> を実行して確認してください。プライマリ名が最初に表示され、代替名がある場合は <code>altname</code> として表示されます。名前が一致しない場合、cloud-init はエラーや警告を表示せずにネットワーク設定全体をスキップします。その結果、<code>ip -6 addr show</code> を実行してもどのインターフェースにもグローバル IPv6 アドレスが表示されません。
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_masquerade_で静的_ipv6_が必要な理由"><a class="anchor" href="#_masquerade_で静的_ipv6_が必要な理由"></a>Masquerade で静的 IPv6 が必要な理由</h3>
+<div class="paragraph">
+<p>virt-launcher Pod は、内部のマスカレードブリッジ上で DHCP サーバー (IPv4) と DHCPv6 サーバー (IPv6) の両方を起動します。IPv4 は、DHCP サーバーがゲストの DHCP Discover メッセージに応答するため自動的に機能します。ただし、DHCPv6 による自動設定のプロセスは完了しません。virt-launcher はマスカレードブリッジ上でルーター広告 (RA: Router Advertisement) を送信しません。RA がない場合、ゲスト OS は DHCPv6 Solicit をトリガーしないため、cloud-init の <code>dhcp6: true</code> ではアドレスを取得できません。cloud-init の <code>networkData</code> を介した静的 IPv6 設定が必要です。</p>
+</div>
+<div class="paragraph">
+<p>アドレス <code>fd10:0:2::2/120</code> およびゲートウェイ <code>fd10:0:2::1</code> は、VMI 設定の <code>Network.pod.vmIPv6NetworkCIDR</code> フィールドによって決定される固定の内部値であり、virt-launcher Pod が VM から Pod へのルーティングに使用します。</p>
+</div>
+<div class="paragraph">
+<p>IPAM が有効な UDN プライマリーネットワークでは、IPv4 アドレスと IPv6 アドレスの両方が OVN-Kubernetes によって自動的に割り当てられるため、cloud-init の networkData は不要です。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_よくある落とし穴"><a class="anchor" href="#_よくある落とし穴"></a>よくある落とし穴</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ゲスト_os_で_ipv6_が無効になっている"><a class="anchor" href="#_ゲスト_os_で_ipv6_が無効になっている"></a>ゲスト OS で IPv6 が無効になっている</h3>
+<div class="paragraph">
+<p>一部のゲストイメージでは、sysctl (<code>net.ipv6.conf.all.disable_ipv6=1</code>) によって IPv6 が無効化されています。確認し、必要に応じて有効化してください。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sysctl net.ipv6.conf.all.disable_ipv6</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>値が <code>1</code> の場合は、IPv6 を有効化します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これを永続化するには、cloud-init の <code>userData</code> に以下を追加します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">write_files:
+  - path: /etc/sysctl.d/99-ipv6.conf
+    content: |
+      net.ipv6.conf.all.disable_ipv6=0
+      net.ipv6.conf.default.disable_ipv6=0
+runcmd:
+  - sysctl --system</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_masquerade_で_slaac_および_dhcpv6_が機能しない"><a class="anchor" href="#_masquerade_で_slaac_および_dhcpv6_が機能しない"></a>Masquerade で SLAAC および DHCPv6 が機能しない</h3>
+<div class="paragraph">
+<p>masquerade 内部ネットワークでは、virt-launcher は DHCPv6 サーバーを起動しますが、ルーターアドバタイズメント (RA) を送信しません。RA がない場合、ゲスト OS は SLAAC (ステートレスアドレス自動設定) を使用したり、DHCPv6 要請をトリガーしたりできません。cloud-init の networkData で <code>dhcp6: true</code> を設定してもアドレスは取得されません。cloud-init による静的 IPv6 設定が必要です。外部セカンダリーネットワーク (localnet、bridge) では、SLAAC および DHCPv6 は外部インフラストラクチャーに依存します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_プライバシー拡張"><a class="anchor" href="#_プライバシー拡張"></a>プライバシー拡張</h3>
+<div class="paragraph">
+<p>Linux ディストリビューションでは、一時アドレスを生成する IPv6 プライバシー拡張 (RFC 4941) が有効になっている場合があります。これにより、予期しない送信元アドレスの選択が発生する可能性があります。ファイアウォールルールに予測可能な送信元アドレスが必要な場合は、プライバシー拡張を無効にします。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">version: 2
+ethernets:
+  eth0:
+    ipv6-privacy: false</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ipv6_の_dns"><a class="anchor" href="#_ipv6_の_dns"></a>IPv6 の DNS</h3>
+<div class="paragraph">
+<p>デュアルスタッククラスターでは、クラスター DNS サービス (CoreDNS) が A (IPv4) レコードと AAAA (IPv6) レコードの両方を解決します。Pod ネットワーク上の VM は、追加の設定なしで両方のプロトコル経由でクラスターサービスを解決できます。</p>
+</div>
+<div class="paragraph">
+<p>IPv6 のみの内部マスカレードネットワークでは、DHCP で割り当てられた検索ドメインが IPv4 でしか利用できないため、FQDN の解決が機能しない場合があることに注意してください。必要に応じて、ネームサーバー設定にクラスター DNS が明示的に含まれていることを確認してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_vm_インターフェースに_ipv6_アドレスがない"><a class="anchor" href="#_vm_インターフェースに_ipv6_アドレスがない"></a>VM インターフェースに IPv6 アドレスがない</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>cloud-init の <code>networkData</code> が <code>version: 2</code> で始まっていることを確認します (<code>network:</code> ラッパーなし)。</p>
+</li>
+<li>
+<p>アドレス形式にプレフィックス長が含まれていることを確認します: <code>fd10:0:2::2/120</code></p>
+</li>
+<li>
+<p>VM 内の cloud-init ログを確認します: <code>sudo cat /var/log/cloud-init.log | grep -i network</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ipv6_ping_は成功するが_tcp_接続に失敗する"><a class="anchor" href="#_ipv6_ping_は成功するが_tcp_接続に失敗する"></a>IPv6 Ping は成功するが TCP 接続に失敗する</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>IPv6 トラフィックをブロックしている NetworkPolicy がないことを確認します</p>
+</li>
+<li>
+<p>VM 内のアプリケーションが <code>0.0.0.0</code> だけでなく <code>::</code> (すべてのインターフェース) でリッスンしていることを確認します</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ipv6_経由で_service_にアクセスできない"><a class="anchor" href="#_ipv6_経由で_service_にアクセスできない"></a>IPv6 経由で Service にアクセスできない</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><code>spec.ipFamilyPolicy</code> が <code>PreferDualStack</code> または <code>RequireDualStack</code> に設定されていることを確認します</p>
+</li>
+<li>
+<p>両方の ClusterIP が割り当てられていることを確認します: <code>oc get svc &lt;name&gt; -o jsonpath='{.spec.clusterIPs}'</code></p>
+</li>
+<li>
+<p>クラスター DNS が AAAA レコードを返すことを確認します: <code>dig AAAA &lt;svc&gt;.&lt;ns&gt;.svc.cluster.local</code></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルで作成したすべてのリソースを削除します:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace dualstack-demo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下について学びました:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>デュアルスタッククラスターでは、clusterNetwork および serviceNetwork に IPv4 と IPv6 の両方の CIDR が必要です。これはインストール時または Day 2 操作として有効にできます。</p>
+</li>
+<li>
+<p>マスカレードモードでは、IPv4 は DHCP 経由で設定されますが、virt-launcher がルーターアドバタイズメントを送信しないため、IPv6 は cloud-init の <code>networkData</code> を介した明示的な静的設定が必要です。</p>
+</li>
+<li>
+<p>内部マスカレード IPv6 サブネットは、<code>Network.pod.vmIPv6NetworkCIDR</code> フィールドで決定される <code>fd10:0:2::/120</code> を使用し、固定ゲートウェイは <code>fd10:0:2::1</code> になります。</p>
+</li>
+<li>
+<p>User Defined Networks は、2 つのサブネット CIDR (アドレスファミリーごとに 1 つ) と自動 IPAM によるデュアルスタックをサポートします。</p>
+</li>
+<li>
+<p>Service は <code>ipFamilyPolicy: RequireDualStack</code> を使用してデュアルスタック用に設定できます。</p>
+</li>
+<li>
+<p>プライバシー拡張機能やゲストイメージでの IPv6 の無効化は、接続問題の一般的な原因です。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="static-ip-configuration.html" class="xref page">VM の静的 IP の設定</a>&#8201;&#8212;&#8201;詳細な cloud-init networkData リファレンス</p>
+</li>
+<li>
+<p><a href="cloud-init-troubleshooting.html" class="xref page">Cloud-init のトラブルシューティング</a>&#8201;&#8212;&#8201;一般的な cloud-init ネットワークの問題</p>
+</li>
+<li>
+<p><a href="udn-primary-networks.html" class="xref page">UDN プライマリーネットワーク</a>&#8201;&#8212;&#8201;VM 向けのレイヤー 2 プライマリーネットワーク</p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/virtualization/networking#virt-configuring-masquerade-mode-dual-stack_virt-connecting-vm-to-default-pod-network" target="_blank" rel="noopener">OpenShift Virtualization デュアルスタックマスカレード (OCP 4.22)</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/network/interfaces_and_networks/#masquerade-ipv4-and-ipv6-dual-stack-support" target="_blank" rel="noopener">KubeVirt デュアルスタックサポート</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a></span>
+  <span class="next"><a href="vm-ingress-routes.html">VM Ingress および Routes</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
+  </body>
+</html>

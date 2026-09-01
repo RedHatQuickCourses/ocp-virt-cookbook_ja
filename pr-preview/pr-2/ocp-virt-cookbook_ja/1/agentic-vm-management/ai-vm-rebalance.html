@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ライブマイグレーションとクラスターのリバランス :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="ai-skill-chaining.html">
+    <link rel="next" href="../appendix/glossary.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">AI エージェントによる VM 管理</a></li>
+    <li><a href="ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">ライブマイグレーションとクラスターのリバランス</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、<code>vm-rebalance</code> エージェントスキルを通じて自然言語コマンドを使用し、クラスターノード間で仮想マシンを移行する方法を説明します。手動 (ユーザー主導) および自動 (AI 主導) で VM をリバランスする方法を学び、ライブマイグレーションとコールドマイグレーションの違いを理解し、メンテナンスのためのノードのドレインやクラスターの負荷分散の最適化などの一般的なシナリオを実践します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="getting-started.html" class="xref page">AI エージェントによる VM 管理の開始</a> チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認が完了していること)</p>
+</li>
+<li>
+<p>OpenShift Virtualization がインストールされた OpenShift クラスター</p>
+</li>
+<li>
+<p><code>KUBECONFIG</code> 環境変数が設定され、有効な kubeconfig ファイルを指していること</p>
+</li>
+<li>
+<p>スケジューリング可能な Worker Node が少なくとも 2 つあるマルチノードクラスター</p>
+</li>
+<li>
+<p>複数のノードに分散して実行されている少なくとも 2 つの VM (作成方法については <a href="natural-language-vm-create.html" class="xref page">自然言語による仮想マシンの作成</a> を参照)</p>
+</li>
+<li>
+<p>ハードウェア仮想化 (KVM) をサポートする Worker Node、またはベアメタル以外の環境では HyperConverged CR でソフトウェアエミュレーションが有効になっていること</p>
+</li>
+<li>
+<p>ライブマイグレーションの場合: <code>ReadWriteMany</code> (RWX) アクセスモードをサポートする StorageClass (例: Ceph RBD、ODF、CephFS)。<code>ReadWriteOnce</code> (RWO) ストレージはコールドマイグレーションのみをサポートします</p>
+</li>
+<li>
+<p>ノード間のコールドマイグレーションの場合: Worker Node が同じ永続ストレージへのアクセスを共有している必要があります。ゾーンバインドストレージまたはノードローカルストレージでは、コールドマイグレーションが同じゾーン内のノードに制限されます</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>このチュートリアルで使用する namespace が存在しない場合は、作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace my-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>使用する VM がない場合は、IDE チャットで次のように入力し、<code>vm-create</code> スキルを使用して作成します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Create a Fedora VM named web-01 in namespace my-vms</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Create a Fedora VM named web-02 in namespace my-vms</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Create a Fedora VM named db-01 in namespace my-vms</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>続行する前に、VM が存在し実行中であることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n my-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME   AGE  STATUS  READY
+db-01  3m  Running  True
+web-01  5m  Running  True
+web-02  4m  Running  True</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM が現在どのノードにスケジュールされているかを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi -n my-vms -o custom-columns="NAME:.metadata.name,NODE:.status.nodeName,PHASE:.status.phase"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>想定される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME   NODE    PHASE
+db-01  worker-02  Running
+web-01  worker-01  Running
+web-02  worker-01  Running</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_動作の仕組み"><a class="anchor" href="#_動作の仕組み"></a>動作の仕組み</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>vm-rebalance</code> スキルは、手動と自動の 2 つの動作モードをサポートしています。どちらのモードも、前提条件を検証し、移行計画を提示し、VM を移動する前に明示的な確認を待つという安全第一のワークフローに従います。</p>
+</div>
+<div class="sect2">
+<h3 id="_手動リバランス"><a class="anchor" href="#_手動リバランス"></a>手動リバランス</h3>
+<div class="paragraph">
+<p>手動モードでは、移動する VM とその移動先を指定します。エージェントは 4 つのステップからなるワークフローに従います:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>ソースとターゲットの検証</strong>&#8201;&#8212;&#8201;エージェントは VM が存在し稼働していることを確認し、ターゲットノードがスケジュール可能であること (cordon や taint が設定されていないこと) をチェックし、ターゲットノードに十分な CPU、メモリ、ストレージリソースがあることを確認します。</p>
+</li>
+<li>
+<p><strong>ストレージ互換性の確認</strong>&#8201;&#8212;&#8201;エージェントは VM のストレージ設定を検査し、ライブマイグレーションが可能かどうかを判断します。ReadWriteMany (RWX) ストレージを使用する VM はライブマイグレーションをサポートします。ReadWriteOnce (RWO) ストレージを使用する VM はコールドマイグレーション (停止、ストレージの移行、起動) が必要です。</p>
+</li>
+<li>
+<p><strong>マイグレーション計画の提示</strong>&#8201;&#8212;&#8201;エージェントはマイグレーションタイプ (ライブまたはコールド)、ソースノードおよびターゲットノード、予想される影響、推定所要時間を表示します。明示的な確認を待ちます。</p>
+</li>
+<li>
+<p><strong>実行と監視</strong>&#8201;&#8212;&#8201;確認後、エージェントはマイグレーションを開始し、状態の遷移を監視して、結果を報告します。</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_自動リバランシング"><a class="anchor" href="#_自動リバランシング"></a>自動リバランシング</h3>
+<div class="paragraph">
+<p>自動モードでは、エージェントはクラスター全体のリソース使用率を分析し、VM をより均等に分散するための移行計画を提案します。このワークフローには分析ステップが追加されます。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>クラスターメトリクスの収集</strong>&#8201;&#8212;&#8201;エージェントはすべての Worker Node の CPU およびメモリ使用率データを収集し、不均衡を特定します。</p>
+</li>
+<li>
+<p><strong>移行計画の生成</strong>&#8201;&#8212;&#8201;メトリクスに基づいて、エージェントはどの VM をどこに移動すべきかを決定します。ストレージの互換性、ノードのキャパシティー、アンチアフィニティールールを考慮します。</p>
+</li>
+<li>
+<p><strong>レビュー用の計画の提示</strong>&#8201;&#8212;&#8201;エージェントは、提案された各移行、移行タイプ、各ノードへの予想されるリソースへの影響を示す表として、完全な移行計画を表示します。</p>
+</li>
+<li>
+<p><strong>VM ごとの確認を伴う実行</strong>&#8201;&#8212;&#8201;計画を承認すると、エージェントは各移行を個別に実行し、進捗状況を報告します。残りの移行はいつでもキャンセルできます。</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ライブマイグレーションとコールドマイグレーションの比較"><a class="anchor" href="#_ライブマイグレーションとコールドマイグレーションの比較"></a>ライブマイグレーションとコールドマイグレーションの比較</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>vm-rebalance</code> スキルは、VM のストレージ設定に基づいてマイグレーションタイプを選択します。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">基準</th>
+<th class="tableblock halign-left valign-top">ライブマイグレーション</th>
+<th class="tableblock halign-left valign-top">コールドマイグレーション</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ストレージアクセスモード</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ReadWriteMany (RWX)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ReadWriteOnce (RWO)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM のダウンタイム</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ゼロ&#8201;&#8212;&#8201;マイグレーション中も VM は稼働を継続</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">短時間&#8201;&#8212;&#8201;VM が停止され、ストレージが移行され、VM が再起動される</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">一般的な所要時間</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">30 秒から 5 分 (メモリサイズおよびダーティーページ率に依存)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2 から 15 分 (ディスクサイズに依存)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ネットワーク接続</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">保持&#8201;&#8212;&#8201;アクティブな TCP 接続は維持される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">切断&#8201;&#8212;&#8201;クライアントは再起動後に再接続が必要</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ユースケース</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">本番ワークロード、ステートフルサービス</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">開発用 VM、バッチジョブ、非クリティカルなワークロード</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="_ライブマイグレーションの仕組み"><a class="anchor" href="#_ライブマイグレーションの仕組み"></a>ライブマイグレーションの仕組み</h3>
+<div class="paragraph">
+<p>KubeVirt のライブマイグレーションは、ゲストオペレーティングシステムを中断することなく、実行中の VM のメモリ状態を送信元ノードからターゲットノードに転送します。このプロセスは以下の段階に従います。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>スケジューリング</strong>&#8201;&#8212;&#8201;新しい VirtualMachineInstance (VMI) Pod がターゲットノードにスケジュールされます。</p>
+</li>
+<li>
+<p><strong>事前コピー</strong>&#8201;&#8212;&#8201;VM がソースノード上で実行され続けている間に、VM のメモリページがターゲットにコピーされます。</p>
+</li>
+<li>
+<p><strong>反復コピー</strong>&#8201;&#8212;&#8201;ダーティーページ (コピー中に変更されたメモリ) は、残りの差分が迅速な切り替えに十分小さくなるまで、連続するラウンドで再送信されます。</p>
+</li>
+<li>
+<p><strong>切り替え</strong>&#8201;&#8212;&#8201;ソースノードで VM が一時的に停止され、最後のダーティーページが転送された後、ターゲットノードで VM が再開されます。</p>
+</li>
+<li>
+<p><strong>クリーンアップ</strong>&#8201;&#8212;&#8201;ソースの VMI Pod が終了されます。</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>マイグレーション状態の遷移を監視できます:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmim -n my-vms -w</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_コールドマイグレーションが必要な場合"><a class="anchor" href="#_コールドマイグレーションが必要な場合"></a>コールドマイグレーションが必要な場合</h3>
+<div class="paragraph">
+<p>コールドマイグレーションは、VM のストレージがノード間での共有アクセスをサポートしていない場合に使用されます。一般的なシナリオには以下が含まれます:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>VM が一度に 1 つのノードにのみマウントできる <code>ReadWriteOnce</code> (RWO) アクセスモードの PVC を使用している。</p>
+</li>
+<li>
+<p>基盤となる StorageClass がボリュームのクローン作成またはマルチアタッチをサポートしていない。</p>
+</li>
+<li>
+<p>VM には共有できないローカルストレージ (hostPath または local-volume) があります。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>エージェントは、コールドマイグレーションが使用される場合に常に通知し、処理を進める前に予想されるダウンタイムについて警告します。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_例示シナリオ_1_手動ライブマイグレーション"><a class="anchor" href="#_例示シナリオ_1_手動ライブマイグレーション"></a>例示シナリオ 1: 手動ライブマイグレーション</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この例では、ライブマイグレーションを使用して単一の VM を特定のターゲットノードに移動します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE のチャットに次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Migrate VM web-01 from worker-01 to worker-02 in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは VM を検証し、ターゲットノードの準備状態と容量を確認し、ストレージのアクセスモードを検査して、移行計画を提示します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Migration Plan
+
+| Parameter  | Value                  |
+|--------------|------------------------------------------|
+| VM Name   | `web-01`                 |
+| Namespace  | `my-vms`                 |
+| Source Node | `worker-01`               |
+| Target Node | `worker-02`               |
+| Migration  | Live (zero downtime)           |
+| Storage   | web-01-rootdisk (30Gi, RWX) - compatible |
+| Est. Duration| ~1-2 minutes               |
+
+**Impact**: No downtime. Active connections preserved.
+
+Proceed with migration? (yes/no)</pre>
+</div>
+</div>
+</li>
+<li>
+<p>計画を確認し、承認します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>yes</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは VirtualMachineInstanceMigration を開始し、状態遷移を監視してレポートします。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Migration Progress
+
+Scheduling... Target pod created on worker-02
+Pre-copy...  Memory transfer in progress (2.1 GiB)
+Iterative... Round 1: 45 MiB dirty pages
+Iterative... Round 2: 8 MiB dirty pages
+Switchover... VM paused on source, final pages transferred
+Running...  VM resumed on worker-02
+Cleanup...  Source pod terminated on worker-01
+
+## VM Migration Successful
+
+**VM**: `web-01` | **From**: worker-01 | **To**: worker-02
+**Duration**: 1m 23s | **Type**: Live (zero downtime)
+
+**Next**: "List VMs in namespace my-vms" or "Show status of VM web-01"</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>VM がターゲットノードで実行されていることを確認できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi web-01 -n my-vms -o jsonpath='{.status.nodeName}'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>worker-02</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ例_2_コールドマイグレーション_rwo_ストレージ"><a class="anchor" href="#_シナリオ例_2_コールドマイグレーション_rwo_ストレージ"></a>シナリオ例 2: コールドマイグレーション (RWO ストレージ)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この例では、ストレージが <code>ReadWriteOnce</code> アクセスモードを使用しているためライブマイグレーションができない VM に対するコールドマイグレーションを示します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Move VM db-01 to worker-01 in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは VM の PVC が RWO アクセスモードを使用していることを検出し、必要なダウンタイムについて警告します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Migration Plan
+
+| Parameter  | Value                     |
+|--------------|------------------------------------------------|
+| VM Name   | `db-01`                    |
+| Namespace  | `my-vms`                    |
+| Source Node | `worker-02`                  |
+| Target Node | `worker-01`                  |
+| Migration  | Cold (brief downtime required)         |
+| Storage   | db-01-rootdisk (30Gi, RWO) - live incompatible |
+| Est. Duration| ~3-5 minutes                  |
+
+WARNING: Cold migration requires stopping the VM. The VM will be
+unavailable for approximately 3-5 minutes. Active network connections
+will be dropped.
+
+**Cold migration steps**:
+1. Stop VM on worker-02
+2. Reschedule VM to worker-01
+3. Start VM on worker-01
+
+Proceed with cold migration? (yes/no)</pre>
+</div>
+</div>
+</li>
+<li>
+<p>次のように確認します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>yes</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは停止-移行-起動のシーケンスを実行し、次のように報告します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Cold Migration Progress
+
+Step 1/3: Stopping VM db-01 on worker-02... Stopped
+Step 2/3: Rescheduling to worker-01... Scheduled
+Step 3/3: Starting VM db-01 on worker-01... Running
+
+## VM Migration Successful
+
+**VM**: `db-01` | **From**: worker-02 | **To**: worker-01
+**Duration**: 3m 47s | **Type**: Cold (VM was stopped during migration)
+**Downtime**: ~3m 47s
+
+**Next**: Verify application connectivity. Clients may need to reconnect.</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_サンプルシナリオ_3_ノードメンテナンスのドレイン"><a class="anchor" href="#_サンプルシナリオ_3_ノードメンテナンスのドレイン"></a>サンプルシナリオ 3: ノードメンテナンスのドレイン</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この例では、メンテナンス前にノードからすべての VM をドレインします。エージェントは各 VM を個別に移行し、各 VM のストレージ設定に基づいてライブマイグレーションまたはコールドマイグレーションを選択します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで以下を入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Drain all VMs from worker-01 for maintenance in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは指定されたノード上のすべての VM の一覧を取得し、それぞれのストレージ互換性を確認して、ドレイン計画を提示します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Node Drain Plan: worker-01
+
+VMs on worker-01: 2
+
+| VM   | Storage Access | Migration Type | Target Node | Est. Duration |
+|--------|----------------|----------------|-------------|---------------|
+| web-01 | RWX      | Live      | worker-02  | ~1-2 min   |
+| web-02 | RWX      | Live      | worker-02  | ~1-2 min   |
+
+**Target node capacity check**:
+- worker-02: 4/8 vCPU used, 12Gi/32Gi memory used - sufficient for 2 additional VMs
+
+**Total estimated time**: ~3-5 minutes
+**Impact**: Zero downtime for all VMs (all eligible for live migration)
+
+Approve drain plan? (yes/no)</pre>
+</div>
+</div>
+</li>
+<li>
+<p>承認します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>yes</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは各 VM を順次移行し、進捗状況を報告します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Node Drain Progress
+
+[1/2] Migrating web-01 (live)... Completed in 1m 15s
+[2/2] Migrating web-02 (live)... Completed in 1m 32s
+
+## Node Drain Complete
+
+**Node**: worker-01 | **VMs migrated**: 2/2
+**Total duration**: 2m 47s | **Downtime**: None
+
+worker-01 is now free of VMs and ready for maintenance.
+
+**Next**: Cordon the node with "oc adm cordon worker-01" before
+starting maintenance to prevent new VMs from scheduling.</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>ドレインが完了したら、ノードを cordon して新しいワークロードがスケジュールされないようにします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm cordon worker-01</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>メンテナンス後、ノードを uncordon して再びスケジュールできるようにします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm uncordon worker-01</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ例_4_自動リバランス"><a class="anchor" href="#_シナリオ例_4_自動リバランス"></a>シナリオ例 4: 自動リバランス</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この例では、自動モードを使用してエージェントがクラスターのリソース使用状況を分析し、VM をより均等に分散させる移行計画を提案します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで、次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Rebalance VMs across nodes in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントはノードのメトリクスを収集し、現在の VM の分散状況を分析して、リバランス計画を提案します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Cluster Analysis
+
+| Node   | vCPU Used | vCPU Total | Mem Used | Mem Total | VMs | Load |
+|-----------|-----------|------------|----------|-----------|-----|-------|
+| worker-01 | 1/8    | 12.5%   | 4Gi   | 32Gi   | 1  | Low  |
+| worker-02 | 3/8    | 37.5%   | 12Gi   | 32Gi   | 3  | High |
+
+**Imbalance detected**: worker-02 hosts 75% of VMs with 3x the resource
+utilization of worker-01.
+
+## Proposed Migration Plan
+
+| VM   | From   | To    | Type | Reason             |
+|--------|-----------|-----------|------|---------------------------------|
+| web-02 | worker-02 | worker-01 | Live | Balance CPU/memory utilization |
+
+**After rebalancing**:
+- worker-01: 2 VMs, ~25% CPU, ~25% memory
+- worker-02: 2 VMs, ~25% CPU, ~25% memory
+
+**Impact**: Zero downtime (all migrations are live)
+
+Approve rebalancing plan? (yes/no)</pre>
+</div>
+</div>
+</li>
+<li>
+<p>計画を確認し、承認します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>yes</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは移行を実行し、結果を報告します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Rebalancing Progress
+
+[1/1] Migrating web-02 from worker-02 to worker-01 (live)... Completed in 1m 18s
+
+## Rebalancing Complete
+
+| Node   | Before     | After     |
+|-----------|----------------|----------------|
+| worker-01 | 1 VM, 12.5% CPU | 2 VMs, 25% CPU |
+| worker-02 | 3 VMs, 37.5% CPU | 2 VMs, 25% CPU |
+
+**VMs migrated**: 1 | **Downtime**: None
+
+Cluster load is now balanced across worker nodes.</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>新しい分散状況を確認できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi -n my-vms -o custom-columns="NAME:.metadata.name,NODE:.status.nodeName,PHASE:.status.phase"</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME   NODE    PHASE
+db-01  worker-01  Running
+web-01  worker-02  Running
+web-02  worker-01  Running</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ストレージ互換性の検証"><a class="anchor" href="#_ストレージ互換性の検証"></a>ストレージ互換性の検証</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>移行を開始する前に、<code>vm-rebalance</code> スキルは VM のストレージ設定が要求された移行タイプをサポートしているかどうかを検証します。エージェントは以下のチェックを実行します:</p>
+</div>
+<div class="sect2">
+<h3 id="_アクセスモードのチェック"><a class="anchor" href="#_アクセスモードのチェック"></a>アクセスモードのチェック</h3>
+<div class="paragraph">
+<p>エージェントは PVC のアクセスモードを検査して、移行の適格性を判断します:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">アクセスモード</th>
+<th class="tableblock halign-left valign-top">ライブマイグレーション</th>
+<th class="tableblock halign-left valign-top">コールドマイグレーション</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ReadWriteMany (RWX)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サポート対象</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サポート対象</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ReadWriteOnce (RWO)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サポート対象外</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サポート対象</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ReadOnlyMany (ROX)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サポート対象 (読み取り専用ディスク)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サポート対象</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>VM の PVC アクセスモードを確認できます:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc -n my-vms -o custom-columns="NAME:.metadata.name,ACCESS:.status.accessModes[0],CAPACITY:.status.capacity.storage"</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME         ACCESS     CAPACITY
+db-01-rootdisk    ReadWriteOnce  30Gi
+web-01-rootdisk   ReadWriteMany  30Gi
+web-02-rootdisk   ReadWriteMany  30Gi</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_storageclass_の機能チェック"><a class="anchor" href="#_storageclass_の機能チェック"></a>StorageClass の機能チェック</h3>
+<div class="paragraph">
+<p>エージェントは、StorageClass が移行に必要な操作をサポートしていることも確認します:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get storageclass -o custom-columns="NAME:.metadata.name,PROVISIONER:.provisioner,BINDING:.volumeBindingMode"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>マルチアタッチをサポートする CSI ドライバーを使用する StorageClass (RWX を備えた Ceph RBD や CephFS など) は、ライブマイグレーションを可能にします。単一ノードへのアタッチに制限されている StorageClass (local-volume や特定の LVM 実装など) では、コールドマイグレーションが必要です。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ノード準備状況チェック"><a class="anchor" href="#_ノード準備状況チェック"></a>ノード準備状況チェック</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>vm-rebalance</code> スキルは、移行を提案または実行する前にターゲットノードを検証します。エージェントは以下の条件をチェックします。</p>
+</div>
+<div class="sect2">
+<h3 id="_ノードのスケジュール可能性"><a class="anchor" href="#_ノードのスケジュール可能性"></a>ノードのスケジュール可能性</h3>
+<div class="paragraph">
+<p>エージェントは、ターゲットノードが cordon されていないこと、またはスケジュール不可としてマークされていないことを検証します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nodes -o custom-columns="NAME:.metadata.name,STATUS:.status.conditions[-1].type,SCHEDULABLE:.spec.unschedulable"</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME    STATUS  SCHEDULABLE
+worker-01  Ready  &lt;none&gt;
+worker-02  Ready  &lt;none&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>SCHEDULABLE: true</code> (unschedulable フラグが設定されている) のノードは cordon されており、移行ターゲットから除外されます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_taint_の検証"><a class="anchor" href="#_taint_の検証"></a>taint の検証</h3>
+<div class="paragraph">
+<p>エージェントは、ターゲットノードに VM の Pod が許容 (tolerate) していない Taint があるかどうかを確認します。許容されない Taint が存在する場合、エージェントは別のターゲットノードを選択するか、適切なターゲットが利用できないことを通知します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nodes -o custom-columns="NAME:.metadata.name,TAINTS:.spec.taints[*].key"</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_リソース容量"><a class="anchor" href="#_リソース容量"></a>リソース容量</h3>
+<div class="paragraph">
+<p>エージェントは、ターゲットノードに受信 VM 用の十分な割り当て可能 CPU およびメモリがあることを確認します。VM のリソース要求 (requests) とノードの残りの容量 (割り当て可能容量から現在割り当てられている容量を差し引いたもの) を比較します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe node worker-01 | grep -A 5 "Allocated resources"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ターゲットノードのリソースが不足している場合、エージェントは不足分を報告し、代替ノードを提案するか、クラスターのスケーリングを推奨します。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_human_in_the_loop_による確認"><a class="anchor" href="#_human_in_the_loop_による確認"></a>Human-in-the-Loop による確認</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>vm-rebalance</code> スキルは、移行が VM の可用性に影響を与えるため、すべての段階で明示的な確認を要求します。</p>
+</div>
+<div class="paragraph">
+<p><strong>手動移行</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>エージェントは、続行する前に移行タイプ (ライブまたはコールド)、移行元ノード、移行先ノード、および予想される影響を提示します。</p>
+</li>
+<li>
+<p>コールド移行には、ダウンタイムに関する明示的な警告が含まれます。</p>
+</li>
+<li>
+<p>移行を実行する前に、「yes」で確認する必要があります。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>自動リバランス</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>エージェントは、移行が開始される前に完全な移行プランをテーブル形式で提示します。</p>
+</li>
+<li>
+<p>プランを確認し、全体として承認または拒否します。</p>
+</li>
+<li>
+<p>承認されたプラン内の個々の移行は順次実行されます。いずれかの移行が失敗した場合、エージェントは停止し、残りの移行を実行せずに失敗を報告します。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>ノードドレイン操作</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>エージェントはノード上のすべての VM のインベントリを作成し、完全なドレイン計画を提示します。</p>
+</li>
+<li>
+<p>この計画には各 VM の移行タイプが表示されるため、全体的な影響を評価できます。</p>
+</li>
+<li>
+<p>実行が開始される前に、ドレイン計画全体を承認します。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>すべてのモードにおいて、いずれかの確認ステップで "no" または "cancel" と入力すると、操作がキャンセルされます。明示的に承認するまで VM は移動されません。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアル中に作成された VM を削除するには:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete vm web-01 web-02 db-01 -n my-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>または、自然言語を使用することもできます。IDE チャットに "Delete VM web-01 in namespace my-vms" と入力します。<code>vm-delete</code> スキルが完全な安全ワークフローで削除を処理します。</p>
+</div>
+<div class="paragraph">
+<p>テスト中に cordon されたノードを uncordon するには:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm uncordon worker-01</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>namespace を削除するには:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace my-vms</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><code>vm-rebalance</code> スキルは、クラスターノード間での手動 (ユーザー主導) および自動 (AI 主導) の VM 移行をサポートします。</p>
+</li>
+<li>
+<p>ライブマイグレーションは、ReadWriteMany (RWX) ストレージを持つ VM に対してダウンタイムなしの VM 移動を提供します。アクティブなネットワーク接続はライブマイグレーション中も維持されます。</p>
+</li>
+<li>
+<p>コールドマイグレーションは、ReadWriteOnce (RWO) ストレージを使用する VM に使用され、短時間のダウンタイムを伴う停止、再スケジュール、起動のシーケンスが行われます。</p>
+</li>
+<li>
+<p>ノードドレイン操作は、メンテナンス前にノードからすべての VM を移行し、ストレージ設定に基づいて各 VM に適したマイグレーションタイプを選択します。</p>
+</li>
+<li>
+<p>自動リバランスは、クラスターの CPU およびメモリ使用率を分析し、VM を均等に分散するためのマイグレーションプランを提案します。</p>
+</li>
+<li>
+<p>エージェントは、マイグレーションを提案する前に、ターゲットノードの準備状態 (スケジューリング可能性、taint、リソース容量) およびストレージの互換性を検証します。</p>
+</li>
+<li>
+<p>すべてのマイグレーション操作には、ユーザーによる明示的な確認が必要です。コールドマイグレーションにはダウンタイムの警告が含まれます。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="getting-started.html" class="xref page">AI エージェントによる VM 管理の開始</a></p>
+</li>
+<li>
+<p><a href="natural-language-vm-create.html" class="xref page">自然言語による仮想マシンの作成</a></p>
+</li>
+<li>
+<p><a href="ai-vm-lifecycle.html" class="xref page">AI を活用した VM ライフサイクル操作</a></p>
+</li>
+<li>
+<p><a href="vm-clone.html" class="xref page">AI エージェントによる仮想マシンのクローン作成</a></p>
+</li>
+<li>
+<p><a href="https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt" target="_blank" rel="noopener">rh-virt スキルパックリポジトリ</a></p>
+</li>
+<li>
+<p><a href="https://github.com/openshift/openshift-mcp-server" target="_blank" rel="noopener">OpenShift MCP Server</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.22/virt/index.html" target="_blank" rel="noopener">OpenShift Virtualization ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.22/virt/live_migration/virt-about-live-migration.html" target="_blank" rel="noopener">OpenShift Live Migration ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/compute/live_migration/" target="_blank" rel="noopener">KubeVirt Live Migration ガイド</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="ai-skill-chaining.html">Day-2 スキルチェイニング</a></span>
+  <span class="next"><a href="../appendix/glossary.html">Glossary</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
+  </body>
+</html>

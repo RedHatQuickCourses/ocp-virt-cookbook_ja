@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>AI エージェントによる VM 管理の開始 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="index.html">
+    <link rel="next" href="natural-language-vm-create.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">AI エージェントによる VM 管理</a></li>
+    <li><a href="getting-started.html">rh-virt の開始</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">AI エージェントによる VM 管理の開始</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、<code>rh-virt</code> agentic スキルパックのインストールと設定、コンテナ化された MCP サーバーを介した OpenShift クラスターへの接続、および <code>vm-inventory</code> スキルを使用した仮想マシンの一覧表示によるセットアップの検証手順を説明します。</p>
+</div>
+<div class="paragraph">
+<p>このチュートリアルを完了すると、Claude Code または Cursor IDE で自然言語プロンプトを使用して OpenShift Virtualization VM を管理できる、完全に設定された AI エージェント環境が整います。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualization Operator がインストールされた OpenShift 4.18+ クラスター</p>
+</li>
+<li>
+<p>インストールおよび認証済みの Claude Code CLI または Cursor IDE</p>
+</li>
+<li>
+<p>Podman 4.0 以上がインストールされており、シェルでアクセス可能であること</p>
+</li>
+<li>
+<p>クラスターへのアクセス権を持つ kubeconfig ファイルを指している KUBECONFIG</p>
+</li>
+<li>
+<p>VirtualMachine リソースを一覧表示および管理するための RBAC 権限を持つ Cluster admin または ServiceAccount</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>続行する前にクラスターへのアクセスを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get virtualmachines -A</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ai_エージェントによる_vm_管理とは"><a class="anchor" href="#_ai_エージェントによる_vm_管理とは"></a>AI エージェントによる VM 管理とは</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>AI エージェントによる VM 管理により、手動での一連の <code>oc</code> コマンド実行が自然言語プロンプトに置き換えられます。実行したい内容を記述すると、AI エージェントが適切なスキルを選択し、Model Context Protocol (MCP) 経由で適切な API 操作を呼び出し、破壊的なアクションを実行する前に確認を求めます。</p>
+</div>
+<div class="paragraph">
+<p><code>rh-virt</code> スキルパックは、OpenShift Virtualization VM の管理方法をエージェントに教えるコンポーネントです。これには 10 個のスキル (vm-inventory、vm-create、vm-lifecycle-manager、vm-clone、vm-delete、vm-snapshot-create、vm-snapshot-list、vm-snapshot-restore、vm-snapshot-delete、vm-rebalance) と、ユーザーの意図を適切なスキルにマッピングする AGENTS.md ルーティングテーブルが含まれています。</p>
+</div>
+<div class="paragraph">
+<p>OpenShift MCP サーバーは、Podman コンテナ内で実際の Kubernetes API 呼び出しを実行するコンポーネントです。Model Context Protocol を介して、<code>core</code> ツールセット (汎用 Kubernetes CRUD) および <code>kubevirt</code> ツールセット (vm_create、vm_lifecycle) をエージェントに公開します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_アーキテクチャーの概要"><a class="anchor" href="#_アーキテクチャーの概要"></a>アーキテクチャーの概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>以下のコンポーネントが連携して動作します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Claude Code または Cursor IDE</strong> — 自然言語プロンプトを入力する AI インターフェース。</p>
+</li>
+<li>
+<p><strong>AGENTS.md</strong> — 意図を表すフレーズを特定のスキルにマッピングするスキルルーティングテーブル。</p>
+</li>
+<li>
+<p><strong>スキルファイル</strong> (スキルごとの SKILL.md) — 各操作についてエージェントが従う詳細な指示。</p>
+</li>
+<li>
+<p><strong>OpenShift MCP Server</strong> — Kubernetes および KubeVirt API 呼び出しを実行するコンテナ化されたサーバー。</p>
+</li>
+<li>
+<p><strong>KUBECONFIG</strong> — クラスターアクセスのために MCP コンテナに読み取り専用でマウントされる認証情報ファイル。</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>「List all VMs」と入力すると、エージェントは AGENTS.md を読み取り、<code>vm-inventory</code> スキルを選択して、MCP サーバー上で <code>resources_list</code> を呼び出し、結果を IDE に表として整形して表示します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_rh_virt_スキルパックのインストール"><a class="anchor" href="#_rh_virt_スキルパックのインストール"></a>rh-virt スキルパックのインストール</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_lola_のインストール"><a class="anchor" href="#_lola_のインストール"></a>Lola のインストール</h3>
+<div class="paragraph">
+<p><code>rh-virt</code> コレクションは、Claude Code および Cursor 向けの スキルパックマネージャーである <a href="https://github.com/LobsterTrap/lola" target="_blank" rel="noopener">Lola</a> を使用してインストールします。</p>
+</div>
+<div class="paragraph">
+<p>アップストリームリポジトリにある Lola のインストール手順に従ってください。インストール後、Lola が使用可能であることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lola --version</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_agentic_plugins_リポジトリのクローン作成"><a class="anchor" href="#_agentic_plugins_リポジトリのクローン作成"></a>agentic-plugins リポジトリのクローン作成</h3>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">git clone https://github.com/RHEcosystemAppEng/agentic-plugins.git</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd agentic-plugins</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_rh_virt_ローカルモジュールの_lola_への追加"><a class="anchor" href="#_rh_virt_ローカルモジュールの_lola_への追加"></a>rh-virt ローカルモジュールの lola への追加</h3>
+<div class="listingblock">
+<div class="content">
+<pre>lola mod add rh-virt</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_選択したアシスタント用の_rh_virt_コレクションのインストール"><a class="anchor" href="#_選択したアシスタント用の_rh_virt_コレクションのインストール"></a>選択したアシスタント用の rh-virt コレクションのインストール</h3>
+<div class="paragraph">
+<p>Claude Code 用のパックをインストールします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lola install -f rh-virt -a claude-code</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>代わりに Cursor IDE 用にインストールします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lola install -f rh-virt -a cursor</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Lola はスキルファイルと MCP 設定を適切な IDE 設定ディレクトリーにコピーします。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mcp_サーバーの設定"><a class="anchor" href="#_mcp_サーバーの設定"></a>MCP サーバーの設定</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_mcps_json_について"><a class="anchor" href="#_mcps_json_について"></a>mcps.json について</h3>
+<div class="paragraph">
+<p><code>rh-virt</code> コレクションには、<code>openshift-virtualization</code> MCP サーバーを定義する <code>mcps.json</code> ファイルが含まれています。このサーバーは Podman コンテナとして実行され、スキルが使用する Kubernetes および KubeVirt API ツールを提供します。</p>
+</div>
+<div class="paragraph">
+<p>この設定は、KUBECONFIG ファイルをコンテナ内の読み取り専用ボリュームとしてマウントし、サーバーバイナリーがその場所を特定できるように <code>KUBECONFIG</code> 環境変数を渡します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/getting-started/mcps.json" class="xref attachment">mcps.json のダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+ "mcpServers": {
+  "openshift-virtualization": {
+   "command": "podman",
+   "args": [
+    "run",
+    "--rm",
+    "-i",
+    "--network=host",
+    "--userns=keep-id:uid=65532,gid=65532",
+    "-v", "${KUBECONFIG}:/kubeconfig:ro,Z",
+    "--entrypoint", "/openshift-mcp-server",
+    "quay.io/redhat-user-workloads/crt-nshift-lightspeed-tenant/openshift-mcp-server@sha256:2f52c860f91ab3c8a5129b727bdef0d620e733013f073b10355866c45eafd053",
+    "--kubeconfig", "/kubeconfig",
+    "--toolsets", "core,kubevirt"
+   ],
+   "env": {
+    "KUBECONFIG": "${KUBECONFIG}"
+   }
+  }
+ }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>主な設定の詳細:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>--userns=keep-id:uid=65532,gid=65532</code> は、rootless Podman のセキュリティのためにコンテナのユーザー namespace をマッピングします。</p>
+</li>
+<li>
+<p>ボリュームマウントの <code>,Z</code> は、コンテナが kubeconfig ファイルを読み取れるように SELinux コンテキストラベルを適用します。</p>
+</li>
+<li>
+<p><code>--entrypoint /openshift-mcp-server</code> は、イメージ内の MCP サーバーバイナリーを指定します。</p>
+</li>
+<li>
+<p><code>--toolsets core,kubevirt</code> は、汎用の Kubernetes ツールセットと KubeVirt 固有のツールセットの両方を有効にします。</p>
+</li>
+<li>
+<p>コンテナがローカルまたはリモートの Kubernetes API エンドポイントにアクセスするには、<code>--network=host</code> が必要です。</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+サプライチェーンのセキュリティのため、イメージは SHA256 ダイジェストによって固定されています。ローカルでのビルドは不要です。イメージは初回使用時に <code>quay.io</code> から自動的にプルされます。
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_kubeconfig_環境変数の設定"><a class="anchor" href="#_kubeconfig_環境変数の設定"></a>KUBECONFIG 環境変数の設定</h3>
+<div class="paragraph">
+<p>MCP サーバーは <code>KUBECONFIG</code> 環境変数を使用して kubeconfig ファイルの場所を特定します。IDE を起動する前にシェルで設定してください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export KUBECONFIG="/path/to/your/kubeconfig"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>変数が正しく設定されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">echo $KUBECONFIG</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>mcps.json</code> はプレースホルダーとして <code>${KUBECONFIG}</code> を使用します。お使いの IDE は MCP サーバーの起動時に環境変数の値を置換します。kubeconfig ファイルやハードコードされた認証情報を <code>mcps.json</code> にコミットしないでください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_podman_がイメージをプルできることの確認"><a class="anchor" href="#_podman_がイメージをプルできることの確認"></a>Podman がイメージをプルできることの確認</h3>
+<div class="paragraph">
+<p>初回使用時に、Podman は MCP サーバーイメージをプルします。IDE で使用する前に、プルが成功することを確認してください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">podman pull quay.io/redhat-user-workloads/crt-nshift-lightspeed-tenant/openshift-mcp-server@sha256:2f52c860f91ab3c8a5129b727bdef0d620e733013f073b10355866c45eafd053</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_セットアップの確認"><a class="anchor" href="#_セットアップの確認"></a>セットアップの確認</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_クラスター接続の確認"><a class="anchor" href="#_クラスター接続の確認"></a>クラスター接続の確認</h3>
+<div class="paragraph">
+<p>agentic skill を使用する前に、KUBECONFIG が VirtualMachine リソースへのアクセス権を提供していることを確認します:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get virtualmachines -A</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力には、すべての namespace の仮想マシンが一覧表示されます:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAMESPACE  NAME        AGE  STATUS  READY
+default   fedora-quickstart 4d7h  Running  True</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザーまたは ServiceAccount に必要な RBAC 権限があることを確認します:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc auth can-i list virtualmachines -A</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vm_inventory_スキルの実行"><a class="anchor" href="#_vm_inventory_スキルの実行"></a>vm-inventory スキルの実行</h3>
+<div class="paragraph">
+<p>スキルパックのインストールと KUBECONFIG の設定が完了したら、Claude Code または Cursor IDE を再起動して MCP サーバー設定を読み込みます。</p>
+</div>
+<div class="paragraph">
+<p>IDE のチャットで、次のように入力します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>List all VMs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>エージェントはリクエストを <code>vm-inventory</code> スキルにルーティングします。このスキルは MCP サーバー上で <code>resources_list</code> を呼び出し、フォーマットされた表を返します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>## 仮想マシン (All Namespaces)
+
+| Namespace | VM Name      | Status | Age | Resources  | Node   |
+|-----------|-------------------|---------|------|--------------|-----------|
+| default  | fedora-quickstart | Running | 4d7h | 2 vCPU, 4Gi | worker-01 |
+
+Summary:
+- Total VMs: 1
+- Running: 1
+- Stopped: 0</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>MCP サーバーに接続できない場合、スキルは次のように報告します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Cannot execute vm-inventory: MCP server not available.
+Setup: Add openshift-virtualization to mcps.json, set KUBECONFIG, restart Claude Code.</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_安全性モデルの理解"><a class="anchor" href="#_安全性モデルの理解"></a>安全性モデルの理解</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>rh-virt</code> スキルパックは、すべての操作において安全モデルを適用します。</p>
+</div>
+<div class="paragraph">
+<p>読み取り専用の操作 (<code>vm-inventory</code>、<code>vm-snapshot-list</code>) はクラスターに変更を加えないため、確認なしで実行されます。</p>
+</div>
+<div class="paragraph">
+<p>ライフサイクル操作 (起動/停止/再起動用の <code>vm-lifecycle-manager</code>) は、偶発的なサービス中断を防ぐため、実行前に明示的なユーザー確認を必要とします。</p>
+</div>
+<div class="paragraph">
+<p>破壊的な操作 (<code>vm-delete</code>、<code>vm-snapshot-restore</code>、<code>vm-snapshot-delete</code>) は、複数の確認ステップを使用します。VM の削除では、エージェントは処理を進める前に確認として VM 名を正確に入力することを要求します。</p>
+</div>
+<div class="paragraph">
+<p>保護ラベルにより、偶発的な削除を防止します。ラベル <code>protected: "true"</code> が設定された VM は、ユーザーの確認に関係なく、<code>vm-delete</code> スキルによる削除が拒否されます。</p>
+</div>
+<div class="paragraph">
+<p><code>vm-create</code> スキルには自動エラー診断機能が含まれています。新しく作成された VM が <code>ErrorUnschedulable</code> 状態になると、スキルはトラブルシューティングナレッジベースを読み込み、根本原因 (ノードの taint やリソース制約など) を診断して回避策を提案し、確認を得た後にのみ適用します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_mcp_サーバーが起動しない"><a class="anchor" href="#_mcp_サーバーが起動しない"></a>MCP サーバーが起動しない</h3>
+<div class="paragraph">
+<p>IDE が起動された環境で <code>KUBECONFIG</code> が設定されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">echo $KUBECONFIG</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Podman にアクセスできることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">podman info --format '{{.Host.Os}}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>イメージが実行され、サーバーバイナリーが存在することをテストします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">podman run --rm --entrypoint /openshift-mcp-server quay.io/redhat-user-workloads/crt-nshift-lightspeed-tenant/openshift-mcp-server@sha256:2f52c860f91ab3c8a5129b727bdef0d620e733013f073b10355866c45eafd053 --help</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_スキルがアクティブにならない"><a class="anchor" href="#_スキルがアクティブにならない"></a>スキルがアクティブにならない</h3>
+<div class="paragraph">
+<p>インストールされているパックを一覧表示して、コレクションがインストールされていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lola list</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>スキルパックをインストールまたは更新した後に IDE を再起動します。AGENTS.md およびスキルファイルは、IDE の起動時に読み込まれます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vm_操作で_permission_denied_が発生する"><a class="anchor" href="#_vm_操作で_permission_denied_が発生する"></a>VM 操作で Permission Denied が発生する</h3>
+<div class="paragraph">
+<p>ServiceAccount またはユーザーが、VirtualMachine リソースに必要な RBAC を持っていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc auth can-i create virtualmachines -A</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc auth can-i delete virtualmachines -A</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>権限が不十分な場合は、クラスター管理者に連絡してください。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルではクラスターリソースを作成しません。クリーンアップは不要です。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><code>rh-virt</code> スキルパックは、OpenShift Virtualization における完全な VM ライフサイクル管理のための 10 個の専用スキルを提供します。</p>
+</li>
+<li>
+<p>OpenShift MCP サーバーは rootless Podman コンテナとして実行され、セキュアなクラスターアクセスのために KUBECONFIG を読み取り専用でマウントします。</p>
+</li>
+<li>
+<p>Lola は、Claude Code または Cursor IDE に <code>rh-virt</code> をインストールするために使用される スキルパックマネージャーです。</p>
+</li>
+<li>
+<p>AGENTS.md ルーティングテーブルは、直接的な MCP ツール呼び出しを行わずに、自然言語の意図を適切なスキルにマッピングします。</p>
+</li>
+<li>
+<p>安全性モデルは、すべてのライフサイクル操作および破壊的操作に対して Human-in-the-loop による確認を強制します。</p>
+</li>
+<li>
+<p>IDE で "List all VMs" を実行すると、<code>vm-inventory</code> スキルがトリガーされ、エンドツーエンドの接続性が確認されます。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="index.html" class="xref page">AI エージェントによる VM 管理モジュールの概要</a></p>
+</li>
+<li>
+<p><a href="https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt" target="_blank" rel="noopener">rh-virt スキルパックリポジトリ</a></p>
+</li>
+<li>
+<p><a href="https://github.com/LobsterTrap/lola" target="_blank" rel="noopener">Lola Skill Pack Manager</a></p>
+</li>
+<li>
+<p><a href="https://github.com/openshift/openshift-mcp-server" target="_blank" rel="noopener">OpenShift MCP Server</a></p>
+</li>
+<li>
+<p><a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol 仕様</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.22/virt/about_virt/about-virt.html" target="_blank" rel="noopener">OpenShift Virtualization ドキュメント</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">AI エージェントによる VM 管理</a></span>
+  <span class="next"><a href="natural-language-vm-create.html">自然言語による VM 作成</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
+  </body>
+</html>

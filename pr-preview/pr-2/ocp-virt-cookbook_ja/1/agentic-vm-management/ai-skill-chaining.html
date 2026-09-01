@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>スキルチェイニングを使用した Day-2 オペレーション :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="ai-vm-snapshot-management.html">
+    <link rel="next" href="ai-vm-rebalance.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">AI エージェントによる VM 管理</a></li>
+    <li><a href="ai-skill-chaining.html">Day-2 スキルチェイニング</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">スキルチェイニングを使用した Day-2 オペレーション</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>この高度なチュートリアルでは、単一の会話内で複数の <code>rh-virt</code> スキルを連携(チェーン)させて複雑な Day-2 オペレーションを実行する方法を説明します。6 つのスキル呼び出しを順番に行う完全なノードメンテナンスワークフローと、4 つのスキル呼び出しを順番に行うテスト環境のスケールアウトワークフローを順を追って体験します。その過程で、エージェントが各リクエストを適切なスキルにルーティングし、状態遷移間でコンテキストを保持し、プロセス全体を通じて human-in-the-loop(人間の介入による安全性確保)を維持する方法について学びます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="getting-started.html" class="xref page">AI エージェントによる VM 管理の開始</a> チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認)</p>
+</li>
+<li>
+<p><a href="natural-language-vm-create.html" class="xref page">自然言語による仮想マシンの作成</a> チュートリアルを完了していること</p>
+</li>
+<li>
+<p><a href="ai-vm-lifecycle.html" class="xref page">AI を活用した VM ライフサイクル操作</a> および <a href="vm-clone.html" class="xref page">AI エージェントを使用した仮想マシンのクローン作成</a> チュートリアルを理解していること</p>
+</li>
+<li>
+<p>OpenShift Virtualization がインストールされ、少なくとも 2 つの Worker Node がある OpenShift クラスター</p>
+</li>
+<li>
+<p><code>KUBECONFIG</code> 環境変数が設定され、有効な kubeconfig ファイルを参照していること</p>
+</li>
+<li>
+<p>VirtualMachine リソースを作成、一覧表示、スナップショット作成、移行、削除するための RBAC 権限</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>このチュートリアルで使用する namespace がまだ存在しない場合は作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace production-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>使用する VM がない場合は、IDE チャットに次のように入力して <code>vm-create</code> スキルを使用し、複数作成します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Create a Fedora VM named web-frontend in namespace production-vms</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Create a Fedora VM named api-server in namespace production-vms</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Create a Fedora VM named cache-node in namespace production-vms</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM はデフォルトで <code>Stopped</code> 状態で作成されます。3 つすべてを起動します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Start all three VMs in namespace production-vms</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>続行する前に、VM が存在し、実行中であることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n production-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME      AGE  STATUS  READY
+api-server   3m  Running  True
+cache-node   2m  Running  True
+web-frontend  5m  Running  True</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_スキルチェーンとは"><a class="anchor" href="#_スキルチェーンとは"></a>スキルチェーンとは</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>スキルチェーンとは、単一の会話内で複数のエージェントスキルを順番に呼び出して、マルチステップの操作を完了する手法です。各自然言語プロンプトは異なるスキルにルーティングされますが、エージェントは遷移間でコンテキスト (VM 名、namespace、ノード割り当て、以前の結果) を保持します。</p>
+</div>
+<div class="paragraph">
+<p>単一のスキルは 1 つの関心事を処理します。たとえば、<code>vm-inventory</code> は VM を一覧表示し、<code>vm-snapshot-create</code> はスナップショットを作成します。どちらのスキルも互いを認識していません。これらを単一の会話でチェーンさせると、エージェントはインベントリ結果からの情報をスナップショットリクエストに引き継ぐため、VM 名や namespace を再指定する必要がありません。</p>
+</div>
+<div class="paragraph">
+<p>スキルのチェーン実行は、個別の会話でスキルを個別に実行する場合とは異なります。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">観点</th>
+<th class="tableblock halign-left valign-top">チェーン実行 (単一の会話)</th>
+<th class="tableblock halign-left valign-top">個別実行 (個別の会話)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンテキスト</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">エージェントは前のステップからの VM 名、namespace、ノード、結果を記憶します</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">毎回すべてのパラメーターを再指定する必要があります</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">効率性</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プロンプト数が減り、重複したルックアップが発生しません</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">各会話が最初から開始されます</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">エラーリカバリー</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">エージェントは以前の状態を参照して問題を診断できます</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">以前のコンテキストは利用できません</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">最適な用途</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ノードメンテナンス、環境プロビジョニング、アップグレード前のバックアップなどのマルチステップワークフロー</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">単一 VM の起動やスナップショットステータスの確認などの単発の操作</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_エージェントがスキルをルーティングする方法"><a class="anchor" href="#_エージェントがスキルをルーティングする方法"></a>エージェントがスキルをルーティングする方法</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>rh-virt</code> スキルパックは、AGENTS.md 設定で定義されたスキルファーストのルーティングアーキテクチャーを使用します。自然言語のプロンプトを入力すると、エージェントはルーティングテーブルを使用して意図を 10 個のスキルのいずれかに一致させます。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 66.6666%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">意図</th>
+<th class="tableblock halign-left valign-top">ルーティングされるスキル</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"すべての VM を一覧表示"、"worker-02 上の VM を表示"、"VM インベントリ"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-inventory</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"web-01 という名前の Fedora VM を作成"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-create</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"VM api-server を起動"、"cache ノードを停止"、"web-frontend を再起動"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-lifecycle-manager</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"web-server を web-test にクローン"、"golden-image のコピーを 5 つ作成"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-clone</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"namespace dev の VM old-test を削除"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-delete</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"アップグレード前に api-server のスナップショットを作成"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-snapshot-create</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"production-vms 内のスナップショットを一覧表示"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-snapshot-list</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"先週の古いスナップショットを削除"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-snapshot-delete</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"スナップショット pre-upgrade から api-server を復元"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-snapshot-restore</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"worker-02 からすべての VM を移行"、"クラスター全体で VM をリバランス"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-rebalance</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>ルーティングはキーワード駆動型です。「list」、「show」、「inventory」などの単語は <code>vm-inventory</code> にルーティングされます。「migrate」、「move」、「rebalance」、「drain」などの単語は <code>vm-rebalance</code> にルーティングされます。エージェントが MCP ツールを直接呼び出すことはなく、常に最初にスキルを選択し、そのスキルがワークフロー、安全性チェック、確認手順を定義します。</p>
+</div>
+<div class="paragraph">
+<p>一連の会話の中で、エージェントは新しいプロンプトごとにルーティングを再評価します。最初のプロンプトは <code>vm-inventory</code> に、2 番目は <code>vm-snapshot-create</code> に、3 番目は <code>vm-rebalance</code> にルーティングされる場合があります。エージェントは各遷移を透過的に処理します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ_1_ノードメンテナンスのワークフロー"><a class="anchor" href="#_シナリオ_1_ノードメンテナンスのワークフロー"></a>シナリオ 1: ノードメンテナンスのワークフロー</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>これは主要なシナリオです。 Worker Node でメンテナンスを実行する必要があります (たとえば、カーネルパッチの適用と再起動など)。このワークフローでは、6 つのスキル呼び出しを順番に使用して、VM を安全に退避し、メンテナンスを実行して、その後にリバランスを行います。</p>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_1_vm_inventory_によるフリートの監査"><a class="anchor" href="#_ステップ_1_vm_inventory_によるフリートの監査"></a>ステップ 1: vm-inventory によるフリートの監査</h3>
+<div class="paragraph">
+<p>まず、メンテナンス対象のノードで実行されている VM を特定します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>List all VMs in namespace production-vms and show which node each VM is running on</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは <code>vm-inventory</code> にルーティングし、MCP サーバーを呼び出します。ノード配置を示すテーブルが返されます。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Virtual Machines in production-vms
+
+| VM Name   | Status | Node   | vCPU | Memory | Age |
+|--------------|---------|-----------|------|--------|------|
+| web-frontend | Running | worker-01 | 1  | 4Gi  | 25m |
+| api-server  | Running | worker-02 | 1  | 4Gi  | 23m |
+| cache-node  | Running | worker-02 | 1  | 4Gi  | 22m |
+
+Summary:
+- Total VMs: 3
+- Running: 3
+- Stopped: 0
+- Nodes: worker-01 (1 VM), worker-02 (2 VMs)</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>これで、<code>worker-02</code> がメンテナンス前に退避させる必要のある 2 つの VM (<code>api-server</code> および <code>cache-node</code>) をホストしていることがわかりました。エージェントは後続のプロンプトのためにこのマッピングを記憶します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_2_vm_snapshot_create_による重要な_vm_のスナップショット作成"><a class="anchor" href="#_ステップ_2_vm_snapshot_create_による重要な_vm_のスナップショット作成"></a>ステップ 2: vm-snapshot-create による重要な VM のスナップショット作成</h3>
+<div class="paragraph">
+<p>ノードから VM を移行する前に、メンテナンス中に問題が発生した場合のセーフティネットとしてスナップショットを作成します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットに以下を入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Create snapshots of api-server and cache-node in namespace production-vms before maintenance</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは <code>vm-snapshot-create</code> にルーティングします。Storage Class がスナップショットをサポートしていることを検証し、確認のために各スナップショットを提示します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Snapshot - Pre-Maintenance Safety Net
+
+### Snapshot 1 of 2: api-server
+
+| Parameter    | Value             |
+|-----------------|--------------------------------|
+| VM Name     | api-server           |
+| Namespace    | production-vms         |
+| Snapshot Name  | api-server-pre-maintenance   |
+| Storage Class  | lvms-vg1 (CSI snapshots: yes) |
+| VM Status    | Running (online snapshot)   |
+
+Confirm: yes/no</pre>
+</div>
+</div>
+</li>
+<li>
+<p>各スナップショットを確認します。エージェントはそれらを順番に作成します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Snapshots Created
+
+api-server-pre-maintenance - Ready (32s)
+cache-node-pre-maintenance - Ready (28s)
+
+Both VMs have pre-maintenance snapshots.
+If maintenance causes issues, restore with:
+ "Restore api-server from snapshot api-server-pre-maintenance"</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>スナップショットは次のように確認できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get virtualmachinesnapshot -n production-vms</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME             SOURCEKIND    SOURCENAME  PHASE    READYTOUSE  AGE
+api-server-pre-maintenance  VirtualMachine  api-server  Succeeded  true     1m
+cache-node-pre-maintenance  VirtualMachine  cache-node  Succeeded  true     1m</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_3_vm_rebalance_を使用してノードから_vm_を移行する"><a class="anchor" href="#_ステップ_3_vm_rebalance_を使用してノードから_vm_を移行する"></a>ステップ 3: vm-rebalance を使用してノードから VM を移行する</h3>
+<div class="paragraph">
+<p>手動移行モードを使用して、<code>worker-02</code> からすべての VM を退避します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Migrate all VMs off worker-02 in namespace production-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは手動モードで <code>vm-rebalance</code> にルーティングします。<code>worker-02</code> 上の 2 つの VM を特定し、移行計画を提示します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Migration Plan - Node Evacuation
+
+**Source Node**: worker-02
+**Target**: Available nodes (worker-01, worker-03)
+
+| VM      | Current Node | Target Node | Migration Type |
+|--------------|--------------|-------------|----------------|
+| api-server  | worker-02  | worker-01  | Live      |
+| cache-node  | worker-02  | worker-03  | Live      |
+
+**Migration Type**: Live (zero downtime)
+**Impact**: VMs remain running during migration. Brief network blip possible.
+
+Proceed with migration? (yes/no)</pre>
+</div>
+</div>
+</li>
+<li>
+<p>確認すると、エージェントはライブマイグレーションを実行し、進捗状況を報告します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Migration Complete
+
+api-server - Migrated to worker-01 (live, 45s)
+cache-node - Migrated to worker-03 (live, 38s)
+
+worker-02 now has 0 VMs. Safe for maintenance.</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>vm-rebalance</code> スキルは、可能な場合はライブマイグレーション (ダウンタイムなし) を使用します。VM がライブマイグレーションをサポートしていない場合 (例えば、ローカルの非共有ボリュームを使用している場合など)、エージェントはコールドマイグレーションにフォールバックし、処理を続行する前に一時的なダウンタイムについて警告します。
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_4_vm_inventory_で退避を確認する"><a class="anchor" href="#_ステップ_4_vm_inventory_で退避を確認する"></a>ステップ 4: vm-inventory で退避を確認する</h3>
+<div class="paragraph">
+<p>メンテナンス対象のノードに VM が残っていないことを確認します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE のチャットに以下を入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Verify no VMs are running on worker-02</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは <code>vm-inventory</code> に戻り、ノードの配置を確認します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Virtual Machines in production-vms
+
+| VM Name   | Status | Node   | vCPU | Memory | Age |
+|--------------|---------|-----------|------|--------|------|
+| web-frontend | Running | worker-01 | 1  | 4Gi  | 35m |
+| api-server  | Running | worker-01 | 1  | 4Gi  | 33m |
+| cache-node  | Running | worker-03 | 1  | 4Gi  | 32m |
+
+Summary:
+- worker-01: 2 VMs
+- worker-02: 0 VMs (safe for maintenance)
+- worker-03: 1 VM
+
+All VMs evacuated from worker-02.</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_5_ノードメンテナンスの実行"><a class="anchor" href="#_ステップ_5_ノードメンテナンスの実行"></a>ステップ 5: ノードメンテナンスの実行</h3>
+<div class="paragraph">
+<p>すべての VM が <code>worker-02</code> から安全に退避されたため、ノードの cordon、drain、パッチ適用、再起動を行えるようになりました。これらのステップでは、エージェント外で標準の OpenShift コマンドを使用します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm cordon worker-02</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm drain worker-02 --ignore-daemonsets --delete-emptydir-data</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>メンテナンスを実行します (パッチの適用、ファームウェアの更新、再起動):</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 例: パッチ適用後にノードを再起動する
+ssh core@worker-02 'sudo systemctl reboot'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ノードがオンラインに戻るのを待ち、uncordon します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm uncordon worker-02</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ノードが Ready であることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get node worker-02</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME    STATUS  ROLES  AGE  VERSION
+worker-02  Ready  worker  30d  v1.28.6+openshift.1</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_6_vm_rebalance_による_vm_のリバランス"><a class="anchor" href="#_ステップ_6_vm_rebalance_による_vm_のリバランス"></a>ステップ 6: vm-rebalance による VM のリバランス</h3>
+<div class="paragraph">
+<p>メンテナンス後、復帰した <code>worker-02</code> を含むすべてのノード間で VM をリバランスします。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Rebalance VMs in namespace production-vms across all nodes</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは自動モードで <code>vm-rebalance</code> にルーティングします。現在の分散状況を評価し、最適な配置を提案します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Rebalance Plan
+
+**Current Distribution**:
+ worker-01: 2 VMs (web-frontend, api-server)
+ worker-02: 0 VMs
+ worker-03: 1 VM (cache-node)
+
+**Proposed Distribution** (balanced):
+ worker-01: 1 VM (web-frontend)
+ worker-02: 1 VM (api-server)
+ worker-03: 1 VM (cache-node)
+
+| VM      | Current Node | Target Node | Migration Type |
+|--------------|--------------|-------------|----------------|
+| api-server  | worker-01  | worker-02  | Live      |
+
+**Migrations Required**: 1
+**Impact**: Live migration, zero downtime
+
+Proceed with rebalancing? (yes/no)</pre>
+</div>
+</div>
+</li>
+<li>
+<p>確認します。エージェントは <code>api-server</code> を <code>worker-02</code> に移行して戻します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Rebalance Complete
+
+api-server - Migrated to worker-02 (live, 42s)
+
+**Final Distribution**:
+ worker-01: 1 VM (web-frontend)
+ worker-02: 1 VM (api-server)
+ worker-03: 1 VM (cache-node)
+
+Cluster is balanced. All VMs running.</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>ノードメンテナンスのワークフローが完了しました。初期インベントリの取得後、VM 名、namespace、またはノード割り当てを再指定することなく、1 つの会話内で 6 回のスキル呼び出しを使用しました。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ_2_テスト環境のスケールアウト"><a class="anchor" href="#_シナリオ_2_テスト環境のスケールアウト"></a>シナリオ 2: テスト環境のスケールアウト</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この 2 つ目のシナリオでは、4 つのチェーンしたスキルを使用して、ゴールデンイメージ VM を複数のテストインスタンスにクローンし、それらすべてを起動する方法を示します。</p>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_1_vm_inventory_でゴールデンイメージ_vm_を検索する"><a class="anchor" href="#_ステップ_1_vm_inventory_でゴールデンイメージ_vm_を検索する"></a>ステップ 1: vm-inventory でゴールデンイメージ VM を検索する</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>List VMs in namespace production-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは <code>vm-inventory</code> にルーティングします。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Virtual Machines in production-vms
+
+| VM Name   | Status | Node   | vCPU | Memory | Age |
+|--------------|---------|-----------|------|--------|------|
+| web-frontend | Running | worker-01 | 1  | 4Gi  | 1h  |
+| api-server  | Running | worker-02 | 1  | 4Gi  | 1h  |
+| cache-node  | Running | worker-03 | 1  | 4Gi  | 1h  |
+
+Summary: 3 VMs, all Running</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>ロードテスト用にクローンを作成するゴールデンイメージとして <code>web-frontend</code> を特定します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_2_vm_clone_による一括クローン作成"><a class="anchor" href="#_ステップ_2_vm_clone_による一括クローン作成"></a>ステップ 2: vm-clone による一括クローン作成</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Create 5 clones of web-frontend named loadtest-01 through loadtest-05 in namespace production-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントはバッチモードで <code>vm-clone</code> にルーティングします。ソース VM を検証し、5 つのターゲット名がすべて利用可能であることを確認して、storage strategy を尋ねます。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Batch Cloning: 5 VMs from `web-frontend`
+
+**Source**: `web-frontend` (production-vms) - u1.medium, 1 vCPU, 4Gi, 30Gi
+**Targets**: loadtest-01, loadtest-02, loadtest-03, loadtest-04, loadtest-05
+
+**Total Resource Impact**: 5 vCPU, 20Gi RAM, 150Gi disk
+
+**Select storage strategy (applied to all clones, 1-4):**
+1. Clone Storage - Full copy (~5-10 min each, 150Gi total)
+2. Reference Existing - Shared disk (dangerous)
+3. New Empty Storage - Fresh disks
+4. Cancel</pre>
+</div>
+</div>
+</li>
+<li>
+<p>オプション 1 を選択します。エージェントは個別の確認とともに各クローンを作成し、レポートを出力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Batch Cloning Complete
+
+**Results**:
+loadtest-01 (production-vms) - Cloned in 6m12s
+loadtest-02 (production-vms) - Cloned in 7m05s
+loadtest-03 (production-vms) - Cloned in 5m48s
+loadtest-04 (production-vms) - Cloned in 6m33s
+loadtest-05 (production-vms) - Cloned in 5m55s
+
+**Total Storage**: 150Gi cloned
+**Status**: All 5 clones created (Stopped)
+
+**Next**: Start all with "Start VMs loadtest-01 through loadtest-05"</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_3_vm_lifecycle_manager_を使用してすべてのクローンを起動"><a class="anchor" href="#_ステップ_3_vm_lifecycle_manager_を使用してすべてのクローンを起動"></a>ステップ 3: vm-lifecycle-manager を使用してすべてのクローンを起動</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Start all loadtest VMs in namespace production-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは <code>vm-lifecycle-manager</code> にルーティングします。5 つのクローンを特定し、確認のためにそれぞれを表示します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Lifecycle Operation - Batch Start
+
+Starting 5 VMs in namespace production-vms:
+
+| VM Name   | Action | Impact       |
+|-------------|--------|---------------------|
+| loadtest-01 | start | consumes resources |
+| loadtest-02 | start | consumes resources |
+| loadtest-03 | start | consumes resources |
+| loadtest-04 | start | consumes resources |
+| loadtest-05 | start | consumes resources |
+
+**Total Impact**: 5 vCPU, 20Gi RAM
+
+Confirm starting all 5 VMs? (yes/no)</pre>
+</div>
+</div>
+</li>
+<li>
+<p>確認します。エージェントは各 VM を起動し、Running ステータスを確認します:</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Batch Start Complete
+
+loadtest-01 - Running (RunStrategy: Always)
+loadtest-02 - Running (RunStrategy: Always)
+loadtest-03 - Running (RunStrategy: Always)
+loadtest-04 - Running (RunStrategy: Always)
+loadtest-05 - Running (RunStrategy: Always)
+
+All 5 VMs started successfully.</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ステップ_4_vm_inventory_によるすべてのクローンの検証"><a class="anchor" href="#_ステップ_4_vm_inventory_によるすべてのクローンの検証"></a>ステップ 4: vm-inventory によるすべてのクローンの検証</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットに以下を入力します:</p>
+<div class="listingblock">
+<div class="content">
+<pre>Show all loadtest VMs with their IPs</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは <code>vm-inventory</code> にルーティングし、VirtualMachineInstance リソースからの IP アドレスを出力に追加します:</p>
+<div class="listingblock">
+<div class="content">
+<pre>## Virtual Machines - Load Test Fleet
+
+| VM Name   | Status | Node   | IP      | vCPU | Memory |
+|-------------|---------|-----------|---------------|------|--------|
+| loadtest-01 | Running | worker-01 | 10.128.0.110 | 1  | 4Gi  |
+| loadtest-02 | Running | worker-02 | 10.128.1.85  | 1  | 4Gi  |
+| loadtest-03 | Running | worker-03 | 10.128.2.42  | 1  | 4Gi  |
+| loadtest-04 | Running | worker-01 | 10.128.0.111 | 1  | 4Gi  |
+| loadtest-05 | Running | worker-02 | 10.128.1.86  | 1  | 4Gi  |
+
+Summary: 5 VMs, all Running, distributed across 3 nodes</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>テスト環境の準備が整いました。1 回の会話で 4 回のスキル呼び出しを使用しました。ソースを検索するための <code>vm-inventory</code>、コピーを作成するための <code>vm-clone</code>、それらを起動するための <code>vm-lifecycle-manager</code>、再度検証するための <code>vm-inventory</code> です。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_スキル間でのコンテキストの保持"><a class="anchor" href="#_スキル間でのコンテキストの保持"></a>スキル間でのコンテキストの保持</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>単一の会話内でスキルをチェーンさせる場合、エージェントは前のステップからのコンテキストを保持します。これは以下を意味します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>VM 名が引き継がれます。</strong> <code>vm-inventory</code> がノード上の VM を一覧表示した後は、名前を繰り返すことなく「それらの VM のスナップショットを作成して」と指示できます。エージェントは、インベントリの結果からどの VM を指しているかを認識します。</p>
+</li>
+<li>
+<p><strong>Namespace が記憶されます。</strong> 最初のプロンプトで <code>production-vms</code> を指定すると、「worker-02 からすべての VM を移行して」などの後続のプロンプトでその Namespace が継承されます。変更する場合を除き、再度指定する必要はありません。</p>
+</li>
+<li>
+<p><strong>ノードの割り当てが追跡されます。</strong> <code>vm-rebalance</code> が VM を移行した後、エージェントは新しいノード配置で内部コンテキストを更新します。後続の <code>vm-inventory</code> の呼び出しには、移行後の状態が反映されます。</p>
+</li>
+<li>
+<p><strong>スナップショット名が利用可能です。</strong> <code>vm-snapshot-create</code> でスナップショットに <code>api-server-pre-maintenance</code> という名前が付けられた後、正確な名前を調べなくても、後から「restore api-server from its pre-maintenance snapshot」と指示して参照できます。</p>
+</li>
+<li>
+<p><strong>操作結果が次のステップに反映されます。</strong> <code>vm-rebalance</code> で移行の失敗が報告された場合、エージェントはその失敗のコンテキストを次のプロンプトに引き継ぎます。「try migrating it to worker-03 instead」と指示するだけで、エージェントはどの VM が失敗し、何がすでに試行されたかを把握します。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>このコンテキストの保持により、パラメーターを繰り返し入力する手間が省け、VM 名や namespace を手動で再入力することによるエラーのリスクが軽減されます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_チェーンさせる場合と個別に実行する場合の使い分け"><a class="anchor" href="#_チェーンさせる場合と個別に実行する場合の使い分け"></a>チェーンさせる場合と個別に実行する場合の使い分け</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>すべてのマルチステップタスクがチェーンによってメリットを得られるわけではありません。以下のガイドラインを参考にしてください。</p>
+</div>
+<div class="sect2">
+<h3 id="_次の場合にスキルをチェーンさせます"><a class="anchor" href="#_次の場合にスキルをチェーンさせます"></a>次の場合にスキルをチェーンさせます</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>ノードメンテナンスや環境のプロビジョニングなど、各ステップが前のステップの出力に依存するマルチステップワークフローを実行している場合。</p>
+</li>
+<li>
+<p>前のステップの結果 (インベントリからの VM 名、スナップショット作成からのスナップショット名、移行からのノード割り当てなど) を参照する必要がある場合。</p>
+</li>
+<li>
+<p>完了したばかりの内容に基づいて、エージェントに次のステップを提案させたい場合。</p>
+</li>
+<li>
+<p>トラブルシューティングを行っており、エージェントに複数のクエリにわたる情報を関連付けさせる必要がある場合。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_以下の場合に個別に実行"><a class="anchor" href="#_以下の場合に個別に実行"></a>以下の場合に個別に実行</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>単一の VM に対して 1 回限りの操作を実行する場合 (VM の起動、スナップショットの確認、古いリソースの削除など)。</p>
+</li>
+<li>
+<p>操作が完全に自己完結しており、事前のコンテキストに依存しない場合。</p>
+</li>
+<li>
+<p>蓄積された状態のないクリーンな会話が必要な場合 (例えば、関連のない目的で異なる namespace 内の VM を管理する場合など)。</p>
+</li>
+<li>
+<p>異なるパラメーターを使用して同じ操作を繰り返し実行する場合 (異なる namespace 内の無関係な複数の VM を削除するなど)。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_一般的なスキルチェーン"><a class="anchor" href="#_一般的なスキルチェーン"></a>一般的なスキルチェーン</h3>
+<div class="paragraph">
+<p>以下のチェーンは、最も頻繁に行われる Day-2 ワークフローに対応しています。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ワークフロー</th>
+<th class="tableblock halign-left valign-top">スキルチェーン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ノードのメンテナンス</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-inventory</code> &#8594; <code>vm-snapshot-create</code> &#8594; <code>vm-rebalance</code> (manual) &#8594; <code>vm-inventory</code> &#8594; maintenance &#8594; <code>vm-rebalance</code> (automatic)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">アップグレード前のバックアップ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-snapshot-create</code> &#8594; upgrade &#8594; <code>vm-snapshot-restore</code> (if needed)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">テスト環境のセットアップ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-inventory</code> &#8594; <code>vm-clone</code> (batch) &#8594; <code>vm-lifecycle-manager</code> &#8594; <code>vm-inventory</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">スナップショットの整理</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-snapshot-list</code> &#8594; <code>vm-snapshot-delete</code> (old snapshots)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM の昇格</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vm-clone</code> (cross-namespace) &#8594; <code>vm-lifecycle-manager</code> &#8594; <code>vm-inventory</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアル中に作成されたリソースを削除するには:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete virtualmachinesnapshot api-server-pre-maintenance cache-node-pre-maintenance -n production-vms</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete vm loadtest-01 loadtest-02 loadtest-03 loadtest-04 loadtest-05 -n production-vms</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete vm web-frontend api-server cache-node -n production-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>namespace を削除するには:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace production-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>または、自然言語を使用します。IDE チャットで「Delete VM loadtest-01 in namespace production-vms」と入力します。<code>vm-delete</code> スキルが、完全な安全ワークフローを使用して削除を処理します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>スキルチェイニングは、パラメーターを再指定することなく複雑な Day-2 オペレーションを実行するために、単一の会話内で複数のエージェントスキルを順次実行します。</p>
+</li>
+<li>
+<p>エージェントは、AGENTS.md ルーティングテーブルで定義されたインテントベースのキーワードマッチングを使用して、各プロンプトを適切なスキルにルーティングします。</p>
+</li>
+<li>
+<p>ノードメンテナンスワークフローは、inventory、snapshot、migrate、verify、maintenance、rebalance の 6 つのスキル呼び出しをチェーンさせます。</p>
+</li>
+<li>
+<p>テスト環境のスケールアウトワークフローは、inventory、batch clone、batch start、verify の 4 つのスキル呼び出しをチェーンさせます。</p>
+</li>
+<li>
+<p>コンテキストの保持により、スキルの遷移間で VM 名、namespace、ノードの割り当て、操作結果が自動的に引き継がれます。</p>
+</li>
+<li>
+<p>依存関係のある複数ステップのワークフローではスキルをチェーンさせ、単発または関連のない操作では個別に実行します。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="getting-started.html" class="xref page">AI エージェントによる VM 管理の開始</a></p>
+</li>
+<li>
+<p><a href="natural-language-vm-create.html" class="xref page">自然言語による仮想マシンの作成</a></p>
+</li>
+<li>
+<p><a href="ai-vm-lifecycle.html" class="xref page">AI を活用した VM ライフサイクル操作</a></p>
+</li>
+<li>
+<p><a href="vm-clone.html" class="xref page">AI エージェントを使用した仮想マシンのクローン作成</a></p>
+</li>
+<li>
+<p><a href="https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt" target="_blank" rel="noopener">rh-virt スキルパックリポジトリ</a></p>
+</li>
+<li>
+<p><a href="https://github.com/openshift/openshift-mcp-server" target="_blank" rel="noopener">OpenShift MCP Server</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.22/virt/index.html" target="_blank" rel="noopener">OpenShift Virtualization ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/virtualization/live-migration" target="_blank" rel="noopener">OpenShift ライブマイグレーションのドキュメント</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="ai-vm-snapshot-management.html">VM スナップショット管理</a></span>
+  <span class="next"><a href="ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
+  </body>
+</html>
