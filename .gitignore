@@ -111,6 +111,20 @@ dist
 .bundle/
 Gemfile.lock
 
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Translation progress (temporary, deleted on completion)
+tools/translation/.translate-progress.json
+
+# Development planning documents
+tools/translation/IMPLEMENTATION-PLAN.md
+tools/translation/IMPLEMENTATION-RESULTS.md
+
 # Claude Code
 .claude/
 CLAUDE.md

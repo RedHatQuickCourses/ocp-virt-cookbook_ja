@@ -1,7 +1,8 @@
-= 仮想マシン用 SR-IOV セカンダリネットワークの構成
-:navtitle: SR-IOV セカンダリネットワーク
+= 仮想マシン用 SR-IOV セカンダリーネットワークの構成
+:navtitle: SR-IOV セカンダリーネットワーク
 
 検証済みバージョン:
+
 ----
 OpenShift 4.21
 ----
@@ -39,7 +40,7 @@ OperatorHub から SR-IOV Network Operator をインストールした後、そ�
 oc get csv -n openshift-sriov-network-operator
 ----
 
-期待される出力 (バージョンにより異なる場合があります):
+想定される出力 (バージョンにより異なる場合があります):
 
 ----
 NAME                                          DISPLAY                   VERSION               PHASE
@@ -183,7 +184,7 @@ VF リソースがノードの割当可能容量に含まれているかを確�
 oc get node <node-name> -o jsonpath='{.status.allocatable.openshift\.io/mlxsriovnic}'
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 4
@@ -192,7 +193,7 @@ oc get node <node-name> -o jsonpath='{.status.allocatable.openshift\.io/mlxsriov
 == ステップ 5: 各 VLAN 用の SR-IOV ネットワークの作成
 
 トランク構成では、物理スイッチポートは同じケーブルで複数の VLAN を伝送します。
-各 `SriovNetwork` リソースは個別の VLAN を定義します。Operator はそれぞれに対して個別の `NetworkAttachmentDefinition` (NAD) を生成します。
+各 `SriovNetwork` リソースは個別の VLAN を定義します。 Operator はそれぞれに対して個別の `NetworkAttachmentDefinition` (NAD) を生成します。
 これらの NAD を通じて VF が VM に割り当てられると、自動的に指定された VLAN ID で送信トラフィックにタグ付けされ、受信時にタグが削除されるため、ゲスト OS はタグなしのフレームを認識することになります。
 
 まず、VM 用の namespace を作成します:
@@ -219,12 +220,12 @@ oc apply -f - <<EOF
 apiVersion: sriovnetwork.openshift.io/v1
 kind: SriovNetwork
 metadata:
-  name: sriov-net-data
+  name: sriov-net-mgmt
   namespace: openshift-sriov-network-operator
 spec:
   networkNamespace: sriov-demo
   resourceName: mlxsriovnic
-  vlan: 100
+  vlan: 200
   spoofChk: "off"
   trust: "on"
 EOF
@@ -265,7 +266,7 @@ EOF
 oc get net-attach-def -n sriov-demo
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 NAME             AGE
@@ -279,7 +280,7 @@ sriov-net-mgmt   5s
 これは、ネットワーク機能が異なるトラフィックタイプに対して分離されたプレーンを必要とする、本番環境のパターンを模倣したものです。
 
 WARNING: この例の cloud-init パスワードはデモ目的専用です。
-本番環境では、常に SSH キー認証または強力なパスワードを使用してください。
+本番環境では、常に SSH 鍵認証または強力なパスワードを使用してください。
 
 xref:attachment$sriov-secondary/fedora-sriov-vm.yaml[fedora-sriov-vm.yaml をダウンロード]
 
@@ -456,7 +457,7 @@ sudo ip link set enp8s0 up
 ip -br addr show
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 lo               UNKNOWN        127.0.0.1/8 ::1/128
@@ -465,7 +466,7 @@ enp7s0           UP             10.100.0.10/24
 enp8s0           UP             10.200.0.10/24
 ----
 
-ヒント: ここでは明快にするために手動で `ip addr add` を使用していますが、このように割り当てられたアドレスはリンクフラップや再起動で失われます。
+TIP: ここでは明快にするために手動で `ip addr add` を使用していますが、このように割り当てられたアドレスはリンクフラップや再起動で失われます。
 本番環境では、以下のいずれかの永続的な代替手段を使用してください:
 
 * **DHCP** -- 各 VLAN に DHCP サーバーをデプロイし、NetworkManager を介してゲストに自動的にアドレスを取得させます。
@@ -584,6 +585,6 @@ oc delete namespace sriov-demo
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/networking/hardware-networks[OpenShift ハードウェアネットワーク,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/virtualization/networking#virt-attaching-vm-to-sriov-network[VM を SR-IOV ネットワークに接続する,window=_blank]
 * link:https://kubevirt.io/user-guide/network/interfaces_and_networks/#sriov[KubeVirt SR-IOV インターフェースバインディング,window=_blank]
-* xref:localnet-secondary.adoc[Localnet セカンダリネットワーク] -- ソフトウェア定義ネットワーキングを使用した代替のセカンダリネットワークアプローチ
+* xref:localnet-secondary.adoc[Localnet セカンダリーネットワーク] -- ソフトウェア定義ネットワーキングを使用した代替のセカンダリーネットワークアプローチ
 * xref:localnet-vlan.adoc[Localnet VLAN 設定] -- localnet トポロジでの VLAN タギング (ソフトウェアベースの代替案)
-* xref:linux-bridges.adoc[Linux bridge] -- より単純なハードウェア要件向けの別のセカンダリネットワークオプション
+* xref:linux-bridges.adoc[Linux bridge] -- より単純なハードウェア要件向けの別のセカンダリーネットワークオプション

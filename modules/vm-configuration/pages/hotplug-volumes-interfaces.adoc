@@ -7,6 +7,54 @@
 
 `virtctl addvolume` を使用して新しい PVC を実行中の VM にアタッチし、ゲスト OS 内部で新しいブロックデバイスとして認識されることを確認した後、`virtctl removevolume` を使用して削除します。また、ネットワークインターフェースのホットプラグに関する概念と要件についても解説します。
 
+== ホットプラグを使用するタイミング
+
+ホットプラグは、VM がすでにトラフィックを処理している状態でストレージやネットワークのニーズが変化し、再起動による中断を避けたい場合に役立ちます。
+
+* **データベースの肥大化**: 本番データベース VM のディスク容量が不足している場合、ダウンタイムなしで追加のストレージボリュームをアタッチします。
+* **デバッグおよび診断用ボリューム**: 稼働中の本番 VM にスクラッチボリュームをアタッチしてログやメモリダンプを収集し、その後デタッチします。再起動は不要で、VM はリクエストの処理を継続できます。
+* **動的なネットワークセグメント**: アプリケーション VM が新しい VLAN へのアクセスを必要としている場合、VM を再起動する代わりにセカンダリーネットワークインターフェースをホットプラグします。
+* **一時的なスクラッチストレージ**: バッチジョブ用に追加のストレージをアタッチし、ジョブの完了時に削除することで、容量が恒久的に占有されるのを防ぎます。
+* **コンプライアンスデータの収集**: 監査用ボリュームをアタッチして必要なデータを収集した後にデタッチし、ストレージがアタッチされている期間を可能な限り短くします。
+
+TIP: `--persist` フラグを使用するかどうかは、ユースケースによって決まります。長期間使用するデータディスクは、再起動後も保持されるように永続化する必要があります。診断、バッチジョブ、または監査用の一時ボリュームは、通常このフラグなしでアタッチします。詳細は <<persist-flag>> を参照してください。
+
+== ホットプラグの仕組み
+
+ホットプラグは、VM を稼働させたままそのデバイスレイアウトを変更します。このチュートリアルのベース VM は 2 つの virtio ディスクで起動します。ボリュームを追加すると、VM を中断することなく 3 つ目のデバイスが導入されます。
+
+....
+BEFORE  — hotplug-vm running
+│
+├─ rootdisk        — vda   (virtio)
+└─ cloudinitdisk   — vdb   (virtio)
+
+   virtctl addvolume hotplug-vm --volume-name=hotplug-disk --persist
+   the VM keeps running — no restart, no downtime
+
+AFTER   — the same hotplug-vm, still running
+│
+├─ rootdisk        — vda   (virtio)
+├─ cloudinitdisk   — vdb   (virtio)
+└─ hotplug-disk    — sda   (SCSI, hotplugged)
+....
+
+ホットプラグされたボリュームは `vdc` ではなく `sda` として認識される点に注意してください。virtio ディスクは起動後に PCI バスへ追加できないため、ホットプラグされたボリュームは virtio PCI バスではなく SCSI バスにアタッチされます。デバイス名のプレフィックスが変わるのはこのためです。詳細は <<disk-bus-type>> を参照してください。
+
+この単一の `virtctl` コマンドの裏側では、PVC がアタッチメント Pod を介してゲストに到達します。
+
+....
+PersistentVolumeClaim (hotplug-disk)
+│
+└─ virtctl addvolume  — patches the running VM
+   │
+   └─ attachment pod  — makes the PVC available to the VM's launcher pod
+      │
+      └─ /dev/sda in the guest  — a new block device, ready to format
+....
+
+アタッチメント Pod は、VMI ステータス内の `hotplugVolume` フィールドとして確認できます。これについてはステップ 4 で説明します。
+
 == 前提条件
 
 * **OpenShift 4.18 以上** (OpenShift Virtualization Operator がインストール済みであること) 
@@ -95,7 +143,7 @@ oc get vm -n hotplug-demo -w
 oc get vmi hotplug-vm -n hotplug-demo -o jsonpath='{range .status.volumeStatus[*]}{.name}: {.target}{"\n"}{end}'
 ----
 
-期待される出力:
+想定される出力:
 ----
 rootdisk: vda
 cloudinitdisk: vdb
@@ -144,7 +192,7 @@ oc get pvc hotplug-disk -n hotplug-demo
 virtctl addvolume hotplug-vm --volume-name=hotplug-disk --namespace=hotplug-demo --persist
 ----
 
-期待される出力:
+想定される出力:
 ----
 Successfully submitted addvolume request to VM hotplug-vm for volume hotplug-disk
 ----
@@ -160,7 +208,7 @@ VMI のボリュームステータスを確認し、新しいディスクが表�
 oc get vmi hotplug-vm -n hotplug-demo -o jsonpath='{range .status.volumeStatus[*]}{.name}: {.target} (hotplugVolume: {.hotplugVolume}){"\n"}{end}'
 ----
 
-期待される出力:
+想定される出力:
 ----
 rootdisk: vda (hotplugVolume: )
 cloudinitdisk: vdb (hotplugVolume: )
@@ -176,7 +224,7 @@ PVC がバインドされていることを確認します。
 oc get pvc hotplug-disk -n hotplug-demo
 ----
 
-期待される出力:
+想定される出力:
 ----
 NAME           STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   AGE
 hotplug-disk   Bound    pvc-xxxx     5Gi        RWO            lvms-vg1       1m
@@ -227,7 +275,7 @@ echo "Hotplug test" | sudo tee /mnt/hotplug/test.txt
 cat /mnt/hotplug/test.txt
 ----
 
-期待される出力:
+想定される出力:
 ----
 Hotplug test
 ----
@@ -250,7 +298,7 @@ sudo umount /mnt/hotplug
 virtctl removevolume hotplug-vm --volume-name=hotplug-disk --namespace=hotplug-demo
 ----
 
-期待される出力:
+想定される出力:
 ----
 Successfully submitted removevolume request to VM hotplug-vm for volume hotplug-disk
 ----
@@ -264,7 +312,7 @@ IMPORTANT: データ破損を防ぐため、ホットプラグしたボリュー
 oc get vmi hotplug-vm -n hotplug-demo -o jsonpath='{range .status.volumeStatus[*]}{.name}: {.target}{"\n"}{end}'
 ----
 
-期待される出力:
+想定される出力:
 ----
 rootdisk: vda
 cloudinitdisk: vdb
@@ -279,6 +327,7 @@ oc get pvc hotplug-disk -n hotplug-demo
 
 == ホットプラグボリュームの参考情報
 
+[[persist-flag]]
 === --persist フラグ
 
 [cols="1,1",options="header"]
@@ -308,6 +357,7 @@ oc get pvc hotplug-disk -n hotplug-demo
 * cloudInitNoCloud / cloudInitConfigDrive ボリューム
 * emptyDir ボリューム
 
+[[disk-bus-type]]
 === ディスクバスタイプ
 
 ホットプラグされたボリュームはデフォルトで SCSI バスを使用します (`sda`、`sdb` などとして表示されます) 。これは、virtio ディスクは起動後に PCI バスへホットプラグできないためです。SCSI はホットアド機能を提供します。
@@ -326,7 +376,7 @@ OpenShift Virtualization はネットワークインターフェースのホッ�
 
 ボリュームのホットプラグ (`virtctl addvolume` を使用) とは異なり、ネットワークインターフェースのホットプラグは VM spec を編集することで行われます。
 
-. セカンダリネットワーク用の NetworkAttachmentDefinition (NAD) を作成します。
+. セカンダリーネットワーク用の NetworkAttachmentDefinition (NAD) を作成します。
 . VM spec を編集して、新しいインターフェースとネットワークの定義を追加します。
 . インターフェースは、実行中の VM に (thick Multus が利用可能な場合) アタッチされるか、ライブマイグレーション後にアタッチされます。
 

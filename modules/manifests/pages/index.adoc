@@ -1,7 +1,7 @@
 = YAML マニフェストライブラリ
 :navtitle: マニフェスト
 
-クックブックのチュートリアルで使用される YAML マニフェストのクイックリファレンスライブラリです。カテゴリごとに整理されています。
+cookbook のチュートリアルで使用される YAML マニフェストのクイックリファレンスライブラリです。カテゴリごとに整理されています。
 
 == クイックナビゲーション
 
@@ -41,14 +41,14 @@ LVM Storage Operator のインストールおよび設定用マニフェスト�
 |xref:storage:attachment$lvm-operator/lvm-namespace.yaml[YAML]
 
 |lvm-operatorgroup
-|OperatorGroup
+| OperatorGroup
 |LVM Operator の namespace スコープの定義
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvm-operatorgroup.yaml[YAML]
 
 |lvm-subscription
 |Subscription
-|OperatorHub からの LVM Storage Operator のインストール
+| OperatorHub からの LVM Storage Operator のインストール
 |xref:storage:lvm-operator.adoc[]
 |xref:storage:attachment$lvm-operator/lvm-subscription.yaml[YAML]
 
@@ -87,7 +87,7 @@ localnet、UDN、Bridge mapping 用のネットワーク設定です。
 
 |localnet-secondary-namespace
 |Namespace
-|localnet セカンダリネットワーク VM 用 namespace
+|localnet セカンダリーネットワーク VM 用 namespace
 |xref:networking:localnet-secondary.adoc[]
 |xref:networking:attachment$localnet-secondary/localnet-secondary-namespace.yaml[YAML]
 
@@ -99,7 +99,7 @@ localnet、UDN、Bridge mapping 用のネットワーク設定です。
 
 |cudn-localnet
 |CUDN
-|localnet セカンダリネットワーク用 ClusterUserDefinedNetwork
+|localnet セカンダリーネットワーク用 ClusterUserDefinedNetwork
 |xref:networking:localnet-secondary.adoc[]
 |xref:networking:attachment$localnet-secondary/cudn-localnet.yaml[YAML]
 
@@ -144,13 +144,13 @@ localnet、UDN、Bridge mapping 用のネットワーク設定です。
 
 |fedora-localnet-vm
 |VirtualMachine
-|localnet セカンダリネットワークを持つ Fedora VM
+|localnet セカンダリーネットワークを持つ Fedora VM
 |xref:networking:localnet-secondary.adoc[]
 |xref:networking:attachment$localnet-secondary/fedora-localnet-vm.yaml[YAML]
 
 |fedora-vlan-vm
 |VirtualMachine
-|VLAN 100 セカンダリネットワークを持つ Fedora VM
+|VLAN 100 セカンダリーネットワークを持つ Fedora VM
 |xref:networking:localnet-vlan.adoc[]
 |xref:networking:attachment$localnet-vlan/fedora-vlan-vm.yaml[YAML]
 
@@ -168,7 +168,7 @@ localnet、UDN、Bridge mapping 用のネットワーク設定です。
 
 |fedora-multi-network-vm
 |VirtualMachine
-|プライマリ DHCP + セカンダリ静的 IP を持つ Fedora VM
+|プライマリ DHCP + セカンダリー静的 IP を持つ Fedora VM
 |xref:networking:static-ip-configuration.adoc[]
 |xref:networking:attachment$static-ip-configuration/fedora-multi-network-vm.yaml[YAML]
 
@@ -248,7 +248,7 @@ VM アクセス用の Kubernetes サービスです。
 |xref:vm-configuration:attachment$internal-dns-for-vms/headless-service.yaml[YAML]
 |===
 
-== Usage
+== 使用方法
 
 === ダウンロードと適用
 
@@ -263,7 +263,7 @@ VM アクセス用の Kubernetes サービスです。
 oc apply --dry-run=client -f <filename>.yaml
 ----
 
-== See Also
+== 参照
 
 * xref:getting-started:index.adoc[]
 * xref:storage:index.adoc[]

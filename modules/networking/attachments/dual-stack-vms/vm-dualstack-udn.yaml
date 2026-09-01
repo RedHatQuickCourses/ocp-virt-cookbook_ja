@@ -1,0 +1,41 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: dualstack-udn-vm
+  namespace: dualstack-demo
+spec:
+  runStrategy: Always
+  instancetype:
+    name: u1.small
+  preference:
+    name: fedora
+  template:
+    metadata:
+      labels:
+        app: dualstack-udn-vm
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: containerdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
+          interfaces:
+            - name: primary-udn
+              binding:
+                name: l2bridge
+      networks:
+        - name: primary-udn
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:40
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: changeme
+              chpasswd:
+                expire: false

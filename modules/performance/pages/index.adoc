@@ -35,6 +35,9 @@ Hugepage でサポートされるメモリと NUMA トポロジーのパスス�
 xref:realtime-vms.adoc[]::
 最悪値の遅延を一定範囲に抑えるために、専用 CPU、NUMA パススルー、Hugepages、RT (リアルタイム) カーネル、SCHED_FIFO スケジューリングを使用してリアルタイム仮想マシンを設定します。
 
+xref:vm-monitoring-metrics.adoc[]::
+OpenShift の Prometheus および Grafana モニタリングスタックを使用して仮想マシンのパフォーマンスと健全性を監視します。これには、VM メトリクス収集、カスタムダッシュボード、アラート、QEMU guest agent を介したゲスト OS 監視が含まれます。
+
 == 推奨される学習順序
 
 パフォーマンスに関するチュートリアルは、以下の順序で段階的に構築されています。
@@ -44,7 +47,17 @@ xref:realtime-vms.adoc[]::
 . **NUMA and Hugepages** -- hugepage メモリの追加と NUMA トポロジーの認識を有効にする
 . **Real-time VMs** -- 上記すべてを組み合わせ、RT カーネルと SCHED_FIFO スケジューリングを適用する
 
-== 関連トピック
+image::performance-tuning-ladder.svg[Performance Tuning Ladder - which level do you need?, align=center]
+
+== 対象読者
+
+**すべての VM 管理者**:: ステップ 1 (リソース制限) のみを実施 -- 適切な容量計画のために QoS を理解します。
+**データベース管理者**:: ステップ 1〜2 (CPU ピニングを追加) -- 一貫したクエリパフォーマンスを実現します。
+**HPC / 科学技術計算**:: ステップ 1〜3 (NUMA + Hugepages を追加) -- メモリ集約型のワークロード向け。
+**通信 / 産業 / 金融**:: 4 つのステップすべて -- 最悪ケースのレイテンシーを制限します。
+**汎用 VM**:: ステップ 1 のみ -- 過度なチューニングは行わず、Kubernetes に効率的なスケジューリングを任せます。
+
+== 参照
 
 * xref:vm-configuration:index.adoc[VM Configuration] - 仮想マシンの一般的な設定とアクセス
 * xref:storage:index.adoc[Storage Configuration] - 仮想マシン用の永続ストレージ

@@ -11,19 +11,19 @@ LVM ストレージが正しく動作していることを確認するために�
 
 [source,bash,role=execute]
 ----
-# 1. Check LVMCluster status
+# 1. LVMCluster ステータスを確認
 oc get lvmcluster -n openshift-lvm-storage
 
-# 2. Check all pods are running
+# 2. すべての Pod が Running であることを確認
 oc get pods -n openshift-lvm-storage
 
-# 3. Check StorageClass exists
+# 3. StorageClass が存在することを確認
 oc get storageclass | grep lvms
 
-# 4. Check volume group on node
+# 4. ノードの volume group を確認
 oc debug node/<node-name> -- chroot /host vgs
 
-# 5. Check thin pool
+# 5. thin pool を確認
 oc debug node/<node-name> -- chroot /host lvs
 ----
 
@@ -137,7 +137,7 @@ lvms-operator-864b6975bb-kxt4t   1/1     Running   0          10m
 vg-manager-xxxxx                 1/1     Running   0          5m
 ----
 
-期待される Pod:
+想定される Pod:
 
 * **lvms-operator**: 常に存在し、LVM ストレージのライフサイクルを管理します。
 * **vg-manager**: ノードごとに 1 つ存在し、そのノードの volume group を管理します。
@@ -147,13 +147,13 @@ vg-manager-xxxxx                 1/1     Running   0          5m
 
 [source,bash,role=execute]
 ----
-# Get pod details
+# Pod の詳細を取得
 oc describe pod -n openshift-lvm-storage <pod-name>
 
-# Check specific pod logs
+# 特定の Pod ログを確認
 oc logs -n openshift-lvm-storage <pod-name>
 
-# Check vg-manager logs (most useful for device issues)
+# vg-manager ログを確認 (デバイスの問題に最も有用)
 oc logs -n openshift-lvm-storage daemonset/vg-manager
 ----
 
@@ -168,13 +168,13 @@ oc logs -n openshift-lvm-storage daemonset/vg-manager
 
 [source,bash,role=execute]
 ----
-# Check ClusterServiceVersion
+# ClusterServiceVersion を確認
 oc get csv -n openshift-lvm-storage
 
-# Check subscription
+# Subscription を確認
 oc get subscription -n openshift-lvm-storage
 
-# Check install plan
+# InstallPlan を確認
 oc get installplan -n openshift-lvm-storage
 ----
 
@@ -184,10 +184,10 @@ oc get installplan -n openshift-lvm-storage
 
 [source,bash,role=execute]
 ----
-# List all StorageClasses
+# すべての StorageClass を一覧表示
 oc get storageclass
 
-# Get specific LVM StorageClass
+# LVM StorageClass の詳細を取得
 oc get storageclass lvms-vg1 -o yaml
 ----
 
@@ -220,10 +220,10 @@ oc get storageclass lvms-vg1 -o jsonpath='{.metadata.annotations.storageclass\.k
 
 [source,bash,role=execute]
 ----
-# List all PVs
+# すべての PV を一覧表示
 oc get pv
 
-# Check PVs using LVM storage
+# LVM ストレージを使用する PV を確認
 oc get pv | grep topolvm
 ----
 
@@ -363,13 +363,13 @@ oc debug node/<node-name> -- chroot /host pvdisplay /dev/sda
 
 [source,bash,role=execute]
 ----
-# Check device exists
+# デバイスの存在を確認
 oc debug node/<node-name> -- chroot /host ls -la /dev/sda
 
-# Check device is a block device
+# ブロックデバイスであることを確認
 oc debug node/<node-name> -- chroot /host lsblk /dev/sda
 
-# Check device is not mounted
+# デバイスがマウントされていないことを確認
 oc debug node/<node-name> -- chroot /host mount | grep /dev/sda
 ----
 
@@ -416,10 +416,10 @@ oc debug node/<node-name> -- chroot /host lsblk -d -o NAME,SIZE,SERIAL
 
 [source,bash,role=execute]
 ----
-# By path
+# パスで指定
 oc debug node/<node-name> -- chroot /host ls -la /dev/disk/by-path/ | grep sda
 
-# By ID
+# ID で指定
 oc debug node/<node-name> -- chroot /host ls -la /dev/disk/by-id/ | grep sda
 ----
 
@@ -438,10 +438,10 @@ lvmcluster   NotReady
 
 [source,bash,role=execute]
 ----
-# Check detailed status
+# 詳細ステータスを確認
 oc get lvmcluster lvmcluster -n openshift-lvm-storage -o yaml | grep -A 20 "conditions"
 
-# Check vg-manager logs
+# vg-manager ログを確認
 oc logs -n openshift-lvm-storage daemonset/vg-manager
 ----
 
@@ -451,7 +451,7 @@ oc logs -n openshift-lvm-storage daemonset/vg-manager
 
 [source,bash,role=execute]
 ----
-# Verify device exists
+# デバイスの存在を確認
 oc debug node/<node-name> -- chroot /host ls -la /dev/sda
 ----
 
@@ -461,7 +461,7 @@ oc debug node/<node-name> -- chroot /host ls -la /dev/sda
 
 [source,bash,role=execute]
 ----
-# Check for existing filesystem
+# 既存のファイルシステムを確認
 oc debug node/<node-name> -- chroot /host lsblk -f /dev/sda
 ----
 
@@ -471,7 +471,7 @@ oc debug node/<node-name> -- chroot /host lsblk -f /dev/sda
 
 [source,bash,role=execute]
 ----
-# Check if mounted
+# マウントされているか確認
 oc debug node/<node-name> -- chroot /host mount | grep /dev/sda
 ----
 
@@ -488,13 +488,13 @@ oc debug node/<node-name> -- chroot /host mount | grep /dev/sda
 
 [source,bash,role=execute]
 ----
-# Check if disk was wiped
+# ディスクがワイプされたか確認
 oc debug node/<node-name> -- chroot /host pvs
 
-# Check vg-manager logs for errors
+# vg-manager ログのエラーを確認
 oc logs -n openshift-lvm-storage daemonset/vg-manager --tail=100
 
-# Check device visibility
+# デバイスの可視性を確認
 oc debug node/<node-name> -- chroot /host lsblk -o NAME,SIZE,TYPE,FSTYPE
 ----
 
@@ -528,13 +528,13 @@ test-pvc        Pending                                      lvms-vg1       5m
 
 [source,bash,role=execute]
 ----
-# Check PVC events
+# PVC イベントを確認
 oc describe pvc <pvc-name>
 
-# Check if pod using PVC exists
+# PVC を使用する Pod が存在するか確認
 oc get pods --all-namespaces -o wide | grep <pvc-name>
 
-# Check available space in VG
+# VG の利用可能な容量を確認
 oc debug node/<node-name> -- chroot /host vgs
 ----
 
@@ -549,7 +549,7 @@ oc debug node/<node-name> -- chroot /host vgs
 
 [source,bash,role=execute]
 ----
-# Check VG free space
+# VG の空き容量を確認
 oc debug node/<node-name> -- chroot /host vgdisplay vg1 | grep "Free"
 ----
 
@@ -559,7 +559,7 @@ oc debug node/<node-name> -- chroot /host vgdisplay vg1 | grep "Free"
 
 [source,bash,role=execute]
 ----
-# Check thin pool usage
+# thin pool の使用量を確認
 oc debug node/<node-name> -- chroot /host lvs | grep thin-pool
 ----
 
@@ -569,7 +569,7 @@ oc debug node/<node-name> -- chroot /host lvs | grep thin-pool
 
 [source,bash,role=execute]
 ----
-# Check pod node selector vs LVMCluster node selector
+# Pod の nodeSelector と LVMCluster の nodeSelector を比較
 oc get pod <pod-name> -o yaml | grep nodeSelector
 oc get lvmcluster lvmcluster -n openshift-lvm-storage -o yaml | grep -A 5 nodeSelector
 ----
@@ -587,13 +587,13 @@ thin-pool-1 vg1 twi-a-tz-- 502.04g  92.00  85.00
 
 [source,bash,role=execute]
 ----
-# Check thin pool details
+# thin pool の詳細を確認
 oc debug node/<node-name> -- chroot /host lvs -a | grep thin-pool
 
-# List all thin volumes
+# すべての thin volume を一覧表示
 oc debug node/<node-name> -- chroot /host lvs -a -o lv_name,lv_size,data_percent,pool_lv | grep thin-pool
 
-# Check which PVs are consuming space
+# どの PV が容量を消費しているか確認
 oc get pv -o custom-columns=NAME:.metadata.name,SIZE:.spec.capacity.storage,STORAGECLASS:.spec.storageClassName | grep lvms
 ----
 
@@ -603,10 +603,10 @@ oc get pv -o custom-columns=NAME:.metadata.name,SIZE:.spec.capacity.storage,STOR
 
 [source,bash,role=execute]
 ----
-# Find PVCs not in use
+# 使用されていない PVC を検索
 oc get pvc --all-namespaces
 
-# Delete PVC
+# PVC を削除
 oc delete pvc <pvc-name> -n <namespace>
 ----
 
@@ -614,11 +614,11 @@ oc delete pvc <pvc-name> -n <namespace>
 
 [source,bash,role=execute]
 ----
-# Check VG free space
+# VG の空き容量を確認
 oc debug node/<node-name> -- chroot /host vgs
 
-# Extend thin pool (if needed manually)
-# Usually handled automatically by LVM operator
+# thin pool を拡張 (手動で必要な場合)
+# 通常は LVM Operator により自動的に処理される
 ----
 
 ==== オーバープロビジョニング比率を調整する
@@ -636,13 +636,13 @@ LVMCluster を編集し、`overprovisionRatio` を減らしてください。
 
 [source,bash,role=execute]
 ----
-# Check current filesystem/partition
+# 現在のファイルシステム/パーティションを確認
 oc debug node/<node-name> -- chroot /host lsblk -f /dev/sda
 
-# Check for LVM signatures
+# LVM シグネチャを確認
 oc debug node/<node-name> -- chroot /host pvs | grep /dev/sda
 
-# Check if device is open
+# デバイスがオープンされているか確認
 oc debug node/<node-name> -- chroot /host lsof | grep /dev/sda
 ----
 
@@ -650,10 +650,10 @@ oc debug node/<node-name> -- chroot /host lsof | grep /dev/sda
 
 [source,bash,role=execute]
 ----
-# Ensure forceWipeDevicesAndDestroyAllData is set
+# forceWipeDevicesAndDestroyAllData が設定されていることを確認
 oc edit lvmcluster lvmcluster -n openshift-lvm-storage
 
-# Add under deviceSelector:
+# deviceSelector の下に追加:
 forceWipeDevicesAndDestroyAllData: true
 ----
 
@@ -670,13 +670,13 @@ vg-manager-xxx   0/1     CrashLoopBackOff   5          3m
 
 [source,bash,role=execute]
 ----
-# Check pod logs
+# Pod ログを確認
 oc logs -n openshift-lvm-storage <vg-manager-pod> --previous
 
-# Check pod events
+# Pod イベントを確認
 oc describe pod -n openshift-lvm-storage <vg-manager-pod>
 
-# Check node resources
+# ノードリソースを確認
 oc describe node <node-name>
 ----
 
@@ -708,10 +708,10 @@ oc describe node <node-name>
 
 [source,bash,role=execute]
 ----
-# Check if any StorageClass is default
+# いずれかの StorageClass がデフォルトか確認
 oc get storageclass | grep default
 
-# Check lvms StorageClass annotations
+# lvms StorageClass のアノテーションを確認
 oc get storageclass lvms-vg1 -o yaml | grep is-default-class
 ----
 
@@ -730,7 +730,7 @@ oc patch storageclass lvms-vg1 -p '{"metadata": {"annotations":{"storageclass.ku
 ----
 oc edit lvmcluster lvmcluster -n openshift-lvm-storage
 
-# Add under deviceClasses:
+# deviceClasses の下に追加:
 - name: vg1
   default: true
 ----

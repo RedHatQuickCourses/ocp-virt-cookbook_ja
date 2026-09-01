@@ -72,24 +72,24 @@ ip-10-0-82-27.ec2.internal    Ready    worker                 22d   v1.31.14   b
 
 [source,bash,role=execute]
 ----
-# Get worker node names
+# Worker Node 名を取得
 WORKER1=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[0].metadata.name}')
 WORKER2=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[1].metadata.name}')
 WORKER3=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[2].metadata.name}')
 
-# Label nodes by environment
+# 環境ごとにノードにラベルを付与
 oc label node $WORKER1 env=development
 oc label node $WORKER2 env=production
 
-# Label nodes by GPU type
+# GPU タイプごとにノードにラベルを付与
 oc label node $WORKER1 gpu=nvidia-t4
 oc label node $WORKER2 gpu=nvidia-a100
 
-# Label nodes by disk type
+# ディスクタイプごとにノードにラベルを付与
 oc label node $WORKER1 storage=ssd
 oc label node $WORKER3 storage=nvme
 
-# Label nodes by workload type
+# ワークロードタイプごとにノードにラベルを付与
 oc label node $WORKER1 workload=database
 ----
 
@@ -674,7 +674,7 @@ NodeSelector と Taints/Toleration を組み合わせて、GPU ノードを GPU 
 
 [source,yaml]
 ----
-# Backend VM
+# バックエンド VM
 spec:
   template:
     metadata:
@@ -734,10 +734,10 @@ spec:
 
 [source,bash,role=execute]
 ----
-# Check VM status
+# VM のステータスを確認
 oc get vm -n vm-placement
 
-# Check VMI events
+# VMI のイベントを確認
 oc describe vmi <vm-name> -n vm-placement
 ----
 
@@ -752,19 +752,19 @@ Warning  FailedScheduling  0/3 nodes are available: 3 node(s) didn't match Pod's
 
 * NodeSelector または required Affinity rule に一致するノードが存在しない。
 * 一致するすべてのノードが満杯 (CPU/メモリ不足) 。
-* ノード上のテイントによりスケジュールが許可されていない。
+* ノード上の Taint によりスケジュールが許可されていない。
 
 **解決策**:
 
 [source,bash,role=execute]
 ----
-# Verify node labels exist
+# ノードラベルの存在を確認
 oc get nodes -L storage,env,gpu
 
-# Check if nodes have required labels
+# 必要なラベルを持つノードを確認
 oc get nodes --selector=storage=ssd
 
-# Review VM placement constraints
+# VM の配置制約を確認
 oc get vm <vm-name> -n vm-placement -o yaml | grep -A 20 "affinity:"
 ----
 
@@ -788,10 +788,10 @@ oc get vm <vm-name> -n vm-placement -o yaml | grep -A 20 "affinity:"
 
 [source,bash,role=execute]
 ----
-# Check where VM is running
+# VM が実行されているノードを確認
 oc get vmi <vm-name> -n vm-placement -o jsonpath='{.status.nodeName}'
 
-# Check that node's labels
+# そのノードのラベルを確認
 oc get node <node-name> --show-labels
 ----
 
@@ -809,10 +809,10 @@ oc get node <node-name> --show-labels
 
 [source,bash,role=execute]
 ----
-# List all VMs and their nodes
+# すべての VM とそのノードを一覧表示
 oc get vmi -n vm-placement -o wide
 
-# Check anti-affinity configuration
+# Anti-Affinity の設定を確認
 oc get vm <vm-name> -n vm-placement -o yaml | grep -A 15 "podAntiAffinity:"
 ----
 
@@ -829,10 +829,10 @@ oc get vm <vm-name> -n vm-placement -o yaml | grep -A 15 "podAntiAffinity:"
 
 [source,bash,role=execute]
 ----
-# Check VM labels
+# VM のラベルを確認
 oc get vm <vm-name> -n vm-placement -o jsonpath='{.spec.template.metadata.labels}' | jq
 
-# Verify anti-affinity selector matches those labels
+# Anti-Affinity のセレクターがラベルと一致しているか確認
 oc get vm <vm-name> -n vm-placement -o yaml | grep -A 5 "labelSelector:"
 ----
 
@@ -844,10 +844,10 @@ oc get vm <vm-name> -n vm-placement -o yaml | grep -A 5 "labelSelector:"
 
 [source,bash,role=execute]
 ----
-# View VM spec
+# VM の spec を表示
 oc get vm <vm-name> -n vm-placement -o yaml | grep -A 5 "nodeSelector:"
 
-# Verify it's under spec.template.spec, not just spec
+# spec.template.spec の配下にあることを確認 (spec 直下ではない)
 oc get vm <vm-name> -n vm-placement -o jsonpath='{.spec.template.spec.nodeSelector}' | jq
 ----
 
@@ -855,7 +855,7 @@ oc get vm <vm-name> -n vm-placement -o jsonpath='{.spec.template.spec.nodeSelect
 
 [source,yaml]
 ----
-# WRONG - nodeSelector at VM spec level
+# 誤り - VM の spec レベルの nodeSelector
 spec:
   nodeSelector:    # This is ignored!
     storage: ssd
@@ -864,7 +864,7 @@ spec:
       domain:
         ...
 
-# CORRECT - nodeSelector at pod spec level
+# 正しい - Pod の spec レベルの nodeSelector
 spec:
   template:
     spec:
@@ -880,10 +880,10 @@ spec:
 
 [source,bash,role=execute]
 ----
-# Delete VMs
+# VM を削除
 oc delete vm --all -n vm-placement
 
-# Remove custom node labels from all workers
+# すべての Worker Node からカスタムノードラベルを削除
 WORKER1=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[0].metadata.name}')
 WORKER2=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[1].metadata.name}')
 WORKER3=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[2].metadata.name}')

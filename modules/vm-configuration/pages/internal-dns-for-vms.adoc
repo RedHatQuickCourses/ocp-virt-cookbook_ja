@@ -32,7 +32,7 @@ oc new-project myapp
 
 Fedora VM をデプロイします。
 
-WARNING: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードまたは SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードまたは SSH 鍵認証を使用してください。
 
 xref:attachment$internal-dns-for-vms/fedora-app-vm.yaml[fedora-app-vm.yaml をダウンロード]
 
@@ -142,9 +142,9 @@ oc get svc myapp-service -n myapp
 oc get endpointslice -n myapp -l kubernetes.io/service-name=myapp-service
 ----
 
-期待される出力:
+想定される出力:
 
-Service は `TYPE: ClusterIP` で `CLUSTER-IP: None` (headless service)) と表示されるはずです。
+Service は `TYPE: ClusterIP` で `CLUSTER-IP: None` (headless service) と表示されるはずです。
 
 EndpointSlice の ENDPOINTS 列には、VM の Pod IP アドレスが表示されるはずです。
 
@@ -187,7 +187,7 @@ oc exec -n myapp debug-dns -- getent hosts myapp-service.myapp.svc.cluster.local
 oc delete pod debug-dns -n myapp
 ----
 
-期待される結果:
+想定される結果:
 
 * DNS 解決によって VM の Pod IP アドレスが返されます (例: `10.128.0.169 myapp-service.myapp.svc.cluster.local`) 
 
@@ -267,15 +267,10 @@ Service が Headless (`clusterIP: None`) であるため、CoreDNS は EndpointS
 === 主要なポイント
 
 * **DNS には Service が必要**: 仮想マシンは CoreDNS に自動的には登録されません。Kubernetes Service のみが DNS レコードを作成します。
-
 * **VM 名は DNS 名ではない**: VM の `metadata.name` は Kubernetes のリソース識別子であり、DNS 名ではありません。ネットワークアクセスには使用できません。
-
 * **Service 名が DNS 名になる**: Service の `metadata.name` が、`<service-name>.<namespace>.svc.cluster.local` として CoreDNS に登録されます。
-
 * **Headless Service は VM の IP を返す**: Headless Service (`clusterIP: None`) は VM の Pod IP を直接返すため、VM 間での直接通信が可能になります。
-
 * **通常の Service は負荷分散を提供する**: 通常の ClusterIP Service は安定した仮想 IP を提供し、複数の VM 間でトラフィックを分散できます。
-
 * **検索ドメインにより短い名前が使用可能**: `/etc/resolv.conf` の `search` ドメインにより、同じ namespace 内の Service にアクセスする際、完全修飾ドメイン名 (FQDN) の代わりに `myapp-service` のような短い名前を使用できます。
 
 == パート 3: 参考情報
@@ -418,11 +413,11 @@ oc delete pod debug-cross-ns -n test-namespace
 1. namespace をまたぐ場合は常に FQDN を使用する: `<service>.<namespace>.svc.cluster.local`
 2. 制限的な NetworkPolicy が設定されていないか確認する
 
-=== その他のリソース
+=== 追加リソース
 
 * link:https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/[Kubernetes DNS for Services and Pods,window=_blank]
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-accessing-vm-internal-fqdn[内部 FQDN を使用した VM へのアクセス - OpenShift Virtualization,window=_blank]
-* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-accessing-vm-secondary-network-fqdn[クラスター FQDN を使用したセカンダリネットワーク上の VM へのアクセス - OpenShift Virtualization,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-accessing-vm-secondary-network-fqdn[クラスター FQDN を使用したセカンダリーネットワーク上の VM へのアクセス - OpenShift Virtualization,window=_blank]
 
 == まとめ
 
@@ -434,7 +429,7 @@ oc delete pod debug-cross-ns -n test-namespace
 * FQDN 形式の `getent hosts` を使用してデバッグ用 Pod から DNS 解決をテストする方法
 * DNS に Service が必要な理由や、検索ドメインにより短い名前の解決が可能になる仕組みなどの重要な概念
 
-== 関連項目
+== 参照
 
 * xref:networking:static-ip-configuration.adoc[静的 IP 構成]
 * xref:remote-access-linux-vms.adoc[Linux VM へのリモートアクセス]

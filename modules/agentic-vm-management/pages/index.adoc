@@ -1,0 +1,83 @@
+= AI エージェントによる VM 管理
+:navtitle: AI エージェントによる VM 管理
+
+== 概要
+
+本モジュールでは、OpenShift Virtualization 向けの AI アシストによる仮想マシン管理について説明します。Claude Code または Cursor IDE で `rh-virt` スキルパックを使用することで、Model Context Protocol (MCP) を利用した自然言語プロンプトを通じて VM ライフサイクル操作を管理できます。
+
+`rh-virt` コレクションは、インベントリ、作成、電源管理、クローン作成、スナップショット、ライブマイグレーション、削除など、VM ライフサイクル全体をカバーする 10 個の特化型スキルを提供します。破壊的な操作はすべて明示的なユーザー確認を必要とするため、制御性を損なうことなく安全第一の自動化を実現できます。
+
+== 学習内容
+
+本モジュールでは、以下について学びます。
+
+* Claude Code または Cursor IDE に `rh-virt` スキルパックをインストールおよび設定する方法
+* コンテナ化された MCP サーバーを介してエージェント環境を OpenShift クラスターに接続する方法
+* 自然言語プロンプトを使用して VM ライフサイクル操作を管理する方法
+* skill-first ルーティングモデルがユーザーの意図を適切な自動化スキルにマッピングする方法
+* AI 支援ワークフローを通じて仮想マシンの作成、起動、停止、クローン作成、スナップショット作成、削除を行う方法
+* 安全確認と human-in-the-loop のチェックポイントを解釈する方法
+
+== スキルの概要
+
+`rh-virt` コレクションは、完全な VM ライフサイクル管理のための 10 個のスキルを提供します。
+
+[cols="1,3",options="header"]
+|===
+| スキル | 目的
+
+| `vm-inventory`
+| ステータス、リソース、ヘルス情報とともに、 namespace を横断して仮想マシンを一覧表示および検査します。
+
+| `vm-create`
+| エラーの自動診断とスケジューリング回避策の提案を行いながら、新しい仮想マシンを作成します。
+
+| `vm-lifecycle-manager`
+| 明示的な安全確認を行って、仮想マシンを起動、停止、再起動します。
+
+| `vm-clone`
+| 柔軟なストレージ戦略、cross namespace サポート、バッチクローン作成を使用して VM をクローンします。
+
+| `vm-delete`
+| 入力による確認と保護ラベルの適用を行い、VM と関連ストレージを完全に削除します。
+
+| `vm-snapshot-create`
+| 実行前に Storage Class 機能の検証を行って、VM スナップショットを作成します。
+
+| `vm-snapshot-list`
+| namespace を横断して VM スナップショットを一覧表示および検査します。
+
+| `vm-snapshot-restore`
+| 事前状態チェックと明示的なユーザー確認を行って、スナップショットから VM を復元します。
+
+| `vm-snapshot-delete`
+| ストレージ回収レポートを行いながら、VM スナップショットを削除します。
+
+| `vm-rebalance`
+| ライブマイグレーションまたはコールドマイグレーションを使用して、ロードバランシングおよびノードメンテナンスのためにノード間で VM を移行します。
+
+|===
+
+== 前提条件
+
+このモジュールのチュートリアルに進む前に、以下の準備ができていることを確認してください。
+
+* OpenShift Virtualization Operator がインストールされた OpenShift {ocp-min-version}+ クラスター
+* Claude Code CLI または Cursor IDE
+* コンテナ化された MCP サーバー用の Podman (バージョン 4.0+)
+* ターゲットクラスター用に設定された KUBECONFIG
+* ターゲット namespace 内の VirtualMachine リソースに対する RBAC 権限を持つ ServiceAccount
+
+== セクション
+
+xref:getting-started.adoc[AI エージェントによる VM 管理の開始]::
+`rh-virt` スキルパックをインストールし、MCP サーバーを設定して、`vm-inventory` スキルを使用してエンドツーエンドの接続性を検証します。
+xref:natural-language-vm-create.adoc[自然言語による仮想マシンの作成]::
+`vm-create` スキルを使用して、自然言語で要件を記述して仮想マシンを作成する方法を学びます。
+
+== 参照
+
+* link:https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt[rh-virt スキルパックリポジトリ,window=_blank]
+* link:https://github.com/openshift/openshift-mcp-server[OpenShift MCP サーバー,window=_blank]
+* link:https://docs.openshift.com/container-platform/{ocp-docs-version}/virt/about_virt/about-virt.html[OpenShift Virtualization ドキュメント,window=_blank]
+* link:https://modelcontextprotocol.io[Model Context Protocol 仕様,window=_blank]

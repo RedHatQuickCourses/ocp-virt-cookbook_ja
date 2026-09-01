@@ -6,6 +6,7 @@
 virtctl CLI ツールは、OpenShift Virtualization で仮想マシン (VM) を管理するためのコマンドを提供します。本ガイドでは、基本的な VM 操作について説明します。
 
 検証済みバージョン:
+
 ----
 OpenShift 4.20
 ----
@@ -23,26 +24,23 @@ OpenShift 4.20
 +
 .OpenShift コンソールでの Virtualization Overview
 image::virtualization-overview.png[Virtualization Overview メニュー]
-
 . Overview ページの右上隅にある *Download the virtctl command-line utility* リンクをクリックします。
 +
 .virtctl のダウンロードリンク
 image::virtctl-download.png[右上隅にある virtctl のダウンロードリンク]
-
 . ダウンロードページで、お使いのオペレーティングシステムおよびアーキテクチャに適した `virtctl` バイナリを選択します。
 +
 .利用可能な virtctl バイナリ
 image::virtctl-versions.png[プラットフォームごとの virtctl バイナリリスト]
-
 . ダウンロード後、バイナリに実行権限を付与し、PATH に移動します。
 +
 [source,bash,role=execute]
 ----
-# Linux/Mac
+# Linux/Mac の場合
 chmod +x virtctl
 sudo mv virtctl /usr/local/bin/
 
-# Verify installation
+# インストールの確認
 virtctl version
 ----
 +
@@ -56,10 +54,10 @@ VM を管理する前に、`oc` コマンドを使用してクラスター内で
 
 [source,bash,role=execute]
 ----
-# List all VMs in a specific namespace
+# 特定の namespace 内のすべての VM を一覧表示
 oc get vm -n myapp
 
-# List all VMs across all namespaces
+# すべての namespace の VM を一覧表示
 oc get vm -A
 ----
 
@@ -94,13 +92,13 @@ VM の起動、停止、再起動を行います。
 
 [source,bash,role=execute]
 ----
-# Start a VM
+# VM を起動
 virtctl start fedora-app-vm -n myapp
 
-# Stop a VM
+# VM を停止
 virtctl stop fedora-app-vm -n myapp
 
-# Restart a VM
+# VM を再起動
 virtctl restart fedora-app-vm -n myapp
 ----
 
@@ -110,13 +108,13 @@ VM に接続します。
 
 [source,bash,role=execute]
 ----
-# Console access (press Ctrl+] to exit)
+# コンソールアクセス (Ctrl+] で終了)
 virtctl console fedora-app-vm -n myapp
 
-# SSH access (requires SSH configured)
+# SSH アクセス (SSH の設定が必要)
 virtctl ssh user@fedora-app-vm -n myapp
 
-# VNC access
+# VNC アクセス
 virtctl vnc fedora-app-vm -n myapp
 ----
 
@@ -126,7 +124,7 @@ VM の詳細を取得します (VM に QEMU guest agent がインストールさ
 
 [source,bash,role=execute]
 ----
-# Guest OS information
+# ゲスト OS 情報
 virtctl guestosinfo fedora-app-vm -n myapp
 ----
 
@@ -152,7 +150,7 @@ virtctl guestosinfo fedora-app-vm -n myapp
 
 [source,bash,role=execute]
 ----
-# List filesystems
+# ファイルシステムの一覧表示
 virtctl fslist fedora-app-vm -n myapp
 ----
 
@@ -189,7 +187,7 @@ virtctl fslist fedora-app-vm -n myapp
 
 [source,bash,role=execute]
 ----
-# List logged-in users
+# ログイン中のユーザーを一覧表示
 virtctl userlist fedora-app-vm -n myapp
 ----
 
@@ -197,24 +195,24 @@ virtctl userlist fedora-app-vm -n myapp
 
 `virtctl scp` を使用して VM との間でファイルをコピーします。これには VM で SSH が実行されている必要があり、以下のいずれかの認証方法が必要です。
 
-* **SSH キー** (推奨): 公開鍵が VM の `~/.ssh/authorized_keys` に存在すること
+* **SSH 鍵** (推奨): 公開鍵が VM の `~/.ssh/authorized_keys` に存在すること
 * **パスワード**: VM の SSH でパスワード認証が有効になっていること
 
 [source,bash,role=execute]
 ----
-# Copy to VM (uses default SSH key)
+# VM へコピー (デフォルトの SSH 鍵を使用)
 virtctl scp local-file.txt fedora@fedora-app-vm:/tmp/remote.txt -n myapp
 
-# Copy from VM
+# VM からコピー
 virtctl scp fedora@fedora-app-vm:/tmp/remote.txt ./local.txt -n myapp
 
-# Specify a different SSH key
+# 別の SSH 鍵を指定
 virtctl scp -i ~/.ssh/my_key local-file.txt fedora@fedora-app-vm:/tmp/ -n myapp
 ----
 
-TIP: SSH が設定されていない場合は、まず `virtctl console` を使用して VM にアクセスし、SSH キーを設定してください。
+TIP: SSH が設定されていない場合は、まず `virtctl console` を使用して VM にアクセスし、SSH 鍵を設定してください。
 
-VM 作成時に SSH キーを注入するには、cloud-init 設定に含めます。
+VM 作成時に SSH 鍵を設定するには、cloud-init 設定に含めます。
 
 [source,yaml]
 ----
@@ -232,7 +230,7 @@ VM を起動または停止した後は、操作を確認します。
 
 [source,bash,role=execute]
 ----
-# Check VM status
+# VM ステータスを確認
 oc get vm fedora-app-vm -n myapp
 ----
 
@@ -246,11 +244,11 @@ fedora-app-vm   7d3h   Running   True
 
 [source,bash,role=execute]
 ----
-# Check VMI (running instance)
+# VMI (実行中のインスタンス) を確認
 oc get vmi fedora-app-vm -n myapp
 ----
 
-期待される結果: 実行中の場合は VMI が一覧に表示され、停止後は VMI は表示されません。
+想定される結果: 実行中の場合は VMI が一覧に表示され、停止後は VMI は表示されません。
 
 == クイックリファレンス
 
@@ -288,10 +286,10 @@ oc get nodes
 
 [source,bash,role=execute]
 ----
-# Access via console first
+# まずはコンソール経由でアクセス
 virtctl console fedora-app-vm -n myapp
 
-# Inside VM, check SSH status
+# VM 内で SSH ステータスを確認
 systemctl status sshd
 ----
 
@@ -313,7 +311,7 @@ oc get vmi fedora-app-vm -n myapp
 * セッションのフリーズを防ぐため、`Ctrl+]` で**コンソールを適切に終了する**
 * 外部アクセスを設定する前に、`virtctl ssh` でテストを行う
 
-== 追加のリソース
+== 追加リソース
 
 * link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/getting-started#virt-using-the-cli-tools[virtctl Commands Reference,window=_blank]
 

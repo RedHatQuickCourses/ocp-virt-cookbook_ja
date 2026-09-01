@@ -1,0 +1,8 @@
+* xref:index.adoc[]
+** xref:getting-started.adoc[]
+** xref:natural-language-vm-create.adoc[]
+** xref:ai-vm-lifecycle.adoc[]
+** xref:vm-clone.adoc[]
+** xref:ai-vm-snapshot-management.adoc[]
+** xref:ai-skill-chaining.adoc[]
+** xref:ai-vm-rebalance.adoc[]

@@ -82,7 +82,7 @@ OpenShift Virtualization は、2 つのファームウェアモードをサポ�
 oc create namespace boot-demo
 ----
 
-WARNING: この例の cloud-init パスワードはデモ目的専用です。本番環境では、常に強力でユニークなパスワードまたは SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的専用です。本番環境では、常に強力でユニークなパスワードまたは SSH 鍵認証を使用してください。
 
 xref:attachment$boot-order-boot-sources/vm-boot-from-pvc.yaml[vm-boot-from-pvc.yaml をダウンロード]
 
@@ -446,7 +446,7 @@ spec:
 ブートシーケンスの説明:
 
 1. `bootOrder: 1` - プライマリディスク (最初に起動を試みる) 
-2. `bootOrder: 2` - セカンダリディスク (プライマリが失敗した場合のフォールバック) 
+2. `bootOrder: 2` - セカンダリーディスク (プライマリが失敗した場合のフォールバック) 
 3. `bootOrder: 3` - CD-ROM (インストールメディア、最後の手段) 
 
 デプロイ:
@@ -737,16 +737,16 @@ spec:
 
 主な構成:
 
-* セカンダリネットワークインターフェース (`pxe-net`) に `bootOrder: 1` を設定 (ディスクより先に起動) 
+* セカンダリーネットワークインターフェース (`pxe-net`) に `bootOrder: 1` を設定 (ディスクより先に起動) 
 * ディスクに `bootOrder: 2` を設定 (ネットワークブート試行後のフォールバック) 
-* Multus を介して構成されたセカンダリネットワーク (例: `pxe-network`) が必要
+* Multus を介して構成されたセカンダリーネットワーク (例: `pxe-network`) が必要
 * 直接的なネットワークアクセスにブリッジインターフェースバインディングを使用
 * プライマリ Pod ネットワーク (`default`) は一般的な接続用として維持
 
 PXE ブートの前提条件:
 
-* セカンダリネットワークが構成されておりアクセス可能であること (ネットワークチュートリアルを参照) 
-* セカンダリネットワーク上で PXE サーバーが構成されていること
+* セカンダリーネットワークが構成されておりアクセス可能であること (ネットワークチュートリアルを参照) 
+* セカンダリーネットワーク上で PXE サーバーが構成されていること
 * DHCP サーバーがブート情報を提供していること
 * TFTP サーバーがブートファイルを提供していること
 * VM と PXE インフラストラクチャ間のネットワーク接続
@@ -1089,7 +1089,7 @@ WARNING: VM を削除すると、関連付けられた DataVolume と PVC も削
 
 ブート構成を理解することは、適切な VM ライフサイクル管理、セキュリティコンプライアンス、多様なオペレーティングシステム要件への対応に不可欠です。
 
-== 参照先
+== 参照
 
 * link:https://kubevirt.io/user-guide/user_workloads/boot_from_external_source/[KubeVirt Booting From External Source,window=_blank]
 * link:https://kubevirt.io/user-guide/virtual_machines/disks_and_volumes/[KubeVirt Disks and Volumes,window=_blank]

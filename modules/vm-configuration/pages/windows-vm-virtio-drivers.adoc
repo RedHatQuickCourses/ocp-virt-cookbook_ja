@@ -62,7 +62,7 @@ VirtIO ドライバーの ISO をアップロードします。
 virtctl image-upload dv virtio-drivers-iso --image-path=virtio-win.iso --insecure
 ----
 
-重要: CDI アップロードプロキシが自己署名証明書を使用する開発環境では、`--insecure` フラグが必要になることがよくあります。
+IMPORTANT: CDI アップロードプロキシが自己署名証明書を使用する開発環境では、`--insecure` フラグが必要になることがよくあります。
 
 == ステップ 2: Windows インストール ISO のアップロード
 

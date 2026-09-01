@@ -1,0 +1,69 @@
+= VM Performance Tuning
+:navtitle:
+
+== Overview
+
+This module covers performance tuning for virtual machines in OpenShift Virtualization. The tutorials form a progressive series, starting with resource management fundamentals and advancing through CPU pinning, NUMA topology, and real-time workloads.
+
+== What You'll Learn
+
+* How to configure CPU and memory requests, limits, and QoS classes for VMs
+* How to pin VM vCPUs to dedicated physical CPUs for latency-sensitive workloads
+* How to configure hugepage-backed memory and NUMA topology passthrough
+* How to run real-time virtual machines with bounded worst-case latency
+* How to monitor VM performance and health using OpenShift's built-in monitoring stack
+
+== Prerequisites
+
+Before working with VM performance tuning, ensure you have:
+
+* OpenShift {ocp-min-version}+ with OpenShift Virtualization operator installed
+* Understanding of Kubernetes resource management concepts
+* CLI tools installed: `oc`, `virtctl`, `kubectl`
+* Cluster admin access for node-level configuration (CPU Manager, hugepages)
+
+== Topics
+
+xref:resource-limits-qos.adoc[]::
+Configure CPU and memory requests, limits, and QoS classes for VMs, including ResourceQuotas and LimitRanges for namespace-level governance.
+
+xref:cpu-pinning.adoc[]::
+Pin VM vCPUs to dedicated physical CPUs using the Kubernetes CPU Manager static policy, eliminating CPU steal for latency-sensitive and performance-critical workloads.
+
+xref:numa-hugepages.adoc[]::
+Configure hugepage-backed memory and NUMA topology passthrough for VMs to reduce TLB overhead and enable NUMA-aware guest scheduling.
+
+xref:realtime-vms.adoc[]::
+Configure real-time virtual machines with dedicated CPUs, NUMA passthrough, hugepages, RT kernel, and SCHED_FIFO scheduling for bounded worst-case latency.
+
+xref:vm-monitoring-metrics.adoc[]::
+Monitor virtual machine performance and health using OpenShift's Prometheus and Grafana monitoring stack, including VM metrics collection, custom dashboards, alerting, and guest OS monitoring via QEMU guest agent.
+
+== Recommended Reading Order
+
+The performance tutorials build on each other sequentially:
+
+. **Resource Limits and QoS** -- understand Guaranteed QoS requirements before enabling dedicated CPUs
+. **CPU Pinning** -- enable CPU Manager static policy and dedicate vCPUs
+. **NUMA and Hugepages** -- add hugepage memory and NUMA topology awareness
+. **Real-time VMs** -- combine all of the above with RT kernel and SCHED_FIFO scheduling
+
+image::performance-tuning-ladder.svg[Performance Tuning Ladder - which level do you need?, align=center]
+
+== Who Needs This?
+
+**All VM administrators**:: Start and stop at Step 1 (Resource Limits) -- understand QoS for proper capacity planning.
+**Database administrators**:: Steps 1-2 (add CPU Pinning) for consistent query performance.
+**HPC / scientific computing**:: Steps 1-3 (add NUMA + Hugepages) for memory-intensive workloads.
+**Telco / industrial / finance**:: All four steps for bounded worst-case latency.
+**General-purpose VMs**:: Step 1 only -- do not over-tune, let Kubernetes schedule efficiently.
+
+== Related Topics
+
+* xref:vm-configuration:index.adoc[VM Configuration] - General VM setup and access
+* xref:storage:index.adoc[Storage Configuration] - Persistent storage for VMs
+
+== Additional Resources
+
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/about#about-virt[OpenShift Virtualization Documentation,window=_blank]
+* link:https://kubevirt.io/user-guide/[KubeVirt User Guide,window=_blank]

@@ -1,0 +1,528 @@
+= VM 用デュアルスタック IPv4/IPv6 ネットワーク
+:navtitle: デュアルスタック IPv4/IPv6 VM
+
+== 概要
+
+このチュートリアルでは、OpenShift Virtualization 上でデュアルスタック (IPv4 + IPv6) ネットワークを使用する仮想マシンをデプロイする方法を説明します。マスカレードモードのデフォルト Pod ネットワークを使用して IPv4 と IPv6 の両方の接続性を持つ VM を設定し、プライマリネットワークの分離のためのデュアルスタック User Defined Networks (UDN) について学びます。
+
+デュアルスタックネットワークは、多くのエンタープライズや政府機関の環境 (米国連邦政府の OMB M-21-07)、テレコム/5G のデプロイメント、および IPv6 への移行を進める組織で必要とされています。
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされた **OpenShift {ocp-min-version}+**
+* OVN-Kubernetes ネットワークプラグイン (デフォルト)
+* **デュアルスタッククラスターネットワーク** -- クラスターの clusterNetwork および serviceNetwork に IPv4 と IPv6 の両方の CIDR が設定されている必要があります (OpenShift {ocp-min-version}+ でインストール時または Day 2 操作として有効化できます)
+* `oc` CLI がインストールされていること
+* クラスター管理者アクセス権
+
+== デュアルスタックネットワークの確認または有効化
+
+クラスターネットワークとサービスネットワークの両方に IPv4 および IPv6 の CIDR が設定されている必要があります。現在の設定を確認します。
+
+[source,bash,role=execute]
+----
+oc get network.config cluster -o jsonpath='{.status.clusterNetwork[*].cidr}'
+----
+
+[source,bash,role=execute]
+----
+oc get network.config cluster -o jsonpath='{.status.serviceNetwork[*]}'
+----
+
+[source,bash]
+.想定される出力
+----
+10.128.0.0/14 fd01::/48
+172.30.0.0/16 fd02::/112
+----
+
+IPv4 CIDR のみが表示される場合、クラスターはシングルスタックです。再インストールせずに Day-2 操作としてデュアルスタックを有効にできます。ネットワーク設定にパッチを適用して IPv6 CIDR を追加します。
+
+[source,bash,role=execute]
+----
+oc patch network.config.openshift.io cluster --type=merge --patch='
+{
+  "spec": {
+    "clusterNetwork": [
+      {"cidr": "10.128.0.0/14", "hostPrefix": 23},
+      {"cidr": "fd01::/48", "hostPrefix": 64}
+    ],
+    "serviceNetwork": [
+      "172.30.0.0/16",
+      "fd02::/112"
+    ]
+  }
+}'
+----
+
+NOTE: これにより、OVN-Kubernetes のローリング再起動がトリガーされます。単一ノードクラスターでは、API サーバーが数分間一時的に利用できなくなります。続行する前に、すべてのクラスター Operator が安定するまで待ちます。
+
+ロールアウトを監視します。
+
+[source,bash,role=execute]
+----
+oc get co network -o jsonpath='{.status.conditions[?(@.type=="Progressing")].status}'
+----
+
+出力に `False` が表示され、サービスネットワークに IPv6 CIDR が含まれていれば、変換は完了です。
+
+[source,bash,role=execute]
+----
+oc get network.config cluster -o jsonpath='{.status.serviceNetwork[*]}'
+----
+
+ノードに IPv4 アドレスと IPv6 アドレスの両方があることを確認します。
+
+[source,bash,role=execute]
+----
+oc get nodes -o jsonpath='{range .items[*]}{.metadata.name}: {.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
+----
+
+== ステップ 1: Namespace の作成
+
+[source,bash,role=execute]
+----
+oc create namespace dualstack-demo
+----
+
+== ステップ 2: Pod ネットワーク上へのデュアルスタック VM のデプロイ
+
+マスカレードモードでは、VM は virt-launcher Pod から DHCP 経由で IPv4 を自動的に取得します。IPv4 とは異なり、IPv6 アドレスとデフォルトルートの設定は自動的には行われないため、cloud-init の `networkData` を介して設定する必要があります。virt-launcher は DHCPv6 サーバーを起動しますが、ルーターアドバタイズメント (RA) を送信しないため、ゲスト OS が DHCPv6 要請 (solicitation) をトリガーすることはありません。cloud-init を使用した静的 IPv6 アドレス設定は、link:https://kubevirt.io/user-guide/network/interfaces_and_networks/#masquerade-ipv4-and-ipv6-dual-stack-support[KubeVirt user guide,window=_blank] および link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/networking#virt-configuring-masquerade-mode-dual-stack_virt-connecting-vm-to-default-pod-network[OpenShift Virtualization documentation,window=_blank] の両方に記載されているアプローチです。
+
+virt-launcher Pod は、自身と VM の間で IPv6 トラフィックをルーティングするために内部サブネット `fd10:0:2::/120` を使用します。VM はアドレス `fd10:0:2::2/120` を取得し、ゲートウェイとして `fd10:0:2::1` を使用します。これらは `Network.pod.vmIPv6NetworkCIDR` フィールドによって決定される固定の内部アドレスであり、外部のクラスターネットワークには表示されません。
+
+xref:attachment$dual-stack-vms/vm-dualstack-masquerade.yaml[vm-dualstack-masquerade.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: dualstack-vm
+  namespace: dualstack-demo
+spec:
+  runStrategy: Always
+  instancetype:
+    name: u1.small
+  preference:
+    name: fedora
+  template:
+    metadata:
+      labels:
+        app: dualstack-vm
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: containerdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
+          interfaces:
+            - name: default
+              masquerade: {}
+              ports:
+                - port: 80
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:40
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: changeme
+              chpasswd:
+                expire: false
+              packages:
+                - nginx
+              runcmd:
+                - systemctl enable --now nginx
+            networkData: |
+              version: 2
+              ethernets:
+                eth0:
+                  dhcp4: true
+                  addresses:
+                    - fd10:0:2::2/120
+                  gateway6: fd10:0:2::1
+EOF
+----
+
+NOTE: netplan 0.103+ では `gateway6` は非推奨ですが、KubeVirt の cloud-init 実装はこれを正常に処理します。ゲスト OS で非推奨に関する警告が表示される場合は、代わりに `routes` エントリを使用できます (<<_cloud_init_networkdata_reference>> を参照)。
+
+VM が準備完了になるまで待機します。
+
+[source,bash,role=execute]
+----
+oc wait vm dualstack-vm -n dualstack-demo --for=condition=Ready --timeout=300s
+----
+
+== ステップ 3: VM 内でのデュアルスタック接続の確認
+
+VM コンソールにアクセスし、IPv4 と IPv6 の両方が設定されていることを確認します。
+
+[source,bash,role=execute]
+----
+virtctl console dualstack-vm -n dualstack-demo
+----
+
+ログイン後 (ユーザー: `fedora` または `root`、パスワード: `changeme`)、ネットワークインターフェースを確認します。
+
+[source,bash]
+----
+ip -4 addr show eth0
+----
+
+[source,bash]
+.想定される出力
+----
+inet 10.0.2.2/24 brd 10.0.2.255 scope global dynamic eth0
+----
+
+[source,bash]
+----
+ip -6 addr show eth0
+----
+
+[source,bash]
+.想定される出力
+----
+inet6 fd10:0:2::2/120 scope global
+----
+
+ゲートウェイに ping を実行して、IPv4 の接続性を確認します。
+
+[source,bash]
+----
+ping -c 3 10.0.2.1
+----
+
+ゲートウェイに ping を実行して、IPv6 の接続性を確認します。
+
+[source,bash]
+----
+ping6 -c 3 fd10:0:2::1
+----
+
+`Ctrl+]` でコンソールを終了します。
+
+== ステップ 4: 外部デュアルスタック到達性の確認
+
+virt-launcher Pod はクラスターネットワーク上に IPv4 アドレスと IPv6 アドレスの両方を持っています。Pod の IP を確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi dualstack-vm -n dualstack-demo -o jsonpath='{.status.interfaces[0].ipAddresses}'
+----
+
+デュアルスタッククラスターでは、IPv4 と IPv6 の両方のアドレスが表示されます。外部クライアントは、いずれかのアドレスを使用して (masquerade NAT 経由で) VM にアクセスできます。
+
+== ステップ 5: デュアルスタック Service の作成
+
+IPv4 と IPv6 の両方のクラスター IP を割り当てる Service を介して VM を公開します。
+
+xref:attachment$dual-stack-vms/service-dualstack.yaml[service-dualstack.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: dualstack-web
+  namespace: dualstack-demo
+spec:
+  ipFamilyPolicy: RequireDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6
+  selector:
+    app: dualstack-vm
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+EOF
+----
+
+Service にデュアルスタック ClusterIP が設定されていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get svc dualstack-web -n dualstack-demo -o jsonpath='{.spec.clusterIPs}'
+----
+
+[source,bash]
+.想定される出力
+----
+["172.30.x.x","fd02::x"]
+----
+
+両方のアドレスファミリー経由でサービスへの接続をテストします。
+
+[source,bash,role=execute]
+----
+oc run test-v4 --rm -i --restart=Never -n dualstack-demo --image=registry.access.redhat.com/ubi9/ubi-minimal -- curl -4 -s --connect-timeout 5 http://dualstack-web.dualstack-demo.svc:80
+----
+
+[source,bash,role=execute]
+----
+oc run test-v6 --rm -i --restart=Never -n dualstack-demo --image=registry.access.redhat.com/ubi9/ubi-minimal -- curl -6 -s --connect-timeout 5 http://dualstack-web.dualstack-demo.svc:80
+----
+
+== User Defined Network を使用したデュアルスタック
+
+デュアルスタックによるネットワーク分離が必要な環境では、IPv4 と IPv6 の両方のサブネットを持つ Primary UDN を設定できます。このアプローチにより、以下が提供されます。
+
+* namespace 間のネイティブな L2 分離
+* ライブマイグレーションをまたいで永続する IP アドレス
+* 両アドレスファミリーのマネージド IPAM
+
+=== デュアルスタック UDN の作成
+
+xref:attachment$dual-stack-vms/udn-dualstack.yaml[udn-dualstack.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: dualstack-udn
+  namespace: dualstack-demo
+spec:
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets:
+      - "10.200.0.0/16"
+      - "2001:db8:abcd::/64"
+    ipam:
+      lifecycle: Persistent
+EOF
+----
+
+NOTE: Primary UDN を使用するには、namespace の作成時にラベル `k8s.ovn.org/primary-user-defined-network: ""` が設定されている必要があります。ValidatingAdmissionPolicy により、namespace の作成後にこのラベルを追加または削除することはできません。前の手順でこのラベルのない namespace を使用した場合は、削除して再作成してください。
+
+[source,bash,role=execute]
+----
+oc delete namespace dualstack-demo
+----
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dualstack-demo
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+EOF
+----
+
+=== デュアルスタック UDN 上への VM のデプロイ
+
+IPAM を備えた Primary UDN 上の VM は、設定されたサブネットから IPv4 アドレスと IPv6 アドレスの両方を自動的に取得します。
+
+xref:attachment$dual-stack-vms/vm-dualstack-udn.yaml[vm-dualstack-udn.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: dualstack-udn-vm
+  namespace: dualstack-demo
+spec:
+  runStrategy: Always
+  instancetype:
+    name: u1.small
+  preference:
+    name: fedora
+  template:
+    metadata:
+      labels:
+        app: dualstack-udn-vm
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: containerdisk
+              disk: {}
+            - name: cloudinitdisk
+              disk: {}
+          interfaces:
+            - name: primary-udn
+              binding:
+                name: l2bridge
+      networks:
+        - name: primary-udn
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:40
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: changeme
+              chpasswd:
+                expire: false
+EOF
+----
+
+IPAM ライフサイクルが `Persistent` に設定されている場合、VM は再起動やライブマイグレーションをまたいでも IPv4 アドレスおよび IPv6 アドレスを保持します。
+
+[[_cloud_init_networkdata_reference]]
+== Cloud-init networkData リファレンス
+
+`networkData` フィールドは netplan バージョン 2 形式を使用します。KubeVirt ユーザーガイドおよび OpenShift ドキュメントでは `gateway6` フィールドが使用されています。
+
+[source,yaml]
+----
+version: 2
+ethernets:
+  eth0:
+    dhcp4: true
+    addresses:
+      - fd10:0:2::2/120
+    gateway6: fd10:0:2::1
+----
+
+`gateway6` フィールドは netplan 0.103 および cloud-init 23.1 以降で非推奨です。ゲスト OS のバージョンで非推奨の警告が表示される場合は、代替として `routes` エントリを使用してください。
+
+[source,yaml]
+----
+version: 2
+ethernets:
+  eth0:
+    dhcp4: true
+    addresses:
+      - fd10:0:2::2/120
+    routes:
+      - to: "::/0"
+        via: "fd10:0:2::1"
+----
+
+どちらの形式でも同じ結果になります。`gateway6` 形式はアップストリームの KubeVirt ドキュメントと一致しており、`routes` 形式は新しい netplan バージョンとの前方互換性があります。
+
+IMPORTANT: `networkData` をトップレベルの `network:` キーでラップしないでください。このフィールドは直接 `version: 2` で開始する必要があります。
+
+IMPORTANT: `networkData` 内のインターフェース名は、ゲスト OS 内のプライマリ名と一致している必要があります。ContainerDisk イメージ (例: `quay.io/containerdisks/fedora`) は `eth0` を使用します。OpenShift Virtualization DataSource イメージ (ゴールデンイメージ) は、予測可能な命名規則 (`enp1s0`) を使用する場合があります。VM 内で `ip link show` を実行して確認してください。プライマリ名が最初に表示され、代替名がある場合は `altname` として表示されます。名前が一致しない場合、cloud-init はエラーや警告を表示せずにネットワーク設定全体をスキップします。その結果、`ip -6 addr show` を実行してもどのインターフェースにもグローバル IPv6 アドレスが表示されません。
+
+=== Masquerade で静的 IPv6 が必要な理由
+
+virt-launcher Pod は、内部のマスカレードブリッジ上で DHCP サーバー (IPv4) と DHCPv6 サーバー (IPv6) の両方を起動します。IPv4 は、DHCP サーバーがゲストの DHCP Discover メッセージに応答するため自動的に機能します。ただし、DHCPv6 による自動設定のプロセスは完了しません。virt-launcher はマスカレードブリッジ上でルーター広告 (RA: Router Advertisement) を送信しません。RA がない場合、ゲスト OS は DHCPv6 Solicit をトリガーしないため、cloud-init の `dhcp6: true` ではアドレスを取得できません。cloud-init の `networkData` を介した静的 IPv6 設定が必要です。
+
+アドレス `fd10:0:2::2/120` およびゲートウェイ `fd10:0:2::1` は、VMI 設定の `Network.pod.vmIPv6NetworkCIDR` フィールドによって決定される固定の内部値であり、virt-launcher Pod が VM から Pod へのルーティングに使用します。
+
+IPAM が有効な UDN プライマリーネットワークでは、IPv4 アドレスと IPv6 アドレスの両方が OVN-Kubernetes によって自動的に割り当てられるため、cloud-init の networkData は不要です。
+
+== よくある落とし穴
+
+=== ゲスト OS で IPv6 が無効になっている
+
+一部のゲストイメージでは、sysctl (`net.ipv6.conf.all.disable_ipv6=1`) によって IPv6 が無効化されています。確認し、必要に応じて有効化してください。
+
+[source,bash]
+----
+sysctl net.ipv6.conf.all.disable_ipv6
+----
+
+値が `1` の場合は、IPv6 を有効化します。
+
+[source,bash]
+----
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0
+----
+
+これを永続化するには、cloud-init の `userData` に以下を追加します。
+
+[source,yaml]
+----
+write_files:
+  - path: /etc/sysctl.d/99-ipv6.conf
+    content: |
+      net.ipv6.conf.all.disable_ipv6=0
+      net.ipv6.conf.default.disable_ipv6=0
+runcmd:
+  - sysctl --system
+----
+
+=== Masquerade で SLAAC および DHCPv6 が機能しない
+
+masquerade 内部ネットワークでは、virt-launcher は DHCPv6 サーバーを起動しますが、ルーターアドバタイズメント (RA) を送信しません。RA がない場合、ゲスト OS は SLAAC (ステートレスアドレス自動設定) を使用したり、DHCPv6 要請をトリガーしたりできません。cloud-init の networkData で `dhcp6: true` を設定してもアドレスは取得されません。cloud-init による静的 IPv6 設定が必要です。外部セカンダリーネットワーク (localnet、bridge) では、SLAAC および DHCPv6 は外部インフラストラクチャーに依存します。
+
+=== プライバシー拡張
+
+Linux ディストリビューションでは、一時アドレスを生成する IPv6 プライバシー拡張 (RFC 4941) が有効になっている場合があります。これにより、予期しない送信元アドレスの選択が発生する可能性があります。ファイアウォールルールに予測可能な送信元アドレスが必要な場合は、プライバシー拡張を無効にします。
+
+[source,yaml]
+----
+version: 2
+ethernets:
+  eth0:
+    ipv6-privacy: false
+----
+
+=== IPv6 の DNS
+
+デュアルスタッククラスターでは、クラスター DNS サービス (CoreDNS) が A (IPv4) レコードと AAAA (IPv6) レコードの両方を解決します。Pod ネットワーク上の VM は、追加の設定なしで両方のプロトコル経由でクラスターサービスを解決できます。
+
+IPv6 のみの内部マスカレードネットワークでは、DHCP で割り当てられた検索ドメインが IPv4 でしか利用できないため、FQDN の解決が機能しない場合があることに注意してください。必要に応じて、ネームサーバー設定にクラスター DNS が明示的に含まれていることを確認してください。
+
+== トラブルシューティング
+
+=== VM インターフェースに IPv6 アドレスがない
+
+* cloud-init の `networkData` が `version: 2` で始まっていることを確認します (`network:` ラッパーなし)。
+* アドレス形式にプレフィックス長が含まれていることを確認します: `fd10:0:2::2/120`
+* VM 内の cloud-init ログを確認します: `sudo cat /var/log/cloud-init.log | grep -i network`
+
+=== IPv6 Ping は成功するが TCP 接続に失敗する
+
+* IPv6 トラフィックをブロックしている NetworkPolicy がないことを確認します
+* VM 内のアプリケーションが `0.0.0.0` だけでなく `::` (すべてのインターフェース) でリッスンしていることを確認します
+
+=== IPv6 経由で Service にアクセスできない
+
+* `spec.ipFamilyPolicy` が `PreferDualStack` または `RequireDualStack` に設定されていることを確認します
+* 両方の ClusterIP が割り当てられていることを確認します: `oc get svc <name> -o jsonpath='{.spec.clusterIPs}'`
+* クラスター DNS が AAAA レコードを返すことを確認します: `dig AAAA <svc>.<ns>.svc.cluster.local`
+
+== クリーンアップ
+
+このチュートリアルで作成したすべてのリソースを削除します:
+
+[source,bash,role=execute]
+----
+oc delete namespace dualstack-demo
+----
+
+== まとめ
+
+このチュートリアルでは、以下について学びました:
+
+* デュアルスタッククラスターでは、clusterNetwork および serviceNetwork に IPv4 と IPv6 の両方の CIDR が必要です。これはインストール時または Day 2 操作として有効にできます。
+* マスカレードモードでは、IPv4 は DHCP 経由で設定されますが、virt-launcher がルーターアドバタイズメントを送信しないため、IPv6 は cloud-init の `networkData` を介した明示的な静的設定が必要です。
+* 内部マスカレード IPv6 サブネットは、`Network.pod.vmIPv6NetworkCIDR` フィールドで決定される `fd10:0:2::/120` を使用し、固定ゲートウェイは `fd10:0:2::1` になります。
+* User Defined Networks は、2 つのサブネット CIDR (アドレスファミリーごとに 1 つ) と自動 IPAM によるデュアルスタックをサポートします。
+* Service は `ipFamilyPolicy: RequireDualStack` を使用してデュアルスタック用に設定できます。
+* プライバシー拡張機能やゲストイメージでの IPv6 の無効化は、接続問題の一般的な原因です。
+
+== 参照
+
+* xref:static-ip-configuration.adoc[VM の静的 IP の設定] -- 詳細な cloud-init networkData リファレンス
+* xref:cloud-init-troubleshooting.adoc[Cloud-init のトラブルシューティング] -- 一般的な cloud-init ネットワークの問題
+* xref:udn-primary-networks.adoc[UDN プライマリーネットワーク] -- VM 向けのレイヤー 2 プライマリーネットワーク
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/networking#virt-configuring-masquerade-mode-dual-stack_virt-connecting-vm-to-default-pod-network[OpenShift Virtualization デュアルスタックマスカレード (OCP 4.22),window=_blank]
+* link:https://kubevirt.io/user-guide/network/interfaces_and_networks/#masquerade-ipv4-and-ipv6-dual-stack-support[KubeVirt デュアルスタックサポート,window=_blank]

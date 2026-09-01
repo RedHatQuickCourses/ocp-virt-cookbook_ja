@@ -1,110 +1,195 @@
 # 翻訳ツール
 
-日本語翻訳ドキュメント (.adoc) の書式を統一するためのツール群です。
+日本語翻訳ドキュメント (.adoc) の upstream 同期と書式整形を行うツール群です。
+
+詳細な仕様は [SYNC-SPEC.md](SYNC-SPEC.md) を参照してください。
 
 ## 前提条件
 
 - Python 3.9 以上
-- 外部ライブラリ不要 (標準ライブラリのみ使用)
+- upstream remote の設定:
+  ```bash
+  git remote add upstream https://github.com/RedHatQuickCourses/ocp-virt-cookbook.git
+  ```
+- google-genai パッケージと GEMINI_API_KEY 環境変数 (後述)
+
+## クイックスタート
+
+upstream の変更を日本語リポジトリに同期するには、`sync-translate.py` を実行するだけです。ブランチ作成、変更検知、翻訳、書式整形、マニフェスト更新まで全て自動で行われます。
+
+```bash
+python3 tools/translation/sync-translate.py
+```
+
+実行後は `git diff` で翻訳結果をレビューし、問題なければ手動でコミット・プッシュしてください。
 
 ## ツール一覧
 
-### add-jp-lat-spaces.py
+### sync-translate.py — AI による自動翻訳 (メインツール)
 
-日本語文字 (ひらがな・カタカナ・漢字) とアルファベット/数字の間に半角スペースを挿入します。
-また、半角括弧 `(` の前および `)` の後にも半角スペースを挿入します。
+upstream との差分を検出し、AI API で自動翻訳して日本語ファイルに適用する。通常はこのツールだけで全ての同期作業が完了する。
 
-**変換例:**
+内部的に `sync-check.py` と `sync-mark.py` を自動呼び出しするため、個別に実行する必要はない。書式整形ツール (`add-jp-lat-spaces.py`, `convert-fullwidth-parens.py`) と事後補正 (アドモニションキーワード復元、見出し用語集適用) も自動実行される。
+
+**処理内容:**
+- main ブランチから翻訳用ブランチを作成
+- upstream の変更を検知しマニフェストを更新
+- 新規ファイル・モジュールの検出と全文翻訳
+- 削除されたファイル・モジュールの削除
+- 変更・追加・削除されたブロックの翻訳・挿入・削除
+- コードブロック内コメントの英語復元
+- 構造不一致 (欠損・余剰ブロック) の自動修正
+- nav.adoc / antora.yml の同期
+- attachments / images の同期
+- マニフェスト・スナップショットの更新
+
+```bash
+# デフォルト (Gemini API、書式整形・事後補正含む)
+python3 tools/translation/sync-translate.py
+
+# dry-run (翻訳結果を表示するが適用しない、ブランチも作成しない)
+python3 tools/translation/sync-translate.py --dry-run
+
+# ブランチ名を指定
+python3 tools/translation/sync-translate.py --branch translate/2026-08-12
+
+# モデルを指定
+python3 tools/translation/sync-translate.py --model gemini-2.5-pro
+
+# 中断した翻訳を再開
+python3 tools/translation/sync-translate.py --resume
+```
+
+| 引数 | 説明 |
+|---|---|
+| `--dry-run` | 翻訳結果を stdout に表示するが、ファイルへの書き込み・ブランチ作成を行わない |
+| `--model` | Gemini モデル。デフォルト: `gemini-3.7-flash` |
+| `--branch` | 作成するブランチ名。デフォルト: `translate/<YYYY-MM-DD>` (実行日) |
+| `--resume` | 中断した翻訳を再開する。既存の translate ブランチに切り替え、翻訳済みファイルをスキップして続行する |
+
+### sync-check.py — upstream 変更検知
+
+upstream との差分をブロック単位で検出し、マニフェストのステータスを更新する。`sync-translate.py` が内部的に呼び出すため、通常は単体で実行する必要はない。
+
+翻訳せずに差分の状況だけ確認したい場合に単体実行できる。
+
+```bash
+python3 tools/translation/sync-check.py
+```
+
+### sync-init.py — スナップショット + マニフェスト初期化
+
+新規ファイルを翻訳管理対象に登録する。upstream の英語原文をスナップショットとして保存し、マニフェストに全ブロックを `synced` として追加する。`sync-translate.py` が新規ファイル検出時に内部的に呼び出す。
+
+```bash
+python3 tools/translation/sync-init.py modules/networking/pages/new-page.adoc
+```
+
+### sync-mark.py — 翻訳反映済みマーク
+
+翻訳が完了したファイルのスナップショットとマニフェストを最新の upstream 状態に更新する。`sync-translate.py` が処理完了時に内部的に呼び出すため、通常は単体で実行する必要はない。
+
+```bash
+python3 tools/translation/sync-mark.py
+```
+
+### sync-status.py — 翻訳カバレッジダッシュボード
+
+マニフェストを集計し、翻訳の進捗状況をダッシュボード形式で表示する。
+
+```bash
+python3 tools/translation/sync-status.py
+```
+
+### validate-structure.py — 構造一致バリデーション
+
+日本語ファイルと upstream 英語ファイルのブロック構造が 1:1 で対応しているかを検証する。欠損や余剰ブロックを検出する。`sync-translate.py` が構造不一致を自動修正するため、修正目的では不要だが、事前確認に使用できる。
+
+```bash
+python3 tools/translation/validate-structure.py
+```
+
+### add-jp-lat-spaces.py — 日本語↔アルファベット間スペース挿入
+
+日本語文字 (ひらがな・カタカナ・漢字) とアルファベット/数字の間に半角スペースを挿入する。`sync-translate.py` で自動実行される。
 
 | 変換前 | 変換後 |
 |---|---|
 | `OpenShiftの設定` | `OpenShift の設定` |
 | `設定はVMに適用` | `設定は VM に適用` |
-| `ステップ1の実行` | `ステップ 1 の実行` |
-| `` コマンド`oc get`を実行 `` | `` コマンド `oc get` を実行 `` |
 | `仮想マシン(VM)を管理` | `仮想マシン (VM) を管理` |
 
-**処理対象外:**
-- コードブロック (`----` / `....` で囲まれた範囲)
-- バッククォート内のコンテンツ (境界のスペースは挿入)
-- `)` の後が句読点 (`.` `,` `。` `、` 等) や AsciiDoc マークアップ (`*` `>`) の場合はスキップ
-
-### convert-fullwidth-parens.py
-
-全角括弧 `（）` を半角括弧 `()` に変換します。
-
-**変換例:**
-
-| 変換前 | 変換後 |
-|---|---|
-| `仮想マシン（VM）` | `仮想マシン(VM)` |
-| `（必須ではありません）` | `(必須ではありません)` |
-
-**処理対象外:**
-- コードブロック (`----` / `....` で囲まれた範囲)
-
-## 使い方
-
-すべてのコマンドはリポジトリルートから実行してください。
-
-### 基本実行 (全ファイル一括処理)
-
 ```bash
-# 日本語↔アルファベット間のスペース挿入
+# 単体実行 (全ファイル)
 python3 tools/translation/add-jp-lat-spaces.py
 
-# 全角括弧→半角括弧の変換
-python3 tools/translation/convert-fullwidth-parens.py
+# dry-run
+python3 tools/translation/add-jp-lat-spaces.py --dry-run
+
+# 特定ファイル/ディレクトリ
+python3 tools/translation/add-jp-lat-spaces.py modules/networking/
 ```
 
-デフォルトでは `modules/` 配下の全 `.adoc` ファイルを処理します。
+### convert-fullwidth-parens.py — 全角括弧→半角括弧変換
 
-### プレビュー (dry-run)
-
-変更内容を確認してから適用したい場合は `--dry-run` を使用します。
+全角括弧 `（）` を半角括弧 `()` に変換する。`sync-translate.py` で自動実行される。
 
 ```bash
-python3 tools/translation/add-jp-lat-spaces.py --dry-run
+# 単体実行 (全ファイル)
+python3 tools/translation/convert-fullwidth-parens.py
+
+# dry-run
 python3 tools/translation/convert-fullwidth-parens.py --dry-run
 ```
 
-変更箇所の行番号と差分が表示されますが、ファイルは変更されません。
-
-### 特定のファイルやディレクトリを指定
+## Gemini API の設定
 
 ```bash
-# 特定のファイルのみ処理
-python3 tools/translation/add-jp-lat-spaces.py modules/networking/pages/index.adoc
-
-# 特定のモジュールのみ処理
-python3 tools/translation/add-jp-lat-spaces.py modules/networking/
-
-# 複数指定
-python3 tools/translation/add-jp-lat-spaces.py modules/storage/ modules/networking/pages/index.adoc
+pip install google-genai
+export GEMINI_API_KEY="your-api-key-here"
 ```
 
 ## 推奨ワークフロー
 
-新しいページを追加・翻訳した後に以下の順で実行します。
+### 定期的な upstream 同期
 
 ```bash
-# 1. プレビューで変更内容を確認
-python3 tools/translation/add-jp-lat-spaces.py --dry-run
-python3 tools/translation/convert-fullwidth-parens.py --dry-run
+# 1. upstream の変更を翻訳
+python3 tools/translation/sync-translate.py
 
-# 2. 問題なければ適用
-python3 tools/translation/add-jp-lat-spaces.py
-python3 tools/translation/convert-fullwidth-parens.py
+# 2. 翻訳結果をレビュー
+git diff
 
 # 3. ビルド確認
 npm run build
 
-# 4. 差分確認
-git diff
+# 4. コミット・プッシュ
+git add -A
+git commit -m "translate: sync with upstream"
+git push origin translate/YYYY-MM-DD
+```
+
+### 翻訳が中断した場合
+
+API タイムアウトや手動中断 (Ctrl+C) で翻訳が途中で止まった場合、`--resume` で翻訳済みファイルをスキップして再開できます。
+
+```bash
+# 中断した翻訳を再開
+python3 tools/translation/sync-translate.py --resume
+```
+
+プログレスの粒度はファイル単位です。翻訳途中のファイル (全ブロック完了前に中断) は最初から再翻訳されます。完全にやり直す場合は translate ブランチを削除してから `--resume` なしで実行してください。
+
+### 翻訳せず差分だけ確認したい場合
+
+```bash
+python3 tools/translation/sync-check.py
+python3 tools/translation/sync-status.py
 ```
 
 ## 注意事項
 
-- 既にスペースが存在する箇所には重複してスペースを挿入しません。同じファイルに対して複数回実行しても安全です。
-- AsciiDoc のマクロ (`xref:`, `link:`, `image::` 等) のパス部分は日本語を含まないため影響を受けません。
-- バッククォートの数が奇数 (閉じていない) 行は、行全体を通常テキストとして処理します。
+- `sync-translate.py` 以外のツールは標準ライブラリのみで動作する (外部パッケージ不要)。`sync-translate.py` は `google-genai` のみ必要
+- `sync-translate.py` は `git add` / `git commit` / `git push` を一切行わない。翻訳結果はワーキングツリー上の未ステージ変更として残る
+- 書式整形ツールは同じファイルに対して複数回実行しても安全 (冪等)
+- コードブロック (`----` / `....`) 内は書式整形の対象外

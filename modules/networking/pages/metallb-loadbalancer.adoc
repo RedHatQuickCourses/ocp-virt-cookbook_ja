@@ -1,0 +1,522 @@
+= VM ワークロード用の MetalLB およびロードバランサーサービス
+:navtitle: VM 向け MetalLB ロードバランサー
+
+== 概要
+
+このチュートリアルでは、ベアメタル OpenShift クラスター上で MetalLB を設定し、LoadBalancer タイプの Service を介して仮想マシンサービスを公開する方法を説明します。OpenShift Route は Ingress コントローラーを通じて HTTP/HTTPS トラフィックを処理しますが、多くの VM ワークロードでは、SSH、データベース、RDP、カスタム TCP/UDP サービスなどの非 HTTP プロトコルに対する直接的な外部アクセスが必要です。
+
+MetalLB は、設定されたプールから外部 IP アドレスを割り当て、レイヤー 2 (ARP/NDP) または BGP プロトコルを介してそれらをアドバタイズすることで、ベアメタルクラスターでの LoadBalancer Service のサポートを提供します。
+
+== 前提条件
+
+* OpenShift {ocp-min-version}+ (OpenShift Virtualization Operator がインストール済み)
+* クラウドロードバランサーのないベアメタルクラスターまたはインフラストラクチャー
+* クラスターノードと同じレイヤー 2 ネットワーク上の IP アドレス範囲 (L2 モード用)
+* クラスター管理者アクセス
+* `oc` CLI がインストールされていること
+
+== MetalLB と Route の使い分け
+
+|===
+| アクセス方法 | プロトコル | ユースケース
+
+| OpenShift Route
+| HTTP/HTTPS のみ
+| Web アプリケーション、TLS 終端を使用する API
+
+| NodePort Service
+| 任意の TCP/UDP
+| 高位ポート番号 (30000-32767) でのシンプルな外部アクセス
+
+| LoadBalancer (MetalLB)
+| 任意の TCP/UDP
+| 標準ポート (22、80、443、3306、5432) での本番環境の外部アクセス
+
+| Gateway API (HTTPRoute)
+| HTTP/HTTPS、gRPC
+| ロールベースのルーティング、TLS、トラフィック分割を備えた Kubernetes 標準の L7 Ingress (OCP 4.19 以降)
+|===
+
+専用の外部 IP アドレスを使用して標準ポートで VM サービスを公開する必要がある場合、特に Route や Gateway API では対応できない非 HTTP プロトコルの場合に MetalLB を使用します。
+
+== ステップ 1: MetalLB Operator のインストール
+
+MetalLB Operator の namespace を作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace metallb-system
+----
+
+AllNamespaces インストールモードで OperatorGroup を作成します (MetalLB Operator で必要)。
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+ name: metallb-operator
+ namespace: metallb-system
+spec: {}
+EOF
+----
+
+Red Hat Operators カタログから MetalLB Operator をサブスクライブします。
+
+xref:attachment$metallb-loadbalancer/metallb-subscription.yaml[metallb-subscription.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+ name: metallb-operator
+ namespace: metallb-system
+spec:
+ channel: stable
+ name: metallb-operator
+ source: redhat-operators
+ sourceNamespace: openshift-marketplace
+EOF
+----
+
+Operator がインストールされるまで待ちます。
+
+[source,bash,role=execute]
+----
+oc wait --for=condition=CatalogSourcesUnhealthy=False subscription metallb-operator -n metallb-system --timeout=120s
+----
+
+ClusterServiceVersion が準備完了状態になっていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get csv -n metallb-system -o custom-columns=NAME:.metadata.name,PHASE:.status.phase
+----
+
+PHASE 列に `Succeeded` と表示されるまで待ちます。
+
+== ステップ 2: MetalLB インスタンスの作成
+
+MetalLB インスタンスをデプロイします。これにより、IP アドレスの通知と割り当てを処理する speaker および controller Pod が作成されます。
+
+xref:attachment$metallb-loadbalancer/metallb-instance.yaml[metallb-instance.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: metallb.io/v1beta1
+kind: MetalLB
+metadata:
+ name: metallb
+ namespace: metallb-system
+spec: {}
+EOF
+----
+
+MetalLB Pod が実行中になるまで待機します。
+
+[source,bash,role=execute]
+----
+oc wait deployment controller -n metallb-system --for=condition=Available --timeout=120s
+----
+
+[source,bash,role=execute]
+----
+oc get pods -n metallb-system
+----
+
+`controller` Deployment および `speaker` DaemonSet の Pod が実行中であることが確認できます。
+
+== ステップ 3: IP アドレスプールの設定
+
+MetalLB が LoadBalancer サービスに割り当てることができる IP アドレスのプールを定義します。これらのアドレスは、クラスターノードと同じレイヤー 2 ネットワーク上でルーティング可能である必要があり、他のデバイスに割り当てられていてはなりません。
+
+IMPORTANT: 以下のアドレス範囲を、ネットワーク上で利用可能な IP に置き換えてください。この範囲は Worker Node と同じサブネット上にある必要があり、既存の DHCP 割り当てや静的 IP と競合してはなりません。
+
+xref:attachment$metallb-loadbalancer/ipaddresspool.yaml[ipaddresspool.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+ name: vm-services-pool
+ namespace: metallb-system
+spec:
+ addresses:
+ - 192.168.2.200-192.168.2.210
+EOF
+----
+
+== ステップ 4: L2 Advertisement の設定
+
+L2Advertisement を作成して、ローカルネットワーク上で ARP (IPv4) または NDP (IPv6) 経由で IP アドレスをアドバタイズします。
+
+xref:attachment$metallb-loadbalancer/l2advertisement.yaml[l2advertisement.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+ name: vm-services-l2
+ namespace: metallb-system
+spec:
+ ipAddressPools:
+ - vm-services-pool
+EOF
+----
+
+== ステップ 5: VM のデプロイ
+
+外部アクセスをテストするために、 namespace を作成し、Nginx Web サーバーを搭載した VM をデプロイします。
+
+[source,bash,role=execute]
+----
+oc create namespace metallb-demo
+----
+
+xref:attachment$metallb-loadbalancer/vm-webserver.yaml[vm-webserver.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: web-vm
+ namespace: metallb-demo
+ labels:
+ app: web-vm
+spec:
+ runStrategy: Always
+ instancetype:
+ name: u1.small
+ preference:
+ name: fedora
+ template:
+ metadata:
+  labels:
+  app: web-vm
+ spec:
+  domain:
+  devices:
+   disks:
+   - name: containerdisk
+    disk: {}
+   - name: cloudinitdisk
+    disk: {}
+   interfaces:
+   - name: default
+    masquerade: {}
+  networks:
+  - name: default
+   pod: {}
+  volumes:
+  - name: containerdisk
+   containerDisk:
+   image: quay.io/containerdisks/fedora:40
+  - name: cloudinitdisk
+   cloudInitNoCloud:
+   userData: |
+    #cloud-config
+    user: fedora
+    password: changeme
+    chpasswd:
+    expire: false
+    ssh_pwauth: true
+    packages:
+    - nginx
+    runcmd:
+    - systemctl enable --now nginx
+EOF
+----
+
+VM の準備が整うまで待機します。
+
+[source,bash,role=execute]
+----
+oc wait vm web-vm -n metallb-demo --for=condition=Ready --timeout=300s
+----
+
+== ステップ 6: HTTP 用の LoadBalancer Service の作成
+
+LoadBalancer Service を介して VM の HTTP ポートを公開します。MetalLB は設定されたプールから外部 IP を割り当てます。
+
+xref:attachment$metallb-loadbalancer/service-lb-http.yaml[service-lb-http.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+ name: web-vm-lb
+ namespace: metallb-demo
+spec:
+ type: LoadBalancer
+ selector:
+ app: web-vm
+ ports:
+ - name: http
+  protocol: TCP
+  port: 80
+  targetPort: 80
+EOF
+----
+
+外部 IP が割り当てられていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get svc web-vm-lb -n metallb-demo
+----
+
+想定される出力には、MetalLB プールからの EXTERNAL-IP が表示されます。
+
+[source,text]
+----
+NAME  TYPE   CLUSTER-IP  EXTERNAL-IP  PORT(S)  AGE
+web-vm-lb LoadBalancer 172.30.x.x  192.168.2.200 80:3xxxx/TCP ...
+----
+
+前のコマンド出力に表示された外部 IP を使用して、同じネットワーク上のマシンから VM への外部アクセスをテストします。
+
+[source,bash]
+----
+curl -s http://<EXTERNAL-IP>:80 | head -5
+----
+
+== ステップ 7: LoadBalancer を介した SSH アクセスの公開
+
+SSH などの非 HTTP プロトコルの場合、個別の LoadBalancer Service を作成します。MetalLB はプールから別の IP を割り当てます。
+
+xref:attachment$metallb-loadbalancer/service-lb-ssh.yaml[service-lb-ssh.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+ name: web-vm-ssh
+ namespace: metallb-demo
+spec:
+ type: LoadBalancer
+ selector:
+ app: web-vm
+ ports:
+ - name: ssh
+  protocol: TCP
+  port: 22
+  targetPort: 22
+EOF
+----
+
+SSH サービスに外部 IP が割り当てられていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get svc web-vm-ssh -n metallb-demo
+----
+
+割り当てられた外部 IP を使用して SSH 経由で接続します。
+
+[source,bash]
+----
+ssh fedora@<EXTERNAL-IP>
+----
+
+== マルチポートサービス
+
+複数のサービスを公開する VM の場合、単一の LoadBalancer Service で複数のポートを定義できます。
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Service
+metadata:
+ name: multi-port-vm
+ namespace: metallb-demo
+spec:
+ type: LoadBalancer
+ selector:
+ app: web-vm
+ ports:
+ - name: http
+  protocol: TCP
+  port: 80
+  targetPort: 80
+ - name: https
+  protocol: TCP
+  port: 443
+  targetPort: 443
+ - name: ssh
+  protocol: TCP
+  port: 22
+  targetPort: 22
+----
+
+これにより、単一の外部 IP が割り当てられ、3 つのポートすべてにアクセスできるようになります。
+
+== 動的ルーティング環境向けの BGP モード
+
+BGP 対応ルーターを備えたデータセンター環境の場合、MetalLB は BGP 経由で LoadBalancer IP をアドバタイズできます。これにより、複数ノード間にわたる等コストマルチパス (ECMP) ルーティングが可能になり、L2 モードで発生する単一ノードへのトラフィック集中を回避できます。
+
+BGP モードには以下が必要です。
+
+* BGP 対応の上流ルーター
+* ピアリング設定 (AS 番号、ピアアドレス)
+* `L2Advertisement` の代わりとなる `BGPPeer` および `BGPAdvertisement` リソース
+
+[source,yaml]
+----
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+ name: upstream-router
+ namespace: metallb-system
+spec:
+ myASN: 64500
+ peerASN: 64501
+ peerAddress: 192.168.2.1
+----
+
+[source,yaml]
+----
+apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+ name: bgp-advertisement
+ namespace: metallb-system
+spec:
+ ipAddressPools:
+ - vm-services-pool
+----
+
+NOTE: BGP モードの設定は、ネットワークインフラストラクチャーに完全に依存します。ネットワークチームと連携して、AS 番号、ピアアドレス、ルーティングポリシーを決定してください。
+
+== Gateway API: Kubernetes ネイティブの Ingress 標準
+
+OpenShift 4.19 以降、Kubernetes Gateway API は OpenShift Routes と並ぶ Ingress オプションとして一般提供されています。Gateway API は、GatewayClass、Gateway、および HTTPRoute カスタムリソースを通じてロール指向の L7 トラフィック管理を提供し、OpenShift Service Mesh 3 を介した Envoy によってサポートされ、Ingress Operator によって管理されます。
+
+Gateway API は、VM の virt-launcher Pod を選択する ClusterIP Service に HTTP/HTTPS/gRPC トラフィックをルーティングすることで、VM ワークロードと連携します。ベアメタルクラスターでは、MetalLB が基盤となる LoadBalancer として機能し、Gateway の Service に外部 IP を提供できます。
+
+次の例は、トラフィックを VM Web サービスにルーティングする HTTPRoute を示しています。
+
+[source,yaml]
+----
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+ name: web-vm-route
+ namespace: metallb-demo
+spec:
+ parentRefs:
+ - name: my-gateway
+  namespace: openshift-ingress
+ hostnames:
+ - "web-vm.apps.example.com"
+ rules:
+ - backendRefs:
+  - name: web-vm-lb
+   port: 80
+----
+
+OpenShift は、これら 3 つの ingress モデルをすべて同時にサポートしています。
+
+* **OpenShift Routes** -- HAProxy をバックエンドとする、安定して実績のあるデフォルトの ingress。edge、passthrough、または re-encrypt TLS 終端を備えた HTTP/HTTPS をサポート。
+* **Gateway API** -- L7 ルーティング、トラフィック分割、クロス namespace 参照を備えた Kubernetes 標準の代替機能。OCP 4.19 以降が必要。
+* **MetalLB LoadBalancer** -- 任意の TCP/UDP プロトコルに対する L4 外部 IP 割り当て。ベアメタル上の非 HTTP ワークロード (SSH、データベース、RDP) に対する唯一の選択肢。
+
+Route と Gateway API はどちらも L7 HTTP トラフィックを処理します。MetalLB は、どちらも対応できないプロトコルの L4 におけるギャップを埋めます。ベアメタルでは、MetalLB と Gateway API は相互補完的です。MetalLB が外部 IP を提供し、Gateway が L7 ルーティングの決定を処理します。
+
+== トラブルシューティング
+
+=== Service が Pending 状態のままになる
+
+LoadBalancer Service が外部 IP なしで `Pending` 状態のままになる場合:
+
+[source,bash,role=execute]
+----
+oc describe svc <service-name> -n <namespace>
+----
+
+一般的な原因:
+
+* `IPAddressPool` が設定されていないか、すべてのアドレスが枯渇している
+* プールを参照する `L2Advertisement` または `BGPAdvertisement` がない
+* MetalLB speaker Pod が実行されていない (`oc get pods -n metallb-system` を確認)
+
+=== 外部 IP が割り当てられているが到達できない
+
+* IP がクライアントマシンと同じ L2 サブネット上にあることを確認する
+* ファイアウォールが ARP またはターゲットポートをブロックしていないことを確認する
+* IP を保持しているノード上で speaker Pod が実行されていることを確認する: `oc get pods -n metallb-system -o wide`
+
+=== externalTrafficPolicy: Cluster での接続タイムアウト
+
+デフォルトでは、Service は `externalTrafficPolicy: Cluster` を使用するため、非対称ルーティングが発生する可能性があります。タイムアウトが発生する場合は、`externalTrafficPolicy: Local` の設定を試してください。
+
+[source,yaml]
+----
+spec:
+ externalTrafficPolicy: Local
+----
+
+これにより、トラフィックはその IP をアドバタイズしているノードによってのみ処理されるようになり、ルーティングの非対称性を回避できます。
+
+== クリーンアップ
+
+デモ用 namespace を削除します。
+
+[source,bash,role=execute]
+----
+oc delete namespace metallb-demo
+----
+
+CAUTION: MetalLB Operator は継続して使用できるようにインストールされたままになります。完全に削除するには、以下を実行します。
+
+[source,bash,role=execute]
+----
+oc delete metallb metallb -n metallb-system
+----
+
+[source,bash,role=execute]
+----
+oc delete subscription metallb-operator -n metallb-system
+----
+
+[source,bash,role=execute]
+----
+oc delete csv -n metallb-system -l operators.coreos.com/metallb-operator.metallb-system=
+----
+
+[source,bash,role=execute]
+----
+oc delete namespace metallb-system
+----
+
+== まとめ
+
+このチュートリアルでは、以下について学びました。
+
+* MetalLB は、クラウドプロバイダーのないベアメタルクラスターに LoadBalancer Service サポートを提供します
+* L2 モードは ARP アナウンスを使用し、クラスターノードと同じサブネット上の IP を必要とします
+* BGP モードは、ルーティングされたデータセンター環境向けのルートアドバタイズを可能にします
+* LoadBalancer Service は、専用の外部 IP で VM の非 HTTP ポート (SSH、データベース、RDP) を公開します
+* 単一の外部 IP に対して、複数のポートを 1 つの Service にまとめることができます
+* Service の `selector` は、`spec.template.metadata.labels` のラベルを使用して VM Pod をターゲットにします
+* MetalLB は、設定された `IPAddressPool` リソースから IP を自動的に割り当てます
+
+== 参照
+
+* xref:vm-ingress-routes.adoc[VM Ingress および Routes] -- OpenShift Route を介して VM HTTP サービスを公開します
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/networking_operators/metallb-operator[MetalLB Operator ドキュメント,window=_blank]
+* link:https://docs.redhat.com/en/documentation/red_hat_openshift_service_mesh/3.0/html-single/gateways/index#ossm-exposing-a-service-by-using-the-kubernetes-gateway-api_ossm-getting-traffic-into-a-mesh[Kubernetes Gateway API を使用したサービスの公開 (Service Mesh 3.0),window=_blank]
+* link:https://kubevirt.io/2022/Virtual-Machines-with-MetalLB.html[KubeVirt MetalLB ガイド,window=_blank]

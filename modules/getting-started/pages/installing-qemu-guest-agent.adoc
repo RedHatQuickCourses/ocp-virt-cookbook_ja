@@ -1,0 +1,960 @@
+= QEMU guest agent のインストール
+:navtitle: QEMU guest agent のインストール
+:page-toclevels: 3
+
+== 概要
+
+このチュートリアルでは、さまざまな Linux ディストリビューションに qemu-guest-agent をインストールする方法を説明します。QEMU guest agent は、ゲスト OS 内で実行されるデーモンです。これにより、アプリケーション整合性のあるスナップショット、ゲスト OS、ファイルシステムのレポート、動的な SSH 鍵およびパスワードのインジェクション、IP アドレスのレポート、exec/ping ヘルスプローブなどが可能になります。
+
+=== 学習内容
+
+* Fedora、Debian、openSUSE Leap で `virtctl console` を使用して `qemu-guest-agent` を手動でインストールおよび有効化する方法
+* cloud-init の `packages` および `runcmd` モジュールを使用して `qemu-guest-agent` を自動的にインストールする方法
+* エージェントが接続され、ゲスト OS 情報を OpenShift Virtualization にレポートしていることを確認する方法
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされた **OpenShift {ocp-min-version}+** (xref:install-openshift-virtualization.adoc[OpenShift Virtualization のインストール] を参照)
+* CLI ツール: `oc`、`virtctl`、`yq`
+
+== namespace の設定
+
+このチュートリアルで使用するすべての仮想マシンを配置する namespace を作成します。
+
+[source,bash,role=execute]
+----
+oc create namespace qemu-ga-demo
+----
+
+[source,bash,role=execute]
+----
+oc project qemu-ga-demo
+----
+
+== `virtctl console` を使用したインストール
+
+このセクションでは、`virtctl console <vm-name>` を使用して仮想マシンのコンソールに接続し、cloud-init で作成されたユーザーとしてログインし、ディストリビューションのパッケージマネージャーを使用して `qemu-guest-agent` をインストールし、`systemctl enable --now qemu-guest-agent` を実行してサービスを起動するとともに再起動後も有効になるよう設定します。
+
+WARNING: 以下の例で使用されている cloud-init のパスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードまたは SSH 鍵認証を使用してください。
+
+=== Fedora/RHEL
+
+==== ステップ 1: Fedora 仮想マシンの作成
+
+CLI から仮想マシンを作成します。 (Web コンソールから作成する場合は <<fedora-create-web-console,こちら>> をクリック)
+
+NOTE: containerdisk の代わりに datavolume を使用しています。これにより初回の起動時間は長くなりますが、ルートボリュームが PVC に保存されるため、virt-launcher がクラッシュした場合や、仮想マシンを停止して再起動した場合でも、以降の手順での変更が永続化されるという利点があります。
+
+xref:attachment$installing-qemu-guest-agent/fedora-no-qga.yaml[fedora-no-qga.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: fedora-virtctl
+ namespace: qemu-ga-demo
+spec:
+ runStrategy: Always
+ dataVolumeTemplates:
+  - metadata:
+    name: fedora-virtctl-rootdisk
+   spec:
+    storage:
+     resources:
+      requests:
+       storage: 10Gi
+     accessModes:
+      - ReadWriteOnce
+    source:
+     registry:
+      url: docker://quay.io/ocpv_cookbook/fedora-no-qga:latest
+ template:
+  metadata:
+   labels:
+    app: fedora-virtctl
+  spec:
+   domain:
+    cpu:
+     cores: 2
+    memory:
+     guest: 4Gi
+    devices:
+     disks:
+      - name: rootdisk
+       disk:
+        bus: virtio
+      - name: cloudinitdisk
+       disk:
+        bus: virtio
+   volumes:
+    - name: rootdisk
+     dataVolume:
+      name: fedora-virtctl-rootdisk
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |-
+       #cloud-config
+       user: fedora
+       password: fedora
+       chpasswd: { expire: false }
+EOF
+----
+
+仮想マシンの STATUS が `Running` になるまで待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm fedora-virtctl -w
+----
+
+TIP: `-w` フラグは継続的に監視します。STATUS が `Running` と表示されたら `Ctrl+C` を押します。
+
+[source,bash]
+----
+# 出力例
+NAME        AGE  STATUS  READY
+fedora-virtctl      6h8m  Running  True
+----
+
+<<fedora-step-2, ステップ 2>> に進みます
+
+[#fedora-create-web-console]
+Web コンソールから仮想マシンを作成します。
+
+. **Virtualization** -> **VirtualMachines** に移動します
+. 右上にある `Create` ボタンの横のドロップダウンをクリックします
+. `With YAML` を選択します
+. テキストエディターウィンドウ内のすべてを選択して削除します
+. 上記の YAML を貼り付けます
+. 左下の `Create` をクリックします
+
+新しく作成した VM の「Overview」タブにリダイレクトされます。Status が `Running` になるまで待ちます。
+
+[#fedora-step-2]
+==== ステップ 2: `qemu-guest-agent` のインストールと有効化
+
+CLI から: (Web コンソールの手順については<<fedora-step-2-web-console,こちら>>をクリック)
+
+[source,bash,role=execute]
+----
+virtctl console fedora-virtctl
+----
+
+ログインプロンプトを表示するために ENTER キーを押す必要がある場合があります。表示されたら、ユーザー名とパスワードの**両方**に `fedora` を入力します。
+
+<<fedora-step-2-2,次のステップに進みます>>
+
+[#fedora-step-2-web-console]
+Web コンソールから:
+
+. **Virtualization** -> **VirtualMachines** に移動します。
+. 仮想マシンの名前をクリックします
+. `overview` タブの `Details` パネルで "Open Web Console" をクリックします (これにより新しいブラウザーウィンドウが開きます)
+. ユーザー名に `fedora` と入力し、Enter キーを押します
+. パスワードに `fedora` と入力し、Enter キーを押します
+
+[#fedora-step-2-2]
+`qemu-guest-agent` がインストールされていないことを確認します。
+
+[source,bash]
+----
+systemctl status qemu-guest-agent
+----
+
+[source,bash]
+----
+# 出力例
+Unit qemu-guest-agent.service could not be found.
+----
+
+dnf を使用して `qemu-guest-agent` をインストールし、有効化します。
+
+[source,bash]
+----
+sudo dnf install -y qemu-guest-agent && sudo systemctl enable --now qemu-guest-agent
+----
+
+`qemu-guest-agent` がインストールされ、有効化され、実行されていることを確認します。
+
+[source,bash]
+----
+systemctl status qemu-guest-agent
+----
+
+[source,bash]
+----
+# 出力例
+[fedora@fedora-virtctl ~]$ systemctl status qemu-guest-agent
+● qemu-guest-agent.service - QEMU Guest Agent
+   Loaded: loaded (/usr/lib/systemd/system/qemu-guest-agent.service; enabled; preset: enabled)
+  Drop-In: /usr/lib/systemd/system/service.d
+       └─10-timeout-abort.conf
+   Active: active (running) since Tue 2026-06-02 21:49:02 UTC; 8s ago # <-- Active (running) に注目
+ Invocation: e1d60262b0cc499b967d42561a6e59ff
+  Process: 1436 ExecStartPre=<<truncated>>
+  Main PID: 1438 (qemu-ga)
+   Tasks: 2 (limit: 4618)
+   Memory: 996K (peak: 1.4M)
+    CPU: 21ms
+   CGroup: /system.slice/qemu-guest-agent.service
+       └─1438 /usr/bin/qemu-ga --method=virtio-serial --path=/dev/virtio-ports/org.qemu.guest_agent.0 <<truncated>>
+----
+
+`ctrl+]` または `ctrl+5` を使用して VM コンソールを終了します。
+
+この VM に対して検証コマンドが機能するように `VM_NAME` 変数を設定します。
+
+[source,bash,role=execute]
+----
+VM_NAME=fedora-virtctl
+----
+
+<<verify-qga-reporting>> に進み、エージェントが接続され、OCP-Virt にレポートしていることを確認します。
+
+=== Debian
+
+==== ステップ 1: Debian 仮想マシンの作成
+
+CLI から仮想マシンを作成します (Web コンソールから作成する場合は <<debian-create-web-console,こちら>> をクリック):
+
+xref:attachment$installing-qemu-guest-agent/debian-no-qga.yaml[debian-no-qga.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: debian-virtctl
+ namespace: qemu-ga-demo
+spec:
+ runStrategy: Always
+ dataVolumeTemplates:
+  - metadata:
+    name: debian-virtctl-rootdisk
+   spec:
+    storage:
+     resources:
+      requests:
+       storage: 10Gi
+     accessModes:
+      - ReadWriteOnce
+    source:
+     registry:
+      url: docker://quay.io/ocpv_cookbook/debian-no-qga:latest
+ template:
+  metadata:
+   labels:
+    app: debian-virtctl
+  spec:
+   domain:
+    cpu:
+     cores: 2
+    memory:
+     guest: 4Gi
+    devices:
+     disks:
+      - name: rootdisk
+       disk:
+        bus: virtio
+      - name: cloudinitdisk
+       disk:
+        bus: virtio
+   volumes:
+    - name: rootdisk
+     dataVolume:
+      name: debian-virtctl-rootdisk
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |-
+       #cloud-config
+       user: debian
+       password: debian
+       chpasswd: { expire: false }
+EOF
+----
+
+仮想マシンの STATUS が `Running` になるまで待ちます:
+
+[source,bash,role=execute]
+----
+oc get vm debian-virtctl -w
+----
+
+TIP: `-w` フラグは継続的に監視します。STATUS が `Running` と表示されたら `Ctrl+C` を押します。
+
+[source,bash]
+----
+# 出力例
+NAME        AGE   STATUS  READY
+debian-virtctl     5m31s  Running  True
+----
+
+<<debian-step-2, ステップ 2>> に進みます
+
+[#debian-create-web-console]
+Web コンソールから仮想マシンを作成します。
+
+. **Virtualization** -> **VirtualMachines** に移動します
+. 右上にある `Create` ボタンの横のドロップダウンをクリックします
+. `With YAML` を選択します。
+. テキストエディターウィンドウ内のすべてを選択して削除します。
+. 上記で提供されている YAML を貼り付けます。
+. 左下の `Create` をクリックします。
+
+新しく作成した VM の "Overview tab" にリダイレクトされます。Status が `Running` になるまで待ちます。
+
+[#debian-step-2]
+==== ステップ 2: `qemu-guest-agent` のインストールと有効化
+
+CLI の場合: (Web コンソールの手順については<<debian-step-2-web-console,こちら>>をクリック)
+
+[source,bash,role=execute]
+----
+virtctl console debian-virtctl
+----
+
+ログインプロンプトを表示するために ENTER キーを押す必要がある場合があります。プロンプトが表示されたら、ユーザー名とパスワードの**両方**に `debian` を入力します。
+
+<<debian-step-2-2,次のステップに進みます>>
+
+[#debian-step-2-web-console]
+Web コンソールの場合:
+
+. **Virtualization** -> **VirtualMachines** に移動します。
+. 仮想マシンの名前をクリックします。
+. `overview` タブの `Details` パネルで "Open Web Console" をクリックします (これにより新しいブラウザーウィンドウが開きます)。
+. ユーザー名に `debian` と入力し、Enter キーを押します。
+. パスワードに `debian` と入力し、Enter キーを押します。
+
+[#debian-step-2-2]
+`qemu-guest-agent` がインストールされていないことを確認します。
+
+[source,bash]
+----
+systemctl status qemu-guest-agent
+----
+
+[source,bash]
+----
+# 出力例
+Unit qemu-guest-agent.service could not be found.
+----
+
+apt パッケージインデックスを更新します。
+
+[source,bash]
+----
+sudo apt update
+----
+
+apt が更新されたら、`qemu-guest-agent` をインストールして有効化します。
+
+[source,bash]
+----
+sudo apt install -y qemu-guest-agent && sudo systemctl enable --now qemu-guest-agent
+----
+
+`qemu-guest-agent` がインストールされ、有効化され、実行されていることを確認します。
+
+[source,bash]
+----
+systemctl status qemu-guest-agent
+----
+
+[source,bash]
+----
+# 出力例
+● qemu-guest-agent.service - QEMU Guest Agent
+   Loaded: loaded (/lib/systemd/system/qemu-guest-agent.service; static)
+   Active: active (running) since Mon 2026-06-08 19:37:00 UTC; 2s ago
+  Main PID: 1013 (qemu-ga)
+   Tasks: 2 (limit: 4657)
+   Memory: 724.0K
+    CPU: 7ms
+   CGroup: /system.slice/qemu-guest-agent.service
+       └─1013 /usr/sbin/qemu-ga
+----
+
+`ctrl+]` または `ctrl+5` を使用して VM コンソールを終了します。
+
+検証コマンドがこの VM で動作するように、`VM_NAME` 変数を設定します:
+
+[source,bash,role=execute]
+----
+VM_NAME=debian-virtctl
+----
+
+<<verify-qga-reporting>> に進み、エージェントが接続され、OCP-Virt にレポートしていることを確認します。
+
+=== openSUSE Leap
+
+openSUSE での `qemu-guest-agent` のインストールは、以前のディストリビューションとは少し異なります。openSUSE Leap はアップストリームの qemu-ga テンプレートアプローチを使用しており、エージェントを特定の virtio-port デバイスにバインドします。udev 経由でそのデバイスが現れると、systemd が自動的にインスタンスを起動するため、手動でサービスを有効にする必要はありません。
+
+==== ステップ 1: openSUSE Leap 仮想マシンの作成
+
+CLI から仮想マシンを作成します: (Web コンソールから作成する場合は <<opensuse-create-web-console,こちら>> をクリック)
+
+xref:attachment$installing-qemu-guest-agent/opensuse-leap-no-qga.yaml[opensuse-leap-no-qga.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: suse-virtctl
+ namespace: qemu-ga-demo
+spec:
+ runStrategy: Always
+ dataVolumeTemplates:
+  - metadata:
+    name: suse-virtctl-rootdisk
+   spec:
+    storage:
+     resources:
+      requests:
+       storage: 10Gi
+     accessModes:
+      - ReadWriteOnce
+    source:
+     registry:
+      url: docker://quay.io/ocpv_cookbook/opensuse-leap-15-no-qga:latest
+ template:
+  metadata:
+   labels:
+    app: suse-virtctl
+  spec:
+   domain:
+    cpu:
+     cores: 2
+    memory:
+     guest: 4Gi
+    devices:
+     disks:
+      - name: rootdisk
+       disk:
+        bus: virtio
+      - name: cloudinitdisk
+       disk:
+        bus: virtio
+   volumes:
+    - name: rootdisk
+     dataVolume:
+      name: suse-virtctl-rootdisk
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |-
+       #cloud-config
+       user: opensuse
+       password: opensuse
+       chpasswd: { expire: false }
+EOF
+----
+
+仮想マシンの STATUS が `Running` になるまで待ちます:
+
+[source,bash,role=execute]
+----
+oc get vm suse-virtctl -w
+----
+
+TIP: `-w` フラグは継続的に監視します。STATUS が `Running` と表示されたら `Ctrl+C` を押します。
+
+[source,bash]
+----
+# 出力例
+NAME           AGE   STATUS  READY
+suse-virtctl  5m31s  Running  True
+----
+
+<<opensuse-step-2, ステップ 2>> に進みます
+
+[#opensuse-create-web-console]
+Web コンソールから仮想マシンを作成します。
+
+. **Virtualization** -> **VirtualMachines** に移動します。
+. 右上にある `Create` ボタンの横のドロップダウンをクリックします。
+. `With YAML` を選択します。
+. テキストエディターウィンドウ内のすべてを選択して削除します。
+. 上記で提供された YAML を貼り付けます
+. 左下の `Create` をクリックします
+
+新しく作成された VM の「Overview」タブにリダイレクトされます。Status が `Running` になるまで待ちます。
+
+[#opensuse-step-2]
+==== ステップ 2: `qemu-guest-agent` のインストール
+
+CLI からの手順: (Web コンソールでの手順は<<opensuse-step-2-web-console,こちら>>をクリック)
+
+[source,bash,role=execute]
+----
+virtctl console suse-virtctl
+----
+
+ログインプロンプトを表示するために ENTER キーを押す必要がある場合があります。プロンプトが表示されたら、ユーザー名とパスワードの**両方**に `opensuse` を入力します。
+
+<<opensuse-step-2-2,次のステップに進みます>>
+
+[#opensuse-step-2-web-console]
+Web コンソールから:
+
+. **Virtualization** -> **VirtualMachines** に移動します。
+. 仮想マシンの名前をクリックします。
+. `overview` タブの `Details` パネルで「Open Web Console」をクリックします (これにより新しいブラウザーウィンドウが開きます)。
+. ユーザー名に `opensuse` と入力し、Enter キーを押します。
+. パスワードに `opensuse` と入力し、Enter キーを押します。
+
+[#opensuse-step-2-2]
+`qemu-guest-agent` がインストールされていないことを確認します。
+
+[source,bash]
+----
+systemctl list-units | grep qemu
+----
+
+前のコマンドを実行しても何も出力されないはずです。
+
+Zypper パッケージを更新します。
+
+[source,bash]
+----
+sudo zypper up
+----
+
+Zypper の更新が完了したら、`qemu-guest-agent` をインストールします。
+
+[source,bash]
+----
+sudo zypper install qemu-guest-agent
+----
+
+`qemu-guest-agent` がインストールされ、実行中であることを確認します。
+
+[source,bash]
+----
+systemctl list-units | grep qemu
+----
+
+[source,bash]
+----
+# 出力例
+qemu-ga@virtio\x2dports-org.qemu.guest_agent.0.service  loaded active running  QEMU Guest Agent
+system-qemu\x2dga.slice                  loaded active active  system-qemu\x2dga.slice
+----
+
+次のコマンドで使用するために、最初の列から完全なサービス名 (例: `qemu-ga@virtio\x2dports-org.qemu.guest_agent.0.service`) をコピーします。
+
+[source,bash]
+----
+systemctl status \
+"qemu-ga@virtio\x2dports-org.qemu.guest_agent.0.service" # <.>
+----
+
+<.> サービス名が引用符で囲まれていることを確認してください。
+
+[source,bash]
+----
+# 出力例
+> "qemu-ga@virtio\x2dports-org.qemu.guest_agent.0.service"
+● qemu-ga@virtio\x2dports-org.qemu.guest_agent.0.service - QEMU Guest Agent
+  Loaded: loaded (/usr/lib/systemd/system/qemu-ga@.service; disabled; vendor p>
+  Active: active (running) since Wed 2026-07-08 18:37:41 UTC; 20h ago # <.>
+   Docs: http://wiki.qemu.org/Features/GuestAgent
+ Main PID: 2042 (qemu-ga)
+  Tasks: 1
+  CGroup: /system.slice/system-qemu\x2dga.slice/qemu-ga@virtio\x2dports-org.qe>
+      └─2042 /usr/bin/qemu-ga -p /dev/virtio-ports/org.qemu.guest_agent.0
+
+Jul 08 18:37:41 suse-virtctl systemd[1]: Started QEMU Guest Agent.
+----
+
+<.> ここで、guest-agent が active かつ running であることが確認できます。
+
+VM コンソールを終了するには、`ctrl+]` または `ctrl+5` を使用します。
+
+検証コマンドがこの VM に対して機能するように、`VM_NAME` 変数を設定します。
+
+[source,bash,role=execute]
+----
+VM_NAME=suse-virtctl
+----
+
+<<verify-qga-reporting>> に進み、エージェントが接続され、OCP-Virt にレポートしていることを確認します。
+
+[#cloud-init-ga-install]
+== cloud-init の `packages` および `runcmd` モジュールを使用したインストール
+
+cloud-init の `packages` モジュールを使用すると、ブートプロセス中にパッケージをインストールできます。このセクションでは、これを使用して `qemu-guest-agent` パッケージをインストールします。インストールが完了すると、cloud-init の `runcmd` モジュールが `systemctl enable --now qemu-guest-agent` を実行し、ブート中にサービスを起動して有効化します。
+
+WARNING: 以下の例の cloud-init パスワードはデモ目的専用です。本番環境では、常に強力で一意なパスワードまたは SSH 鍵認証を使用してください。
+
+=== Fedora/RHEL
+
+仮想マシンを作成します。
+
+xref:attachment$installing-qemu-guest-agent/fedora-qga-package.yaml[fedora-qga-package.yaml をダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: fedora-cloudinit
+ namespace: qemu-ga-demo
+spec:
+ runStrategy: Always
+ dataVolumeTemplates:
+  - metadata:
+    name: fedora-cloudinit-rootdisk
+   spec:
+    storage:
+     resources:
+      requests:
+       storage: 10Gi
+     accessModes:
+      - ReadWriteOnce
+    source:
+     registry:
+      url: docker://quay.io/ocpv_cookbook/fedora-no-qga:latest
+ template:
+  metadata:
+   labels:
+    app: fedora-cloudinit
+  spec:
+   domain:
+    cpu:
+     cores: 2
+    memory:
+     guest: 4Gi
+    devices:
+     disks:
+      - name: rootdisk
+       disk:
+        bus: virtio
+      - name: cloudinitdisk
+       disk:
+        bus: virtio
+   volumes:
+    - name: rootdisk
+     dataVolume:
+      name: fedora-cloudinit-rootdisk
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |-
+       #cloud-config
+       user: fedora
+       password: fedora
+       chpasswd: { expire: false }
+       packages: # <.>
+        - qemu-guest-agent
+       runcmd: # <.>
+        - systemctl enable --now qemu-guest-agent # <.>
+EOF
+----
+
+<.> **packages** cloud-init モジュールを使用して `qemu-guest-agent` をインストールします
+<.> **runcmd** cloud-init モジュールを使用して起動中に任意のコマンドを実行します
+<.> パッケージのインストール後に `systemctl enable --now qemu-guest-agent` を実行してサービスを開始します
+
+仮想マシンの STATUS が `Running` になるまで待ちます:
+
+[source,bash,role=execute]
+----
+oc get vm fedora-cloudinit -w
+----
+
+TIP: `-w` フラグは継続的に監視します。STATUS が `Running` と表示されたら `Ctrl+C` を押します。
+
+[source,bash]
+----
+# 出力例
+NAME           AGE   STATUS  READY
+fedora-cloudinit  8m23s  Running  True
+----
+
+検証コマンドがこの仮想マシンに対して機能するように、`VM_NAME` 変数を設定します:
+
+[source,bash,role=execute]
+----
+VM_NAME=fedora-cloudinit
+----
+
+エージェントが接続され、OCP-Virt にレポートしていることを確認するために、<<verify-qga-reporting>> に進みます。
+
+=== Debian
+
+cloud-init の `packages` および `runcmd` 設定は、上記の Fedora の例と同じです。唯一の違いは、コンテナイメージ、ユーザー名、VM 名です。
+
+仮想マシンを作成します。
+
+xref:attachment$installing-qemu-guest-agent/debian-qga-package.yaml[debian-qga-package.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: debian-cloudinit
+ namespace: qemu-ga-demo
+spec:
+ runStrategy: Always
+ dataVolumeTemplates:
+  - metadata:
+    name: debian-cloudinit-rootdisk
+   spec:
+    storage:
+     resources:
+      requests:
+       storage: 10Gi
+     accessModes:
+      - ReadWriteOnce
+    source:
+     registry:
+      url: docker://quay.io/ocpv_cookbook/debian-no-qga:latest
+ template:
+  metadata:
+   labels:
+    app: debian-cloudinit
+  spec:
+   domain:
+    cpu:
+     cores: 2
+    memory:
+     guest: 4Gi
+    devices:
+     disks:
+      - name: rootdisk
+       disk:
+        bus: virtio
+      - name: cloudinitdisk
+       disk:
+        bus: virtio
+   volumes:
+    - name: rootdisk
+     dataVolume:
+      name: debian-cloudinit-rootdisk
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |-
+       #cloud-config
+       user: debian
+       password: debian
+       chpasswd: { expire: false }
+       packages:
+        - qemu-guest-agent
+       runcmd:
+        - systemctl enable --now qemu-guest-agent
+EOF
+----
+
+仮想マシンの STATUS が `Running` になるまで待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm debian-cloudinit -w
+----
+
+TIP: `-w` フラグは継続的に監視します。STATUS が `Running` と表示されたら `Ctrl+C` を押します。
+
+[source,bash]
+----
+# 出力例
+NAME       AGE   STATUS  READY
+debian-cloudinit 5m31s  Running  True
+----
+
+検証コマンドがこの VM に対して機能するように、`VM_NAME` 変数を設定します。
+
+[source,bash,role=execute]
+----
+VM_NAME=debian-cloudinit
+----
+
+エージェントが接続され、OCP-Virt にレポートを送信していることを確認するには、<<verify-qga-reporting>> に進みます。
+
+=== openSUSE Leap
+
+cloud-init の `packages` 設定は、上記の Fedora および Debian の例と同じです。サービスは自動的に実行されるため、`runcmd` は省略されています。また、コンテナイメージ、ユーザー、および VM 名も異なります。
+
+仮想マシンを作成します。
+
+xref:attachment$installing-qemu-guest-agent/opensuse-leap-qga-package.yaml[opensuse-leap-qga-package.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: suse-cloudinit
+ namespace: qemu-ga-demo
+spec:
+ runStrategy: Always
+ dataVolumeTemplates:
+  - metadata:
+    name: suse-cloudinit-rootdisk
+   spec:
+    storage:
+     resources:
+      requests:
+       storage: 10Gi
+     accessModes:
+      - ReadWriteOnce
+    source:
+     registry:
+      url: docker://quay.io/ocpv_cookbook/opensuse-leap-15-no-qga:latest
+ template:
+  metadata:
+   labels:
+    app: suse-cloudinit
+  spec:
+   domain:
+    cpu:
+     cores: 2
+    memory:
+     guest: 4Gi
+    devices:
+     disks:
+      - name: rootdisk
+       disk:
+        bus: virtio
+      - name: cloudinitdisk
+       disk:
+        bus: virtio
+   volumes:
+    - name: rootdisk
+     dataVolume:
+      name: suse-cloudinit-rootdisk
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |-
+       #cloud-config
+       user: opensuse
+       password: opensuse
+       chpasswd: { expire: false }
+       packages:
+        - qemu-guest-agent
+EOF
+----
+
+仮想マシンの STATUS が `Running` になるまで待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm suse-cloudinit -w
+----
+
+TIP: `-w` フラグは継続的に監視します。STATUS が `Running` と表示されたら `Ctrl+C` を押します。
+
+[source,bash]
+----
+# 出力例
+NAME              AGE  STATUS  READY
+suse-cloudinit  39m  Running  True
+----
+
+検証コマンドがこの VM に対して機能するように、`VM_NAME` 変数を設定します。
+
+[source,bash,role=execute]
+----
+VM_NAME=suse-cloudinit
+----
+
+エージェントが接続され、OCP-Virt にレポートしていることを確認するために、<<verify-qga-reporting>> に進みます。
+
+[#verify-qga-reporting]
+== `qemu-guest-agent` が OCP-Virt にレポートしていることの確認
+
+Web コンソールから、または `oc` および `virtctl` CLI ツールを使用してターミナルから、qemu-guest-agent が動作し、ゲスト OS に関する情報を OCP-Virt に適切にレポートしているかを確認する方法はいくつかあります。
+
+=== ターミナルからの確認
+
+`AgentConnected` 条件が `True` であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm $VM_NAME -oyaml | yq -e '.status.conditions[] | select(.type == "AgentConnected")'
+----
+
+成功した場合の出力は次のようになります。
+
+[source,yaml]
+----
+# 出力例
+lastProbeTime: "2026-06-04T13:33:28Z"
+lastTransitionTime: null
+status: "True"
+type: AgentConnected
+----
+
+guest-agent が VM の IP アドレスを報告していることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi $VM_NAME -oyaml | yq -e '.status.interfaces[]'
+----
+
+[source,bash]
+----
+# 出力例
+infoSource: domain, guest-agent # <1>
+interfaceName: enp1s0
+ipAddress: 10.130.0.22
+ipAddresses:
+ - 10.130.0.22
+linkState: up
+mac: 0a:58:0a:82:00:16
+name: default
+podInterfaceName: eth0
+queueCount: 1
+----
+
+<1> infoSource として `guest-agent` が存在する場合、IP アドレスが qemu-guest-agent によって報告されていることを示します。
+
+詳細なゲスト OS 情報を取得します。
+
+[source,bash,role=execute]
+----
+virtctl guestosinfo $VM_NAME
+----
+
+=== OCP-Virt Web コンソールによる検証
+
+. **Virtualization** -> **VirtualMachines** に移動します。
+. 仮想マシンをクリックします。
+
+**Overview** タブで、qemu-guest-agent がゲスト OS 情報をレポートしていることを確認できます。
+
+image::qemu-guest-agent/Web-console-OS-report.png[web console os reporting]
+
+**Diagnostics** タブで、仮想マシンの `AgentConnected` の **status** が `True` になっていることを確認できます。
+
+image::qemu-guest-agent/Web-console-AgentConnected.png[AgentConnected]
+
+== クリーンアップ
+
+このチュートリアルで作成したすべてのリソースを削除します:
+
+[source,bash,role=execute]
+----
+oc delete namespace qemu-ga-demo
+----
+
+== まとめ
+
+このチュートリアルでは、次の方法を学びました:
+
+* Fedora、Debian、openSUSE Leap 上で `virtctl console` を使用して手動で `qemu-guest-agent` をインストールおよび有効化する
+* cloud-init の `packages` および `runcmd` モジュールを使用して `qemu-guest-agent` を自動的にインストールする
+* エージェントが接続され、ゲスト OS 情報を OpenShift Virtualization に報告していることを確認する
+
+== 参照
+
+* link:https://kubevirt.io/user-guide/user_workloads/guest_agent_information/[QEMU Guest Agent - KubeVirt User Guide,window=_blank]
+* link:https://cloudinit.readthedocs.io/en/latest/reference/modules.html[Cloud-init Modules Reference,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/[OpenShift Container Platform Documentation,window=_blank]

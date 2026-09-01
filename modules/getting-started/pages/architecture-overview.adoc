@@ -1,0 +1,234 @@
+= OpenShift Virtualization アーキテクチャの概要
+:navtitle: アーキテクチャの概要
+
+== 概要
+
+OpenShift Virtualization は、同一ノード上でコンテナワークロードと並行して仮想マシンを実行する機能によって OpenShift クラスターを拡張します。
+アップストリームの KubeVirt プロジェクトをベースにしており、カスタムリソース定義 (Custom Resource Definition)、PersistentVolumeClaim、Pod などの標準的な Kubernetes リソースを使用して、VM の全てのライフサイクルを管理します。
+本ガイドでは、 Operator のインストールや最初の仮想マシンの作成を行う前に、Kubernetes 上で VM がどのように実行されるかを理解できるように、OpenShift Virtualization の基盤となるアーキテクチャについて説明します。
+
+=== 学習内容
+
+* VM とコンテナが同一のクラスターインフラストラクチャーを共有する方法
+* HyperConverged CR からサブ Operator の Operator 階層
+* VirtualMachine CR から実行中の QEMU/KVM プロセスに至る実行フロー
+* ストレージパイプラインを通じてディスクイメージが実行中の VM ディスクになる仕組み
+* VM が Pod ネットワークおよびセカンダリーインターフェースを使用してネットワークに接続する仕組み
+* OpenShift Virtualization と VMware vSphere、Microsoft Hyper-V、その他のハイパーバイザーとの比較
+
+適用対象:
+
+----
+OpenShift Virtualization 4.18+
+----
+
+== 前提条件
+
+* **基本的な Kubernetes の知識** -- Pod、Namespace、カスタムリソースに関する一般的な知識
+* **クラスターへのアクセスは不要** -- 本書は概要ガイドです
+* インストール手順については、xref:install-openshift-virtualization.adoc[] を参照してください
+* 環境セットアップの詳細については、xref:prerequisites.adoc[] を参照してください
+
+== VM とコンテナ: 共有インフラストラクチャー
+
+OpenShift Virtualization は Kubernetes プラットフォームを置き換えるのではなく、拡張します。
+仮想マシンはカスタムリソース定義 (CRD) を使用して定義され、Pod、Deployment、Service を扱うのと同じ Kubernetes API を通じて管理されます。
+この機能の背後にあるアップストリームプロジェクトは KubeVirt です。
+
+VM とコンテナは同じ Worker Node 上で実行され、同じストレージバックエンドを使用し、同じネットワークインフラストラクチャーを共有します。
+単一の OpenShift クラスターが両方のワークロードタイプを管理します。
+これは、スケジューリング、RBAC、モニタリング、GitOps ワークフローなどの既存の Kubernetes 機能が、追加のツールなしで仮想マシンに適用されることを意味します。
+
+各 VM は `virt-launcher` Pod 内で実行されます。
+Kubernetes スケジューラーの観点からは、仮想マシンは内部で QEMU/KVM プロセスが実行されている Pod です。
+これにより、VM がコンテナとともにノードリソースを共有し、同じクラスターレベルのポリシーのメリットを享受できるようになります。
+
+次の図は完全なアーキテクチャーを示しています。各コンポーネントについては後続のセクションで説明します。
+
+image::architecture-overview/high-level-architecture.png[コンテナ Pod と virt-launcher Pod の両方を実行する Worker Node を備えた OpenShift クラスターを示すハイレベルアーキテクチャー]
+
+TIP: VMware vSphere を使用したことがある場合、OpenShift クラスターは ESXi ホストを管理する vCenter に相当します。HyperConverged CR は、vSphere クラスター構成と同様の役割で仮想化スタックを設定します。各 `virt-launcher` Pod は、ESXi ホスト上で実行されている VM に相当します。
+
+== Operator の階層構造
+
+OpenShift Virtualization スタック全体は、`openshift-cnv` namespace 内の単一の `HyperConverged` カスタムリソースによって管理されます。
+この CR を作成すると、それぞれ異なる機能領域を担当する 4 つのサブ Operator がアクティブになります。
+
+*KubeVirt Operator* は、コア仮想化ライフサイクルを担当します。
+VM リクエストを検証する API レイヤー (`virt-api`)、VM のスケジューリングと状態遷移をオーケストレーションするコントローラー (`virt-controller`)、各 VM のホストリソースを設定するノードレベルのエージェント (`virt-handler`) を管理します。
+
+*CDI Operator* (Containerized Data Importer) は、ディスクイメージの管理を処理します。
+コンテナレジストリ、HTTP ソース、または S3 バケットからのイメージのインポート、ローカルイメージのアップロード、既存ボリュームのクローン作成を行います。取得したイメージは PersistentVolumeClaim (PVC) に格納され、VM がディスクとして使用します。
+
+*SSP Operator* (Scheduling、Scale、Performance) は、VM テンプレートとブートソースを管理します。
+一般的なオペレーティングシステム向けのデフォルトテンプレートのセットを維持し、そのブートソースイメージを自動的に最新の状態に保ちます。
+
+*Network Addons Operator* は、セカンダリーネットワークインターフェースに必要なネットワークコンポーネントをデプロイします。
+VM がデフォルトの Pod ネットワーク以外の追加ネットワークに接続できるように、Multus CNI および関連プラグインをインストールします。
+
+[cols="1,2",options="header"]
+|===
+|Namespace |用途
+
+|`openshift-cnv`
+| Operator および Control Plane コンポーネント
+
+|`openshift-virtualization-os-images`
+|VM テンプレート用のデフォルトブートソースイメージ
+
+|ユーザー namespace
+|VM およびそのリソースが実行される場所
+|===
+
+NOTE: Pod レベルの詳細やデプロイツリーを含むコンポーネントの内訳については、インストールガイドの xref:install-openshift-virtualization.adoc#_what_gets_deployed[デプロイされるコンポーネント] セクションを参照してください。
+
+== VM の動作の仕組み
+
+=== 実行フロー
+
+仮想マシンが起動されると、次のシーケンスが発生します。
+
+. ユーザーが `VirtualMachine` CR を作成または起動します。これには必要な VM spec が定義されています。
+. `virt-controller` は CR を検出し、実行状態を表す `VirtualMachineInstance` (VMI) を作成します。
+. VMI は `virt-launcher` Pod の作成をトリガーします。Kubernetes スケジューラーはこの Pod を適切な Worker Node に配置します。
+. ターゲットノード上の `virt-handler` は、ネットワークブリッジやデバイスパススルーを含むホストレベルのリソースを設定します。
+. `virt-launcher` Pod 内で、`libvirtd` がセッションモードで実行され、QEMU/KVM プロセスを開始します。
+. ゲストオペレーティングシステムは、PVC を基盤とする仮想ディスクから起動します。
+
+image::architecture-overview/vm-execution-flow.png[VirtualMachine CR から virt-controller および virt-launcher を経由して QEMU/KVM ゲスト OS に至る VM 実行フロー]
+
+=== リソースの関係性
+
+OpenShift Virtualization は、仮想マシンを表すために 3 つのレイヤーのリソースを使用します。
+
+[cols="1,1,2",options="header"]
+|===
+|リソース |ライフタイム |説明
+
+|`VirtualMachine`
+|永続
+|希望状態 (desired-state) の定義。VM が実行中か停止中かに関係なく存在します。
+
+|`VirtualMachineInstance`
+|実行中のみ
+|起動時に作成され、シャットダウン時に削除されます。IP アドレスやノード配置などのランタイム情報を保持します。
+
+|Pod (`virt-launcher`)
+|実行中のみ
+|VM の libvirtd および QEMU/KVM プロセスをホストする Kubernetes Pod。
+|===
+
+VM が停止しているときは、`VirtualMachine` リソースのみが存在します。VM を起動すると、`VirtualMachineInstance` と `virt-launcher` Pod の両方が作成されます。VM を停止すると、両方とも削除されます。
+
+実行中の VM について、これら 3 つのリソースすべてを 1 つのコマンドで確認できます。
+
+[source,bash,role=execute]
+----
+oc get vm,vmi,pods -n <namespace>
+----
+
+VM の状態と遷移に関する詳細な説明については、xref:vm-lifecycle-states.adoc[] を参照してください。完全な API フィールド spec については、xref:api:api-component-overview.adoc[] を参照してください。
+
+== ストレージ: イメージから実行中のディスクへ
+
+仮想マシンは起動するためのディスクイメージを必要とします。OpenShift Virtualization では、宣言型ストレージパイプラインがソースイメージを実行中の VM ディスクに変換するプロセスを処理します。
+
+`DataSource` は、SSP Operator によって管理される Fedora や RHEL のクラウドイメージなどのブートイメージを指します。VM が作成されると、`DataVolume` は CDI コントローラーに対して、そのイメージを新しい `PersistentVolumeClaim` (PVC) にインポート、クローン、アップロードするように指示します。CDI コントローラーはデータ転送を自動的に処理します。生成された PVC は `virt-launcher` Pod にマウントされ、仮想ディスクとして QEMU に提示されます。他のアプローチも利用可能です。`DataVolume` を直接作成してイメージをアップロードすること (Web コンソール UI 経由を含む) や、軽量でエフェメラルなブートボリューム用に VM の YAML 内にインラインで定義されたコンテナディスクを使用することもできます。
+
+PVC のアクセスモードによって、VM で利用可能な操作が決まります。`ReadWriteOnce` (RWO) は、単一ノード上に留まる VM に十分です。ライブマイグレーションには `ReadWriteMany` (RWX) が必要です。これは、移行元ノードと移行先ノードの両方からディスクに同時にアクセスできる必要があるためです。
+
+TIP: VMware vSphere に馴染みがある場合、`DataSource` はコンテンツライブラリテンプレートに似ており、`DataVolume` はクローン操作に相当し、CDI はクローンを実行するエンジンであり、結果として得られる `PVC` は vmdk ファイルと同等です。
+
+ストレージ設定の詳細については、xref:default-storage-class.adoc[] および xref:storage:index.adoc[Storage モジュール] を参照してください。
+
+== ネットワーク: VM の接続方法
+
+すべての VM は、クラスターのデフォルトの OVN-Kubernetes ネットワークを介して Pod IP アドレスを自動的に取得します。
+masquerade モードでは、外部へのネットワークアクセスが即座に機能します。
+VM をクラスター外部からのトラフィックに公開するには、コンテナ化されたアプリケーションの場合と同様に Kubernetes の Service および Route を作成します。
+
+物理ネットワークと直接の L2 アクセス、VLAN タグ付け、またはハードウェアアクセラレーションによるネットワーク接続を必要とするワークロードでは、VM にセカンダリーネットワークインターフェースをアタッチできます。
+`NetworkAttachmentDefinition` CR で各追加ネットワークを定義し、Multus CNI メタプラグインがそれを VM の Pod にアタッチします。
+利用可能なオプションには、User Defined Network (UDN)、Linux ブリッジ、localnet、Layer 2 overlay、ハードウェアアクセラレーションによるネットワーク接続のための SR-IOV などがあります。UDN は最近の OpenShift リリースにおける現在のデフォルトであり、Red Hat が積極的に推進しているアプローチです。
+
+NMState Operator は、bridge、VLAN、bond などのノードレベルのネットワーク設定を Kubernetes CR を介して宣言的に管理します。
+
+TIP: VMware vSphere を使い慣れている場合、デフォルトの Pod ネットワークは VMware Workstation の NAT ネットワークに類似しています。Multus セカンダリーネットワークは、異なるポートグループまたは仮想スイッチに接続された vNIC を追加することに相当します。
+
+ネットワークのチュートリアルおよびトポロジーのオプションについては、xref:networking:index.adoc[Networking モジュール] を参照してください。
+
+== 従来のハイパーバイザーとの比較
+
+以下の表は、各プラットフォームにおける一般的な仮想化の概念を対応付けたものです。
+
+[cols="2,3,3,3",options="header"]
+|===
+|概念 |OpenShift Virtualization |VMware vSphere |Microsoft Hyper-V
+
+|VM の定義
+|YAML カスタムリソース (`VirtualMachine` CR)
+|.vmx ファイル + vSphere インベントリー
+|XML 構成 + PowerShell / SCVMM
+
+|ハイパーバイザー
+|QEMU/KVM (virt-launcher Pod 内)
+|ESXi (ベアメタル)
+|Hyper-V (Type 1、ベアメタルまたは Windows Server の役割)
+
+|管理レイヤー
+|`oc` / `kubectl` / `virtctl` / Web コンソール
+|vCenter Server / vSphere Client
+|SCVMM / Windows Admin Center / PowerShell
+
+|ストレージ
+|CSI ドライバーを基盤とする PVC
+|VMFS / vSAN / NFS データストア
+|CSV / SMB / ローカルストレージ
+
+|ネットワーク
+|OVN-Kubernetes + Multus セカンダリーネットワーク
+|vSwitch / dvSwitch / NSX
+|Hyper-V 仮想スイッチ / SDN
+
+|HA / ライブマイグレーション
+|Pod の再スケジュール + ライブマイグレーション (RWX ストレージが必要)
+|vMotion / vSphere HA / DRS
+|Live Migration / フェイルオーバークラスタリング
+
+|宣言型 API
+|ネイティブ (Kubernetes API、GitOps 互換)
+|一部対応 (PowerCLI、REST API)
+|一部対応 (PowerShell / DSC)
+
+|コンテナの共存
+|ネイティブ -- VM とコンテナが同一ノードを共有
+|別個のインフラストラクチャー (コンテナには Tanzu)
+|別個のインフラストラクチャー (コンテナには AKS)
+|===
+
+NOTE: Red Hat Virtualization (RHV、旧称 RHEV) も、oVirt 管理プラットフォームを通じて KVM をハイパーバイザーとして使用していました。OpenShift Virtualization は、Red Hat の製品ポートフォリオ内で KVM ベースのワークロードを実行するための後継プラットフォームです。
+
+OpenShift Virtualization と従来のハイパーバイザーとの最も大きな違いは管理モデルです。従来のプラットフォームは主に命令型 (imperative) であり、実行するアクションを指示する UI のクリック、スクリプト、または API 呼び出しを通じて VM を作成および変更します。OpenShift Virtualization は宣言型 (declarative) であり、YAML マニフェストで VM の望ましい状態を定義すると、プラットフォームがその状態に向けて継続的に調整 (reconcile) します。これにより、VM は GitOps ワークフロー、Helm チャート、CI/CD パイプラインと互換性を持つようになります。
+
+もう 1 つの違いは統合性です。従来のハイパーバイザーはコンテナワークロードとは分離して VM を管理するため、VM とコンテナそれぞれに個別のインフラストラクチャーとツールが必要でした。OpenShift Virtualization は、同じツールで管理され、同じポリシーによって制御される同一クラスター上で両方を実行します。
+
+== まとめ
+
+このガイドでは、以下の内容について説明しました。
+
+* OpenShift Virtualization が Kubernetes を拡張し、コンテナと並んで VM をファーストクラスオブジェクトとして実行する方法
+* HyperConverged CR からその 4 つのサブ Operator に至る Operator 階層
+* VirtualMachine CR から virt-controller および virt-launcher を経由して実行中の QEMU/KVM プロセスに至る実行フロー
+* ストレージパイプラインがディスクイメージを PVC を基盤とする仮想ディスクに変換する仕組み
+* VM がデフォルトの Pod ネットワークおよびオプションの Multus セカンダリーインターフェースを介して接続する仕組み
+* OpenShift Virtualization と VMware vSphere、Microsoft Hyper-V、およびその他の従来のハイパーバイザーとの比較
+
+== 参照
+
+* xref:install-openshift-virtualization.adoc[] - Operator のインストールと設定
+* xref:vm-lifecycle-states.adoc[] - VM の状態、遷移、および管理操作
+* xref:api:api-component-overview.adoc[] - すべての仮想化オブジェクトの API コンポーネントリファレンス
+* xref:storage:index.adoc[Storage モジュール] - ストレージ設定チュートリアル
+* xref:networking:index.adoc[Networking モジュール] - ネットワークトポロジーのオプションとチュートリアル
+* link:https://kubevirt.io/user-guide/architecture/[KubeVirt アーキテクチャー,window=_blank]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/index[OpenShift Virtualization ドキュメント,window=_blank]

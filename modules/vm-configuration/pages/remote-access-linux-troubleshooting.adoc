@@ -4,26 +4,30 @@
 このガイドでは、OpenShift Virtualization における Linux VM へのリモートアクセスに関連する問題のトラブルシューティング手順、検証コマンド、および解決策を提供します。
 
 == 目次
-* <<クイックヘルスチェック>>
-* <<メソッド 1: コンソールアクセス>>
-* <<メソッド 2: VNC アクセス>>
-* <<メソッド 3: virtctl 経由の SSH>>
-* <<メソッド 4: NodePort Service 経由の SSH>>
-* <<メソッド 5: LoadBalancer 経由の SSH>>
-* <<メソッド 6: ポートフォワード経由の SSH>>
-* <<メソッド 7: セカンダリネットワーク経由の直接アクセス>>
-* <<調査コマンド>>
 
+* <<quick-health-check,クイックヘルスチェック>>
+* <<method-1-console,メソッド 1: コンソールアクセス>>
+* <<method-2-vnc,メソッド 2: VNC アクセス>>
+* <<method-3-virtctl-ssh,メソッド 3: virtctl 経由の SSH>>
+* <<method-4-nodeport,メソッド 4: NodePort Service 経由の SSH>>
+* <<method-5-loadbalancer,メソッド 5: LoadBalancer 経由の SSH>>
+* <<method-6-port-forward,メソッド 6: ポートフォワード経由の SSH>>
+* <<method-7-secondary-network,メソッド 7: セカンダリーネットワーク経由の直接アクセス>>
+* <<diagnostic-commands,調査コマンド>>
+
+[[quick-health-check]]
 == クイックヘルスチェック
 
 === VM ステータスの確認
+
 [source,bash,role=execute]
 ----
 oc get vm <vm-name> -n <namespace>
 oc get vmi <vm-name> -n <namespace>
 ----
 
-実行中の VM の期待される出力:
+実行中の VM の想定される出力:
+
 [source,text]
 ----
 NAME        AGE   STATUS    READY
@@ -31,6 +35,7 @@ my-vm       5m    Running   True
 ----
 
 === VM に IP アドレスが割り当てられているか確認
+
 [source,bash,role=execute]
 ----
 oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.interfaces[*].ipAddress}'
@@ -39,12 +44,14 @@ oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.interfaces[*].ipAddres
 少なくとも 1 つの IP アドレスが返される必要があります。
 
 === VM Pod が実行中か確認
+
 [source,bash,role=execute]
 ----
 oc get pods -n <namespace> -l kubevirt.io/domain=<vm-name>
 ----
 
-期待される出力:
+想定される出力:
+
 [source,text]
 ----
 NAME                       READY   STATUS    RESTARTS   AGE
@@ -52,18 +59,21 @@ virt-launcher-<vm>-xxxxx   3/3     Running   0          5m
 ----
 
 === guest agent のステータス確認
+
 [source,bash,role=execute]
 ----
 oc get vmi <vm-name> -n <namespace> -o jsonpath='{.status.guestOSInfo.id}'
 ----
 
-空の場合、guest agent は実行されていません。注: 基本的なアクセス方法 (コンソール、VNC、SSH、ポートフォワード、NodePort、LoadBalancer、セカンダリネットワーク) には guest agent は必須ではありません。guest agent はゲスト OS の詳細情報を提供したり、動的な SSH キー注入のような機能を有効にしたりするために使用されます。
+空の場合、guest agent は実行されていません。注: 基本的なアクセス方法 (コンソール、VNC、SSH、ポートフォワード、NodePort、LoadBalancer、セカンダリーネットワーク) には guest agent は必須ではありません。guest agent はゲスト OS の詳細情報を提供したり、動的な SSH 鍵注入のような機能を有効にしたりするために使用されます。
 
+[[method-1-console]]
 == メソッド 1: コンソールアクセス
 
 === 問題: コンソールに接続できない
 
 **事象**:
+
 [source,bash]
 ----
 $ virtctl console my-vm -n my-namespace
@@ -71,15 +81,16 @@ Error: unable to connect to console
 ----
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check VM is running
+# VM が実行中であることを確認
 oc get vm my-vm -n my-namespace
 
-# Check VMI exists
+# VMI が存在することを確認
 oc get vmi my-vm -n my-namespace
 
-# Check virt-launcher pod
+# virt-launcher Pod を確認
 oc get pods -n my-namespace -l kubevirt.io/domain=my-vm
 ----
 
@@ -97,21 +108,18 @@ oc get pods -n my-namespace -l kubevirt.io/domain=my-vm
 ----
 virtctl start my-vm -n my-namespace
 ----
-
 . VMI が準備完了になるまで待ちます:
 +
 [source,bash,role=execute]
 ----
 oc wait --for=condition=Ready vmi/my-vm -n my-namespace --timeout=60s
 ----
-
 . virt-launcher Pod のログを確認します:
 +
 [source,bash,role=execute]
 ----
 oc logs -n my-namespace -l kubevirt.io/domain=my-vm
 ----
-
 . virtctl のバージョンがクラスターと一致していることを確認します:
 +
 [source,bash,role=execute]
@@ -126,10 +134,11 @@ oc get kubevirt -n openshift-cnv -o jsonpath='{.items[0].status.observedKubeVirt
 コンソールは接続できたが、画面が真っ白かプロンプトが表示されない。
 
 **調査**:
+
 [source,bash]
 ----
-# Try sending Enter key
-# Press Enter multiple times
+# Enter キーの送信を試行
+# Enter を複数回押す
 ----
 
 **一般的な原因**:
@@ -152,7 +161,7 @@ oc get vmi my-vm -n my-namespace -o jsonpath='{.status.phase}'
 +
 [source,bash,role=execute]
 ----
-# Press Ctrl+] to disconnect
+# Ctrl+] で切断
 virtctl console my-vm -n my-namespace
 ----
 
@@ -168,7 +177,7 @@ virtctl console my-vm -n my-namespace
 
 **解決策**:
 
-WARNING: この例の cloud-init パスワードはデモ目的のみです。本番環境では常に強力でユニークなパスワードを使用するか、SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的のみです。本番環境では常に強力でユニークなパスワードを使用するか、SSH 鍵認証を使用してください。
 
 . クラウドイメージの場合、cloud-init を使用してパスワードを設定します:
 +
@@ -182,14 +191,16 @@ cloudInitNoCloud:
     chpasswd:
       expire: false
 ----
-. または、SSH キー認証を使用し、キーを使用してコンソール経由でアクセスします。
+. または、SSH 鍵認証を使用し、キーを使用してコンソール経由でアクセスします。
 . VM 内の cloud-init ログを確認し、ユーザー作成のエラーがないか調査します。
 
+[[method-2-vnc]]
 == メソッド 2: VNC アクセス
 
 === 問題: virtctl vnc コマンドが動作しない
 
 **事象**:
+
 [source,bash]
 ----
 $ virtctl vnc my-vm -n my-namespace
@@ -197,20 +208,22 @@ Error: VNC is not configured for this VM
 ----
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check if graphics is enabled
+# グラフィックスデバイスが有効か確認
 oc get vm my-vm -n my-namespace -o jsonpath='{.spec.template.spec.domain.devices.autoattachGraphicsDevice}'
 
-# Check VM devices configuration
+# VM デバイス設定を確認
 oc get vm my-vm -n my-namespace -o yaml | grep -A 10 "devices:"
 ----
 
 **一般的な原因**:
 - `autoattachGraphicsDevice: false` によりグラフィックスデバイスが無効化されている
-- VM 仕様でグラフィックスデバイスが明示的に除外されている
+- VM spec でグラフィックスデバイスが明示的に除外されている
 
 **解決策**:
+
 . グラフィックスデバイスが有効になっていることを確認します (OpenShift Virtualization ではデフォルトで有効です)。明示的に無効化されている場合は、`autoattachGraphicsDevice: false` の設定を削除するか、`true` に設定してください。
 
 === 問題: VNC ビューアーが接続できない
@@ -219,13 +232,14 @@ oc get vm my-vm -n my-namespace -o yaml | grep -A 10 "devices:"
 virtctl vnc コマンドは開始されるが、VNC ビューアーが接続できない。
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check virtctl output for port number
+# virtctl 出力でポート番号を確認
 virtctl vnc my-vm -n my-namespace
-# Shows: "VNC connection on port 5900"
+# 表示例: "VNC connection on port 5900"
 
-# Check if port is listening
+# ポートが待受状態か確認
 netstat -tuln | grep 5900
 ----
 
@@ -240,10 +254,10 @@ netstat -tuln | grep 5900
 +
 [source,bash]
 ----
-# Linux
+# Linux の場合
 sudo dnf install tigervnc
 
-# macOS
+# macOS の場合
 brew install tiger-vnc
 ----
 . localhost:5900 または 127.0.0.1:5900 に接続します。
@@ -266,17 +280,19 @@ VNC は接続できたが、真っ白 (または真っ黒) な画面が表示さ
 +
 [source,bash]
 ----
-# Inside VM
+# VM 内部
 systemctl status gdm  # For GNOME
 systemctl status lightdm  # For other DEs
 ----
 . GUI がない VM の場合は、コンソールアクセスを使用してください。
 
+[[method-3-virtctl-ssh]]
 == メソッド 3: virtctl 経由の SSH
 
 === 問題: virtctl ssh コマンドが失敗する
 
 **事象**:
+
 [source,bash]
 ----
 $ virtctl ssh fedora@my-vm -n my-namespace
@@ -284,14 +300,15 @@ Error: SSH is not available for this VM
 ----
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check VM has IP address
+# VM に IP アドレスがあることを確認
 oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces}'
 
-# Check SSH service in VM (via console) 
+# VM 内の SSH サービスを確認 (コンソール経由)
 virtctl console my-vm -n my-namespace
-# Inside VM: systemctl status sshd
+# VM 内部: systemctl status sshd
 ----
 
 **一般的な原因**:
@@ -306,7 +323,7 @@ virtctl console my-vm -n my-namespace
 +
 [source,bash]
 ----
-# Inside VM via console
+# コンソール経由で VM 内部
 sudo dnf install openssh-server
 sudo systemctl enable --now sshd
 ----
@@ -320,7 +337,7 @@ oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces[0].ipAddress}'
 +
 [source,bash,role=execute]
 ----
-# Try port-forward method first
+# まず port-forward 方式を試行
 oc port-forward vmi/my-vm -n my-namespace 2222:22 &
 ssh -p 2222 fedora@localhost
 ----
@@ -328,6 +345,7 @@ ssh -p 2222 fedora@localhost
 === 問題: virtctl ssh は接続できたが認証が失敗する
 
 **事象**:
+
 [source,bash]
 ----
 $ virtctl ssh fedora@my-vm -n my-namespace
@@ -335,23 +353,24 @@ fedora@my-vm: Permission denied (publickey,gssapi-keyex,gssapi-with-mic) .
 ----
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check SSH keys
+# SSH 鍵を確認
 ls -la ~/.ssh/
 
-# Try with password authentication
+# パスワード認証で試行
 virtctl ssh --local-ssh-opts="-o PreferredAuthentications=password" fedora@my-vm -n my-namespace
 ----
 
 **一般的な原因**:
 - SSH 公開鍵が VM の authorized_keys に含まれていない
 - ユーザー名が間違っている
-- SSH キーのパスフレーズが必要
+- SSH 鍵のパスフレーズが必要
 
 **解決策**:
 
-. cloud-init 経由で SSH キーを追加します:
+. cloud-init 経由で SSH 鍵を追加します:
 +
 [source,yaml]
 ----
@@ -382,16 +401,19 @@ chmod 600 ~/.ssh/authorized_keys
 
 **解決策**:
 遅い認証方法をスキップする SSH オプションを追加します:
+
 [source,bash,role=execute]
 ----
 virtctl ssh --local-ssh-opts="-o GSSAPIAuthentication=no -o UseDNS=no" fedora@my-vm -n my-namespace
 ----
 
+[[method-4-nodeport]]
 == メソッド 4: NodePort Service 経由の SSH
 
 === 問題: NodePort Service にアクセスできない
 
 **事象**:
+
 [source,bash]
 ----
 $ ssh -p 30022 fedora@<node-ip>
@@ -399,15 +421,16 @@ ssh: connect to host <node-ip> port 30022: Connection refused
 ----
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check service exists
+# Service の存在を確認
 oc get svc -n my-namespace
 
-# Check service endpoints
+# Service エンドポイントを確認
 oc get endpoints my-vm-ssh -n my-namespace
 
-# Check NodePort assigned
+# NodePort の割り当てを確認
 oc get svc my-vm-ssh -n my-namespace -o jsonpath='{.spec.ports[0].nodePort}'
 ----
 
@@ -449,7 +472,7 @@ oc get vm my-vm -n my-namespace -o jsonpath='{.spec.template.metadata.labels}'
 [source,bash,role=execute]
 ----
 virtctl console my-vm -n my-namespace
-# Inside VM:
+# VM 内部:
 systemctl status sshd
 ----
 
@@ -459,12 +482,13 @@ systemctl status sshd
 SSH は接続できるが、別の VM に接続されるか、接続が拒否される。
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check service endpoints
+# Service エンドポイントを確認
 oc describe svc my-vm-ssh -n my-namespace
 
-# Look at Endpoints field - should show VM pod IP
+# Endpoints フィールドを確認 — VM Pod の IP が表示されるはず
 ----
 
 **一般的な原因**:
@@ -478,8 +502,8 @@ oc describe svc my-vm-ssh -n my-namespace
 [source,yaml]
 ----
 selector:
-  kubevirt.io/domain: my-vm  # Unique per VM
-  # OR
+  kubevirt.io/domain: my-vm  # VM ごとに一意
+  # または
   app: my-specific-vm-app
 ----
 . エンドポイントが 1 つだけであることを確認します:
@@ -495,23 +519,26 @@ oc get endpoints my-vm-ssh -n my-namespace -o yaml
 NodePort アクセスに使用すべき Node IP が特定できない。
 
 **解決策**:
+
 [source,bash,role=execute]
 ----
-# Get node IPs
+# Node の IP を取得
 oc get nodes -o wide
 
-# Use any node's INTERNAL-IP or EXTERNAL-IP (if available) 
+# 任意の Node の INTERNAL-IP または EXTERNAL-IP (利用可能な場合) を使用
 
-# Or get specific node where VM is running
+# または VM が実行されている特定の Node を取得
 VM_NODE=$(oc get vmi my-vm -n my-namespace -o jsonpath='{.status.nodeName}') 
 oc get node $VM_NODE -o jsonpath='{.status.addresses[?(@.type=="InternalIP") ].address}'
 ----
 
+[[method-5-loadbalancer]]
 == メソッド 5: LoadBalancer 経由の SSH
 
 === 問題: LoadBalancer Service に外部 IP が割り当てられない
 
 **事象**:
+
 [source,bash]
 ----
 $ oc get svc my-vm-ssh -n my-namespace
@@ -520,12 +547,13 @@ my-vm-ssh    LoadBalancer   172.30.x.x      <pending>     22:30022/TCP
 ----
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check if LoadBalancer provider is available
+# LoadBalancer プロバイダーが利用可能か確認
 oc get svc -A | grep LoadBalancer
 
-# Check cluster has LoadBalancer support
+# クラスターが LoadBalancer をサポートしているか確認
 oc describe svc my-vm-ssh -n my-namespace
 ----
 
@@ -552,15 +580,16 @@ oc describe svc my-vm-ssh -n my-namespace
 外部 IP が割り当てられているが、SSH 接続がタイムアウトする。
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check LoadBalancer IP
-LB_IP=$(oc get svc my-vm-ssh -n my-namespace -o jsonpath='{.status.loadBalancer.ingress[0].ip}') 
+# LoadBalancer IP を確認
+LB_IP=$(oc get svc my-vm-ssh -n my-namespace -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-# Try ping
+# ping で確認
 ping -c 3 $LB_IP
 
-# Check from within cluster
+# クラスター内部から確認
 oc run test-curl --image=curlimages/curl --rm -it --restart=Never -- curl -v telnet://$LB_IP:22
 ----
 
@@ -576,11 +605,13 @@ oc run test-curl --image=curlimages/curl --rm -it --restart=Never -- curl -v tel
 . ファイアウォールが LoadBalancer IP へのトラフィックを許可していることを確認します。
 . VM で SSH が実行されていることを確認します (メソッド 4 の解決策を参照) 。
 
+[[method-6-port-forward]]
 == メソッド 6: ポートフォワード経由の SSH
 
 === 問題: oc port-forward が開始できない
 
 **事象**:
+
 [source,bash]
 ----
 $ oc port-forward vmi/my-vm -n my-namespace 2222:22
@@ -588,12 +619,13 @@ Error: unable to forward port
 ----
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check VMI exists
+# VMI の存在を確認
 oc get vmi my-vm -n my-namespace
 
-# Check local port not in use
+# ローカルポートが使用されていないことを確認
 netstat -tuln | grep 2222
 lsof -i :2222
 ----
@@ -615,7 +647,7 @@ oc port-forward vmi/my-vm -n my-namespace 12345:22
 +
 [source,bash]
 ----
-# Find process
+# プロセスを検索
 lsof -ti :2222 | xargs kill -9
 ----
 . VMI が準備完了になるまで待ちます:
@@ -628,6 +660,7 @@ oc wait --for=condition=Ready vmi/my-vm -n my-namespace
 === 問題: ポートフォワードは確立できたが SSH に失敗する
 
 **事象**:
+
 [source,bash]
 ----
 $ oc port-forward vmi/my-vm -n my-namespace 2222:22 &
@@ -638,11 +671,12 @@ ssh: connect to host localhost port 2222: Connection refused
 ----
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check SSH is listening in VM
+# VM 内で SSH がリッスンしているか確認
 virtctl console my-vm -n my-namespace
-# Inside VM:
+# VM 内部:
 ss -tuln | grep :22
 ----
 
@@ -657,7 +691,7 @@ ss -tuln | grep :22
 +
 [source,bash]
 ----
-# Inside VM via console
+# コンソール経由で VM 内部
 sudo dnf install openssh-server
 sudo systemctl enable --now sshd
 ----
@@ -665,14 +699,14 @@ sudo systemctl enable --now sshd
 +
 [source,bash]
 ----
-# Inside VM
+# VM 内部
 sudo ss -tuln | grep ssh
 ----
 . SSH 構成を確認します:
 +
 [source,bash]
 ----
-# Inside VM
+# VM 内部
 sudo cat /etc/ssh/sshd_config | grep ^Port
 ----
 
@@ -704,11 +738,13 @@ while true; do
 done &
 ----
 
-== メソッド 7: セカンダリネットワーク経由の直接アクセス
+[[method-7-secondary-network]]
+== メソッド 7: セカンダリーネットワーク経由の直接アクセス
 
-=== 問題: セカンダリネットワーク上の VM に到達できない
+=== 問題: セカンダリーネットワーク上の VM に到達できない
 
 **事象**:
+
 [source,bash]
 ----
 $ ping 192.168.100.10
@@ -716,22 +752,23 @@ Request timeout
 ----
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Check VM has secondary interface configured
+# VM にセカンダリーインターフェースが設定されているか確認
 oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces}' | jq
 
-# Check NetworkAttachmentDefinition (NAD)  exists
+# NetworkAttachmentDefinition (NAD) の存在を確認
 oc get network-attachment-definition -n my-namespace
 
-# Check VM network configuration
+# VM ネットワーク設定を確認
 oc get vm my-vm -n my-namespace -o jsonpath='{.spec.template.spec.networks}' | jq
 ----
 
 **一般的な原因**:
 - NetworkAttachmentDefinition が構成されていない
-- VM にセカンダリネットワークインターフェースがない
-- セカンダリネットワークの IP が構成されていない
+- VM にセカンダリーネットワークインターフェースがない
+- セカンダリーネットワークの IP が構成されていない
 - 物理ネットワークにアクセスできない
 - VLAN 構成のエラー
 
@@ -743,7 +780,7 @@ oc get vm my-vm -n my-namespace -o jsonpath='{.spec.template.spec.networks}' | j
 ----
 oc describe network-attachment-definition my-nad -n my-namespace
 ----
-. VM にセカンダリネットワークがあることを確認します:
+. VM にセカンダリーネットワークがあることを確認します:
 +
 [source,yaml]
 ----
@@ -769,30 +806,31 @@ spec:
 [source,bash,role=execute]
 ----
 virtctl console my-vm -n my-namespace
-# Inside VM:
-ip addr show enp2s0  # Secondary interface
+# VM 内部:
+ip addr show enp2s0  # セカンダリーインターフェース
 ----
 . cloud-init 経由で静的 IP を構成します (cloud-init IP 構成チュートリアルを参照) 。
 . VLAN ネットワークについては、OVS bridge 検証ガイドを参照してください。
 
-=== 問題: セカンダリネットワークインターフェースが VM で表示されない
+=== 問題: セカンダリーネットワークインターフェースが VM で表示されない
 
 **事象**:
 プライマリインターフェース (enp1s0)  のみが表示され、enp2s0 がない。
 
 **調査**:
+
 [source,bash,role=execute]
 ----
-# Inside VM
+# VM 内部で確認
 ip link show
 
-# Check from OpenShift
+# OpenShift から確認
 oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces}' | jq
 ----
 
 **一般的な原因**:
 - NAD が同じ namespace に存在しない
-- VM spec にセカンダリネットワークインターフェースが欠落している
+- VM spec にセカンダリーネットワークインターフェースが欠落している
 - Multus CNI が動作していない
 
 **解決策**:
@@ -803,7 +841,7 @@ oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces}' | jq
 ----
 oc get network-attachment-definition -n my-namespace
 ----
-. VM 仕様にネットワークとインターフェースの両方が定義されていることを確認します。
+. VM spec にネットワークとインターフェースの両方が定義されていることを確認します。
 . multus ログを確認します:
 +
 [source,bash,role=execute]
@@ -818,6 +856,7 @@ POD=$(oc get pods -n my-namespace -l kubevirt.io/domain=my-vm -o name)
 oc describe $POD -n my-namespace
 ----
 
+[[diagnostic-commands]]
 == 調査コマンド
 
 === VM アクセスヘルスチェックスクリプト
@@ -930,7 +969,7 @@ Need access to VM?
 │       └─ Not working? → Check NAD, VM secondary interface, IP config, network routing
 ----
 
-== その他のリソース
+== 追加リソース
 
 * link:https://docs.openshift.com/container-platform/latest/virt/vm_networking/virt-about-vm-networking.html[OpenShift Virtualization Networking,window=_blank]
 * link:https://kubevirt.io/user-guide/virtual_machines/accessing_virtual_machines/[KubeVirt Network Access,window=_blank]
@@ -964,6 +1003,7 @@ $ oc get vmi fedora-access-vm -n vm-access-test -o jsonpath='{.status.interfaces
 ----
 
 guest agent のステータス:
+
 [source,bash]
 ----
 $ oc get vmi fedora-access-vm -n vm-access-test -o jsonpath='{.status.guestOSInfo}' | jq
@@ -972,7 +1012,7 @@ $ oc get vmi fedora-access-vm -n vm-access-test -o jsonpath='{.status.guestOSInf
   "kernelRelease": "6.11.4-301.fc41.x86_64",
   "kernelVersion": "#1 SMP PREEMPT_DYNAMIC Thu Oct 10 16:16:06 UTC 2024",
   "name": "Fedora Linux",
-  "prettyName": "Fedora Linux 41 (Cloud Edition) ",
+  "prettyName": "Fedora Linux 41 (Cloud Edition)",
   "version": "41",
   "versionId": "41"
 }

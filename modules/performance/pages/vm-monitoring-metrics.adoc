@@ -1,0 +1,570 @@
+= VM のモニタリングとメトリクス
+:navtitle: VM のモニタリングとメトリクス
+
+== 概要
+
+このチュートリアルでは、OpenShift に組み込まれている Prometheus および Grafana モニタリングスタックを使用して、仮想マシンのパフォーマンスと健全性をモニタリングする方法を説明します。Web コンソールから VM メトリクスにアクセスし、カスタム分析のために Prometheus を直接クエリし、Grafana ダッシュボードを構築し、問題をプロアクティブに検出するためのアラートを設定する方法を学びます。
+
+VM のモニタリングにより、パフォーマンスの最適化、キャパシティプランニング、SLA 遵守の追跡、リソース制約の早期検出が可能になります。このチュートリアルでは、ハイパーバイザーレベルのメトリクス (即座に利用可能) とゲスト OS メトリクス (QEMU guest agent のインストール経由) の両方を扱います。
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされ、4.21 でテスト済みの **OpenShift {ocp-min-version}+**
+* **クラスターモニタリングが有効** (OpenShift ではデフォルト)
+* 以前のチュートリアルまたは既存のワークロードからの**実行中の VM**
+* OpenShift クラスターへの **Web コンソールアクセス**
+* インストールおよび認証済みの **`oc` CLI**
+* VM コンソールアクセス用にインストールされた **`virtctl` CLI**
+
+== VM メトリクスについて
+
+OpenShift Virtualization は、包括的なモニタリングのために相互に補完し合う 2 つの主要なソースを通じてメトリクスを公開します。
+
+=== ハイパーバイザーレベルのメトリクス
+
+これらのメトリクスは、ゲスト OS の設定を必要とせずに、ホストシステムおよび KubeVirt コンポーネントから収集されます。
+
+* **CPU メトリクス**: vCPU 使用率 (パーセント)、CPU 時間 (ナノ秒)
+* **メモリメトリクス**: メモリ使用量 (バイト単位)、メモリリクエストおよび制限
+* **ネットワークメトリクス**: ネットワークインターフェースごとの送受信バイト数、パケット数
+* **ストレージメトリクス**: ディスク読み取り/書き込み操作、ボリュームごとの I/O バイト数
+* **ライフサイクルメトリクス**: VM 状態遷移、稼働時間、マイグレーションイベント
+
+=== ゲスト OS メトリクス
+
+これらの追加メトリクスには、VM 内で QEMU guest agent が実行されている必要があります:
+
+* **ゲストのメモリプレッシャー**: スワップ使用量、メモリプレッシャーインジケーター
+* **ゲストのディスク使用率**: マウントポイントごとのファイルシステム使用量
+* **ゲストのネットワーク詳細**: エラーやドロップを含む詳細なインターフェース統計
+* **ゲストのシステム情報**: OS バージョン、カーネルバージョン、システム負荷
+
+== ステップ 1: モニタリング用のテスト VM の作成
+
+モニタリング機能を実証するためのシンプルな VM を作成します:
+
+[source,bash,role=execute]
+----
+oc create namespace vm-monitoring-demo
+----
+
+xref:attachment$vm-monitoring-metrics/monitoring-test-vm.yaml[monitoring-test-vm.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: monitoring-test-vm
+ namespace: vm-monitoring-demo
+ labels:
+  app: monitoring-demo
+spec:
+ instancetype:
+  name: u1.small
+ preference:
+  name: fedora
+ runStrategy: Always
+ template:
+  metadata:
+   labels:
+    kubevirt.io/domain: monitoring-test-vm
+  spec:
+   domain:
+    devices:
+     disks:
+     - disk: {}
+      name: rootdisk
+     - disk: {}
+      name: cloudinitdisk
+     interfaces:
+     - masquerade: {}
+      name: default
+   networks:
+   - name: default
+    pod: {}
+   volumes:
+   - name: rootdisk
+    containerDisk:
+     image: quay.io/containerdisks/fedora:latest
+   - name: cloudinitdisk
+    cloudInitNoCloud:
+     userData: |
+      #cloud-config
+      password: redhat
+      chpasswd:
+       expire: false
+      packages:
+      - qemu-guest-agent
+      runcmd:
+      - systemctl enable --now qemu-guest-agent
+EOF
+----
+
+VM が Running 状態になるまで待ちます:
+
+[source,bash,role=execute]
+----
+oc get vm monitoring-test-vm -n vm-monitoring-demo -w
+----
+
+出力例:
+
+----
+NAME         AGE  STATUS  READY
+monitoring-test-vm  30s  Running  True
+----
+
+VM に `Running` および `True` が表示されたら、`Ctrl+C` を押して監視を停止します。
+
+== ステップ 2: Web コンソールからの VM メトリクスへのアクセス
+
+OpenShift Web コンソールで VM に移動し、組み込みのモニタリング機能を確認します。
+
+=== 基本的な VM メトリクスビュー
+
+1. OpenShift Web コンソールを開きます。
+2. **Virtualization > VirtualMachines** に移動します。
+3. `monitoring-test-vm` をクリックします。
+4. **Metrics** タブを選択します。
+
+Metrics タブには、主要な 4 つのグラフが表示されます。
+
+* **CPU usage**: 時間の経過に伴う vCPU 使用率 (%) を表示します
+* **Memory usage**: メモリ消費量 (GB) を表示します
+* **Network In/Out**: すべてのインターフェースのネットワークトラフィック (MB/s)
+* **Storage In/Out**: すべてのディスクのストレージ I/O (MB/s)
+
+image::vm-monitoring-metrics-dashboard.png[monitoring-test-vm の CPU、メモリ、ストレージ、ネットワークメトリクスを表示する VM Metrics ダッシュボード]
+
+TIP: メトリクスの収集は、VM の起動後すぐに開始されます。グラフが空で表示される場合は、データが収集されてグラフに反映されるまで 2-3 分お待ちください。
+
+=== VM 概要メトリクス
+
+1. **Overview** タブをクリックします。
+2. **Utilization** セクションまでスクロールします。
+
+Overview タブには、現在のリソース使用率が表示されます。
+
+* **CPU**: リアルタイムの CPU 使用率 (パーセンテージ)
+* **メモリ**: 現在のメモリ使用量と割り当て量
+* **ネットワーク**: ネットワークインターフェースの使用率
+* **ストレージ**: ストレージ I/O アクティビティ
+
+== ステップ 3: Prometheus による VM メトリクスのクエリ
+
+高度なメトリクス分析やカスタムクエリを実行するには、OpenShift モニタリングスタックに直接アクセスします。
+
+=== Prometheus コンソールへのアクセス
+
+1. Web コンソールで、**Observe > Metrics** に移動します。
+2. これにより、OpenShift に統合された Prometheus クエリインターフェースが開きます。
+
+=== 一般的な VM メトリクスクエリ
+
+VM メトリクスを理解するために、以下の Prometheus クエリを実行します。
+
+**VM ごとの CPU 使用率:**
+
+[source,promql]
+----
+rate(kubevirt_vmi_vcpu_seconds_total[5m]) * 100
+----
+
+**VM 別のメモリ使用量:**
+
+[source,promql]
+----
+kubevirt_vmi_memory_resident_bytes / 1024 / 1024 / 1024
+----
+
+**VM 別の受信ネットワークバイト数:**
+
+[source,promql]
+----
+rate(kubevirt_vmi_network_receive_bytes_total[5m])
+----
+
+**VM 別のストレージ読み取り操作数:**
+
+[source,promql]
+----
+rate(kubevirt_vmi_storage_read_traffic_bytes_total[5m])
+----
+
+**クラスター全体の VM フェーズ数 (ノードレベルの集計):**
+
+[source,promql]
+----
+kubevirt_vmi_phase_count
+----
+
+**VM 別のフェーズステータス:**
+
+[source,promql]
+----
+kubevirt_vmi_info
+----
+
+=== Namespace によるメトリクスのフィルタリング
+
+特定の環境に焦点を当てるために namespace フィルターを追加します。
+
+[source,promql]
+----
+kubevirt_vmi_memory_resident_bytes{namespace="vm-monitoring-demo"} / 1024 / 1024 / 1024
+----
+
+=== カスタムメトリクス式の作成
+
+派生計算のためにメトリクスを組み合わせます。
+
+**メモリ使用率:**
+
+[source,promql]
+----
+(kubevirt_vmi_memory_resident_bytes / kubevirt_vmi_memory_domain_bytes) * 100
+----
+
+**全コアの CPU 使用率:**
+
+[source,promql]
+----
+sum(rate(kubevirt_vmi_vcpu_seconds_total[5m])) by (name, namespace)
+----
+
+== ステップ 4: OpenShift Console ダッシュボードの使用
+
+OpenShift は、Web コンソールを介した VM モニタリング用の組み込みダッシュボード機能を提供します。
+
+=== 組み込みダッシュボードへのアクセス
+
+1. **Observe > Dashboards** に移動します。
+2. 事前設定された VM ダッシュボードを探します。
+
+仮想化に関連するダッシュボードが表示されている場合は、以下を確認できます。
+
+* **クラスターの概要**: すべての VM における合計 VM 数、CPU/メモリ使用率
+* **VM ごとのメトリクス**: 個々の VM のリソース消費量
+* **ネットワーク統計**: VM のネットワークトラフィックパターン
+* **ストレージ統計**: VM のストレージ I/O パターン
+
+=== Metrics インターフェースの使用
+
+**Observe > Metrics** インターフェースは、柔軟なダッシュボードのような機能を提供します。
+
+1. **Observe > Metrics** に移動します
+2. **Add Query** ボタンを使用して複数のクエリパネルを作成します
+3. ステップ 3 のクエリを使用してカスタムビューを構築します:
++
+--
+**CPU パネル:** `rate(kubevirt_vmi_vcpu_seconds_total{namespace="vm-monitoring-demo"}[5m]) * 100` +
+**メモリパネル:** `kubevirt_vmi_memory_resident_bytes / 1024 / 1024 / 1024` +
+**ネットワークパネル:** `rate(kubevirt_vmi_network_receive_bytes_total[5m])` +
+**ストレージパネル:** `rate(kubevirt_vmi_storage_read_traffic_bytes_total[5m])`
+--
+
+4. 必要に応じて時間範囲と更新間隔を調整します
+5. URL をブックマークして、カスタムダッシュボードのレイアウトを保存します
+
+=== オプション: 外部 Grafana のセットアップ
+
+組織で高度なダッシュボード機能が必要な場合は、Grafana を個別にインストールできます。
+
+NOTE: これにはクラスター管理者権限が必要であり、本チュートリアルの範囲を超える追加のセットアップが必要です。
+
+**インストールの概要:**
+
+* OperatorHub から Grafana Operator をインストールします
+* Prometheus データソースを設定します
+* VM 監視ダッシュボードのインポートまたは作成
+
+基本的な VM 監視には、通常、組み込みの OpenShift メトリクスインターフェースで十分です。
+
+== ステップ 5: VM アラートの設定
+
+VM のパフォーマンスの問題や健全性の問題についてアラートを発行するように PrometheusRule リソースを設定します。
+
+WARNING: アラートのしきい値は、特定のワークロード要件および SLA 目標に基づいてカスタマイズする必要があります。
+
+=== namespace のアラートモニタリングの有効化
+
+ユーザー namespace 内の PrometheusRule を評価するには、クラスターモニタリングが必要です。namespace のモニタリングを有効にします。
+
+[source,bash,role=execute]
+----
+oc label namespace vm-monitoring-demo openshift.io/cluster-monitoring="true"
+----
+
+=== VM パフォーマンスアラートの作成
+
+一般的な VM の問題についてアラートを発行する PrometheusRule を作成します。
+
+xref:attachment$vm-monitoring-metrics/vm-performance-alerts.yaml[vm-performance-alerts.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+ name: vm-performance-alerts
+ namespace: vm-monitoring-demo
+ labels:
+  prometheus: kube-prometheus
+  role: alert-rules
+spec:
+ groups:
+ - name: vm-performance
+  rules:
+  - alert: VMHighCPUUsage
+   expr: rate(kubevirt_vmi_vcpu_seconds_total[5m]) * 100 > 80
+   for: 5m
+   labels:
+    severity: warning
+   annotations:
+    summary: "VM {{ \$labels.name }} high CPU usage"
+    description: "VM {{ \$labels.name }} in namespace {{ \$labels.namespace }} has CPU usage above 80% for more than 5 minutes"
+
+  - alert: VMHighMemoryUsage
+   expr: (kubevirt_vmi_memory_resident_bytes / kubevirt_vmi_memory_domain_bytes) * 100 > 90
+   for: 2m
+   labels:
+    severity: warning
+   annotations:
+    summary: "VM {{ \$labels.name }} high memory usage"
+    description: "VM {{ \$labels.name }} in namespace {{ \$labels.namespace }} has memory usage above 90% for more than 2 minutes"
+
+  - alert: VMNotRunning
+   expr: kubevirt_vmi_info{phase!="running"} == 1
+   for: 1m
+   labels:
+    severity: critical
+   annotations:
+    summary: "VM {{ \$labels.name }} not running"
+    description: "VM {{ \$labels.name }} in namespace {{ \$labels.namespace }} is in {{ \$labels.phase }} phase"
+EOF
+----
+
+=== アラートルールの検証
+
+アラートルールが読み込まれていることを確認します。
+
+[source,bash,role=execute]
+----
+oc get prometheusrule vm-performance-alerts -n vm-monitoring-demo
+----
+
+=== アクティブなアラートの表示
+
+OpenShift コンソールでアラートを監視します。
+
+1. **Observe > Alerting** に移動します。
+2. namespace でフィルタリングします: `vm-monitoring-demo`
+3. VM の現在の状態に基づいてアクティブなアラートを確認します。
+
+=== アラートトリガーのテスト
+
+負荷を生成してアラートをトリガーし、正しく機能することを確認します。
+
+==== メモリアラートのテスト
+
+VM にコンソール接続してメモリ負荷を生成します。
+
+[source,bash,role=execute]
+----
+virtctl console monitoring-test-vm -n vm-monitoring-demo
+----
+
+ユーザー名 `fedora`、パスワード `redhat` でログインします。
+
+VM コンソール内で、負荷テスト用に stress-ng をインストールします。
+
+[source,bash]
+----
+sudo dnf install -y stress-ng
+----
+
+メモリ負荷を生成して VMHighMemoryUsage アラートをトリガーします。
+
+[source,bash]
+----
+stress-ng --vm 1 --vm-bytes 1536M --timeout 300s
+----
+
+このコマンドは、2GB の VM 上で 1.5GB を使用してメモリ負荷を発生させます。
+
+`Ctrl+]` でコンソールを終了します。
+
+==== アラートステータスの監視
+
+1. **Observe > Alerting** に戻ります。
+2. アラートの評価を 2〜3 分待ちます。
+3. VMHighMemoryUsage アラートが最初に "Pending" 状態で表示され、その後 "Firing" になるはずです。
+
+image::vm-alert-pending.png[しきい値を超えるメモリ使用量を示す Pending 状態の VM アラート]
+
+==== CPU アラートのテスト
+
+CPU アラートの場合は、VM のコンソールに戻ります。
+
+[source,bash,role=execute]
+----
+virtctl console monitoring-test-vm -n vm-monitoring-demo
+----
+
+CPU ストレステストを実行します。
+
+[source,bash]
+----
+stress-ng --cpu 4 --timeout 300s
+----
+
+`Ctrl+]` でコンソールを終了し、アラートを監視します。5〜10 分以内に VMHighCPUUsage アラートが発生するはずです。
+
+==== 負荷テストのクリーンアップ
+
+テスト後、stress プロセスはタイムアウト後に自動的に停止します。必要に応じて、VM のコンソールに戻り、`Ctrl+C` を使用して手動で停止することもできます。
+
+== ステップ 6: ゲスト OS メトリクスの有効化
+
+詳細なゲスト OS モニタリングを有効にするために、QEMU guest agent をインストールして設定します。
+
+=== ゲストエージェントのインストールの確認
+
+テスト VM の cloud-init によってゲストエージェントはすでにインストールされています。実行中であることを確認します。
+
+[source,bash,role=execute]
+----
+virtctl console monitoring-test-vm -n vm-monitoring-demo
+----
+
+VM の内部で、サービスステータスを確認します。
+
+[source,bash]
+----
+systemctl status qemu-guest-agent
+----
+
+想定される出力:
+
+----
+● qemu-guest-agent.service - QEMU Guest Agent
+   Active: active (running) since Wed 2026-01-01 10:00:00 UTC
+----
+
+`Ctrl+]` でコンソールを終了します。
+
+=== Web コンソールにおけるゲストメトリクス
+
+ゲストエージェントが実行されている状態で、Web コンソールの VM の **Metrics** タブに戻ります。**Overview** タブに追加のゲスト OS 情報が表示されるようになります。
+
+* **Guest OS information**: オペレーティングシステム名およびバージョン
+* **Guest agent status**: エージェントが実行されているかどうか
+* **Enhanced metrics**: より詳細なメモリおよびネットワークの統計情報
+
+=== Prometheus のゲストエージェントメトリクス
+
+ゲスト固有のメトリクスをクエリします:
+
+**ゲスト OS 情報:**
+
+[source,promql]
+----
+kubevirt_vmi_info
+----
+
+**ゲストファイルシステムの使用状況:**
+
+[source,promql]
+----
+kubevirt_vmi_filesystem_used_bytes / kubevirt_vmi_filesystem_capacity_bytes
+----
+
+=== ゲストエージェントの手動インストール
+
+cloud-init による guest agent のセットアップを行っていない VM の場合は、手動でインストールします。
+
+**Red Hat Enterprise Linux / Fedora:**
+
+[source,bash]
+----
+dnf install qemu-guest-agent
+systemctl enable --now qemu-guest-agent
+----
+
+**Ubuntu / Debian:**
+
+[source,bash]
+----
+apt update && apt install qemu-guest-agent
+systemctl enable --now qemu-guest-agent
+----
+
+**Windows:**
+
+QEMU guest agent を含む virtio-win ドライバーパッケージをダウンロードしてインストールします。
+
+== トラブルシューティング
+
+=== メトリクスデータが表示されない
+
+**事象**: グラフが空であるか、または "No data available" と表示される
+
+**解決策**:
+
+* メトリクスの収集が開始されるまで 2〜3 分待ちます
+* VM が Running 状態であることを確認します: `oc get vm`
+* OpenShift でクラスターモニタリングが有効になっていることを確認します
+* ブラウザーとクラスターの間で適切に時刻が同期されていることを確認します
+
+=== ゲストエージェントが検出されない
+
+**事象**: Web コンソール内のゲスト OS 情報が限定的である
+
+**解決策**:
+
+* ゲストエージェントのインストールを確認します: `systemctl status qemu-guest-agent`
+* ゲストエージェントを再起動します: `systemctl restart qemu-guest-agent`
+* VM テンプレートにゲストエージェントのインストールが含まれていることを確認します
+* VM のオペレーティングシステムが QEMU guest agent をサポートしていることを確認します
+
+=== モニタリングによる高リソース使用率
+
+**事象**: モニタリングスタックがクラスターリソースを過剰に消費している
+
+**解決策**:
+
+* ストレージが限られている場合は、Prometheus の保持期間を調整する
+* 重要度の低いメトリクスのスクレイプ間隔を長くする
+* 頻繁にクエリされる複雑な式にはレコーディングルールを使用する
+* 大規模クラスター向けに専用のモニタリングノードを検討する
+
+== クリーンアップ
+
+このチュートリアルで作成したすべてのリソースを削除します:
+
+[source,bash,role=execute]
+----
+oc delete namespace vm-monitoring-demo
+----
+
+== まとめ
+
+このチュートリアルでは、以下の方法を学びました。
+
+* OpenShift Web コンソールの Metrics タブから VM メトリクスにアクセスする
+* Prometheus PromQL 式を使用して VM パフォーマンスデータをクエリする
+* OpenShift Metrics インターフェースを使用してカスタムモニタリングビューを構築する
+* PrometheusRule リソースを設定して VM のパフォーマンス問題に関するアラートを発行する
+* 拡張ゲスト OS メトリクスを取得するために QEMU guest agent をインストールおよび設定する
+* 一般的なモニタリング設定の問題をトラブルシューティングする
+
+== 参照
+
+* xref:resource-limits-qos.adoc[VM のリソース制限と QoS]
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/monitoring#virt-monitoring_virt-monitoring[OpenShift Virtualization 監視ドキュメント,window=_blank]
+* link:https://prometheus.io/docs/prometheus/latest/querying/basics/[Prometheus Query Language (PromQL),window=_blank]
+* link:https://grafana.com/docs/grafana/latest/dashboards/[Grafana ダッシュボードドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/operations/monitoring/[KubeVirt 監視ガイド,window=_blank]

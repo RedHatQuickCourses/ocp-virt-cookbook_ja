@@ -1,0 +1,738 @@
+= YAML マニフェストを使用した CLI からの VM の作成
+:navtitle: CLI からの VM の作成
+
+== 概要
+
+このチュートリアルでは、OpenShift CLI (`oc`) と YAML マニフェストを使用して仮想マシンを作成する方法を説明します。CLI ベースの VM 作成は、自動化、GitOps、Infrastructure as Code ワークフローの基盤となります。Web コンソールのアプローチとは異なり、YAML マニフェストはバージョン管理、再現性、CI/CD パイプラインとの統合を提供します。
+
+=== 学習内容
+
+* `virtctl create vm` を使用した VM マニフェストの生成と、適用前のカスタマイズ
+* VirtualMachine YAML マニフェストの構造 (apiVersion、kind、metadata、spec)
+* テスト用の containerDisk を使用した VM の作成 (永続ストレージなし)
+* 本番ワークロード用の DataVolume ブートソースを使用した VM の作成
+* CPU、メモリ、ディスクリソースの設定
+* 非推奨となった `running` フィールドの代わりとしての `runStrategy` の使用
+* ユーザー設定および SSH 鍵設定のための cloud-init の統合
+* `oc apply -f` によるマニフェストの適用
+* VM 作成の検証、およびコンソールと SSH を使用した VM へのアクセス
+
+== 前提条件
+
+* OpenShift Virtualization Operator がインストールされた OpenShift {ocp-min-version}+
+* インストール済みの OpenShift CLI (`oc`) および virtctl (xref:virtctl-basics.adoc[] を参照)
+* VM ディスクプロビジョニング用に設定されたデフォルトの StorageClass
+* クラスター内の利用可能なブートソースイメージ (DataSources)
+
+ブートソースが利用可能であることを確認します:
+
+[source,bash,role=execute]
+----
+oc get datasources -n openshift-virtualization-os-images
+----
+
+クラスターにデフォルトの StorageClass があることを確認します:
+
+[source,bash,role=execute]
+----
+oc get storageclass
+----
+
+`(default)` とマークされている StorageClass を探します。存在しない場合は、xref:default-storage-class.adoc[] を参照してください。
+
+== VirtualMachine YAML マニフェストの構造
+
+OpenShift Virtualization における VirtualMachine リソースは、標準的な Kubernetes リソース構造に従います。基本的な構造は以下のとおりです。
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: my-vm
+  namespace: demo
+spec:
+  runStrategy: Always                # <1>
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: my-vm
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: rootdisk
+          interfaces:
+            - name: default
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 1
+      networks:
+        - name: default
+      volumes:
+        - name: rootdisk
+  dataVolumeTemplates:                   # <2>
+    - metadata:
+        name: rootdisk-dv
+----
+
+<1> ライフサイクルポリシー - `Always`、`RerunOnFailure`、`Manual`、または `Halted`
+<2> 永続ディスクを作成するためのオプションの DataVolume テンプレート
+
+IMPORTANT: 非推奨となった `running: true/false` フィールドの代わりに `runStrategy` を使用してください。`runStrategy` により、よりきめ細かいライフサイクル制御が可能になります。
+
+== ステップ 1: virtctl を使用した VM マニフェストの生成
+
+`virtctl create vm` コマンドを使用すると、適用前にカスタマイズ可能なベース YAML マニフェストを生成できます。これは多くの場合、マニフェストを最初から作成するよりも簡単です。
+
+=== プロジェクトの作成
+
+まず、チュートリアル用の namespace を作成します。
+
+[source,bash,role=execute]
+----
+oc new-project demo
+----
+
+=== ベースマニフェストの生成
+
+`virtctl create vm` を使用して、DataVolume ブートソースを持つマニフェストを生成します。
+
+[source,bash,role=execute]
+----
+virtctl create vm --name=my-rhel-vm \
+  --volume-import type:ds,src:openshift-virtualization-os-images/rhel9 \
+  --memory=2Gi \
+  --user=cloud-user \
+  --ssh-key="$(cat ~/.ssh/id_rsa.pub)" > my-rhel-vm.yaml
+----
+
+このコマンドは以下の処理を実行します。
+
+- `my-rhel-vm` という名前の VM を作成します
+- ブートボリュームとして RHEL 9 DataSource からインポートします
+- メモリを 2Gi に設定します (CPU 割り当ては instancetypes または手動のマニフェスト編集により処理されます)
+- `cloud-user` という名前の cloud-init ユーザーを作成します
+- パスワードレスアクセスのために SSH 公開鍵を設定します
+- YAML マニフェストを `my-rhel-vm.yaml` に出力します (virtctl はデフォルトで YAML を出力します)
+
+TIP: SSH 鍵をお持ちでない場合は、`ssh-keygen -t ed25519 -C "your.email@example.com"` を実行して生成してください。
+
+生成されたマニフェストを確認します。
+
+[source,bash,role=execute]
+----
+cat my-rhel-vm.yaml
+----
+
+=== 生成されたマニフェストのカスタマイズ
+
+生成されたマニフェストは適切な出発点となりますが、多くの場合、カスタマイズが必要になります。`virtctl` コマンドによって基本的な cloud-init 設定は既に作成されていますが、さらにカスタマイズを追加することもできます。
+
+1. **cloud-init への SSH 鍵およびパスワードの追加**
+2. **CPU およびメモリ割り当ての調整**
+3. **追加パッケージのインストール**
+4. **ラベルおよびアノテーションの追加**
+
+お好みのテキストエディターを使用してマニフェストをカスタマイズします。vi を使用できます。
+
+[source,bash,role=execute]
+----
+vi my-rhel-vm.yaml
+----
+
+または、お好みで nano を使用することもできます。
+
+[source,bash,role=execute]
+----
+nano my-rhel-vm.yaml
+----
+
+IMPORTANT: `AAAA...your-public-key...` を `~/.ssh/id_ed25519.pub` などの実際の SSH 公開鍵に置き換えます。
+
+=== カスタマイズしたマニフェストの適用
+
+マニフェストをカスタマイズしたら、それを適用して VM を作成します。
+
+[source,bash,role=execute]
+----
+oc apply -f my-rhel-vm.yaml
+----
+
+VM の作成を監視します。
+
+[source,bash,role=execute]
+----
+oc get vm my-rhel-vm -n demo -w
+----
+
+この「生成 → カスタマイズ → 適用」というワークフローは、本番環境で YAML マニフェストを使用して VM を作成する際の最も一般的なパターンです。
+
+== ステップ 2: containerDisk を使用した最小限の VM の作成
+
+最もシンプルな VM では、ブートソースとして containerDisk を使用します。containerDisk はエフェメラル (永続ストレージなし) ですが、テストや開発に最適です。
+
+=== プロジェクトのセットアップ
+
+NOTE: ステップ 1 で作成した `demo` プロジェクトを引き続き使用します。このステップから個別に開始する場合は、`oc new-project demo` でプロジェクトを作成してください。
+
+=== 最小限の VM マニフェストの適用
+
+xref:attachment$create-vm-cli-yaml/vm-minimal-containerdisk.yaml[vm-minimal-containerdisk.yaml のダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-minimal
+  namespace: demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-minimal
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+        resources:
+          requests:
+            memory: 1Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          containerDisk:                     # <1>
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: fedora
+              password: fedora123
+              chpasswd:
+                expire: false
+              ssh_pwauth: true
+----
+
+<1> containerDisk ボリュームタイプ - コンテナレジストリからディスクイメージをプルします
+
+マニフェストを適用します:
+
+[source,bash,role=execute]
+----
+oc apply -f vm-minimal-containerdisk.yaml
+----
+
+=== VM 作成の確認
+
+VM ステータスを確認します:
+
+[source,bash,role=execute]
+----
+oc get vm vm-minimal -n demo
+----
+
+想定される出力:
+
+[source,text]
+----
+NAME         AGE   STATUS    READY
+vm-minimal   30s   Running   True
+----
+
+VirtualMachineInstance (実行中の VM) を確認します:
+
+[source,bash,role=execute]
+----
+oc get vmi vm-minimal -n demo
+----
+
+出力例:
+
+[source,text]
+----
+NAME         AGE   PHASE     IP             NODENAME           READY
+vm-minimal   1m    Running   10.128.1.123   worker-node-2      True
+----
+
+この VM は containerDisk を使用しているため、DataVolume は作成されません。ディスクイメージはコンテナレジストリから直接 pull されます。
+
+=== VM コンソールへのアクセス
+
+VM コンソールにアクセスして、正常に動作していることを確認します。
+
+[source,bash,role=execute]
+----
+virtctl console vm-minimal -n demo
+----
+
+cloud-init の認証情報を使用してログインします。
+
+- ユーザー名: `fedora`
+- パスワード: `fedora123`
+
+コンソールセッションを終了するには、`Ctrl+]` を押すか、コンソールのエスケープシーケンスを使用します。
+
+NOTE: ContainerDisk VM はディスクのプロビジョニングが不要なため、迅速に起動します。ただし、ディスクに加えられた変更は、VM の停止時に失われます。
+
+== ステップ 3: DataVolume ブートソースを使用した VM の作成
+
+本番環境のワークロードには、永続ディスクを作成する DataVolume ブートソースを使用します。DataVolume は既存のディスクイメージからクローンを作成し、VM の再起動後も保持される永続ストレージを提供します。
+
+xref:attachment$create-vm-cli-yaml/vm-datavolume.yaml[vm-datavolume.yaml のダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-datavolume
+  namespace: demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-datavolume
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 1
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          dataVolume:                        # <1>
+            name: vm-datavolume
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              ssh_pwauth: true
+              user:
+                name: fedora
+                lock_passwd: false
+                plain_text_passwd: fedora123
+                ssh_authorized_keys:
+                  - 'ssh-ed25519 AAAA...your-public-key... user@workstation'
+              packages:
+                - vim
+                - git
+              runcmd:
+                - echo "VM setup complete" > /tmp/vm-ready
+  dataVolumeTemplates:                       # <2>
+    - metadata:
+        name: vm-datavolume
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+----
+
+<1> containerDisk の代わりに DataVolume を参照
+<2> DataVolume テンプレートは Fedora DataSource から永続ディスクを作成
+
+IMPORTANT: `AAAA...your-public-key...` を `~/.ssh/id_ed25519.pub` などにある実際の SSH 公開鍵に置き換えます。
+
+マニフェストを適用します:
+
+[source,bash,role=execute]
+----
+oc apply -f vm-datavolume.yaml
+----
+
+=== DataVolume プロビジョニングの監視
+
+DataVolume VM は、最初にディスクをプロビジョニングする必要があるため、起動により時間がかかります。プロセスを監視します。
+
+[source,bash,role=execute]
+----
+oc get dv vm-datavolume -n demo -w
+----
+
+予想される進行状況:
+
+[source,text]
+----
+NAME            PHASE       PROGRESS   RESTARTS   AGE
+vm-datavolume   Pending                           5s
+vm-datavolume   CloneInProgress   0.00%          10s
+vm-datavolume   CloneInProgress   45.2%          30s
+vm-datavolume   Succeeded                         45s
+----
+
+DataVolume に `Succeeded` と表示されたら、`Ctrl+C` を押して監視を停止します。
+
+VM のステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm vm-datavolume -n demo
+----
+
+=== DataVolume VM への SSH アクセス
+
+VM が実行中になったら、公開鍵を設定していれば SSH 経由でアクセスできます。
+
+[source,bash,role=execute]
+----
+virtctl ssh fedora@vm-datavolume -n demo
+----
+
+TIP: SSH が機能しない場合は、YAML マニフェスト内のプレースホルダーの SSH 鍵を実際の公開鍵に置き換えたか確認してください。
+
+== ステップ 4: CPU、メモリ、高度な cloud-init のカスタマイズ
+
+この例では、特定の CPU/メモリ設定と包括的な cloud-init 設定を含む、より高度な VM 設定を示します。
+
+xref:attachment$create-vm-cli-yaml/vm-customized.yaml[vm-customized.yaml のダウンロード]
+
+[source,yaml]
+----
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-customized
+  namespace: demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-customized
+    spec:
+      domain:
+        cpu:
+          cores: 2                           # <1>
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: 4Gi                         # <2>
+        resources:
+          requests:
+            memory: 4Gi
+            cpu: 2
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: vm-customized
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              ssh_pwauth: true
+              users:                         # <3>
+                - name: fedora
+                  lock_passwd: false
+                  plain_text_passwd: s3cur3p4ss
+                  ssh_authorized_keys:
+                    - 'ssh-ed25519 AAAA...your-public-key... user@workstation'
+                - name: admin
+                  groups: wheel
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  ssh_authorized_keys:
+                    - 'ssh-ed25519 AAAA...your-public-key... user@workstation'
+              packages:
+                - vim
+                - git
+                - tmux
+                - htop
+              write_files:
+                - path: /etc/motd
+                  content: |
+                    Welcome to your customized VM!
+                    Created via YAML manifest and oc apply.
+                  permissions: '0644'
+              runcmd:
+                - systemctl enable --now cockpit.socket
+                - echo "VM initialization complete at $(date)" > /var/log/vm-init.log
+  dataVolumeTemplates:
+    - metadata:
+        name: vm-customized
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 50Gi
+----
+
+<1> 特定の CPU コア数
+<2> ゲストメモリ割り当て (resources.requests.memory と一致する必要があります)
+<3> sudo 権限を持つ追加ユーザーの作成
+
+NOTE: マシンタイプ `pc-q35-rhel9.4.0` は、クラスターのバージョンによって異なる場合があります。クラスターで利用可能なタイプを確認するには、`oc get VirtualMachineClusterInstancetypes` を使用します。
+
+カスタマイズした VM を適用します。
+
+[source,bash,role=execute]
+----
+oc apply -f vm-customized.yaml
+----
+
+=== 高度な設定の検証
+
+VM の CPU、メモリの割り当てを確認します。
+
+[source,bash,role=execute]
+----
+oc describe vmi vm-customized -n demo | grep -A 5 "Requests"
+----
+
+VM にアクセスして、cloud-init が正常に実行されたことを確認します。
+
+[source,bash,role=execute]
+----
+virtctl ssh admin@vm-customized -n demo
+----
+
+cloud-init によって書き込まれた message of the day を確認します。
+
+[source,bash]
+----
+cat /etc/motd
+----
+
+tmux がインストールされたことを確認します。
+
+[source,bash]
+----
+which tmux
+----
+
+htop がインストールされたことを確認します。
+
+[source,bash]
+----
+which htop
+----
+
+初期化ログを確認します。
+
+[source,bash]
+----
+cat /var/log/vm-init.log
+----
+
+== ステップ 5: VM ライフサイクル操作
+
+=== VM のステータスおよびイベントの確認
+
+VM の詳細情報を表示します。
+
+[source,bash,role=execute]
+----
+oc describe vm vm-customized -n demo
+----
+
+トラブルシューティングのために VM イベントを確認します。
+
+[source,bash,role=execute]
+----
+oc get events -n demo --field-selector involvedObject.name=vm-customized
+----
+
+=== VM の停止および起動
+
+VM を停止する (正常シャットダウン):
+
+[source,bash,role=execute]
+----
+virtctl stop vm-customized -n demo
+----
+
+停止していることを確認する:
+
+[source,bash,role=execute]
+----
+oc get vm vm-customized -n demo
+----
+
+VM を再度起動する:
+
+[source,bash,role=execute]
+----
+virtctl start vm-customized -n demo
+----
+
+=== VM の再起動
+
+正常な再起動を実行する:
+
+[source,bash,role=execute]
+----
+virtctl restart vm-customized -n demo
+----
+
+=== VM 構成の更新
+
+マニフェストを編集して再適用することで、ほとんどの VM 設定を変更できます。たとえば、メモリを変更するには以下を実行します。
+
+[source,bash,role=execute]
+----
+oc patch vm vm-customized -n demo --type merge --patch '{"spec":{"template":{"spec":{"domain":{"memory":{"guest":"6Gi"},"resources":{"requests":{"memory":"6Gi"}}}}}}}'
+----
+
+NOTE: メモリおよび CPU の変更を有効にするには、VM の再起動が必要です。
+
+== トラブルシューティング
+
+=== VM が起動しない
+
+VirtualMachine イベントを確認します。
+
+[source,bash,role=execute]
+----
+oc describe vm <vm-name> -n demo
+----
+
+VirtualMachineInstance のイベントも確認します。
+
+[source,bash,role=execute]
+----
+oc describe vmi <vm-name> -n demo
+----
+
+一般的な問題:
+
+- DataVolume のプロビジョニングに失敗した (`oc get dv` を確認)
+- クラスターリソースが不足している (ノードの容量を確認)
+- cloud-init の構文が無効である (Pod ログを確認)
+
+=== DataVolume のプロビジョニングに関する問題
+
+DataVolume のステータスを確認します。
+
+[source,bash,role=execute]
+----
+oc describe dv <datavolume-name> -n demo
+----
+
+CDI インポート Pod のログを確認します:
+
+[source,bash,role=execute]
+----
+oc logs -l app=containerized-data-importer -n openshift-cnv
+----
+
+=== Cloud-init のエラー
+
+VM コンソールにアクセスし、cloud-init のステータスを確認します:
+
+[source,bash,role=execute]
+----
+virtctl console <vm-name> -n demo
+----
+
+VM にログインし、cloud-init のステータスを確認します。コンソールセッションを終了するには、`Ctrl+]` を押します。
+
+VM 内で、cloud-init のステータスを確認します:
+
+[source,bash]
+----
+cloud-init status --long
+----
+
+cloud-init ログでエラーを確認します:
+
+[source,bash]
+----
+cat /var/log/cloud-init.log
+----
+
+詳細な cloud-init のトラブルシューティングについては、xref:cloud-init-fundamentals.adoc[] を参照してください。
+
+== クリーンアップ
+
+すべての VM と関連リソースを削除します:
+
+[source,bash,role=execute]
+----
+oc delete vm vm-minimal vm-datavolume vm-customized -n demo
+----
+
+DataVolume がクリーンアップされるまでしばらく待ってから、プロジェクトを削除します:
+
+[source,bash,role=execute]
+----
+oc delete project demo
+----
+
+WARNING: プロジェクトを削除すると、すべての VM とその永続ディスクが削除されます。必要に応じてバックアップがあることを確認してください。
+
+== まとめ
+
+ここでは、次の方法を学びました。
+
+* DataSource からのボリュームインポートを指定して `virtctl create vm` を使用し、VM マニフェストを生成する方法
+* 生成されたマニフェストを適用する前にカスタマイズする方法 (推奨されるワークフロー)
+* 適切な apiVersion、metadata、spec セクションを使用して VirtualMachine YAML マニフェストを構成する方法
+* テストシナリオ向けに containerDisk を使用して軽量な VM を作成する方法
+* 永続ストレージ用の DataVolume ブートソースを使用して本番環境用 VM を作成する方法
+* CPU コア、メモリ割り当て、およびディスクサイズを設定する方法
+* 非推奨の `running` フィールドの代わりに、VM のライフサイクル管理に `runStrategy` を使用する方法
+* cloud-init を統合して、ユーザー設定、SSH 鍵の設定、パッケージのインストールを自動化する方法
+* `oc apply -f` でマニフェストを適用し、`oc get vm`、`oc get vmi`、`oc get dv` で作成を確認する方法
+* `virtctl console` および `virtctl ssh` による VM へのアクセス
+* 基本的なライフサイクル操作 (stop、start、restart) の実行
+* リソースの適切なクリーンアップ
+
+== 参照
+
+* xref:cloud-init-fundamentals.adoc[] - cloud-init 設定オプションの詳細
+* xref:networking:static-ip-configuration.adoc[] - VM の静的 IP アドレスの設定
+* xref:vm-configuration:node-placement-affinity.adoc[] - VM を実行するノードの制御
+* xref:storage:multi-disk-configuration.adoc[] - VM 向けの高度なストレージ設定
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/managing-vms[仮想マシンの作成 - 公式ドキュメント,window=_blank]
+* link:https://kubevirt.io/user-guide/virtual_machines/creating_vms/[KubeVirt 仮想マシン作成ガイド,window=_blank]
+* link:https://cloudinit.readthedocs.io/en/latest/[Cloud-init ドキュメント,window=_blank]

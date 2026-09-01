@@ -1,0 +1,190 @@
+= クイックスタート: 5 分で作成する最初の VM
+:navtitle: クイックスタート
+
+== 概要
+
+このチュートリアルでは、OpenShift Virtualization 上で仮想マシンを作成して実行するための最速の手順を説明します。5 分足らずで、コンソールからアクセス可能な実行中の Fedora VM を用意できます。この簡潔なアプローチでは、詳細な説明を省略してすぐに結果を得ることを重視しており、ワークショップやデモ、迅速なスタートに最適です。
+
+詳細な内容については、このクイックスタートを完了した後に xref:index.adoc[スタートガイド]モジュールを参照してください。
+
+=== 達成できること
+
+* 3 つのコマンドで最小限の前提条件を確認する
+* 単一の YAML マニフェストを使用した Fedora VM の作成
+* VM の作成およびコンソール経由でのアクセスの確認
+* 完了時のリソースのクリーンアップ
+
+== 前提条件
+
+OpenShift Virtualization がインストールされた OpenShift {ocp-min-version}+、および VM コンソールアクセス用の virtctl CLI ツール。以下の 2 つのコマンドを使用してセットアップを確認します。
+
+クラスターアクセスの確認:
+
+[source,bash,role=execute]
+----
+oc get nodes
+----
+
+OpenShift Virtualization Operator が実行中であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get csv -n openshift-cnv | grep kubevirt-hyperconverged
+----
+
+いずれかのコマンドが失敗した場合は、詳細なセットアップ手順について xref:prerequisites.adoc[] を参照してください。
+
+== 最初の VM の作成
+
+この最小限のマニフェストを使用して、シンプルな Fedora VM を作成します。これをコピーして直接適用します。
+
+xref:attachment$vm-quick-start/fedora-quickstart.yaml[fedora-quickstart.yaml のダウンロード]
+
+[source,bash,role=execute]
+----
+oc apply -f - <<EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-quickstart
+  namespace: default
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: fedora-quickstart
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        memory:
+          guest: 2Gi
+        devices:
+          disks:
+          - name: containerdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: fedora
+            chpasswd: { expire: False }
+            ssh_pwauth: True
+EOF
+----
+
+== VM 作成の検証
+
+VM が作成され、実行中であることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vm fedora-quickstart
+----
+
+想定される出力には `Running` ステータスが表示されます。
+
+----
+NAME                AGE   STATUS    READY
+fedora-quickstart   30s   Running   True
+----
+
+VirtualMachineInstance がアクティブであることを確認します。
+
+[source,bash,role=execute]
+----
+oc get vmi fedora-quickstart
+----
+
+想定される出力には `Running` フェーズが表示されます。
+
+----
+NAME                AGE   PHASE     IP           NODENAME                      READY
+fedora-quickstart   45s   Running   10.244.2.5   ip-10-0-22-218.ec2.internal   True
+----
+
+== VM へのアクセス
+
+VM コンソールに接続します (virtctl が必要です)。
+
+[source,bash,role=execute]
+----
+virtctl console fedora-quickstart
+----
+
+ユーザー名 `fedora`、パスワード `fedora` でログインします。コンソールから切断するには `exit` と入力します。
+
+NOTE: virtctl がインストールされていない場合は、インストール手順について xref:virtctl-basics.adoc[] を参照してください。
+
+== トラブルシューティング
+
+VM が起動しない場合:
+
+* Pod イベントの確認: `oc describe vm fedora-quickstart`
+* ストレージの検証: `oc get pvc` (containerDisk の PVC は表示されないはずです)
+* ログの確認: `oc logs -l kubevirt.io/vm=fedora-quickstart`
+
+一般的な問題:
+
+* **デフォルト StorageClass がない**: xref:default-storage-class.adoc[] を参照してください
+* **クラスターリソースの不足**: `oc describe nodes` でノード容量を確認します
+* **ネットワーク接続**: `oc get pods -o wide` で Pod ネットワークを確認します
+
+== クリーンアップ
+
+VM および関連リソースを削除します:
+
+[source,bash,role=execute]
+----
+oc delete vm fedora-quickstart
+----
+
+クリーンアップが完了したことを確認します:
+
+[source,bash,role=execute]
+----
+oc get vm fedora-quickstart
+----
+
+出力例:
+
+----
+No resources found in default namespace.
+----
+
+== まとめ
+
+以下を正常に完了しました:
+
+* OpenShift Virtualization の前提条件を数秒で検証しました
+* 単一の `oc apply` コマンドで Fedora VM を作成しました
+* コンソール経由で実行中の VM にアクセスしました
+* すべてのリソースをクリーンアップしました
+
+== 参照
+
+=== 次のステップ
+
+動作する VM が作成できたので、本番環境での使用に向けて以下のトピックを確認してください。
+
+* xref:create-vm-cli-yaml.adoc[] - 永続ストレージを使用した CLI による包括的な VM 作成
+* xref:cloud-init-fundamentals.adoc[] - 高度な VM 初期化と設定
+* xref:vm-lifecycle-states.adoc[] - VM の管理と運用
+* xref:storage:index.adoc[] - 永続ストレージの設定
+* xref:networking:index.adoc[] - VM のネットワーク設定
+
+=== 参考資料
+
+* xref:prerequisites.adoc[] - セットアップ要件の詳細
+* xref:virtctl-basics.adoc[] - 基本的な virtctl コマンド
+* xref:default-storage-class.adoc[] - ストレージ設定ガイド
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/getting-started[OpenShift Virtualization ドキュメント,window=_blank]

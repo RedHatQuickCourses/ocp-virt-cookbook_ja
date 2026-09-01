@@ -46,7 +46,7 @@ OpenShift 4.21
 
 == ステップ 1: テンプレートの表示と選択 [[step_1_selecting_template]]
 
-このステップでは、デフォルトで用意されているテンプレートを簡単に確認し、その中から 1 つを選択して、後続のセクションで仮想的なニーズに合わせて変更できるようにします。
+このステップでは、デフォルトで用意されているテンプレートを簡単に確認し、その中から 1 つを選択して、後続のセクションで特定のニーズに合わせて変更できるようにします。
 
 まず、`openshift` project で利用可能な `templates` のリストを取得します。
 
@@ -551,7 +551,7 @@ parameters:
 * **`CLOUD_INIT_USERNAME`** - 以前は `cloud-user` とハードコードされていた cloud-init ユーザーアカウント名をテンプレート化するための新しいパラメーターです。
 * **`CLOUD_INIT_PASSWORD`** - `cloud-user` アカウントが存在しなくなったため、明確にするためにこのパラメーターの名前が調整されました。
 
-重要: 進める前に、上記で提供された yaml データで `rhel9-custom.template.yaml` ファイルを更新する必要があります。
+IMPORTANT: 進める前に、上記で提供された yaml データで `rhel9-custom.template.yaml` ファイルを更新する必要があります。
 
 カスタムテンプレートが完成したら、`oc process` を使用して正しくレンダリングされることをテストします。
 
@@ -587,7 +587,7 @@ oc get vm -n template-example
 export RHEL9_CUSTOM_VM=$(oc get vm -o custom-columns=:metadata.name --no-headers -n template-example | grep custom)
 ----
 
-注: 作成したオリジナルの `rhel9` VM に接続する場合は、以下の例で `$RHEL9_CUSTOM_VM` を `RHEL9_SERVER_VM` に置き換えてください。
+NOTE: 作成したオリジナルの `rhel9` VM に接続する場合は、以下の例で `$RHEL9_CUSTOM_VM` を `RHEL9_SERVER_VM` に置き換えてください。
 
 VM の yaml 出力を表示して、cloud-init パスワードを取得し、記録またはコピーします。
 

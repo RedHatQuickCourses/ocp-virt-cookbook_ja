@@ -132,6 +132,15 @@ spec:
 oc apply -f rdp-service.yaml
 ----
 
+===== オプション C: virtctl の使用
+
+[source,bash,role=execute]
+----
+virtctl expose vm <your-vm-name> --port=3389 --name=<your-vm-name>-rdp-service --type=LoadBalancer
+----
+
+`<your-vm-name>` を実際の VM 名に置き換えます。LoadBalancer の代わりに NodePort を使用する場合は、`--type=NodePort` を使用します。
+
 ==== ステップ 3: 接続情報の取得
 
 ===== LoadBalancer サービスの場合:

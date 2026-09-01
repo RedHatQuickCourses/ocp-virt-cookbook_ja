@@ -52,7 +52,8 @@ OpenShift Virtualization は、この宣言型 API を仮想化固有のオブ�
 == 仮想化 API [[virtualization_apis]]
 
 === VirtualMachines [[virtual_machines]]
-VirtualMachine は OpenShift Virtualizationにおいて、仮想マシンを表すAPIオブジェクト（厳密にはKubernetesカスタムリソース）です。
+
+VirtualMachine は OpenShift Virtualization において、仮想マシンを表す API オブジェクト (厳密には Kubernetes カスタムリソース) です。
 
 VirtualMachine には VirtualMachineInstance (次セクションで解説) のテンプレートが含まれており、Status の一部として実行状態を反映します。
 
@@ -61,7 +62,7 @@ VirtualMachine には `spec` 内に VM の詳細を定義する多数のフィ�
 * `instanceType` - VirtualMachine に使用する <<instance_types,インスタンスタイプ>> 名 (RAM と CPU の割り当て量でサイズ指定されます) 。
 * `volumes` - 仮想ディスクとして VM に接続されるボリュームのリスト。このフィールドは https://kubevirt.io/user-guide/storage/disks_and_volumes/#volumes[複数のボリュームタイプ,window=_blank] をサポートしていますが、`dataVolume` と `persistentVolumeClaims` が最も一般的です。
 ** `dataVolume` - この VM 用にプロビジョニングされる <<data_volumes,DataVolume (s)>> の名前を示します。作成される DataVolume (s) は `dataVolumeTemplates` セクション内で定義されます。
-** `persistentVolumeClaim` - <<persistent_volume_claim,PersistentVolumeClaim>> をディスクとして VM に接続します。
+** `persistentVolumeClaim` - <<persistent_volume_claims,PersistentVolumeClaim>> をディスクとして VM に接続します。
 * `networks` - VM に接続されたインターフェースにバインドされる <<networks,networks>> のリスト。空のフィールドの場合、デフォルトで標準の Pod/VM ネットワークが使用されます。
 * `interfaces` - VM に接続されたネットワーク <<interfaces,interfaces>> のリスト。インターフェースは仮想化された NIC と考えることができ、Pod/VM を特定のネットワークに接続するために使用されます。
 * `dataVolumeTemplates` - 作成される <<data_volumes,DataVolume マニフェスト>> のリスト。ここにリストされている DataVolume は、`volumes` セクションで名前によって参照される必要があります。
@@ -90,9 +91,10 @@ API レベルでは、`Manual` run strategy を持つ VM に対して電源コ�
 ----
 status:
   stateChangeRequests:
-  - action: <Stop|Start> <1>
-    uid: <uid-of-the-virtual-machine-instance> <2>
+  - action: <Stop|Start> # <1>
+    uid: <uid-of-the-virtual-machine-instance> # <2>
 ----
+
 <1> 要求されているアクション。以下のいずれかの文字列値 (`Stop`, `Start`)。
 <2> アクションを実行する対象の VirtualMachineInstance (VirtualMachine ではない) のオプションの UID。VM が起動すると VMI が作成されるため、`Start` コマンドでは不要です。
 
@@ -329,12 +331,13 @@ spec:
       domain:
         devices:
           interfaces:
-          - name: default <1>
-            masquerade: {} <2>
+          - name: default # <1>
+            masquerade: {} # <2>
       networks:
-      - name: default <1>
-        pod: {} <3>
+      - name: default # <1>
+        pod: {} # <3>
 ----
+
 <1> `domain.devices.interfaces` (`spec.template.spec` の下) で定義されたネットワーク名は、VM テンプレートスペック内の `networks` 下にある目的のネットワーク名と一致する必要があります。
 <2> デフォルトネットワークは IP マスカレード (NAT) を使用して NIC を基盤ネットワークに接続します
 <3> これにより、基盤ネットワークとして Kubernetes Pod ネットワークが選択されます
@@ -677,7 +680,7 @@ export token シークレットの名前を含む `tokenSecretRef` を定義し�
 
 VirtualMachine をエクスポートすると VM の yaml マニフェストに加え、VM に関連付けられている PVC、DataVolumes、MemoryDump volume がエクスポートされますが、VirtualMachineSnapshot や PVC をエクスポートしても VM マニフェストは提供されません。
 
-エクスポートされたアーティファクトにアクセスするには、VirtualMachineExport の `status` ブロックを確認し、準備が整った後に提供されるURLを使用して、エクスポートされたVMイメージ、ファイル、アーカイブをダウンロードします。
+エクスポートされたアーティファクトにアクセスするには、VirtualMachineExport の `status` ブロックを確認し、準備が整った後に提供される URL を使用して、エクスポートされた VM イメージ、ファイル、アーカイブをダウンロードします。
 
 ダウンロード用に 4 つのフォーマットが提供されています。
 
@@ -698,14 +701,15 @@ VirtualMachineExport の例を以下に示します。
 apiVersion: export.kubevirt.io/v1beta1
 kind: VirtualMachineExport
 metadata:
-  name: export-example <1>
+  name: export-example # <1>
 spec:
-  tokenSecretRef: export-token <2>
-  source: <3>
+  tokenSecretRef: export-token # <2>
+  source: # <3>
     apiGroup: "kubevirt.io"
     kind: VirtualMachine
     name: virtual-machine-example
 ----
+
 <1> 定義されている VirtualMachineExport オブジェクトの名前
 <2> export token を含むシークレットの名前
 <3> ソースは、特定のグループ/バージョンおよび kind への名前付き参照

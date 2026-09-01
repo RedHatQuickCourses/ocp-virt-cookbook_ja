@@ -289,16 +289,16 @@ NAME           PROVISIONER                        RECLAIMPOLICY   VOLUMEBINDINGM
 hostpath-csi   kubevirt.io.hostpath-provisioner   Delete          WaitForFirstConsumer   false                  10s
 ----
 
-=== オプション: default StorageClass への設定
+=== オプション: デフォルト StorageClass への設定
 
-HPP を default StorageClass に設定します (他のストレージがない開発/テストクラスターで有用です)。
+HPP を デフォルト StorageClass に設定します (他のストレージがない開発/テストクラスターで有用です)。
 
 [source,bash,role=execute]
 ----
 oc patch storageclass hostpath-csi -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 ----
 
-NOTE: クラスター内には default StorageClass は 1 つだけであるべきです。他にデフォルトが存在する場合は、先にそのアノテーションを削除してください。
+NOTE: クラスター内にはデフォルト StorageClass は 1 つだけであるべきです。他にデフォルトが存在する場合は、先にそのアノテーションを削除してください。
 
 [source,bash,role=execute]
 ----
@@ -409,7 +409,7 @@ oc delete pvc hpp-test-pvc
 
 HPP ベースのストレージを使用する VM を作成します。
 
-WARNING: この例の cloud-init パスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSH キー認証を使用してください。
+WARNING: この例の cloud-init パスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSH 鍵認証を使用してください。
 
 xref:attachment$hostpath-provisioner/hpp-test-vm.yaml[hpp-test-vm.yaml をダウンロード]
 
