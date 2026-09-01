@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -340,6 +419,45 @@
 </div>
 </div>
 <div class="sect1">
+<h2 id="_スナップショットを使用するタイミング"><a class="anchor" href="#_スナップショットを使用するタイミング"></a>スナップショットを使用するタイミング</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>スナップショットは、多くの仮想化管理者がすでに行っている運用手順に対応しています。一般的な用途は以下のとおりです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>アップグレード前のセーフティネット</strong>: OS のアップグレードやアプリケーションの更新前にスナップショットを取得します。アップグレードが失敗した場合は、VM を再構築する代わりに即座にロールバックできます。</p>
+</li>
+<li>
+<p><strong>パッチ適用前のチェックポイント</strong>: 毎月のセキュリティパッチ適用前にスナップショットを取得することで、問題を引き起こすパッチを元に戻すことができます。</p>
+</li>
+<li>
+<p><strong>安全な設定テスト</strong>: ネットワーク設定、ファイアウォールルール、アプリケーション設定を変更する前にスナップショットを取得します。変更によって機能が損なわれた場合に元に戻せます。</p>
+</li>
+<li>
+<p><strong>コンプライアンスのチェックポイント</strong>: 監査のマイルストーンでスナップショットを取得し、正常と確認されている状態をコンプライアンスの証跡として保存します。</p>
+</li>
+<li>
+<p><strong>トレーニングおよびラボ</strong>: クリーンなラボ VM のスナップショットを取得しておくことで、受講者が自由に実験し、演習の合間に既知の状態にリセットできるようにします。</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+スナップショットはバックアップではありません。スナップショットは VM のディスクと同じストレージバックエンドに保存されるため、そのバックエンドの障害や損失からは保護されません。迅速なローカルロールバックにはスナップショットを使用し、ディザスターリカバリーにはバックアップソリューションを使用してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
 <div class="sectionbody">
 <div class="ulist">
@@ -351,7 +469,7 @@
 <p>スナップショット対象となる実行中または停止中の VM</p>
 </li>
 <li>
-<p>CSI スナップショットをサポートするストレージクラス</p>
+<p>CSI スナップショットをサポートする Storage Class</p>
 </li>
 <li>
 <p>インストール済みの <code>oc</code> および <code>virtctl</code> CLI ツール</p>
@@ -403,6 +521,34 @@ ocs-storagecluster-rbdplugin-snapclass   openshift-storage.rbd.csi.ceph.com   De
 <p>実際のスナップショットデータであり、VirtualMachineSnapshot が処理されると自動的に作成されます。基盤となる VolumeSnapshot への参照が含まれます。</p>
 </dd>
 </dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_スナップショットのタイムライン"><a class="anchor" href="#_スナップショットのタイムライン"></a>スナップショットのタイムライン</h3>
+<div class="paragraph">
+<p>スナップショットは、ある特定の時点における VM のディスク状態をキャプチャします。後のスナップショットが以前のスナップショットを置き換えることはなく、復元を行っても復元元のスナップショットが消費（消去）されることはありません。以下のタイムラインは、2 つのスナップショットとロールバックを経る VM の流れを示しています。T1 で状態 A がキャプチャされ、VM が状態 B に変化し、T3 で状態 B がキャプチャされ、T4 で問題が発生して状態 A への復元が必要になります。復元を実行する前に VM を停止する必要があること、およびロールバック後も後のスナップショットは保持される点に注意してください。</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>T1  VMディスク = 状態 A   (VM稼働中)
+│
+├─ Snapshot-1 を取得  — 状態 A をキャプチャ
+│
+T2  VM ディスク = 状態 B   (構成変更、パッチ適用済み)
+│
+T3  Snapshot-2 を取得  — 状態 B をキャプチャ
+│
+T4  状態 B で問題が検出
+│
+├─ VMを停止  (復元前に必須)
+│
+└─ Snapshot-1 を復元  — VM ディスク = s再び状態Aに
+
+Snapshot-2 は依然として存在するため、状態 B は復元可能なままです。</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>復元手順の詳細は <a href="#restore-from-snapshot">スナップショットからの復元</a> で説明されています。</p>
 </div>
 </div>
 <div class="sect2">
@@ -749,7 +895,7 @@ vmsnapshot-cd166db8-00be-4aa9-972e-dea669527bfd-volume-rootdisk   true         d
 </div>
 </div>
 <div class="sect1">
-<h2 id="_スナップショットからの復元"><a class="anchor" href="#_スナップショットからの復元"></a>スナップショットからの復元</h2>
+<h2 id="restore-from-snapshot"><a class="anchor" href="#restore-from-snapshot"></a>スナップショットからの復元</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>スナップショットから VM を復元すると、VM のディスクがスナップショット取得時の状態に戻ります。</p>
@@ -976,11 +1122,11 @@ VirtualMachineSnapshot を削除すると、関連する VirtualMachineSnapshotC
 <div class="sect2">
 <h3 id="_volumesnapshotclass_の設定"><a class="anchor" href="#_volumesnapshotclass_の設定"></a>VolumeSnapshotClass の設定</h3>
 <div class="paragraph">
-<p>VolumeSnapshotClass は、スナップショットの作成および管理方法を決定します。ストレージクラスに対応する snapshot class があることを確認してください。</p>
+<p>VolumeSnapshotClass は、スナップショットの作成および管理方法を決定します。Storage Class に対応する snapshot class があることを確認してください。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ストレージクラスの確認
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Storage Class の確認
 oc get storageclass
 
 # 対応する snapshot class の確認
@@ -1110,7 +1256,7 @@ oc wait vm database-vm -n vm-snapshots --for=jsonpath='{.status.printableStatus}
 <p><strong>問題</strong>: ストレージプロビジョナーに一致する VolumeSnapshotClass がないため、スナップショット作成が失敗する。</p>
 </div>
 <div class="paragraph">
-<p><strong>解決策</strong>: ストレージクラスに対して VolumeSnapshotClass が存在することを確認します。</p>
+<p><strong>解決策</strong>: Storage Class に対して VolumeSnapshotClass が存在することを確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1218,5 +1364,8 @@ oc get volumesnapshot -n vm-snapshots</code></pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

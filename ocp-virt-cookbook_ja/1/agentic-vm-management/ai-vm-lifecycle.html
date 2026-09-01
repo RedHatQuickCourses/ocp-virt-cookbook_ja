@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>AI を活用した VM ライフサイクル操作 :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="natural-language-vm-create.html">
+    <link rel="next" href="vm-clone.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">AI エージェントによる VM 管理</a></li>
+    <li><a href="ai-vm-lifecycle.html">AI VM ライフサイクル操作</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">AI を活用した VM ライフサイクル操作</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、<code>vm-lifecycle-manager</code> および <code>vm-delete</code> エージェントスキルを通じて自然言語コマンドを使用し、OpenShift VirtualMachines のライフサイクルを管理する方法を説明します。人間による安全確認 (Human-in-the-loop) を行いながら VM の起動、停止、再起動、削除を行う方法や、エージェントが保護された VM や実行中の VM の削除などのエッジケースをどのように処理するかを学びます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="getting-started.html" class="xref page">AI エージェントによる VM 管理の開始</a> チュートリアルを完了していること (スキルパックのインストール、MCP サーバーの設定、クラスター接続の確認が完了していること)</p>
+</li>
+<li>
+<p>OpenShift Virtualization がインストールされた OpenShift クラスター</p>
+</li>
+<li>
+<p><code>KUBECONFIG</code> 環境変数が設定され、有効な kubeconfig ファイルを参照していること</p>
+</li>
+<li>
+<p>管理対象の VM が少なくとも 1 つ(作成方法については <a href="natural-language-vm-create.html" class="xref page">自然言語による仮想マシンの作成</a> を参照)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>本チュートリアルで使用する namespace がまだ存在しない場合は作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace my-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>管理対象の VM がない場合は、IDE チャットに次のように入力して <code>vm-create</code> スキルを使用して作成します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Create a Fedora VM named lifecycle-demo in namespace my-vms</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>続行する前に、VM が存在することを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n my-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME             AGE   STATUS    READY
+lifecycle-demo   2m    Running   True</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_仕組み"><a class="anchor" href="#_仕組み"></a>仕組み</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_vm_lifecycle_manager_スキル"><a class="anchor" href="#_vm_lifecycle_manager_スキル"></a>vm-lifecycle-manager スキル</h3>
+<div class="paragraph">
+<p><code>vm-lifecycle-manager</code> スキルは、start、stop、restart 操作に対して 3 段階のワークフローに従います。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>パラメーターの収集と確認</strong> - エージェントは、プロンプトから VM 名、namespace、アクションを収集します。操作とその影響 (start の場合はリソース消費、stop の場合はサービス中断、restart の場合は一時的なダウンタイム) を提示し、続行する前に明示的な確認を待ちます。</p>
+</li>
+<li>
+<p><strong>操作の実行</strong> - 確認後、エージェントは <code>vm_lifecycle</code> MCP ツールを呼び出して VM の RunStrategy を変更します。restart の場合、エージェントはコンポジットパターンを使用します。VM を停止し、停止したことを確認し、少し待ってから再度起動します。この 2 段階のアプローチにより、Kubernetes の resourceVersion の競合を回避します。</p>
+</li>
+<li>
+<p><strong>レポートと検証</strong> - エージェントは結果を報告し、新しい RunStrategy を確認し、VM ステータスの確認や namespace 内の VM の一覧表示などの次のステップを提案します。</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vm_delete_スキル"><a class="anchor" href="#_vm_delete_スキル"></a>vm-delete スキル</h3>
+<div class="paragraph">
+<p><code>vm-delete</code> スキルは、5 段階のワークフローを通じて厳格な安全プロトコルを適用します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>検証</strong> - エージェントは VM が存在することを確認し、<code>protected: "true"</code> ラベル (削除を完全にブロックする) をチェックし、VM が実行中かどうかを確認します。</p>
+</li>
+<li>
+<p><strong>ストレージの検出</strong> - エージェントは、削除範囲の全容を示すために、VM に関連付けられている DataVolume および PVC を一覧表示します。</p>
+</li>
+<li>
+<p><strong>オプションの提示</strong> - エージェントは削除範囲を表示し、VM のみ削除 (ストレージを保持)、VM とストレージを削除 (テスト/開発環境に推奨)、またはキャンセルの 3 つのオプションを提示します。</p>
+</li>
+<li>
+<p><strong>入力による確認</strong> - 削除を確認するには、正確な VM 名を入力する必要があります。一致しない場合、操作はキャンセルされます。</p>
+</li>
+<li>
+<p><strong>実行とレポート</strong> - エージェントは VM と (必要に応じて) そのストレージを削除し、削除された内容と解放されたストレージ容量をレポートします。</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_サンプルシナリオ_1_停止している_vm_の起動"><a class="anchor" href="#_サンプルシナリオ_1_停止している_vm_の起動"></a>サンプルシナリオ 1: 停止している VM の起動</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この例では、<code>vm-lifecycle-manager</code> スキルを使用して停止している VM を起動します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで、以下を入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Start VM lifecycle-demo in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは確認のために操作を表示します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Lifecycle Operation
+
+| Parameter | Value            | Impact                   |
+|-----------|------------------|--------------------------|
+| VM Name   | `lifecycle-demo` | from user                |
+| Namespace | `my-vms`         | from user                |
+| Action    | `start`          | consumes resources       |
+
+Confirm: yes/no</pre>
+</div>
+</div>
+</li>
+<li>
+<p>影響を確認し、承認します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>yes</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは <code>vm_lifecycle</code> を呼び出して RunStrategy を <code>Halted</code> から <code>Always</code> に変更し、VM が Running ステータスに達したことを確認します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Start Successful
+
+**VM**: `lifecycle-demo` | **Namespace**: `my-vms` | **RunStrategy**: Always
+
+**Impact**: Running, consuming resources (CPU/memory).
+Access: virtctl console or SSH.
+RunStrategy: Always (auto-restart on crash)
+
+**Next**: "Show status of VM lifecycle-demo" or "List VMs in namespace my-vms"</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>以下のコマンドを使用して、VM が実行中であることを確認できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm lifecycle-demo -n my-vms</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME             AGE   STATUS    READY
+lifecycle-demo   10m   Running   True</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_例示シナリオ_2_実行中の_vm_の停止"><a class="anchor" href="#_例示シナリオ_2_実行中の_vm_の停止"></a>例示シナリオ 2: 実行中の VM の停止</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この例では、実行中の VM を正常に停止します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Stop VM lifecycle-demo in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは停止操作とその影響を表示します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Lifecycle Operation
+
+| Parameter | Value            | Impact             |
+|-----------|------------------|--------------------|
+| VM Name   | `lifecycle-demo` | from user          |
+| Namespace | `my-vms`         | from user          |
+| Action    | `stop`           | graceful shutdown  |
+
+Confirm: yes/no</pre>
+</div>
+</div>
+</li>
+<li>
+<p>確認後、エージェントは正常なシャットダウンを実行し、RunStrategy を <code>Halted</code> に遷移させます。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Stop Successful
+
+**VM**: `lifecycle-demo` | **Namespace**: `my-vms` | **RunStrategy**: Halted
+
+**Impact**: Stopped, resources freed. State preserved.
+Start: "Start VM lifecycle-demo in namespace my-vms"
+RunStrategy: Halted (stays off)
+
+**Next**: "Show status of VM lifecycle-demo" or "List VMs in namespace my-vms"</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>VM が停止すると、VirtualMachineInstance (VMI) オブジェクトは削除されます。VirtualMachine リソースとそのストレージ (DataVolume、PVC) はそのまま保持されます。VM が <code>Halted</code> 状態の間は、コンピュートリソース (CPU、メモリ) は消費されません。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_例示シナリオ_3_vm_の再起動"><a class="anchor" href="#_例示シナリオ_3_vm_の再起動"></a>例示シナリオ 3: VM の再起動</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>再起動操作では、Kubernetes API の競合を回避するために、停止してから開始する複合パターンを使用します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで、以下を入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Restart VM lifecycle-demo in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは一時的な中断について警告します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Lifecycle Operation
+
+| Parameter | Value            | Impact                       |
+|-----------|------------------|------------------------------|
+| VM Name   | `lifecycle-demo` | from user                    |
+| Namespace | `my-vms`         | from user                    |
+| Action    | `restart`        | brief interruption ~1-2min   |
+
+Confirm: yes/no</pre>
+</div>
+</div>
+</li>
+<li>
+<p>確認後、エージェントは複合再起動を実行します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Restart Successful
+
+**VM**: `lifecycle-demo` | **Namespace**: `my-vms` | **RunStrategy**: Always
+
+Composite restart steps completed:
+1. Stopped VM -&gt; verified status: Stopped
+2. Started VM -&gt; verified status: Running
+
+**Impact**: Running after stop+start. Brief interruption (~1-2min).
+Monitor app logs for any issues.
+
+**Next**: "Show status of VM lifecycle-demo" or "List VMs in namespace my-vms"</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>複合再起動により、新しい Pod、新しい IP アドレス、新しい MAC アドレスを持つ新しい VirtualMachineInstance が生成されます。アプリケーションが安定したネットワーク ID に依存している場合は、Kubernetes Service を使用して基盤となる VMI を抽象化してください。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_サンプルシナリオ_4_ストレージのクリーンアップを伴う_vm_の削除"><a class="anchor" href="#_サンプルシナリオ_4_ストレージのクリーンアップを伴う_vm_の削除"></a>サンプルシナリオ 4: ストレージのクリーンアップを伴う VM の削除</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>この例では、<code>vm-delete</code> スキルを使用して VM とその関連ストレージを削除します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットに次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Delete VM lifecycle-demo in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは VM を検証し、関連するストレージを検出して、削除範囲を表示します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Deletion - Review Scope
+
+**VM**: `lifecycle-demo` | **Namespace**: `my-vms` | **Status**: Running
+
+**Resources**: VM `lifecycle-demo` (Age: 10m, vCPU: 1, Memory: 4Gi)
+**Storage**: DataVolume `lifecycle-demo-rootdisk` (30Gi),
+             PVC `lifecycle-demo-rootdisk` (30Gi) - Total: 30Gi
+
+### Deletion Options
+**1: VM Only** - Preserves storage for reuse
+**2: VM + Storage** &lt;- Recommended (test/dev) - Frees storage
+**3: Cancel**
+
+Select (1, 2, or 3):</pre>
+</div>
+</div>
+</li>
+<li>
+<p>すべてのリソースを解放するためにオプション 2 を選択します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>2</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは確認のために、VM 名を正確に入力することを要求します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## PERMANENT DELETION - Typed Confirmation Required
+
+**CANNOT BE UNDONE**
+
+**Will delete**:
+- VirtualMachine: `lifecycle-demo` (namespace: `my-vms`)
+- DataVolume: `lifecycle-demo-rootdisk`
+- PVC: `lifecycle-demo-rootdisk`
+- All data lost
+
+Type `lifecycle-demo` to confirm: _____</pre>
+</div>
+</div>
+</li>
+<li>
+<p>正確な名前を入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>lifecycle-demo</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは実行中の VM を停止し、VM とそのストレージを削除して、結果を報告します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Deleted (Complete Cleanup)
+
+**Deleted**: VM + DataVolume + PVC | **Freed**: 30Gi
+**Impact**: Permanent removal. Cannot recover.
+**Verify**: "List VMs in namespace my-vms" - VM should not appear</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>VM およびそのストレージが削除されていることを確認できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n my-vms</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>No resources found in my-vms namespace.</pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc -n my-vms</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>No resources found in my-vms namespace.</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_例_5_保護された_vm_の削除拒否"><a class="anchor" href="#_例_5_保護された_vm_の削除拒否"></a>例 5: 保護された VM の削除拒否</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>protected: "true"</code> ラベルが設定されている VM は、確認の有無にかかわらず削除できません。これにより、重要な本番環境の VM が誤って削除されるのを防ぎます。</p>
+</div>
+<div class="paragraph">
+<p>VM に保護ラベルを追加するには、次を実行します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc label vm &lt;vm-name&gt; -n &lt;namespace&gt; protected=true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ラベルが設定されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm &lt;vm-name&gt; -n &lt;namespace&gt; --show-labels</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>保護された VM を削除しようとすると、次のようになります。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで、次のように入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Delete VM production-db in namespace production</pre>
+</div>
+</div>
+</li>
+<li>
+<p>エージェントは保護ラベルを検出し、操作を拒否します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Cannot Delete Protected VM
+
+VM `production-db` has label `protected: "true"` - deletion blocked.
+
+To remove the protection label (requires admin approval):
+  oc label vm production-db -n production protected-
+
+Operation cancelled.</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>エージェントは確認ステップに進みません。削除できるようにするには、事前に保護ラベルを手動で削除する必要があります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ例_6_vm_がすでに目的の状態である場合"><a class="anchor" href="#_シナリオ例_6_vm_がすでに目的の状態である場合"></a>シナリオ例 6: VM がすでに目的の状態である場合</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM がすでに要求された状態にある場合、エージェントはアクションを実行せずにその旨を通知します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE のチャットで以下を入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Start VM lifecycle-demo in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>VM がすでに実行されている場合:</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Already Running
+
+**VM**: `lifecycle-demo` | **Namespace**: `my-vms` | **Status**: Running
+
+Result: No action taken - VM already in desired state.
+To restart: "Restart VM lifecycle-demo in namespace my-vms"</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_シナリオ例_7_ストレージを保持したまま_vm_を削除する"><a class="anchor" href="#_シナリオ例_7_ストレージを保持したまま_vm_を削除する"></a>シナリオ例 7: ストレージを保持したまま VM を削除する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM 定義を削除しつつ、新しい VM への再アタッチ用にディスクを保持したい場合があります。これは、データを保持したまま別の構成で VM を再構築する必要がある場合に役立ちます。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>IDE チャットで、以下を入力します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>Delete VM lifecycle-demo in namespace my-vms</pre>
+</div>
+</div>
+</li>
+<li>
+<p>削除オプションのプロンプトで、オプション 1 を選択します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>1</pre>
+</div>
+</div>
+</li>
+<li>
+<p>確認のために VM 名を入力すると、エージェントは VirtualMachine リソースのみを削除します。</p>
+<div class="listingblock">
+<div class="content">
+<pre>## VM Deleted (VM Only)
+
+**Deleted**: VM `lifecycle-demo`
+**Preserved**: PVC `lifecycle-demo-rootdisk` (30Gi) - available for reattachment
+**Impact**: VM definition removed. Storage retained.</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>PVC は再利用のために namespace に残ります。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc -n my-vms</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                       STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS
+lifecycle-demo-rootdisk    Bound    pvc-abc12345-6789-0def-ghij-klmnopqrstuv   30Gi       RWO            lvms-vg1</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_runstrategy_について"><a class="anchor" href="#_runstrategy_について"></a>RunStrategy について</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>エージェントは、非推奨となった <code>running</code> フィールドに代わる VirtualMachine リソースの <code>runStrategy</code> フィールドを使用して、VM の電源状態を管理します。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">アクション</th>
+<th class="tableblock halign-left valign-top">RunStrategy</th>
+<th class="tableblock halign-left valign-top">動作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">start</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Always</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM が実行され、クラッシュまたはノード障害時に自動的に再起動します</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stop</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Halted</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM が停止し、明示的に起動されるまで停止状態を維持します</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">restart</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Always</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM が停止し、停止したことを確認した上で、自動再起動が有効な状態で起動します</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><code>Always</code> ストラテジーは、現在の VMI が何らかの理由 (ゲストのシャットダウン、ノードのドレイン、OOM キル) で終了した場合に、プラットフォームが新しい VMI を作成することを意味します。<code>Halted</code> ストラテジーは、VMI が作成されないことを意味します。エージェントは非推奨の <code>running</code> フィールドを設定することはなく、すべての電源状態遷移に <code>runStrategy</code> のみを使用します。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+KubeVirt は、<code>RerunOnFailure</code> (ゼロ以外の終了コードの場合のみ再起動) および <code>Manual</code> (自動アクションなし) ストラテジーもサポートしています。<code>vm-lifecycle-manager</code> スキルでは、これら 2 つの状態が最も一般的な電源管理シナリオをカバーしているため、<code>Always</code> と <code>Halted</code> を使用します。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>VM の現在の RunStrategy を確認できます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm lifecycle-demo -n my-vms -o jsonpath='{.spec.runStrategy}'</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_human_in_the_loop_による確認"><a class="anchor" href="#_human_in_the_loop_による確認"></a>Human-in-the-Loop による確認</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>どちらのスキルも、状態を変更する前に明示的なユーザー確認を必要とする安全モデルを適用します。</p>
+</div>
+<div class="paragraph">
+<p><strong>ライフサイクル操作</strong> (<code>vm-lifecycle-manager</code>):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>エージェントは、処理を続行する前に、VM 名、namespace、およびアクションとその影響を提示します。</p>
+</li>
+<li>
+<p>操作が実行される前に、"yes" と明示的に確認する必要があります。</p>
+</li>
+<li>
+<p>「no」と回答するか再検討した場合、操作はキャンセルされ、VM は変更されません。</p>
+</li>
+<li>
+<p>一括操作 (複数の VM) では、VM ごとに個別の確認が必要です。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>削除操作</strong> (<code>vm-delete</code>):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>エージェントは VM を検証し、関連するすべてのリソースを検出して、削除範囲の全容を表示します。</p>
+</li>
+<li>
+<p>VM のみの削除、VM とストレージの削除、またはキャンセルのいずれかを選択します。</p>
+</li>
+<li>
+<p>確認するには、VM 名を正確に (大文字と小文字を区別して) 入力する必要があります。</p>
+</li>
+<li>
+<p>不一致の場合は、操作が直ちにキャンセルされます。</p>
+</li>
+<li>
+<p>保護された VM (ラベル <code>protected: "true"</code>) は、確認ステップの前に拒否されます。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>このセーフティモデルにより、偶発的なサービス中断、リソース消費、恒久的なデータ損失を防ぎます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルで作成されたリソースを削除するには:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete vm lifecycle-demo -n my-vms</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>または、自然言語を使用することもできます。IDE チャットに「Delete VM lifecycle-demo in namespace my-vms」と入力します。<code>vm-delete</code> スキルが、完全な安全性ワークフローを使用して削除を処理します。</p>
+</div>
+<div class="paragraph">
+<p>namespace を削除するには:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace my-vms</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><code>vm-lifecycle-manager</code> スキルは、<code>runStrategy</code> フィールドを <code>Always</code> (実行中) と <code>Halted</code> (停止) の間で遷移させることで、VM の電源状態を管理します。</p>
+</li>
+<li>
+<p>VM を停止するとグレースフルシャットダウンが実行され、ストレージと VM の状態を保持しながらコンピュートリソースが解放されます。</p>
+</li>
+<li>
+<p>VM を起動すると RunStrategy が <code>Always</code> に設定され、クラッシュ時やノード障害時の自動再起動機能が提供されます。</p>
+</li>
+<li>
+<p>再起動では、Kubernetes の <code>resourceVersion</code> の競合を回避するために stop-verify-start (停止・検証・開始) の複合パターンを使用します。再起動により、新しい Pod とネットワーク ID を持つ新しい VMI が生成されます。</p>
+</li>
+<li>
+<p><code>vm-delete</code> スキルは、検証、スコープの確認、オプションの選択、名前入力による確認という複数ステップの安全策を適用します。</p>
+</li>
+<li>
+<p>保護ラベル (<code>protected: "true"</code>) は確認ステップの前に削除をブロックするため、手動で削除する必要があります。</p>
+</li>
+<li>
+<p>削除は 2 つのモードをサポートしています: VM のみ (再アタッチ用にストレージを保持) と VM + ストレージ (完全なクリーンアップ)。</p>
+</li>
+<li>
+<p>どちらのスキルも読み取り専用の安全性を備えており、明示的に確認するまで変更は行われません。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="getting-started.html" class="xref page">AI エージェントによる VM 管理の開始</a></p>
+</li>
+<li>
+<p><a href="natural-language-vm-create.html" class="xref page">自然言語による仮想マシンの作成</a></p>
+</li>
+<li>
+<p><a href="vm-clone.html" class="xref page">AI エージェントによる仮想マシンのクローン作成</a></p>
+</li>
+<li>
+<p><a href="https://github.com/RHEcosystemAppEng/agentic-plugins/tree/main/rh-virt" target="_blank" rel="noopener">rh-virt スキルパックリポジトリ</a></p>
+</li>
+<li>
+<p><a href="https://github.com/openshift/openshift-mcp-server" target="_blank" rel="noopener">OpenShift MCP サーバー</a></p>
+</li>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.22/virt/index.html" target="_blank" rel="noopener">OpenShift Virtualization ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/virtual_machines/run_strategies/" target="_blank" rel="noopener">KubeVirt RunStrategy ドキュメント</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="natural-language-vm-create.html">自然言語による VM 作成</a></span>
+  <span class="next"><a href="vm-clone.html">VM のクローン作成</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
+  </body>
+</html>

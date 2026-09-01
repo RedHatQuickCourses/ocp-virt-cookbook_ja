@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>ゴールデンイメージトラブルシューティングガイド :: OpenShift Virtualization cookbook</title>
-    <link rel="prev" href="custom-golden-images.html">
+    <link rel="prev" href="windows-golden-images.html">
     <link rel="next" href="cloning-vms.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
     <link rel="stylesheet" href="../../../_/css/site.css">
@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
     <a class="nav-link" href="golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -314,20 +393,20 @@
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#クイックヘルスチェック">[クイックヘルスチェック]</a></p>
+<p><a href="#quick-health-check">クイックヘルスチェック</a></p>
 </li>
 <li>
-<p><a href="#ステップ別詳細確認">[ステップ別詳細確認]</a></p>
+<p><a href="#step-by-step-check">ステップ別詳細確認</a></p>
 </li>
 <li>
-<p><a href="#一般的な問題と解決策">[一般的な問題と解決策]</a></p>
+<p><a href="#common-issues">一般的な問題と解決策</a></p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_クイックヘルスチェック"><a class="anchor" href="#_クイックヘルスチェック"></a>クイックヘルスチェック</h2>
+<h2 id="quick-health-check"><a class="anchor" href="#quick-health-check"></a>クイックヘルスチェック</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_namespace_の確認"><a class="anchor" href="#_namespace_の確認"></a>namespace の確認</h3>
@@ -337,7 +416,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -381,7 +460,7 @@ golden-images    Active   5m</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ別詳細確認"><a class="anchor" href="#_ステップ別詳細確認"></a>ステップ別詳細確認</h2>
+<h2 id="step-by-step-check"><a class="anchor" href="#step-by-step-check"></a>ステップ別詳細確認</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_ステップ_1_ベース_vm_作成の検証"><a class="anchor" href="#_ステップ_1_ベース_vm_作成の検証"></a>ステップ 1: ベース VM 作成の検証</h3>
@@ -393,7 +472,7 @@ golden-images    Active   5m</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -451,7 +530,7 @@ base-fedora-vm   2m    Running   True</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -468,7 +547,7 @@ base-fedora-vm-disk   Succeeded   100.0%                5m</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力には <code>Bound</code> ステータスと正しい Storage Class が表示されます:</p>
+<p>想定される出力には <code>Bound</code> ステータスと正しい Storage Class が表示されます:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -495,11 +574,11 @@ base-fedora-vm-disk   Bound    pvc-abc123...                              30Gi  
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># For nginx
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># nginx の場合
 systemctl status nginx
 nginx -v
 
-# For custom configuration
+# カスタム設定の場合
 cat /etc/nginx/nginx.conf
 ls -la /usr/share/nginx/html/</code></pre>
 </div>
@@ -525,7 +604,7 @@ cat /var/log/cloud-init-output.log</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -542,7 +621,7 @@ base-fedora-vm   10m   Stopped   False</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -561,7 +640,7 @@ base-fedora-vm   10m   Stopped   False</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -601,7 +680,7 @@ fedora-nginx-golden    1m</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -619,7 +698,7 @@ webserver-vm-2    2m    Running   True</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -637,7 +716,7 @@ webserver-vm-2-disk    Succeeded   100.0%                2m</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力には DataSource への参照が表示されます:</p>
+<p>想定される出力には DataSource への参照が表示されます:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -699,7 +778,7 @@ webserver-vm-2-disk    Bound    pvc-ghi789...    30Gi       RWO            lvms-
 <h4 id="_実際のストレージ使用量の確認_lvm_使用時"><a class="anchor" href="#_実際のストレージ使用量の確認_lvm_使用時"></a>実際のストレージ使用量の確認 (LVM 使用時)</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Get the LVM thin pool usage
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># LVM シンプールの使用状況を取得
 oc get lvmvolumegroup -n openshift-storage -o yaml | grep -A 10 status</code></pre>
 </div>
 </div>
@@ -708,7 +787,7 @@ oc get lvmvolumegroup -n openshift-storage -o yaml | grep -A 10 status</code></p
 </div>
 </div>
 <div class="sect1">
-<h2 id="_一般的な問題と解決策"><a class="anchor" href="#_一般的な問題と解決策"></a>一般的な問題と解決策</h2>
+<h2 id="common-issues"><a class="anchor" href="#common-issues"></a>一般的な問題と解決策</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_問題_1_ベース_vm_の_datavolume_が_importinprogress_で停止している"><a class="anchor" href="#_問題_1_ベース_vm_の_datavolume_が_importinprogress_で停止している"></a>問題 1: ベース VM の DataVolume が ImportInProgress で停止している</h3>
@@ -727,10 +806,10 @@ base-fedora-vm-disk   ImportInProgress   10%        10m</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check CDI importer pod
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># CDI importer pod を確認
 oc get pods -n golden-images | grep importer
 
-# Check importer logs
+# importer のログを確認
 oc logs -n golden-images &lt;importer-pod-name&gt;</code></pre>
 </div>
 </div>
@@ -791,10 +870,10 @@ base-fedora-vm   5m    WaitingForVolumeBinding                   False</code></p
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check DataVolume status
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># DataVolume のステータスを確認
 oc get dv base-fedora-vm-disk -n golden-images
 
-# Check events
+# イベントを確認
 oc get events -n golden-images --sort-by='.lastTimestamp' | grep -i error</code></pre>
 </div>
 </div>
@@ -839,7 +918,7 @@ oc get events -n golden-images --sort-by='.lastTimestamp' | grep -i error</code>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi base-fedora-vm -n golden-images -o jsonpath='{.status.guestOSInfo}'
-# Returns empty</code></pre>
+# 空が返される</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -847,13 +926,13 @@ oc get events -n golden-images --sort-by='.lastTimestamp' | grep -i error</code>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Access VM console
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM コンソールにアクセス
 virtctl console base-fedora-vm -n golden-images
 
-# Check if qemu-guest-agent is installed
+# qemu-guest-agent がインストールされているか確認
 rpm -qa | grep qemu-guest-agent
 
-# Check service status
+# サービスのステータスを確認
 systemctl status qemu-guest-agent</code></pre>
 </div>
 </div>
@@ -888,10 +967,10 @@ sudo systemctl enable --now qemu-guest-agent</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Access the VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM にアクセス
 virtctl console webserver-vm-1 -n golden-images
 
-# Check for nginx
+# nginx を確認
 which nginx
 systemctl status nginx</code></pre>
 </div>
@@ -912,7 +991,7 @@ systemctl status nginx</code></pre>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console base-fedora-vm -n golden-images
-# Check manually for installed software</code></pre>
+# インストール済みソフトウェアを手動で確認</code></pre>
 </div>
 </div>
 </li>
@@ -982,10 +1061,10 @@ oc create -f fedora-golden-datasource.yaml</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check LVM volume group usage
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># LVM ボリュームグループの使用状況を確認
 oc get lvmvolumegroup -n openshift-storage -o yaml
 
-# Check PVC requests vs available
+# PVC のリクエストと利用可能容量を確認
 oc get pvc -n golden-images</code></pre>
 </div>
 </div>
@@ -1022,10 +1101,10 @@ oc get pvc -n golden-images</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check DataVolume progress
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># DataVolume の進捗を確認
 oc get dv webserver-vm-1-disk -n golden-images -w
 
-# Check CDI pod logs
+# CDI pod のログを確認
 oc logs -n golden-images -l app=containerized-data-importer --tail=100</code></pre>
 </div>
 </div>
@@ -1069,13 +1148,13 @@ oc logs -n golden-images -l app=containerized-data-importer --tail=100</code></p
 <h3 id="_全リソースのチェック"><a class="anchor" href="#_全リソースのチェック"></a>全リソースのチェック</h3>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Everything in namespace
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># namespace 内のすべてのリソース
 oc get all,dv,pvc,datasource -n golden-images
 
-# With more details
+# 詳細を表示
 oc get all,dv,pvc,datasource -n golden-images -o wide
 
-# Watch for changes
+# 変更を監視
 oc get vm,vmi,dv -n golden-images -w</code></pre>
 </div>
 </div>
@@ -1084,13 +1163,13 @@ oc get vm,vmi,dv -n golden-images -w</code></pre>
 <h3 id="_ログとイベント"><a class="anchor" href="#_ログとイベント"></a>ログとイベント</h3>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Recent events
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 最近のイベント
 oc get events -n golden-images --sort-by='.lastTimestamp' | tail -20
 
-# VM events
+# VM のイベント
 oc describe vm base-fedora-vm -n golden-images | tail -20
 
-# CDI operator logs
+# CDI Operator のログ
 oc logs -n openshift-cnv -l app=cdi-operator --tail=50</code></pre>
 </div>
 </div>
@@ -1099,13 +1178,13 @@ oc logs -n openshift-cnv -l app=cdi-operator --tail=50</code></pre>
 <h3 id="_ストレージの詳細"><a class="anchor" href="#_ストレージの詳細"></a>ストレージの詳細</h3>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># PVC details
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># PVC の詳細
 oc describe pvc &lt;pvc-name&gt; -n golden-images
 
-# Storage class configuration
+# StorageClass の設定
 oc get storageclass -o yaml
 
-# LVM status (if using LVM)
+# LVM のステータス (LVM を使用している場合)
 oc get lvmvolumegroup,lvmvolumegroupnodestatus -n openshift-storage</code></pre>
 </div>
 </div>
@@ -1113,7 +1192,7 @@ oc get lvmvolumegroup,lvmvolumegroupnodestatus -n openshift-storage</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_その他のリソース"><a class="anchor" href="#_その他のリソース"></a>その他のリソース</h2>
+<h2 id="_追加リソース"><a class="anchor" href="#_追加リソース"></a>追加リソース</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -1134,7 +1213,7 @@ oc get lvmvolumegroup,lvmvolumegroupnodestatus -n openshift-storage</code></pre>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="custom-golden-images.html">カスタムゴールデンイメージ</a></span>
+  <span class="prev"><a href="windows-golden-images.html">Windows ゴールデンイメージ</a></span>
   <span class="next"><a href="cloning-vms.html">VM のクローン作成</a></span>
 </nav>
 </article>
@@ -1147,5 +1226,8 @@ oc get lvmvolumegroup,lvmvolumegroupnodestatus -n openshift-storage</code></pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

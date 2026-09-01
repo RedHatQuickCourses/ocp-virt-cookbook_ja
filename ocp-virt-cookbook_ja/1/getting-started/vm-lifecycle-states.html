@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>VM ライフサイクルの状態と基本操作の理解 :: OpenShift Virtualization cookbook</title>
-    <link rel="prev" href="create-vm-web-console.html">
+    <link rel="prev" href="create-vm-cli-yaml.html">
     <link rel="next" href="virtctl-basics.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
     <link rel="stylesheet" href="../../../_/css/site.css">
@@ -55,10 +55,19 @@
     <a class="nav-link" href="index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="default-storage-class.html">ストレージ設定</a>
@@ -66,14 +75,17 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -291,7 +370,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">スタートガイド</a></li>
-    <li><a href="vm-lifecycle-states.html">VM ライフサイクル状態</a></li>
+    <li><a href="vm-lifecycle-states.html">VM ライフサイクルの状態</a></li>
   </ul>
 </nav>
 </div>
@@ -305,7 +384,7 @@
 <h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>OpenShift Virtualization における仮想マシンのライフサイクルを理解することは、効果的な VM 管理、トラブルシューティング、および自動化に不可欠です。本ガイドでは、VirtualMachine リソースと VirtualMachineInstance リソースの関係、VM のさまざまな状態、ライフサイクル全体を通じて VM を管理する方法について説明します。</p>
+<p>OpenShift Virtualization における仮想マシンのライフサイクルを理解することは、効果的な VM 管理、トラブルシューティング、自動化に不可欠です。本ガイドでは、VirtualMachine リソースと VirtualMachineInstance リソースの関係、VM のさまざまな状態、ライフサイクル全体を通じて VM を管理する方法について説明します。</p>
 </div>
 <div class="paragraph">
 <p>テスト済みバージョン:</p>
@@ -370,7 +449,7 @@
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># List VirtualMachine resources
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 仮想マシンリソースを一覧表示
 oc get vm -n my-vms</code></pre>
 </div>
 </div>
@@ -404,7 +483,7 @@ fedora-app-vm   14m   Running   True</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># List VirtualMachineInstance resources
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VirtualMachineInstance リソースを一覧表示
 oc get vmi -n my-vms</code></pre>
 </div>
 </div>
@@ -507,6 +586,75 @@ fedora-app-vm   78s   Running   10.128.0.184   ocplab01   True</code></pre>
 </tbody>
 </table>
 </div>
+<div class="sect2">
+<h3 id="_状態遷移図"><a class="anchor" href="#_状態遷移図"></a>状態遷移図</h3>
+<div class="paragraph">
+<p>次の図は、VM が状態間をどのように遷移するかを示しています。各矢印は操作または自動遷移を表します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">  ┌──────┐      start   ┌──────┐           ┌────────┐            ┌───────┐
+  │ Stopped │─────────►│ Pending │───────►│ Scheduling │───────►│ Starting │
+  └──────┘              └──────┘           └────────┘            └───┬───┘
+       ▲                                                                                │
+       │                                                                                ▼
+  ┌──┴─────┐         ┌───────┐   stop   ┌──────┐    pause     ┌─────┐
+  │ Terminating │◄──────│ Stopping │◄──────│ Running │────────►│ Paused  │
+  └────────┘         └───────┘          └───┬──┘◄────────└─────┘
+                                                           │         unpause
+                                                        migrate
+                                                           │
+                                                           ▼
+                                                  ┌───────┐
+                                                  │ Migrating │──► Running (new node)
+                                                  └───────┘</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Start</strong> は、停止した VM を Pending、Scheduling、Starting を経由して Running に遷移させます。</p>
+</li>
+<li>
+<p><strong>Stop</strong> は、実行中の VM を Stopping および Terminating を経由して Stopped に戻します。</p>
+</li>
+<li>
+<p><strong>Restart</strong> は、すべての中間状態を経由して、完全な停止と起動のサイクルを実行します。</p>
+</li>
+<li>
+<p><strong>Pause/Unpause</strong> は、VMI のライフサイクルを変更することなく、実行を一時停止および再開します。</p>
+</li>
+<li>
+<p><strong>Migrate</strong> は、VM を Running 状態のまま別のノードにライブマイグレーションします。</p>
+</li>
+<li>
+<p><strong>Delete</strong> は、任意の状態から VM リソースを完全に削除します。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ライブマイグレーションとライフサイクル"><a class="anchor" href="#_ライブマイグレーションとライフサイクル"></a>ライブマイグレーションとライフサイクル</h3>
+<div class="paragraph">
+<p>ライブマイグレーションは、ダウンタイムなしで実行中の VM をあるノードから別のノードに移動します。マイグレーションは以下のような場面で発生します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Node drain</strong>&#8201;&#8212;&#8201;メンテナンスのためにノードが cordon された場合、実行中の VM は自動的に他のノードにマイグレーションされます。</p>
+</li>
+<li>
+<p><strong>クラスターのアップグレード</strong>&#8201;&#8212;&#8201;OpenShift は Worker Node を 1 台ずつローリング更新し、各ノード上の VM のマイグレーションをトリガーします。</p>
+</li>
+<li>
+<p><strong>リバランス</strong>&#8201;&#8212;&#8201;管理者または descheduler が VM をマイグレーションして、ノード間でワークロードをより均等に分散する場合があります。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>マイグレーション中、VM は一時的に VMI ステータスに表示される <code>Migrating</code> フェーズに入ります。このプロセスの間、VM にはアクセス可能なままです。マイグレーションには共有ストレージ (ReadWriteMany PVC) が必要であるか、または非共有ストレージ設定のための post-copy マイグレーションが使用されます。</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -554,10 +702,10 @@ fedora-app-vm   78s   Running   10.128.0.184   ocplab01   True</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check VM status
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM の状態を確認
 oc get vm fedora-app-vm -n my-vms
 
-# Check VMI was created
+# VMI が作成されたことを確認
 oc get vmi fedora-app-vm -n my-vms</code></pre>
 </div>
 </div>
@@ -633,10 +781,10 @@ fedora-app-vm   78s   Running   10.128.0.184   ocplab01   True</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM should show Stopped status
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM は停止状態になっているはずです。
 oc get vm fedora-app-vm -n my-vms
 
-# VMI should no longer exist
+# VMI は存在しないはずです。
 oc get vmi fedora-app-vm -n my-vms</code></pre>
 </div>
 </div>
@@ -713,10 +861,10 @@ Error from server (NotFound): virtualmachineinstances.kubevirt.io "fedora-app-vm
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Pause a VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM を一時停止
 virtctl pause vm fedora-app-vm -n my-vms
 
-# Unpause a VM
+# VM の一時停止を解除
 virtctl unpause vm fedora-app-vm -n my-vms</code></pre>
 </div>
 </div>
@@ -845,10 +993,10 @@ fedora-app-vm   14m   Paused   False</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM should not exist
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM は存在しないはずです
 oc get vm fedora-app-vm -n my-vms
 
-# Check if PVCs were preserved (if desired)
+# PVC が保持されているか確認 (必要に応じて)
 oc get pvc -n my-vms</code></pre>
 </div>
 </div>
@@ -1069,7 +1217,7 @@ Status:
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Get events for a specific VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 特定の VM のイベントを取得
 oc get events -n my-vms --field-selector involvedObject.name=fedora-app-vm</code></pre>
 </div>
 </div>
@@ -1184,6 +1332,40 @@ oc get events -n my-vms --field-selector involvedObject.name=fedora-app-vm</code
 </table>
 </div>
 <div class="sect2">
+<h3 id="_実行戦略の選択"><a class="anchor" href="#_実行戦略の選択"></a>実行戦略の選択</h3>
+<div class="paragraph">
+<p>この決定木を使用して、ワークロードに適した戦略を選択してください。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">  VMは常に稼働している必要がありますか?
+      │
+      ├── はい ──► Always
+      │           自動起動し、停止時には自動的に再起動します。
+      │
+      └── いいえ
+           │
+           クラッシュから自動的に復旧すべきですか?
+               │
+               ├── はい ──► RerunOnFailure
+               │           障害発生時には再起動し、
+               │           ゲスト側で開始されたシャットダウン時には停止状態を維持します。
+               │
+               └── いいえ
+                    │
+                    手動での開始・停止制御を行いますか?
+                        │
+                        ├── はい   ──► Manual
+                        │             明示的にリクエストしたときにのみ、
+                        │             開始および停止します。
+                        │
+                        └── いいえ ──► Halted
+                                      VMは停止したままになります。
+                                      メンテナンス中にVMを待機状態にしておく場合に使用します。</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_実行戦略の設定"><a class="anchor" href="#_実行戦略の設定"></a>実行戦略の設定</h3>
 <div class="paragraph">
 <p><strong>VM の YAML:</strong></p>
@@ -1195,9 +1377,9 @@ kind: VirtualMachine
 metadata:
   name: my-vm
 spec:
-  runStrategy: Always    # or RerunOnFailure, Manual, Halted
+  runStrategy: Always    # または RerunOnFailure、Manual、Halted
   template:
-    # ... VM template spec</code></pre>
+    # ... VM テンプレート spec</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1270,23 +1452,44 @@ spec:
 <p>VirtualMachine リソースと VirtualMachineInstance リソースの違い</p>
 </li>
 <li>
-<p>VM ライフサイクルの状態と遷移</p>
+<p>VM ライフサイクルの状態と遷移 (状態遷移図を含む)</p>
 </li>
 <li>
 <p>VM の起動、停止、一時停止、再開、再起動、削除の方法</p>
 </li>
 <li>
+<p>Node drain やアップグレード時におけるライブマイグレーションと VM ライフサイクルの関係</p>
+</li>
+<li>
 <p>条件 (Conditions) とイベント (Events) を使用した VM 状態の監視方法</p>
 </li>
 <li>
-<p>VM の自動動作を制御する実行戦略 (Run Strategies)</p>
+<p>実行戦略による VM の自動動作の制御と適切な戦略の選択方法</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="create-vm-web-console.html" class="xref page">Web コンソールを使用したテンプレートからの VM の作成</a> - Web コンソールからの VM の作成</p>
+</li>
+<li>
+<p><a href="virtctl-basics.html" class="xref page">virtctl を使用した VM 管理</a> - VM 管理用 CLI コマンド</p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/virtualization/managing-vms" target="_blank" rel="noopener">仮想マシンの管理 - 公式ドキュメント</a></p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="create-vm-web-console.html">Web コンソールを使用した VM の作成</a></span>
+  <span class="prev"><a href="create-vm-cli-yaml.html">CLI からの VM の作成</a></span>
   <span class="next"><a href="virtctl-basics.html">Virtctl の基礎</a></span>
 </nav>
 </article>
@@ -1299,5 +1502,8 @@ spec:
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

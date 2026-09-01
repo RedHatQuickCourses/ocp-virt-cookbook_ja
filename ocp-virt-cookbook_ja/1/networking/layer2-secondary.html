@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Layer 2 セカンダリネットワークの設定 :: OpenShift Virtualization cookbook</title>
+    <title>Layer 2 セカンダリーネットワークの設定 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="cudn-localnet-vlan.html">
     <link rel="next" href="linux-bridges.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -291,7 +370,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">ネットワーク構成</a></li>
-    <li><a href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a></li>
+    <li><a href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a></li>
   </ul>
 </nav>
 </div>
@@ -300,12 +379,12 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Layer 2 セカンダリネットワークの設定</h1>
+<h1 class="page">Layer 2 セカンダリーネットワークの設定</h1>
 <div class="sect1">
 <h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>本ガイドでは、クラスター全体の論理スイッチを介して <code>VirtualMachines</code> を接続するための <code>layer2</code> セカンダリネットワークの設定方法を説明します。</p>
+<p>本ガイドでは、クラスター全体の論理スイッチを介して <code>VirtualMachines</code> を接続するための <code>layer2</code> セカンダリーネットワークの設定方法を説明します。</p>
 </div>
 <div class="paragraph">
 <p>これを行うことで、<code>VirtualMachines</code> はデフォルトの Pod ネットワークをプライマリネットワークとして継続的に使用できます。これは、以下の条件が当てはまる場合に有効です。</p>
@@ -325,10 +404,10 @@
 <p>クラスター内のノードの物理ネットワークインターフェースへのアクセスが不要な場合</p>
 </li>
 <li>
-<p>インターネットからセカンダリネットワークへのイングレス接続をルーティングする必要がない場合</p>
+<p>インターネットからセカンダリーネットワークへのイングレス接続をルーティングする必要がない場合</p>
 </li>
 <li>
-<p>最後に、セカンダリネットワークから外部ネットワークへのアクセスが不要な場合</p>
+<p>最後に、セカンダリーネットワークから外部ネットワークへのアクセスが不要な場合</p>
 </li>
 </ul>
 </div>
@@ -391,7 +470,7 @@
 </div>
 </li>
 <li>
-<p><a href="#testing_secondary_network">セカンダリネットワークのテスト</a></p>
+<p><a href="#testing_secondary_network">セカンダリーネットワークのテスト</a></p>
 </li>
 </ul>
 </div>
@@ -481,7 +560,7 @@ spec:
 これは、一般的な OpenShift (Kubernetes) のやり方に従い、<code>VirtualMachine</code> API オブジェクトを作成してクラスターに適用することで行います。</p>
 </div>
 <div class="paragraph">
-<p>このセクションでは、どちらもセカンダリの <code>l2-network</code> に接続される 2 つの新しい VM を作成します。</p>
+<p>このセクションでは、どちらもセカンダリーの <code>l2-network</code> に接続される 2 つの新しい VM を作成します。</p>
 </div>
 <div class="sect2">
 <h3 id="creating_first_vm"><a class="anchor" href="#creating_first_vm"></a>最初の VirtualMachine の作成</h3>
@@ -587,7 +666,7 @@ spec:
 <p><strong>name</strong> - インターフェース名を指定します。ここでは <code>networks</code> で関連付けられたネットワーク名に合わせて <code>secondary</code> と命名しました。</p>
 </li>
 <li>
-<p><strong>bridge</strong> または <strong>masquerade</strong> - セカンダリインターフェースは <code>bridge</code> を使用してハイパーバイザー Pod のインターフェースに接続されます。どちらのフィールドも空のオブジェクト (<code>{}</code>) を受け入れます。</p>
+<p><strong>bridge</strong> または <strong>masquerade</strong> - セカンダリーインターフェースは <code>bridge</code> を使用してハイパーバイザー Pod のインターフェースに接続されます。どちらのフィールドも空のオブジェクト (<code>{}</code>) を受け入れます。</p>
 </li>
 </ul>
 </div>
@@ -670,7 +749,7 @@ spec:
 <div class="sect2">
 <h3 id="creating_second_vm"><a class="anchor" href="#creating_second_vm"></a>2 つ目の VirtualMachine の作成</h3>
 <div class="paragraph">
-<p>テストを行う前に、セカンダリネットワークを介した接続を確立するために 2 つ目の VM が必要です。</p>
+<p>テストを行う前に、セカンダリーネットワークを介した接続を確立するために 2 つ目の VM が必要です。</p>
 </div>
 <div class="paragraph">
 <p>以下は、2 つ目の <code>VirtualMachine</code> の YAML ソース定義です。
@@ -763,10 +842,10 @@ spec:
 </div>
 </div>
 <div class="sect1">
-<h2 id="testing_secondary_network"><a class="anchor" href="#testing_secondary_network"></a>セカンダリネットワークのテスト</h2>
+<h2 id="testing_secondary_network"><a class="anchor" href="#testing_secondary_network"></a>セカンダリーネットワークのテスト</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>セカンダリネットワークは <code>layer2</code> 専用であり、クラスターと namespace 内の仮想ネットワークとしてのみ存在するため、ある VM から別の VM への接続性をテストする必要があります。</p>
+<p>セカンダリーネットワークは <code>layer2</code> 専用であり、クラスターと namespace 内の仮想ネットワークとしてのみ存在するため、ある VM から別の VM への接続性をテストする必要があります。</p>
 </div>
 <div class="paragraph">
 <p>テストを進めるには、<code>example-l2-secondary</code> namespace に以下のリソースが存在している必要があります。</p>
@@ -777,10 +856,10 @@ spec:
 <p><code>NetworkAttachmentDefinition</code>: <code>l2-network</code></p>
 </li>
 <li>
-<p><code>VirtualMachine</code>: <code>fedora-l2-secondary</code> (セカンダリ NIC IP アドレス: 192.168.20.10)</p>
+<p><code>VirtualMachine</code>: <code>fedora-l2-secondary</code> (セカンダリー NIC IP アドレス: 192.168.20.10)</p>
 </li>
 <li>
-<p><code>VirtualMachine</code>: <code>fedora-l2-secondary2</code> (セカンダリ NIC IP アドレス: 192.168.20.20)</p>
+<p><code>VirtualMachine</code>: <code>fedora-l2-secondary2</code> (セカンダリー NIC IP アドレス: 192.168.20.20)</p>
 </li>
 </ul>
 </div>
@@ -804,7 +883,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>最初の VM のコンソールから <code>fedora-l2-secondary2</code> (IP アドレス: <code>192.168.20.20</code>) VM に ping を送信します。応答があれば、セカンダリネットワークは機能しています (<code>CTRL+C</code> を押すと ping がキャンセルされます)。</p>
+<p>最初の VM のコンソールから <code>fedora-l2-secondary2</code> (IP アドレス: <code>192.168.20.20</code>) VM に ping を送信します。応答があれば、セカンダリーネットワークは機能しています (<code>CTRL+C</code> を押すと ping がキャンセルされます)。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -826,6 +905,72 @@ oc delete namespace example-l2-secondary</code></pre>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_ネットワークトポロジー"><a class="anchor" href="#_ネットワークトポロジー"></a>ネットワークトポロジー</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>次の図は、異なる Worker Node 上にある 2 つの VM が Layer 2 セカンダリーネットワーク経由でどのように通信するかを示しています。トラフィックは、物理ネットワークアクセスやノードレベルの NIC 設定を必要とせずに、ノード間の Geneve トンネルを介して OVN オーバーレイを通過します。</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="_images/layer2-secondary-topology.png" alt="Layer 2 Secondary Network Topology">
+</div>
+</div>
+<div class="paragraph">
+<p><code>layer2</code> トポロジーを備えた <code>ovn-k8s-cni-overlay</code> CNI プラグインは、クラスター全体の OVN 論理スイッチを作成します。Multus は、ブリッジ接続を介して各 VM のセカンダリーインターフェースをこの論理スイッチにアタッチします。Node 1 の VM-A が Node 2 の VM-B にトラフィックを送信すると、OVN はフレームを Geneve トンネル内にカプセル化し、クラスターの既存のノード間ネットワークを通じて配信します。基盤となる転送がオーバーレイであっても、VM は同じ物理スイッチ上にあるかのように直接の Layer 2 接続を認識します。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Layer 2 セカンダリーネットワークは完全に OVN オーバーレイ内で動作するため、クラスターノードに <code>NodeNetworkConfigurationPolicy</code> (NNCP)、ブリッジセットアップ、VLAN 設定は不要です。これにより、Layer 2 はデプロイが最も簡単なセカンダリーネットワークオプションとなります。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ビジネスユースケース"><a class="anchor" href="#_ビジネスユースケース"></a>ビジネスユースケース</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Layer 2 セカンダリーネットワークは、外部ネットワークアクセスを必要とせず、シンプルで分離された VM 間接続を必要とするワークロードに最適です。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ユースケース</th>
+<th class="tableblock halign-left valign-top">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">内部の east-west 通信</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クラスター外にトラフィックを公開することなく、直接の Layer 2 接続を必要とする VM 間のデータベースレプリケーション、メッセージキュー、またはアプリケーションクラスタリング。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">開発およびテスト環境</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">物理 NIC アクセスやネットワークチームの関与を必要とせずに、多層アプリケーションをテストするための分離された VM ネットワーク。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">シンプルな VM 間接続</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM 同士がプライベートサブネット上で相互に到達する必要があるが、外部ネットワークやインターネットへのアクセスは必要としないワークロード。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linux bridge の代替</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">物理ネットワーク統合が不要な場合、Layer 2 オーバーレイは、ノードレベルの NNCP リソースと物理 NIC アクセスを必要とする Linux bridge の設定よりもシンプルです。VM が既存の物理ネットワークセグメントに参加する必要がある場合は、Linux bridge を選択してください。</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -837,28 +982,28 @@ oc delete namespace example-l2-secondary</code></pre>
 <p><code>ovn-k8s-cni-overlay</code> CNI プラグインを使用して <code>layer2</code> トポロジーの <code>NetworkAttachmentDefinition</code> を作成する方法</p>
 </li>
 <li>
-<p>プライマリ masquerade インターフェースとセカンダリ bridge インターフェースの両方を持つ VirtualMachines を設定する方法</p>
+<p>プライマリ masquerade インターフェースとセカンダリー bridge インターフェースの両方を持つ VirtualMachines を設定する方法</p>
 </li>
 <li>
-<p>cloud-init <code>networkData</code> を使用してセカンダリネットワークに静的 IP アドレスを割り当てる方法</p>
+<p>cloud-init <code>networkData</code> を使用してセカンダリーネットワークに静的 IP アドレスを割り当てる方法</p>
 </li>
 <li>
 <p>同じ OVN 管理の論理スイッチ上の VM 間の Layer 2 接続を確認する方法</p>
 </li>
 <li>
-<p>Linux bridge や localnet などの他のネットワークオプションと比較して、いつ Layer 2 セカンダリネットワークを使用すべきか判断する方法</p>
+<p>Linux bridge や localnet などの他のネットワークオプションと比較して、いつ Layer 2 セカンダリーネットワークを使用すべきか判断する方法</p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_関連リソース"><a class="anchor" href="#_関連リソース"></a>関連リソース</h2>
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-connecting-vm-to-ovn-secondary-network" target="_blank" rel="noopener">OpenShift Virtualization - OVN セカンダリネットワークへの VM の接続</a></p>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/virtualization/networking#virt-connecting-vm-to-ovn-secondary-network" target="_blank" rel="noopener">OpenShift Virtualization - OVN セカンダリーネットワークへの VM の接続</a></p>
 </li>
 <li>
 <p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/multiple_networks/understanding-multiple-networks" target="_blank" rel="noopener">OpenShift - 複数のネットワークの理解</a></p>
@@ -868,7 +1013,7 @@ oc delete namespace example-l2-secondary</code></pre>
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a></span>
+  <span class="prev"><a href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a></span>
   <span class="next"><a href="linux-bridges.html">Linux bridge</a></span>
 </nav>
 </article>
@@ -881,5 +1026,8 @@ oc delete namespace example-l2-secondary</code></pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

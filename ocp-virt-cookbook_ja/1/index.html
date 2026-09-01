@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>OpenShift Virtualization クックブック :: OpenShift Virtualization cookbook</title>
+    <title>OpenShift Virtualization cookbook :: OpenShift Virtualization cookbook</title>
     <link rel="next" href="getting-started/index.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -54,10 +54,19 @@
     <a class="nav-link" href="getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="getting-started/default-storage-class.html">ストレージ設定</a>
@@ -66,13 +75,16 @@
     <a class="nav-link" href="getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -91,6 +103,9 @@
     <a class="nav-link" href="storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -98,6 +113,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -119,22 +143,31 @@
     <a class="nav-link" href="networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -165,7 +198,13 @@
     <a class="nav-link" href="vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -178,6 +217,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -201,6 +243,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -216,6 +261,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -248,6 +296,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -298,18 +377,18 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">OpenShift Virtualization クックブック</h1>
+<h1 class="page">OpenShift Virtualization cookbook</h1>
 <div class="sect1">
 <h2 id="_はじめに"><a class="anchor" href="#_はじめに"></a>はじめに</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>このクックブックは、OpenShift Virtualization でのワークロードを開始、およびデプロイするための実践的なフィールドガイドです。</p>
+<p>この cookbook は、OpenShift Virtualization でのワークロードを開始、およびデプロイするための実践的なフィールドガイドです。</p>
 </div>
 <div class="paragraph">
 <p>OpenShift を使い始めたばかりの方に向けて、すぐに役立つレシピ、マニフェストの例、トラブルシューティングに関するメモを提供します。本書は、体系的な学習に代わるものではなく、実際の導入を促進するための、<a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html-single/virtualization/index" target="_blank" rel="noopener">公式ドキュメント</a> および <a href="https://www.redhat.com/en/services/training/do316-managing-virtual-machines-red-hat-openshift-virtualization" target="_blank" rel="noopener">トレーニングコース</a> を補完する <em>実践的なガイド</em> として設計されています。</p>
 </div>
 <div class="paragraph">
-<p>(<em>最終更新日: 2026-08-12</em>)</p>
+<p>(<em>最終更新日: 2026-09-01</em>)</p>
 </div>
 </div>
 </div>
@@ -317,7 +396,7 @@
 <h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>このクックブックを効果的に活用するには、以下が必要です。</p>
+<p>本 cookbook を効果的に活用するには、以下が必要です。</p>
 </div>
 <div class="ulist">
 <ul>
@@ -338,7 +417,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_クックブックのモジュール"><a class="anchor" href="#_クックブックのモジュール"></a>クックブックのモジュール</h2>
+<h2 id="_cookbook_のモジュール"><a class="anchor" href="#_cookbook_のモジュール"></a>cookbook のモジュール</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>左側のメニューからモジュールを 1 つ選択して開始してください。</p>
@@ -417,7 +496,7 @@
 <h2 id="_コントリビューション"><a class="anchor" href="#_コントリビューション"></a>コントリビューション</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>質問、問題、またはコントリビューションについては、<a href="https://github.com/RedHatQuickCourses/ocp-virt-cookbook/issues/new/choose" target="_blank" rel="noopener">プロジェクトリポジトリ</a> で Issue をオープンするか、<a href="mailto:ocp-virt-cookbook@redhat.com">ocp-virt-cookbook@redhat.com</a> までチームにご連絡ください。</p>
+<p>質問、問題、コントリビューションについては、<a href="https://github.com/RedHatQuickCourses/ocp-virt-cookbook/issues/new/choose" target="_blank" rel="noopener">プロジェクトリポジトリ</a> で Issue をオープンするか、<a href="mailto:ocp-virt-cookbook@redhat.com">ocp-virt-cookbook@redhat.com</a> までチームにご連絡ください。</p>
 </div>
 </div>
 </div>
@@ -425,7 +504,7 @@
 <h2 id="_クレジット"><a class="anchor" href="#_クレジット"></a>クレジット</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>このクックブックは、オリジナルの <a href="https://github.com/acmenezes/ocp-virt-onboarding-kit" target="_blank" rel="noopener">OpenShift Virtualization Onboarding Kit</a> の優れた成果を基に構築されています。Alexandre Menezes、Andrea Perotti、Daphne Hoover、Josh Manning、Melvin Hillsman、Roshan Warrier、Yash Devan Oza、コミュニティの貢献に深く感謝いたします。</p>
+<p>この cookbook は、オリジナルの <a href="https://github.com/acmenezes/ocp-virt-onboarding-kit" target="_blank" rel="noopener">OpenShift Virtualization Onboarding Kit</a> の優れた成果を基に構築されています。Alexandre Menezes、Andrea Perotti、Daphne Hoover、Josh Manning、Melvin Hillsman、Roshan Warrier、Yash Devan Oza、コミュニティの貢献に深く感謝いたします。</p>
 </div>
 <div class="paragraph">
 <p>コンテンツ作成、テスト、フィードバックを通じて、このリソースの形成を支援してくださったすべてのコントリビューターに心から感謝します。</p>
@@ -446,7 +525,7 @@
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-このクックブックは、コンテンツ開発の加速とドキュメントの品質向上のために、AI ツールの支援を受けて作成されました。ただし、すべてのコンテンツは、技術的な正確さと実用性を確保するために、経験豊富な人間のエンジニアによって構築、編集、テスト、レビューされています。私たちは、あらゆる段階で人間の専門知識と監督を維持しつつ、使用ツールについて透明性を保つことを信条としています。
+本 cookbook は、コンテンツ開発の加速とドキュメントの品質向上のために、AI ツールの支援を受けて作成されました。ただし、すべてのコンテンツは、技術的な正確さと実用性を確保するために、経験豊富な人間のエンジニアによって構築、編集、テスト、レビューされています。私たちは、あらゆる段階で人間の専門知識と監督を維持しつつ、使用ツールについて透明性を保つことを信条としています。
 </td>
 </tr>
 </table>
@@ -467,5 +546,8 @@
 <script defer src="../../_/js/vendor/tabs.js"></script>
 <script defer src="../../_/js/vendor/reading-time.js"></script>
 <script defer src="../../_/js/vendor/course-total-duration.js"></script>
+<script src="../../_/js/vendor/lunr.js"></script>
+<script src="../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../.." data-snippet-length="100" data-stylesheet="../../_/css/search.css"></script>
+<script async src="../../search-index.js"></script>
   </body>
 </html>

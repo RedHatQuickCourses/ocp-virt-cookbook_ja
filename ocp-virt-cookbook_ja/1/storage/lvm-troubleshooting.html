@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>LVM Storage Operator のトラブルシューティング :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="lvm-operator.html">
-    <link rel="next" href="hostpath-provisioner.html">
+    <link rel="next" href="odf-ceph-storage.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -317,19 +396,19 @@
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 1. Check LVMCluster status
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 1. LVMCluster ステータスを確認
 oc get lvmcluster -n openshift-lvm-storage
 
-# 2. Check all pods are running
+# 2. すべての Pod が Running であることを確認
 oc get pods -n openshift-lvm-storage
 
-# 3. Check StorageClass exists
+# 3. StorageClass が存在することを確認
 oc get storageclass | grep lvms
 
-# 4. Check volume group on node
+# 4. ノードの volume group を確認
 oc debug node/&lt;node-name&gt; -- chroot /host vgs
 
-# 5. Check thin pool
+# 5. thin pool を確認
 oc debug node/&lt;node-name&gt; -- chroot /host lvs</code></pre>
 </div>
 </div>
@@ -492,7 +571,7 @@ vg-manager-xxxxx                 1/1     Running   0          5m</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される Pod:</p>
+<p>想定される Pod:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -512,13 +591,13 @@ vg-manager-xxxxx                 1/1     Running   0          5m</code></pre>
 <h4 id="_pod_詳細の確認"><a class="anchor" href="#_pod_詳細の確認"></a>Pod 詳細の確認</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Get pod details
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Pod の詳細を取得
 oc describe pod -n openshift-lvm-storage &lt;pod-name&gt;
 
-# Check specific pod logs
+# 特定の Pod ログを確認
 oc logs -n openshift-lvm-storage &lt;pod-name&gt;
 
-# Check vg-manager logs (most useful for device issues)
+# vg-manager ログを確認 (デバイスの問題に最も有用)
 oc logs -n openshift-lvm-storage daemonset/vg-manager</code></pre>
 </div>
 </div>
@@ -546,13 +625,13 @@ oc logs -n openshift-lvm-storage daemonset/vg-manager</code></pre>
 <h4 id="_operator_インストールの確認"><a class="anchor" href="#_operator_インストールの確認"></a>Operator インストールの確認</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check ClusterServiceVersion
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ClusterServiceVersion を確認
 oc get csv -n openshift-lvm-storage
 
-# Check subscription
+# Subscription を確認
 oc get subscription -n openshift-lvm-storage
 
-# Check install plan
+# InstallPlan を確認
 oc get installplan -n openshift-lvm-storage</code></pre>
 </div>
 </div>
@@ -564,10 +643,10 @@ oc get installplan -n openshift-lvm-storage</code></pre>
 <h4 id="_storageclass_の確認"><a class="anchor" href="#_storageclass_の確認"></a>StorageClass の確認</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># List all StorageClasses
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべての StorageClass を一覧表示
 oc get storageclass
 
-# Get specific LVM StorageClass
+# LVM StorageClass の詳細を取得
 oc get storageclass lvms-vg1 -o yaml</code></pre>
 </div>
 </div>
@@ -622,10 +701,10 @@ lvms-vg1   topolvm.io    Delete          WaitForFirstConsumer   true            
 <h4 id="_persistentvolumes_の確認"><a class="anchor" href="#_persistentvolumes_の確認"></a>PersistentVolumes の確認</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># List all PVs
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># すべての PV を一覧表示
 oc get pv
 
-# Check PVs using LVM storage
+# LVM ストレージを使用する PV を確認
 oc get pv | grep topolvm</code></pre>
 </div>
 </div>
@@ -857,13 +936,13 @@ thin-pool-1 vg1 twi-a-tz-- &lt;502.04g             0.00   6.76</code></pre>
 <h4 id="_デバイスパスの検証"><a class="anchor" href="#_デバイスパスの検証"></a>デバイスパスの検証</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check device exists
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># デバイスの存在を確認
 oc debug node/&lt;node-name&gt; -- chroot /host ls -la /dev/sda
 
-# Check device is a block device
+# ブロックデバイスであることを確認
 oc debug node/&lt;node-name&gt; -- chroot /host lsblk /dev/sda
 
-# Check device is not mounted
+# デバイスがマウントされていないことを確認
 oc debug node/&lt;node-name&gt; -- chroot /host mount | grep /dev/sda</code></pre>
 </div>
 </div>
@@ -939,10 +1018,10 @@ sdc   558.4G disk                        PERC H730 Adp
 <h4 id="_デバイスの永続パスの確認"><a class="anchor" href="#_デバイスの永続パスの確認"></a>デバイスの永続パスの確認</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># By path
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># パスで指定
 oc debug node/&lt;node-name&gt; -- chroot /host ls -la /dev/disk/by-path/ | grep sda
 
-# By ID
+# ID で指定
 oc debug node/&lt;node-name&gt; -- chroot /host ls -la /dev/disk/by-id/ | grep sda</code></pre>
 </div>
 </div>
@@ -969,10 +1048,10 @@ lvmcluster   NotReady</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check detailed status
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 詳細ステータスを確認
 oc get lvmcluster lvmcluster -n openshift-lvm-storage -o yaml | grep -A 20 "conditions"
 
-# Check vg-manager logs
+# vg-manager ログを確認
 oc logs -n openshift-lvm-storage daemonset/vg-manager</code></pre>
 </div>
 </div>
@@ -983,7 +1062,7 @@ oc logs -n openshift-lvm-storage daemonset/vg-manager</code></pre>
 <h4 id="_デバイスが見つからないまたはパスが間違っている"><a class="anchor" href="#_デバイスが見つからないまたはパスが間違っている"></a>デバイスが見つからない、またはパスが間違っている</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Verify device exists
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># デバイスの存在を確認
 oc debug node/&lt;node-name&gt; -- chroot /host ls -la /dev/sda</code></pre>
 </div>
 </div>
@@ -995,7 +1074,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host ls -la /dev/sda</code></pre>
 <h4 id="_デバイスに既存のデータやファイルシステムがある"><a class="anchor" href="#_デバイスに既存のデータやファイルシステムがある"></a>デバイスに既存のデータやファイルシステムがある</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check for existing filesystem
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 既存のファイルシステムを確認
 oc debug node/&lt;node-name&gt; -- chroot /host lsblk -f /dev/sda</code></pre>
 </div>
 </div>
@@ -1007,7 +1086,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host lsblk -f /dev/sda</code></pre>
 <h4 id="_デバイスが使用中"><a class="anchor" href="#_デバイスが使用中"></a>デバイスが使用中</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check if mounted
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># マウントされているか確認
 oc debug node/&lt;node-name&gt; -- chroot /host mount | grep /dev/sda</code></pre>
 </div>
 </div>
@@ -1036,13 +1115,13 @@ oc debug node/&lt;node-name&gt; -- chroot /host mount | grep /dev/sda</code></pr
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check if disk was wiped
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ディスクがワイプされたか確認
 oc debug node/&lt;node-name&gt; -- chroot /host pvs
 
-# Check vg-manager logs for errors
+# vg-manager ログのエラーを確認
 oc logs -n openshift-lvm-storage daemonset/vg-manager --tail=100
 
-# Check device visibility
+# デバイスの可視性を確認
 oc debug node/&lt;node-name&gt; -- chroot /host lsblk -o NAME,SIZE,TYPE,FSTYPE</code></pre>
 </div>
 </div>
@@ -1105,13 +1184,13 @@ test-pvc        Pending                                      lvms-vg1       5m</
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check PVC events
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># PVC イベントを確認
 oc describe pvc &lt;pvc-name&gt;
 
-# Check if pod using PVC exists
+# PVC を使用する Pod が存在するか確認
 oc get pods --all-namespaces -o wide | grep &lt;pvc-name&gt;
 
-# Check available space in VG
+# VG の利用可能な容量を確認
 oc debug node/&lt;node-name&gt; -- chroot /host vgs</code></pre>
 </div>
 </div>
@@ -1135,7 +1214,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host vgs</code></pre>
 <h4 id="_空き容量不足"><a class="anchor" href="#_空き容量不足"></a>空き容量不足</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check VG free space
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VG の空き容量を確認
 oc debug node/&lt;node-name&gt; -- chroot /host vgdisplay vg1 | grep "Free"</code></pre>
 </div>
 </div>
@@ -1147,7 +1226,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host vgdisplay vg1 | grep "Free"</cod
 <h4 id="_thin_provisioning_pool_がいっぱい"><a class="anchor" href="#_thin_provisioning_pool_がいっぱい"></a>thin provisioning pool がいっぱい</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check thin pool usage
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># thin pool の使用量を確認
 oc debug node/&lt;node-name&gt; -- chroot /host lvs | grep thin-pool</code></pre>
 </div>
 </div>
@@ -1159,7 +1238,7 @@ oc debug node/&lt;node-name&gt; -- chroot /host lvs | grep thin-pool</code></pre
 <h4 id="_ノードセレクターの不一致"><a class="anchor" href="#_ノードセレクターの不一致"></a>ノードセレクターの不一致</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check pod node selector vs LVMCluster node selector
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Pod の nodeSelector と LVMCluster の nodeSelector を比較
 oc get pod &lt;pod-name&gt; -o yaml | grep nodeSelector
 oc get lvmcluster lvmcluster -n openshift-lvm-storage -o yaml | grep -A 5 nodeSelector</code></pre>
 </div>
@@ -1182,13 +1261,13 @@ thin-pool-1 vg1 twi-a-tz-- 502.04g  92.00  85.00</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check thin pool details
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># thin pool の詳細を確認
 oc debug node/&lt;node-name&gt; -- chroot /host lvs -a | grep thin-pool
 
-# List all thin volumes
+# すべての thin volume を一覧表示
 oc debug node/&lt;node-name&gt; -- chroot /host lvs -a -o lv_name,lv_size,data_percent,pool_lv | grep thin-pool
 
-# Check which PVs are consuming space
+# どの PV が容量を消費しているか確認
 oc get pv -o custom-columns=NAME:.metadata.name,SIZE:.spec.capacity.storage,STORAGECLASS:.spec.storageClassName | grep lvms</code></pre>
 </div>
 </div>
@@ -1199,10 +1278,10 @@ oc get pv -o custom-columns=NAME:.metadata.name,SIZE:.spec.capacity.storage,STOR
 <h4 id="_未使用の_pvc_を削除する"><a class="anchor" href="#_未使用の_pvc_を削除する"></a>未使用の PVC を削除する</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Find PVCs not in use
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 使用されていない PVC を検索
 oc get pvc --all-namespaces
 
-# Delete PVC
+# PVC を削除
 oc delete pvc &lt;pvc-name&gt; -n &lt;namespace&gt;</code></pre>
 </div>
 </div>
@@ -1211,11 +1290,11 @@ oc delete pvc &lt;pvc-name&gt; -n &lt;namespace&gt;</code></pre>
 <h4 id="_thin_provisioning_pool_を拡張する_vg_に空きがある場合"><a class="anchor" href="#_thin_provisioning_pool_を拡張する_vg_に空きがある場合"></a>thin provisioning pool を拡張する (VG に空きがある場合)</h4>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check VG free space
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VG の空き容量を確認
 oc debug node/&lt;node-name&gt; -- chroot /host vgs
 
-# Extend thin pool (if needed manually)
-# Usually handled automatically by LVM operator</code></pre>
+# thin pool を拡張 (手動で必要な場合)
+# 通常は LVM Operator により自動的に処理される</code></pre>
 </div>
 </div>
 </div>
@@ -1246,13 +1325,13 @@ oc debug node/&lt;node-name&gt; -- chroot /host vgs
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check current filesystem/partition
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 現在のファイルシステム/パーティションを確認
 oc debug node/&lt;node-name&gt; -- chroot /host lsblk -f /dev/sda
 
-# Check for LVM signatures
+# LVM シグネチャを確認
 oc debug node/&lt;node-name&gt; -- chroot /host pvs | grep /dev/sda
 
-# Check if device is open
+# デバイスがオープンされているか確認
 oc debug node/&lt;node-name&gt; -- chroot /host lsof | grep /dev/sda</code></pre>
 </div>
 </div>
@@ -1261,10 +1340,10 @@ oc debug node/&lt;node-name&gt; -- chroot /host lsof | grep /dev/sda</code></pre
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Ensure forceWipeDevicesAndDestroyAllData is set
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># forceWipeDevicesAndDestroyAllData が設定されていることを確認
 oc edit lvmcluster lvmcluster -n openshift-lvm-storage
 
-# Add under deviceSelector:
+# deviceSelector の下に追加:
 forceWipeDevicesAndDestroyAllData: true</code></pre>
 </div>
 </div>
@@ -1285,13 +1364,13 @@ vg-manager-xxx   0/1     CrashLoopBackOff   5          3m</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check pod logs
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Pod ログを確認
 oc logs -n openshift-lvm-storage &lt;vg-manager-pod&gt; --previous
 
-# Check pod events
+# Pod イベントを確認
 oc describe pod -n openshift-lvm-storage &lt;vg-manager-pod&gt;
 
-# Check node resources
+# ノードリソースを確認
 oc describe node &lt;node-name&gt;</code></pre>
 </div>
 </div>
@@ -1358,10 +1437,10 @@ oc describe node &lt;node-name&gt;</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check if any StorageClass is default
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># いずれかの StorageClass がデフォルトか確認
 oc get storageclass | grep default
 
-# Check lvms StorageClass annotations
+# lvms StorageClass のアノテーションを確認
 oc get storageclass lvms-vg1 -o yaml | grep is-default-class</code></pre>
 </div>
 </div>
@@ -1382,7 +1461,7 @@ oc get storageclass lvms-vg1 -o yaml | grep is-default-class</code></pre>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc edit lvmcluster lvmcluster -n openshift-lvm-storage
 
-# Add under deviceClasses:
+# deviceClasses の下に追加:
 - name: vg1
   default: true</code></pre>
 </div>
@@ -1489,7 +1568,7 @@ echo "=== End of Diagnostic Report ==="</code></pre>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="lvm-operator.html">LVM Operator のインストール</a></span>
-  <span class="next"><a href="hostpath-provisioner.html">HostPath Provisioner</a></span>
+  <span class="next"><a href="odf-ceph-storage.html">ODF/Ceph Storage</a></span>
 </nav>
 </article>
   </div>
@@ -1501,5 +1580,8 @@ echo "=== End of Diagnostic Report ==="</code></pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

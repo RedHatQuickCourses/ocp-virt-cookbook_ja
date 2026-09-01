@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -427,7 +506,7 @@ VM に Memory limits を設定すると、ゲスト OS やハイパーバイザ�
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-この例の cloud-init パスワードはデモ用です。本番環境では、常に強力で一意なパスワードまたは SSH キー認証を使用してください。
+この例の cloud-init パスワードはデモ用です。本番環境では、常に強力で一意なパスワードまたは SSH 鍵認証を使用してください。
 </td>
 </tr>
 </table>
@@ -628,7 +707,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力：</p>
+<p>想定される出力：</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -650,7 +729,7 @@ vm-guaranteed    45s   Running   True</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力：</p>
+<p>想定される出力：</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -666,7 +745,7 @@ vm-guaranteed    45s   Running   True</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力：</p>
+<p>想定される出力：</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -682,7 +761,7 @@ vm-guaranteed    45s   Running   True</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力：</p>
+<p>想定される出力：</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -864,6 +943,22 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_qos_階層の概要"><a class="anchor" href="#_qos_階層の概要"></a>QoS 階層の概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>次の図は、Kubernetes がリソース設定と、メモリ不足 (memory pressure) 時の結果的な退避 (eviction) 動作に基づいて、VM を 3 つの QoS 階層にどのように分類するかを示しています。</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="_images/qos-tiers.png" alt="QoS Tier Diagram">
+</div>
+</div>
+<div class="paragraph">
+<p>Kubernetes は、<code>virt-launcher</code> Pod のリソース requests および limits に基づいて QoS クラスを割り当てます。KubeVirt は、VM のリソース仕様 (<code>spec.domain</code> で定義された CPU およびメモリ) をコンテナレベルの requests および limits に変換し、Kubernetes はそれを QoS 分類の評価に使用します。limits を持つ ResourceQuota が namespace に存在する場合、KubeVirt は <code>autoMemoryLimitsRatio</code> 乗数 (デフォルトは 1.0023、<code>alpha.kubevirt.io/auto-memory-limits-ratio</code> ラベルにより namespace ごとに設定可能) を使用してメモリ limits を自動的に設定します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_qos_class_のまとめ"><a class="anchor" href="#_qos_class_のまとめ"></a>QoS class のまとめ</h2>
 <div class="sectionbody">
 <table class="tableblock frame-all grid-all stretch">
@@ -902,6 +997,68 @@ EOF</code></pre>
 </tr>
 </tbody>
 </table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ビジネスユースケース"><a class="anchor" href="#_ビジネスユースケース"></a>ビジネスユースケース</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>適切な QoS クラスの選択は、ワークロードの退避に対する許容度、パフォーマンス要件、クラスターの集約度目標によって異なります。次の表は、一般的なワークロードタイプと適切な QoS 設定のマッピングを示しています。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3335%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ワークロードタイプ</th>
+<th class="tableblock halign-left valign-top">QoS クラス</th>
+<th class="tableblock halign-left valign-top">設定</th>
+<th class="tableblock halign-left valign-top">根拠</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">本番データベース (PostgreSQL、Oracle、MongoDB)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Guaranteed</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CPU とメモリの両方で requests を limits と同じ値に設定する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">データベース VM は、メモリ不足時に決して退避 (evict) されてはなりません。予測可能なパフォーマンスとデータの整合性が、VM の集約度よりも優先されます。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">アプリケーションサーバー (Web、API)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Burstable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">requests を予想される定常状態の使用量に設定し、limits は未設定にするか requests より高い値に設定する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">アプリケーションサーバーは、トラフィックスパイク時のバーストから恩恵を受けます。退避 (evict) はすべての BestEffort Pod の後にのみ発生するため、一時的な再起動を許容できるワークロードには適しています。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">開発およびテスト VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BestEffort</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">リソースの requests と limits を省略する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">退避 (evict) された場合でも迅速に再作成できるエフェメラルな VM です。使い捨てのワークロードに対してクラスター上の VM 集約度を最大化します。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">バッチ処理 (ETL、スケジュールされたジョブ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Burstable (高い limits)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">requests をアイドル状態の使用量に、limits をピーク時の処理要件に設定する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">バッチ VM は処理ウィンドウ中にバーストする必要がありますが、それ以外の時間帯にはスロットル可能です。スケジューラーはオフピーク時にノードを効率的に集約配置します。</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+これらは推奨される開始点です。QoS クラスを確定する前に、<code>oc adm top pods</code> を使用して実際のリソース消費量を観察してください。Burstable に適していると思われるワークロードでも、Guaranteed の配置を必要とするメモリパターンが明らかになる場合があります。
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -978,7 +1135,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_参照情報"><a class="anchor" href="#_参照情報"></a>参照情報</h2>
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -1012,5 +1169,8 @@ EOF</code></pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

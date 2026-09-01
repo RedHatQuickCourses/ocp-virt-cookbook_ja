@@ -1,0 +1,42 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: win2k25-vm-1
+  namespace: default
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: win2k25-vm-1-disk
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: win2k25
+          namespace: default
+        storage:
+          resources:
+            requests:
+              storage: 60Gi
+  runStrategy: RerunOnFailure
+  instancetype:
+    name: u1.large
+  preference:
+    name: windows.2k25.virtio
+  template:
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: rootdisk
+              disk: {}
+            - name: sysprep
+              cdrom: {}
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: win2k25-vm-1-disk
+        - name: sysprep
+          sysprep:
+            configMap:
+              name: win2k25-sysprep-unattend

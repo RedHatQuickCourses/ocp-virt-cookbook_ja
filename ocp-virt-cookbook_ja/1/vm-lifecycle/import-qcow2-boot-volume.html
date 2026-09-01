@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -317,7 +396,7 @@
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-このチュートリアルは、OpenShift Virtualization を導入した OpenShift 4.18.33 環境で、AWS EBS gp3-csi ストレージクラスを使用してテストされています。
+このチュートリアルは、OpenShift Virtualization を導入した OpenShift 4.18.33 環境で、AWS EBS gp3-csi StorageClass を使用してテストされています。
 </td>
 </tr>
 </table>
@@ -342,7 +421,7 @@
 <p>ローカルで利用可能な (または HTTP/S3 経由でアクセス可能な) qcow2 イメージファイル</p>
 </li>
 <li>
-<p><a href="../getting-started/default-storage-class.html" class="xref page">ストレージクラスの設定</a> - 動的なボリュームプロビジョニング用</p>
+<p><a href="../getting-started/default-storage-class.html" class="xref page">StorageClass の設定</a> - 動的なボリュームプロビジョニング用</p>
 </li>
 <li>
 <p>namespace 内の十分なストレージクォータ</p>
@@ -411,10 +490,10 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Download Fedora Cloud image (example)
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Fedora Cloud イメージをダウンロード (例)
 curl -LO https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
 
-# Verify the image
+# イメージを確認
 ls -lh Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2</code></pre>
 </div>
 </div>
@@ -500,8 +579,17 @@ disk size: 420 MiB</code></pre>
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>重要: <code>--force-bind</code> フラグは、<code>volumeBindingMode: WaitForFirstConsumer</code> を使用する StorageClass (AWS EBS、Azure Disk、その他のクラウドプロバイダーで一般的) を使用する場合に必須です。このフラグがないと、PVC が保留 (pending) 状態のままとなり、アップロードが開始されません。</p>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<code>--force-bind</code> フラグは、<code>volumeBindingMode: WaitForFirstConsumer</code> を使用する StorageClass (AWS EBS、Azure Disk、その他のクラウドプロバイダーで一般的) を使用する場合に必須です。このフラグがないと、PVC が保留 (pending) 状態のままとなり、アップロードが開始されません。
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>アップロードの進行状況の出力:</p>
@@ -574,7 +662,7 @@ oc logs -n imported-vms cdi-upload-fedora-imported-disk -f</code></pre>
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-この例の cloud-init パスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSH キー認証を使用してください。
+この例の cloud-init パスワードはデモ目的のみです。本番環境では、常に強力で一意のパスワードを使用するか、SSH 鍵認証を使用してください。
 </td>
 </tr>
 </table>
@@ -690,10 +778,10 @@ fedora-imported-vm   45s   Running     10.128.2.54    worker-01   True</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check OS version
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># OS バージョンを確認
 cat /etc/os-release
 
-# Check disk configuration
+# ディスク構成を確認
 lsblk</code></pre>
 </div>
 </div>
@@ -782,8 +870,17 @@ fedora-http-imported   Succeeded          100.0%                1m30s</code></pr
       name: fedora-http-imported</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>ヒント: この方法は手動のアップロードが不要なため、自動化や CI/CD パイプラインに最適です。適切な資格情報を設定すれば S3 URL も使用できます。</p>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+この方法は手動のアップロードが不要なため、自動化や CI/CD パイプラインに最適です。適切な資格情報を設定すれば S3 URL も使用できます。
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -972,7 +1069,7 @@ spec:
 <p><strong>拡張性を考慮</strong> - VM 操作を見越して、Virtual size よりも多くのストレージを割り当て</p>
 </li>
 <li>
-<p><strong>シンプロビジョニング</strong> - 利用可能な場合、シンプロビジョニングをサポートするストレージクラスを使用</p>
+<p><strong>シンプロビジョニング</strong> - 利用可能な場合、シンプロビジョニングをサポートする StorageClass を使用</p>
 </li>
 <li>
 <p><strong>使用状況の監視</strong> - 定期的に PVC の使用状況を追跡</p>
@@ -994,7 +1091,7 @@ spec:
 <p><strong>アクセス制御</strong> - RBAC を使用してイメージアップロード権限を制御</p>
 </li>
 <li>
-<p><strong>暗号化ストレージ</strong> - 保存時の暗号化をサポートするストレージクラスを検討</p>
+<p><strong>暗号化ストレージ</strong> - 保存時の暗号化をサポートする StorageClass を検討</p>
 </li>
 </ul>
 </div>
@@ -1069,7 +1166,7 @@ oc describe pvc fedora-imported-disk -n imported-vms</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Use PVC upload (not DataVolume)
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># PVC アップロードを使用 (DataVolume ではなく)
 virtctl image-upload pvc &lt;pvc-name&gt; \
   --image-path=./image.qcow2 \
   --size=10Gi \
@@ -1123,7 +1220,7 @@ oc logs -n openshift-cnv &lt;cdi-uploadproxy-pod&gt;</code></pre>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete pvc fedora-imported-disk -n imported-vms
 
-# Retry upload with larger --size parameter
+# より大きな --size パラメーターで再試行
 virtctl image-upload pvc fedora-imported-disk \
   --image-path=./image.qcow2 \
   --size=20Gi \
@@ -1168,13 +1265,13 @@ oc get events -n imported-vms --field-selector involvedObject.name=fedora-import
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Delete the VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM を削除
 oc delete vm fedora-imported-vm -n imported-vms
 
-# Delete the PVC
+# PVC を削除
 oc delete pvc fedora-imported-disk -n imported-vms
 
-# Delete the namespace
+# namespace を削除
 oc delete namespace imported-vms</code></pre>
 </div>
 </div>
@@ -1275,5 +1372,8 @@ PVC を削除すると、インポートしたイメージデータは完全に�
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

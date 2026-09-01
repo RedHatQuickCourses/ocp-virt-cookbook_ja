@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -374,9 +453,9 @@
 <dl>
 <dt class="hdlist1">クラスター管理のネットワーク機能の喪失</dt>
 <dd>
-<p>セカンダリネットワークに静的 IP を割り当てると、VM はデフォルトの Pod ネットワークに依存する OpenShift の <code>Services</code> や <code>Routes</code> へのアクセスを失う可能性があります。クラスター接続性を維持するために、プライマリインターフェース (Pod ネットワークに接続) は DHCP で割り当てられたアドレスを保持するようにしてください。</p>
+<p>セカンダリーネットワークに静的 IP を割り当てると、VM はデフォルトの Pod ネットワークに依存する OpenShift の <code>Services</code> や <code>Routes</code> へのアクセスを失う可能性があります。クラスター接続性を維持するために、プライマリインターフェース (Pod ネットワークに接続) は DHCP で割り当てられたアドレスを保持するようにしてください。</p>
 </dd>
-<dt class="hdlist1">割り当て済みアドレスに対する OpenShift クラスター上での認識の欠如</dt>
+<dt class="hdlist1">OpenShift クラスターが割り当て済みアドレスを認識しない問題</dt>
 <dd>
 <p>静的 IP は OVN-Kubernetes IPAM をバイパスします。クラスターはこれらのアドレスを追跡しないため、外部で適切に管理されていないと IP 競合が発生する可能性があります。IP アドレスのインベントリを維持するか、外部の IPAM ソリューションを使用してください。</p>
 </dd>
@@ -438,7 +517,7 @@
 <p>少なくとも 1 つの設定済みネットワーク (プライマリ Pod ネットワーク)</p>
 </li>
 <li>
-<p>セカンダリネットワークを使用する場合: NetworkAttachmentDefinition (NAD) が設定済みであること (<a href="localnet-vlan.html" class="xref page">Localnet VLAN チュートリアル</a>を参照)</p>
+<p>セカンダリーネットワークを使用する場合: NetworkAttachmentDefinition (NAD) が設定済みであること (<a href="localnet-vlan.html" class="xref page">Localnet VLAN チュートリアル</a>を参照)</p>
 </li>
 <li>
 <p>DHCP 予約を使用する場合: 外部 DHCP サーバーへの管理者アクセス権</p>
@@ -501,7 +580,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p>この例では、<code>enp1s0</code>(プライマリ Pod ネットワークインターフェース) は DHCP を使用し、<code>enp2s0</code>(セカンダリインターフェース) は静的 IP を受け取ります。</p>
+<p>この例では、<code>enp1s0</code>(プライマリ Pod ネットワークインターフェース) は DHCP を使用し、<code>enp2s0</code>(セカンダリーインターフェース) は静的 IP を受け取ります。</p>
 </div>
 </div>
 <div class="sect2">
@@ -529,7 +608,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p>この例では、<code>search</code> フィールドで DNS 検索ドメインを追加する方法と、<code>routes</code> リストで特定のルートを追加する方法も示しています。デフォルトゲートウェイのルートには <code>to: default</code> を使用してください (プライマリインターフェースにデフォルトルートが存在しない場合、セカンダリインターフェースでのみ使用します)。</p>
+<p>この例では、<code>search</code> フィールドで DNS 検索ドメインを追加する方法と、<code>routes</code> リストで特定のルートを追加する方法も示しています。デフォルトゲートウェイのルートには <code>to: default</code> を使用してください (プライマリインターフェースにデフォルトルートが存在しない場合、セカンダリーインターフェースでのみ使用します)。</p>
 </div>
 </div>
 <div class="sect2">
@@ -559,15 +638,24 @@
 <p><code>enp1s0</code>&#8201;&#8212;&#8201;最初のインターフェース (通常は Pod ネットワーク)</p>
 </li>
 <li>
-<p><code>enp2s0</code>&#8201;&#8212;&#8201;2 番目のインターフェース (最初のセカンダリネットワーク)</p>
+<p><code>enp2s0</code>&#8201;&#8212;&#8201;2 番目のインターフェース (最初のセカンダリーネットワーク)</p>
 </li>
 <li>
-<p><code>enp3s0</code>&#8201;&#8212;&#8201;3 番目のインターフェース (2 番目のセカンダリネットワーク)</p>
+<p><code>enp3s0</code>&#8201;&#8212;&#8201;3 番目のインターフェース (2 番目のセカンダリーネットワーク)</p>
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>重要: <code>eth0</code> のようなレガシーな名前は使用しないでください。VM spec で定義されたインターフェースの順序と一致する、予測可能な名前 (<code>enpXs0</code>) を使用してください。</p>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<code>eth0</code> のようなレガシーな名前は使用しないでください。VM spec で定義されたインターフェースの順序と一致する、予測可能な名前 (<code>enpXs0</code>) を使用してください。
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -595,19 +683,19 @@
 <div class="sect2">
 <h3 id="_静的_ip_が適用される場所"><a class="anchor" href="#_静的_ip_が適用される場所"></a>静的 IP が適用される場所</h3>
 <div class="paragraph">
-<p>静的 IP 設定は<strong>セカンダリネットワークインターフェースのみ</strong>に適用されます。プライマリインターフェースは masquerade 経由で Pod ネットワークに接続し、クラスターから自動的に IP を受け取るため、静的 IP を割り当てないでください。masquerade ブリッジは内部サブネット (<code>10.0.2.0/24</code>) 上で動作し、NAT によって Pod IP に変換されます。これを別のサブネットの静的アドレスで上書きすると、接続が切断されます。</p>
+<p>静的 IP 設定は<strong>セカンダリーネットワークインターフェースのみ</strong>に適用されます。プライマリインターフェースは masquerade 経由で Pod ネットワークに接続し、クラスターから自動的に IP を受け取るため、静的 IP を割り当てないでください。masquerade ブリッジは内部サブネット (<code>10.0.2.0/24</code>) 上で動作し、NAT によって Pod IP に変換されます。これを別のサブネットの静的アドレスで上書きすると、接続が切断されます。</p>
 </div>
 <div class="paragraph">
-<p>本チュートリアルのすべての例では、プライマリインターフェース (<code>enp1s0</code>) を DHCP のままにし、セカンダリインターフェース (<code>enp2s0</code> 以降) に静的 IP を設定します。</p>
+<p>本チュートリアルのすべての例では、プライマリインターフェース (<code>enp1s0</code>) を DHCP のままにし、セカンダリーインターフェース (<code>enp2s0</code> 以降) に静的 IP を設定します。</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_シナリオ_プライマリ_dhcp_セカンダリ静的_ip"><a class="anchor" href="#_シナリオ_プライマリ_dhcp_セカンダリ静的_ip"></a>シナリオ: プライマリ DHCP + セカンダリ静的 IP</h3>
+<h3 id="_シナリオ_プライマリ_dhcp_セカンダリー静的_ip"><a class="anchor" href="#_シナリオ_プライマリ_dhcp_セカンダリー静的_ip"></a>シナリオ: プライマリ DHCP + セカンダリー静的 IP</h3>
 <div class="paragraph">
-<p>これが標準的なアプローチです。プライマリインターフェースは Pod ネットワーク上で DHCP を使用し、VLAN またはブリッジネットワーク上のセカンダリインターフェースが静的 IP を取得します。</p>
+<p>これが標準的なアプローチです。プライマリインターフェースは Pod ネットワーク上で DHCP を使用し、VLAN またはブリッジネットワーク上のセカンダリーインターフェースが静的 IP を取得します。</p>
 </div>
 <div class="paragraph">
-<p>前提条件: セカンダリネットワークが設定されていることを確認してください (例: localnet VLAN 100 の NetworkAttachmentDefinition (NAD))。設定手順については <a href="localnet-vlan.html" class="xref page">Localnet VLAN チュートリアル</a> を参照してください。</p>
+<p>前提条件: セカンダリーネットワークが設定されていることを確認してください (例: localnet VLAN 100 の NetworkAttachmentDefinition (NAD))。設定手順については <a href="localnet-vlan.html" class="xref page">Localnet VLAN チュートリアル</a> を参照してください。</p>
 </div>
 <div class="paragraph">
 <p>本チュートリアル用の namespace を作成します。</p>
@@ -727,7 +815,7 @@ spec:
 </div>
 </div>
 <div class="listingblock">
-<div class="title">期待される出力</div>
+<div class="title">想定される出力</div>
 <div class="content">
 <pre>1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -755,15 +843,24 @@ spec:
 </div>
 </div>
 <div class="listingblock">
-<div class="title">期待される出力</div>
+<div class="title">想定される出力</div>
 <div class="content">
 <pre>default via 10.0.2.1 dev enp1s0 proto dhcp src 10.0.2.2 metric 100
 10.0.2.0/24 dev enp1s0 proto kernel scope link src 10.0.2.2 metric 100
 192.168.100.0/24 dev enp2s0 proto kernel scope link src 192.168.100.50 metric 101</pre>
 </div>
 </div>
-<div class="paragraph">
-<p>注: 最初のインターフェース (<code>enp1s0</code>) は DHCP を使用し、デフォルトルートを自動的に受け取ります。2 番目のインターフェース (<code>enp2s0</code>) は、デフォルトルートなしで静的 IP <code>192.168.100.50</code> を保持します。ルーティングの競合を避けるため、セカンダリインターフェースにはデフォルトルートを設定しないでください。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+最初のインターフェース (<code>enp1s0</code>) は DHCP を使用し、デフォルトルートを自動的に受け取ります。2 番目のインターフェース (<code>enp2s0</code>) は、デフォルトルートなしで静的 IP <code>192.168.100.50</code> を保持します。ルーティングの競合を避けるため、セカンダリーインターフェースにはデフォルトルートを設定しないでください。
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -777,7 +874,7 @@ spec:
 </div>
 </div>
 <div class="listingblock">
-<div class="title">期待される出力</div>
+<div class="title">想定される出力</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">[
     {
@@ -824,7 +921,7 @@ spec:
 </div>
 </div>
 <div class="listingblock">
-<div class="title">期待される出力</div>
+<div class="title">想定される出力</div>
 <div class="content">
 <pre>status: done</pre>
 </div>
@@ -835,7 +932,7 @@ spec:
 </div>
 </div>
 <div class="listingblock">
-<div class="title">期待される出力</div>
+<div class="title">想定される出力</div>
 <div class="content">
 <pre>NAME               UUID                                  TYPE      DEVICE
 cloud-init enp1s0  a41601f3-3acc-5f60-ac5f-9d9011ab7c25  ethernet  enp1s0
@@ -1026,7 +1123,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>cloud-init 手法との主な違いは、セカンダリインターフェース上の <code>macAddress</code> フィールドです。DHCP サーバーが IP 割り当てを処理するため、<code>networkData</code> は不要です。</p>
+<p>cloud-init 手法との主な違いは、セカンダリーインターフェース上の <code>macAddress</code> フィールドです。DHCP サーバーが IP 割り当てを処理するため、<code>networkData</code> は不要です。</p>
 </div>
 </div>
 <div class="sect2">
@@ -1084,7 +1181,7 @@ spec:
 <p>DHCP 予約が適用されている場合、出力は固定 MAC 上の予約済み IP を表示します。</p>
 </div>
 <div class="listingblock">
-<div class="title">期待される出力</div>
+<div class="title">想定される出力</div>
 <div class="content">
 <pre>3: enp2s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1400 qdisc fq_codel state UP group default qlen 1000
     link/ether 02:00:00:01:00:01 brd ff:ff:ff:ff:ff:ff
@@ -1095,8 +1192,17 @@ spec:
 <div class="paragraph">
 <p>DHCP サーバーが応答しない場合、インターフェースはリンクローカル IPv6 アドレスのみを持つことになります。固定 MAC <code>02:00:00:01:00:01</code> は、<code>macAddress</code> フィールドが正しく適用されていることを確認します。</p>
 </div>
-<div class="paragraph">
-<p>注: <code>02:</code> で始まる MAC アドレスはローカル管理範囲にあるため、ハードウェアベンダーが割り当てた MAC と競合することはありません。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>02:</code> で始まる MAC アドレスはローカル管理範囲にあるため、ハードウェアベンダーが割り当てた MAC と競合することはありません。
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -1107,7 +1213,7 @@ spec:
 <div class="ulist">
 <ul>
 <li>
-<p><strong>ブリッジベースのセカンダリネットワーク (localnet、Linux Bridge)</strong>: VM はマイグレーション中も MAC アドレスと IP を保持します。ネットワークファブリックが MAC モビリティをサポートしている必要があります (例: スイッチが MAC アドレステーブルを更新する必要がある)。cloud-init、DHCP 予約、または <code>nmcli</code> を通じて割り当てられた静的 IP は、マイグレーション後も保持されます。</p>
+<p><strong>ブリッジベースのセカンダリーネットワーク (localnet、Linux Bridge)</strong>: VM はマイグレーション中も MAC アドレスと IP を保持します。ネットワークファブリックが MAC モビリティをサポートしている必要があります (例: スイッチが MAC アドレステーブルを更新する必要がある)。cloud-init、DHCP 予約、または <code>nmcli</code> を通じて割り当てられた静的 IP は、マイグレーション後も保持されます。</p>
 </li>
 <li>
 <p><strong>SR-IOV ネットワーク</strong>: SR-IOV でのライブマイグレーションには追加の設定が必要であり、同じネットワークパスが保持されない場合があります。詳細については <a href="https://docs.openshift.com/container-platform/latest/virt/live_migration/virt-about-live-migration.html" target="_blank" rel="noopener">OpenShift Virtualization ライブマイグレーションのドキュメント</a> を参照してください。</p>
@@ -1164,7 +1270,7 @@ spec:
 <div class="sect2">
 <h3 id="_静的_ip_の適用"><a class="anchor" href="#_静的_ip_の適用"></a>静的 IP の適用</h3>
 <div class="paragraph">
-<p>まず、セカンダリインターフェースで DHCP を使用するか、またはそのインターフェースに対して <code>networkData</code> を設定せずに VM をデプロイします。</p>
+<p>まず、セカンダリーインターフェースで DHCP を使用するか、またはそのインターフェースに対して <code>networkData</code> を設定せずに VM をデプロイします。</p>
 </div>
 <div class="paragraph">
 <p>VM に接続します (例: 手法 2 でデプロイした DHCP 予約済み VM)。</p>
@@ -1298,7 +1404,7 @@ VM がもともと cloud-init の <code>networkData</code> で設定されてい
 <div class="sect2">
 <h3 id="_unattend_xml_のネットワークセクションの例"><a class="anchor" href="#_unattend_xml_のネットワークセクションの例"></a>unattend.xml のネットワークセクションの例</h3>
 <div class="paragraph">
-<p>以下のスニペットは、specialize パス中に <code>Ethernet</code> として識別されるセカンダリネットワークインターフェースに静的 IP を設定します。マルチ NIC の Windows VM では、インターフェースの <code>Identifier</code> がターゲットネットワークに接続されているアダプターと一致することを確認してください。確認にはデバイスマネージャーまたは PowerShell の <code>Get-NetAdapter</code> を使用してください。</p>
+<p>以下のスニペットは、specialize パス中に <code>Ethernet</code> として識別されるセカンダリーネットワークインターフェースに静的 IP を設定します。マルチ NIC の Windows VM では、インターフェースの <code>Identifier</code> がターゲットネットワークに接続されているアダプターと一致することを確認してください。確認にはデバイスマネージャーまたは PowerShell の <code>Get-NetAdapter</code> を使用してください。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1403,8 +1509,17 @@ VM がもともと cloud-init の <code>networkData</code> で設定されてい
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>注: Sysprep は Windows の初期セットアップ中にのみ実行されます。Windows VM のデプロイ後の IP 変更については、PowerShell リモートアクセスまたは RDP を使用して手動でネットワークを設定してください。</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Sysprep は Windows の初期セットアップ中にのみ実行されます。Windows VM のデプロイ後の IP 変更については、PowerShell リモートアクセスまたは RDP を使用して手動でネットワークを設定してください。
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -1525,7 +1640,7 @@ VM がもともと cloud-init の <code>networkData</code> で設定されてい
 </div>
 </div>
 <div class="sect2">
-<h3 id="_セカンダリインターフェースで接続できない"><a class="anchor" href="#_セカンダリインターフェースで接続できない"></a>セカンダリインターフェースで接続できない</h3>
+<h3 id="_セカンダリーインターフェースで接続できない"><a class="anchor" href="#_セカンダリーインターフェースで接続できない"></a>セカンダリーインターフェースで接続できない</h3>
 <div class="paragraph">
 <p><strong>問題</strong>: 静的インターフェースで DHCP を無効にするのを忘れた。</p>
 </div>
@@ -1536,10 +1651,10 @@ VM がもともと cloud-init の <code>networkData</code> で設定されてい
 <div class="sect2">
 <h3 id="_複数のデフォルトルートによる接続問題"><a class="anchor" href="#_複数のデフォルトルートによる接続問題"></a>複数のデフォルトルートによる接続問題</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: プライマリインターフェースとセカンダリインターフェースの両方にデフォルトルートを設定した。</p>
+<p><strong>問題</strong>: プライマリインターフェースとセカンダリーインターフェースの両方にデフォルトルートを設定した。</p>
 </div>
 <div class="paragraph">
-<p><strong>解決策</strong>: デフォルトルートはプライマリインターフェース (通常は <code>enp1s0</code>) のみに設定してください。セカンダリインターフェースにデフォルトルートを設定しないでください。</p>
+<p><strong>解決策</strong>: デフォルトルートはプライマリインターフェース (通常は <code>enp1s0</code>) のみに設定してください。セカンダリーインターフェースにデフォルトルートを設定しないでください。</p>
 </div>
 </div>
 <div class="sect2">
@@ -1552,12 +1667,12 @@ VM がもともと cloud-init の <code>networkData</code> で設定されてい
 </div>
 </div>
 <div class="sect2">
-<h3 id="_セカンダリネットワークで_dns_が解決されない"><a class="anchor" href="#_セカンダリネットワークで_dns_が解決されない"></a>セカンダリネットワークで DNS が解決されない</h3>
+<h3 id="_セカンダリーネットワークで_dns_が解決されない"><a class="anchor" href="#_セカンダリーネットワークで_dns_が解決されない"></a>セカンダリーネットワークで DNS が解決されない</h3>
 <div class="paragraph">
-<p><strong>問題</strong>: セカンダリインターフェースでネームサーバーが設定されていない、または誤っている。</p>
+<p><strong>問題</strong>: セカンダリーインターフェースでネームサーバーが設定されていない、または誤っている。</p>
 </div>
 <div class="paragraph">
-<p><strong>解決策</strong>: そのインターフェース用の <code>networkData</code> に適切なネームサーバーを追加してください。セカンダリインターフェースが隔離されたネットワーク上にある場合、外部 DNS は不要な場合があります。</p>
+<p><strong>解決策</strong>: そのインターフェース用の <code>networkData</code> に適切なネームサーバーを追加してください。セカンダリーインターフェースが隔離されたネットワーク上にある場合、外部 DNS は不要な場合があります。</p>
 </div>
 </div>
 <div class="sect2">
@@ -1707,5 +1822,8 @@ VM がもともと cloud-init の <code>networkData</code> で設定されてい
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

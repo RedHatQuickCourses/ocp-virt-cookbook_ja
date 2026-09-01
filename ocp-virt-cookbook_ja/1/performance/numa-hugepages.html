@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -305,12 +384,12 @@
 <h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>このチュートリアルでは、OpenShift Virtualization において、Hugepages でバックアップされたメモリと NUMA トポロジーのパススルーを仮想マシン向けに設定する方法を説明します。デフォルトでは、VM のメモリは標準的な 4Ki ページを使用し、ゲスト OS はホストの NUMA レイアウトを認識できません。NFV/テレコム、HPC、リアルタイム処理、大規模メモリデータベースなどのパフォーマンスが重要なワークロードにおいて、このデフォルト設定は以下の 2 つの想定可能なボトルネックを引き起こします。</p>
+<p>このチュートリアルでは、OpenShift Virtualization において、Hugepages を使用したメモリと NUMA トポロジーのパススルーを仮想マシン向けに設定する方法を説明します。デフォルトでは、VM のメモリは標準的な 4Ki ページを使用し、ゲスト OS はホストの NUMA レイアウトを認識できません。NFV/テレコム、HPC、リアルタイム処理、大規模メモリデータベースなどのパフォーマンスが重要なワークロードにおいて、このデフォルト設定は以下の 2 つの想定されるボトルネックを引き起こします。</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>TLB pressure</strong>: 16Gi のメモリを持ち、4Ki ページでバックアップされた VM は、400 万以上のページテーブルエントリを必要とします。CPU の TLB (Translation Lookaside Buffer) はサイズが制限されているため、頻繁な TLB ミスが発生し、コストのかかるページテーブルウォークが強制されます。</p>
+<p><strong>TLB pressure</strong>: 16Gi のメモリを持ち、4Ki ページを使用する VM は、400 万以上のページテーブルエントリを必要とします。CPU の TLB (Translation Lookaside Buffer) はサイズが制限されているため、頻繁な TLB ミスが発生し、コストのかかるページテーブルウォークが強制されます。</p>
 </li>
 <li>
 <p><strong>Cross-NUMA memory latency</strong>: マルチソケットまたはマルチチップレットのホストでは、リモートの NUMA ノード上のメモリへのアクセスは、ローカルメモリへのアクセスよりも 1.5-3 倍低速になる可能性があります。NUMA を意識しない場合、ゲスト OS はメモリとスレッドを同一の物理 NUMA ノード上に配置できません。</p>
@@ -395,7 +474,7 @@
 </tbody>
 </table>
 <div class="paragraph">
-<p>VM 仕様に <code>memory.hugepages.pageSize</code> が含まれている場合、KubeVirt はホストの事前割り当て済み Hugepages プールからすべてのゲストメモリを割り当てるように QEMU を設定します。このメモリは固定 (pinned) され、スワップされることはありません。</p>
+<p>VM spec に <code>memory.hugepages.pageSize</code> が含まれている場合、KubeVirt はホストの事前割り当て済み Hugepages プールからすべてのゲストメモリを割り当てるように QEMU を設定します。このメモリは固定 (pinned) され、スワップされることはありません。</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -427,7 +506,7 @@ NUMA Node 1: CPUs 20-39, 60-79  Local Memory: 128Gi</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>NUMA を考慮していない場合、ゲスト OS は NUMA ノード 0 にマップされる vCPU 上でスレッドをスケジュールする一方で、バックアップメモリが NUMA ノード 1 に割り当てられる可能性があります。このようなノードをまたぐアクセスにより、すべてのメモリ操作に遅延が発生します。</p>
+<p>NUMA を考慮していない場合、ゲスト OS は NUMA ノード 0 にマップされる vCPU 上でスレッドをスケジュールする一方で、メモリが NUMA ノード 1 に割り当てられる可能性があります。このようなノードをまたぐアクセスにより、すべてのメモリ操作に遅延が発生します。</p>
 </div>
 <div class="paragraph">
 <p>KubeVirt の <code>guestMappingPassthrough</code> 戦略は、ホストの NUMA トポロジーをゲストにパススルーすることでこれを解決します。ゲストは (割り当てられた専用 CPU に基づいて) 物理ホストと同じ NUMA 構造を認識し、独自の NUMA を意識したスケジューリングの決定を行うことができます。</p>
@@ -551,7 +630,7 @@ worker   rendered-worker-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   True      False     
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -575,13 +654,13 @@ worker   rendered-worker-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   True      False     
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre>AnonHugePages:         0 kB
 ShmemHugePages:        0 kB
-FileHugePages:        0 kB
+FileHugePages:         0 kB
 HugePages_Total:    1024
 HugePages_Free:     1024
 HugePages_Rsvd:        0
@@ -729,7 +808,7 @@ NUMA node1 CPU(s):     20-29,60-69</pre>
 <h2 id="_ステップ_4_hugepages_を使用した_vm_のデプロイ"><a class="anchor" href="#_ステップ_4_hugepages_を使用した_vm_のデプロイ"></a>ステップ 4: Hugepages を使用した VM のデプロイ</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>この最初の VM は、NUMA パススルーを使用せず、専用 CPU 配置と Hugepages バックアップメモリを使用します。この設定により、TLB オーバーヘッドが排除され、VM マニフェストが簡素化されます。</p>
+<p>この最初の VM は、NUMA パススルーを使用せず、専用 CPU 配置と Hugepages メモリを使用します。この設定により、TLB オーバーヘッドが排除され、VM マニフェストが簡素化されます。</p>
 </div>
 <div class="paragraph">
 <p>重要なフィールド:</p>
@@ -754,7 +833,7 @@ NUMA node1 CPU(s):     20-29,60-69</pre>
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-この例の cloud-init パスワードはデモンストレーション目的専用です。本番環境では SSH キー認証または強力で一意なパスワードを使用してください。
+この例の cloud-init パスワードはデモンストレーション目的専用です。本番環境では SSH 鍵認証または強力で一意なパスワードを使用してください。
 </td>
 </tr>
 </table>
@@ -830,7 +909,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -841,7 +920,7 @@ vm-hugepages   45s   Running   True</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_5_hugepages_バックアップの確認"><a class="anchor" href="#_ステップ_5_hugepages_バックアップの確認"></a>ステップ 5: Hugepages バックアップの確認</h2>
+<h2 id="_ステップ_5_hugepages_使用の確認"><a class="anchor" href="#_ステップ_5_hugepages_使用の確認"></a>ステップ 5: Hugepages 使用の確認</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_ホスト側の検証"><a class="anchor" href="#_ホスト側の検証"></a>ホスト側の検証</h3>
@@ -925,7 +1004,7 @@ vm-hugepages   45s   Running   True</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1030,7 +1109,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1054,7 +1133,7 @@ vm-numa-hugepages   60s   Running   True</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1208,7 +1287,7 @@ Node 0 Inactive:          80000 kB</pre>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">事前割り当ての粒度</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">微細 (例: 100Mi 単位)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">細かい (例: 100Mi 単位)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">粗い (最低 1Gi)</p></td>
 </tr>
 <tr>
@@ -1238,7 +1317,7 @@ cmdline_openshift_node_hugepages=hugepagesz=1G hugepages=16</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>そして VM 仕様を更新します。</p>
+<p>そして VM spec を更新します。</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1315,7 +1394,7 @@ Memory requests は Hugepages サイズで均等に割り切れる必要があ�
 <div class="ulist">
 <ul>
 <li>
-<p>VMI 仕様で <code>guestMappingPassthrough</code> が設定されていることを確認します。</p>
+<p>VMI spec で <code>guestMappingPassthrough</code> が設定されていることを確認します。</p>
 </li>
 <li>
 <p>VM の専用 CPU が複数の物理 NUMA ノードにまたがっていることを確認します。割り当てられた CPU がすべて単一の NUMA ノード上にある場合、ゲストが 1 つしかノードを認識しないのは正常です。</p>
@@ -1403,7 +1482,7 @@ Memory requests は Hugepages サイズで均等に割り切れる必要があ�
 <p><code>/sys/devices/system/node/</code> および <code>lscpu</code> を使用してホストの NUMA トポロジーを調査する</p>
 </li>
 <li>
-<p>TLB オーバーヘッドを軽減するために、Hugepages バックアップメモリを持つ VM をデプロイする</p>
+<p>TLB オーバーヘッドを軽減するために、Hugepages メモリを持つ VM をデプロイする</p>
 </li>
 <li>
 <p>NUMA を意識したゲストスケジューリングのために、NUMA パススルー (<code>guestMappingPassthrough</code>) を持つ VM をデプロイする</p>
@@ -1419,7 +1498,7 @@ Memory requests は Hugepages サイズで均等に割り切れる必要があ�
 </div>
 </div>
 <div class="sect1">
-<h2 id="_関連項目"><a class="anchor" href="#_関連項目"></a>関連項目</h2>
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -1462,5 +1541,8 @@ Memory requests は Hugepages サイズで均等に割り切れる必要があ�
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

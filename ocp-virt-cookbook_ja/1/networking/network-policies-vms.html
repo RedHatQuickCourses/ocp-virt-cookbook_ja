@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>仮想マシンのネットワークポリシー :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="sriov-secondary.html">
+    <link rel="next" href="metallb-loadbalancer.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ネットワーク構成</a></li>
+    <li><a href="network-policies-vms.html">VM のネットワークポリシー</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">仮想マシンのネットワークポリシー</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、OpenShift Virtualization の仮想マシンワークロードに Kubernetes NetworkPolicy および AdminNetworkPolicy を適用する方法を説明します。VM は virt-launcher Pod 内で実行されるため、ネットワークポリシーは VM の <code>spec.template.metadata.labels</code> で定義されたラベルを使用して Pod レベルで適用されます。このガイドでは、VM 向けのゼロトラストネットワークモデルの構築手順を順を追って説明します。まずすべてを拒否するベースラインから開始し、フロントエンド/バックエンドアーキテクチャに対して選択的にトラフィックを許可します。</p>
+</div>
+<div class="paragraph">
+<p>VM トラフィックを分離し、VM ティア間で特定のポートアクセスを許可し、テナントユーザーがオーバーライドできないクラスター全体のガードレールとして AdminNetworkPolicy を使用する方法を学びます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualization Operator がインストールされた OpenShift 4.18+</p>
+</li>
+<li>
+<p>クラスターネットワークプラグインとしての OVN-Kubernetes (OpenShift 4.12 以降のデフォルト)</p>
+</li>
+<li>
+<p>AdminNetworkPolicy リソース用のクラスター管理者アクセス権</p>
+</li>
+<li>
+<p><code>oc</code> CLI がインストールされていること</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ネットワークポリシーが_vm_pod_を選択する方法"><a class="anchor" href="#_ネットワークポリシーが_vm_pod_を選択する方法"></a>ネットワークポリシーが VM Pod を選択する方法</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenShift Virtualization が実行中の VM を作成すると、virt-launcher Pod が生成されます。VirtualMachine リソースの <code>spec.template.metadata.labels</code> で定義したラベルは、この Pod に適用されます。NetworkPolicy オブジェクトは、他のワークロードと同様に <code>podSelector</code> を使用してこれらの Pod を選択します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: web-vm
+ labels:
+  app: web
+spec:
+ template:
+  metadata:
+   labels:
+    app: web    <i class="conum" data-value="1"></i><b>(1)</b>
+    role: frontend <i class="conum" data-value="1"></i><b>(1)</b>
+  spec:
+   # ...</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>これらのラベルは virt-launcher Pod に伝播され、NetworkPolicy の <code>podSelector</code> フィールドで使用できます。</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+VirtualMachine リソース自体の <code>metadata.labels</code> にあるラベルは、virt-launcher Pod に影響を与えません。ポリシーに関連するラベルは、必ず <code>spec.template.metadata.labels</code> に配置してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_namespace_の作成と_vm_のデプロイ"><a class="anchor" href="#_ステップ_1_namespace_の作成と_vm_のデプロイ"></a>ステップ 1: Namespace の作成と VM のデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>デモ用の Namespace を作成し、フロントエンドの Web サーバーとバックエンドのデータベースリスナーという 2 つの VM をデプロイします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace netpol-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ポート 80 で Nginx を実行するフロントエンド VM をデプロイします。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/network-policies-vms/vm-web.yaml" class="xref attachment">vm-web.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: web-vm
+ namespace: netpol-demo
+ labels:
+  app: web
+  role: frontend
+spec:
+ runStrategy: Always
+ instancetype:
+  name: u1.small
+ preference:
+  name: fedora
+ template:
+  metadata:
+   labels:
+    app: web
+    role: frontend
+  spec:
+   domain:
+    devices:
+     disks:
+      - name: containerdisk
+       disk: {}
+      - name: cloudinitdisk
+       disk: {}
+     interfaces:
+      - name: default
+       masquerade: {}
+   networks:
+    - name: default
+     pod: {}
+   volumes:
+    - name: containerdisk
+     containerDisk:
+      image: quay.io/containerdisks/fedora:40
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |
+       #cloud-config
+       password: changeme
+       chpasswd:
+        expire: false
+       packages:
+        - nginx
+       runcmd:
+        - systemctl enable --now nginx
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ポート 5432 でリッスンするバックエンド VM をデプロイします。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/network-policies-vms/vm-db.yaml" class="xref attachment">vm-db.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: db-vm
+ namespace: netpol-demo
+ labels:
+  app: database
+  role: backend
+spec:
+ runStrategy: Always
+ instancetype:
+  name: u1.small
+ preference:
+  name: fedora
+ template:
+  metadata:
+   labels:
+    app: database
+    role: backend
+  spec:
+   domain:
+    devices:
+     disks:
+      - name: containerdisk
+       disk: {}
+      - name: cloudinitdisk
+       disk: {}
+     interfaces:
+      - name: default
+       masquerade: {}
+   networks:
+    - name: default
+     pod: {}
+   volumes:
+    - name: containerdisk
+     containerDisk:
+      image: quay.io/containerdisks/fedora:40
+    - name: cloudinitdisk
+     cloudInitNoCloud:
+      userData: |
+       #cloud-config
+       password: changeme
+       chpasswd:
+        expire: false
+       packages:
+        - nmap-ncat
+       runcmd:
+        - ncat -l -k -p 5432 -e /usr/bin/echo &amp;
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>両方の VM の準備が整うまで待機します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc wait vm web-vm db-vm -n netpol-demo --for=condition=Ready --timeout=300s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>virt-launcher Pod に期待されるラベルが付与されていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n netpol-demo -l app=web --show-labels</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n netpol-demo -l app=database --show-labels</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_ベースライン接続の確認_ポリシー適用前"><a class="anchor" href="#_ステップ_2_ベースライン接続の確認_ポリシー適用前"></a>ステップ 2: ベースライン接続の確認 (ポリシー適用前)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ポリシーを適用する前に、トラフィックが VM に問題なく流れることを確認します。両方の VM の Pod IP を取得します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi -n netpol-demo -o 'custom-columns=NAME:.metadata.name,IP:.status.interfaces[0].ipAddress'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>表示された IP アドレスを書き留めます。このチュートリアル全体で接続テストに使用します。</p>
+</div>
+<div class="paragraph">
+<p>接続確認に使用する長期間実行されるテスト Pod を default namespace に作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc run curl-test -n default --image=registry.access.redhat.com/ubi9/ubi-minimal --restart=Never -- sleep 3600</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>web VM への接続をテストします (<code>&lt;web-vm-ip&gt;</code> を上記の IP に置き換えます)。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -n default curl-test -- curl -s --connect-timeout 5 http://&lt;web-vm-ip&gt;:80</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Nginx のウェルカムページの HTML が表示され、制限なく接続できることが確認できます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_すべてを拒否するベースラインの適用"><a class="anchor" href="#_ステップ_3_すべてを拒否するベースラインの適用"></a>ステップ 3: すべてを拒否するベースラインの適用</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ゼロトラストモデルは、まずすべてのトラフィックを拒否し、その後に必要なトラフィックのみを明示的に許可することから始まります。このポリシーは、 namespace 内のすべての Pod に対して、すべての Ingress および Egress を拒否します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/network-policies-vms/deny-all.yaml" class="xref attachment">deny-all.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+ name: deny-all
+ namespace: netpol-demo
+spec:
+ podSelector: {}
+ policyTypes:
+  - Ingress
+  - Egress
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>トラフィックがブロックされていることを確認します。テスト Pod から Web VM への接続を試みます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -n default curl-test -- curl -s --connect-timeout 5 http://&lt;web-vm-ip&gt;:80</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">想定される出力</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">command terminated with exit code 28</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>終了コード 28 は接続がタイムアウトしたことを意味します。OVN-Kubernetes は TCP RST を送信するのではなく、ポリシーに違反するパケットをサイレントにドロップするため、curl は <code>--connect-timeout</code> が切れるまで待機します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_dns_egress_の許可"><a class="anchor" href="#_ステップ_4_dns_egress_の許可"></a>ステップ 4: DNS Egress の許可</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>すべて拒否 (deny-all) ポリシーが適用されている場合、DNS 解決もブロックされます。名前解決が引き続き機能するように、すべての Pod がクラスター DNS サービスに到達できるようにします。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/network-policies-vms/allow-dns-egress.yaml" class="xref attachment">allow-dns-egress.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+ name: allow-dns-egress
+ namespace: netpol-demo
+spec:
+ podSelector: {}
+ policyTypes:
+  - Egress
+ egress:
+  - to:
+    - namespaceSelector:
+      matchLabels:
+       kubernetes.io/metadata.name: openshift-dns
+   ports:
+    - protocol: UDP
+     port: 5353
+    - protocol: TCP
+     port: 5353
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_web_vm_への_http_ingress_の許可"><a class="anchor" href="#_ステップ_5_web_vm_への_http_ingress_の許可"></a>ステップ 5: Web VM への HTTP Ingress の許可</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>任意の送信元から TCP ポート 80 で Web VM への ingress トラフィックを許可します。これは、フロントエンドを内部の利用者に公開するシナリオを想定しています。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/network-policies-vms/allow-web-ingress.yaml" class="xref attachment">allow-web-ingress.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+ name: allow-web-ingress
+ namespace: netpol-demo
+spec:
+ podSelector:
+  matchLabels:
+   app: web
+ policyTypes:
+  - Ingress
+ ingress:
+  - ports:
+    - protocol: TCP
+     port: 80
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>テスト Pod から Web VM のポート 80 にアクセスできるようになったことを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -n default curl-test -- curl -s --connect-timeout 5 http://&lt;web-vm-ip&gt;:80</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Nginx のウェルカムページが再度表示され、Ingress 許可ルールが機能していることが確認できます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_6_web_vm_からデータベース_vm_への通信を許可する"><a class="anchor" href="#_ステップ_6_web_vm_からデータベース_vm_への通信を許可する"></a>ステップ 6: Web VM からデータベース VM への通信を許可する</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>一般的なアーキテクチャーでは、フロントエンドからバックエンドのデータベースへのアクセスが必要です。Web VM からデータベースポートへの Egress を許可するポリシーと、<code>app: web</code> ラベルを持つ Pod からデータベース VM への Ingress のみを許可するポリシーの 2 つを作成します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/network-policies-vms/allow-web-to-db-egress.yaml" class="xref attachment">allow-web-to-db-egress.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+ name: allow-web-to-db-egress
+ namespace: netpol-demo
+spec:
+ podSelector:
+  matchLabels:
+   app: web
+ policyTypes:
+  - Egress
+ egress:
+  - to:
+    - podSelector:
+      matchLabels:
+       app: database
+   ports:
+    - protocol: TCP
+     port: 5432
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/network-policies-vms/allow-db-from-web.yaml" class="xref attachment">allow-db-from-web.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+ name: allow-db-from-web
+ namespace: netpol-demo
+spec:
+ podSelector:
+  matchLabels:
+   app: database
+ policyTypes:
+  - Ingress
+ ingress:
+  - from:
+    - podSelector:
+      matchLabels:
+       app: web
+   ports:
+    - protocol: TCP
+     port: 5432
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>テスト Pod (<code>app: web</code> ラベルを持たない Pod) がデータベースにアクセスできないことを確認します (接続がタイムアウトするはずです)。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -n default curl-test -- curl -s --connect-timeout 5 http://&lt;db-vm-ip&gt;:5432</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>&lt;db-vm-ip&gt;</code> をステップ 2 のデータベース VM の IP に置き換えます。</p>
+</div>
+<div class="listingblock">
+<div class="title">想定される出力</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">command terminated with exit code 28</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>タイムアウトが発生することで、ポリシーによってデータベースへの不正なアクセスがブロックされていることが確認できます。</p>
+</div>
+<div class="paragraph">
+<p><code>allow-db-from-web</code> ポリシーが namespace 内のラベル <code>app: web</code> を持つ pod への ingress を制限しているため、データベースポートには web VM の virt-launcher pod からのみ到達可能です。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_7_アクティブなポリシーの表示"><a class="anchor" href="#_ステップ_7_アクティブなポリシーの表示"></a>ステップ 7: アクティブなポリシーの表示</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>セキュリティポスチャーを確認するために、namespace 内のすべての NetworkPolicy リソースを一覧表示します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get networkpolicy -n netpol-demo</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">想定される出力</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME           POD-SELECTOR  AGE
+allow-db-from-web    app=database  ...
+allow-dns-egress     &lt;none&gt;     ...
+allow-web-ingress    app=web    ...
+allow-web-to-db-egress  app=web    ...
+deny-all         &lt;none&gt;     ...</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クラスター全体のガードレール用の_adminnetworkpolicy"><a class="anchor" href="#_クラスター全体のガードレール用の_adminnetworkpolicy"></a>クラスター全体のガードレール用の AdminNetworkPolicy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>NetworkPolicy は namespace スコープであり、アプリケーションチームによって管理されますが、クラスター管理者は AdminNetworkPolicy (ANP) を使用してオーバーライド不可能なルールを適用できます。OVN-Kubernetes は以下の順序でポリシーを評価します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>AdminNetworkPolicy</strong> (最高優先度)&#8201;&#8212;&#8201;<code>Allow</code> または <code>Deny</code> ルールが最終決定となります。<code>Pass</code> は次の階層に委任します。</p>
+</li>
+<li>
+<p><strong>NetworkPolicy</strong>&#8201;&#8212;&#8201;標準の namespace スコープのルール。</p>
+</li>
+<li>
+<p><strong>BaselineAdminNetworkPolicy</strong>&#8201;&#8212;&#8201;NetworkPolicy に一致するものがない場合に適用されるクラスター全体のフォールバック。</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>次の ANP の例は、OpenShift Virtualization インフラストラクチャーの namespace を不正アクセスから保護します。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/network-policies-vms/admin-network-policy.yaml" class="xref attachment">admin-network-policy.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: policy.networking.k8s.io/v1alpha1
+kind: AdminNetworkPolicy
+metadata:
+ name: cluster-deny-to-virt-infra
+spec:
+ priority: 50
+ subject:
+  namespaces:
+   matchExpressions:
+    - key: kubernetes.io/metadata.name
+     operator: NotIn
+     values:
+      - openshift-cnv
+      - openshift-virtualization-os-images
+ ingress:
+  - name: deny-ingress-to-virt-infra
+   action: Deny
+   from:
+    - namespaces:
+      matchExpressions:
+       - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values:
+         - openshift-cnv
+         - openshift-virtualization-os-images
+   ports:
+    - portRange:
+      start: 1
+      end: 65535
+      protocol: TCP</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+AdminNetworkPolicy は <code>v1alpha1</code> API バージョンです。この API は安定しており、OpenShift 4.14 以降の OVN-Kubernetes クラスターでデフォルトで有効になっていますが、<code>v1</code> に達する前に変更される可能性があります。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_重要な考慮事項"><a class="anchor" href="#_重要な考慮事項"></a>重要な考慮事項</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_セカンダリーネットワーク"><a class="anchor" href="#_セカンダリーネットワーク"></a>セカンダリーネットワーク</h3>
+<div class="paragraph">
+<p>NetworkPolicy は、<strong>プライマリー Pod ネットワーク</strong> (デフォルトのクラスターネットワークまたは Primary UDN) 上のトラフィックにのみ適用されます。NetworkAttachmentDefinition、localnet、Linux ブリッジインターフェース経由で接続されたセカンダリーネットワーク上のトラフィックは、NetworkPolicy によって管理され<strong>ません</strong>。セカンダリーネットワーク上のトラフィックを制御するには、VM ゲスト内のファイアウォールルールまたは外部ネットワークインフラストラクチャーの制御を使用してください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ライブマイグレーション"><a class="anchor" href="#_ライブマイグレーション"></a>ライブマイグレーション</h3>
+<div class="paragraph">
+<p>ライブマイグレーション中、VM の virt-launcher Pod はターゲットノード上に再作成されます。新しい Pod は <code>spec.template.metadata.labels</code> から同じラベルを継承するため、既存の NetworkPolicy ルールは変更なしで引き続き適用されます。マイグレーション自体は、namespace スコープの NetworkPolicy の影響を受けない内部 KubeVirt 通信チャネルを使用します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_masquerade_vs_bridge_binding"><a class="anchor" href="#_masquerade_vs_bridge_binding"></a>Masquerade vs Bridge Binding</h3>
+<div class="paragraph">
+<p><code>masquerade</code> interface binding (Pod ネットワークのデフォルト) を使用する場合、VM ゲストと Pod ネットワーク間のトラフィックは NAT されます。NetworkPolicy は virt-launcher Pod の IP を送信元/送信先として認識します。<code>bridge</code> binding を使用すると、VM は Pod IP を直接取得します。どちらの場合も、ポリシーは virt-launcher Pod をターゲットにします。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ポリシーが有効にならない"><a class="anchor" href="#_ポリシーが有効にならない"></a>ポリシーが有効にならない</h3>
+<div class="paragraph">
+<p>virt-launcher Pod のラベルがポリシーセレクターと一致していることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n netpol-demo --show-labels</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM が <code>metadata.labels</code> だけでなく、<code>spec.template.metadata.labels</code> にもラベルを定義していることを確認します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deny_all_の適用後に_dns_解決が機能しなくなる"><a class="anchor" href="#_deny_all_の適用後に_dns_解決が機能しなくなる"></a>Deny-All の適用後に DNS 解決が機能しなくなる</h3>
+<div class="paragraph">
+<p>すべて拒否する egress ポリシーを適用し、DNS の許可を忘れた場合、すべての名前解決が失敗します。ステップ 4 の DNS egress ポリシーを適用してください。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_すべて拒否した後にトラフィックが引き続き流れる場合"><a class="anchor" href="#_すべて拒否した後にトラフィックが引き続き流れる場合"></a>すべて拒否した後にトラフィックが引き続き流れる場合</h3>
+<div class="paragraph">
+<p><code>policyTypes</code> に <code>Ingress</code> のみを指定した場合、egress は制限されません (逆も同様です)。双方向をブロックするには、<code>policyTypes</code> に <code>Ingress</code> と <code>Egress</code> の両方を含めます。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>テスト Pod と namespace を削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete pod curl-test -n default</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace netpol-demo</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+AdminNetworkPolicy の例を適用した場合は、クラスタースコープであるため別途削除してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete adminnetworkpolicy cluster-deny-to-virt-infra</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下について学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>NetworkPolicy は、virt-launcher Pod に伝播される <code>spec.template.metadata.labels</code> のラベルを通じて VM ワークロードを選択します</p>
+</li>
+<li>
+<p>すべて拒否 (deny-all) のベースラインにより、VM namespace にゼロトラスト分離が提供されます</p>
+</li>
+<li>
+<p>きめ細かな Ingress および Egress ルールにより、VM 階層間の制御された通信が可能になります</p>
+</li>
+<li>
+<p>すべて拒否のベースラインを使用する場合は、DNS Egress を明示的に許可する必要があります</p>
+</li>
+<li>
+<p>AdminNetworkPolicy は、テナントユーザーがオーバーライドできないクラスター全体のガードレールを提供します</p>
+</li>
+<li>
+<p>NetworkPolicy はプライマリーネットワークのトラフィックのみを制御します。セカンダリーネットワークインターフェースには個別の制御が必要です</p>
+</li>
+<li>
+<p>Pod ラベルが保持されるため、ポリシーはライブマイグレーションをまたいで維持されます</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="vm-ingress-routes.html" class="xref page">VM Ingress および Routes</a>&#8201;&#8212;&#8201;VM HTTP サービスを外部に公開する</p>
+</li>
+<li>
+<p><a href="udn-primary-networks.html" class="xref page">UDN プライマリーネットワーク</a>&#8201;&#8212;&#8201;組み込みの分離機能を備えたレイヤー 2 プライマリーネットワークを設定する</p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/network_security/network-policy-apis" target="_blank" rel="noopener">OpenShift ネットワークセキュリティードキュメント</a></p>
+</li>
+<li>
+<p><a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/" target="_blank" rel="noopener">Kubernetes NetworkPolicy リファレンス</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a></span>
+  <span class="next"><a href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>VM ディスク I/O パフォーマンスチューニング :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="cdi-operations.html">
+    <link rel="next" href="../networking/index.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="disk-io-tuning.html">ディスク I/O チューニング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ストレージ設定</a></li>
+    <li><a href="disk-io-tuning.html">ディスク I/O チューニング</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">VM ディスク I/O パフォーマンスチューニング</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ディスク I/O パフォーマンスは、OpenShift Virtualization 上で仮想マシンを実行する際によく見られる懸念事項の 1 つです。デフォルトの VM 構成は一般的なワークロードに対応しますが、データベースサーバー、ロギングパイプライン、その他の I/O 負荷の高いアプリケーションでは、ディスクバスタイプ、キャッシュモード、I/O スレッディング、ボリュームモードをチューニングすることでメリットが得られます。</p>
+</div>
+<div class="paragraph">
+<p>このチュートリアルでは、各チューニングオプションを順を追って説明し、最適化された設定で VM をデプロイし、ゲスト内で <code>fio</code> を使用してその影響を測定します。また、ゲスト側とホスト側の両方から I/O ボトルネックを特定する方法についても学習します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_学習内容"><a class="anchor" href="#_学習内容"></a>学習内容</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>ディスクバスタイプ (VirtIO、SCSI、SATA) が I/O パフォーマンスに与える影響</p>
+</li>
+<li>
+<p>ボリュームモード (Block と Filesystem) によって I/O パスがどのように変化するか</p>
+</li>
+<li>
+<p>ディスクキャッシュモード、I/O スレッド、マルチキューを設定する方法</p>
+</li>
+<li>
+<p><code>fio</code> を使用して VM ディスク I/O のベンチマークを実行する方法</p>
+</li>
+<li>
+<p>ゲストおよびホストのツールを使用して I/O ボトルネックを特定する方法</p>
+</li>
+<li>
+<p>さまざまなワークロードタイプに対してどのチューニングオプションを適用すべきか</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualization Operator がインストールされた <strong>OpenShift 4.18+</strong></p>
+</li>
+<li>
+<p><strong>クラスター管理者アクセス</strong> (<code>system:admin</code> または同等)</p>
+</li>
+<li>
+<p>インストール済みの <strong><code>oc</code> CLI</strong> および <strong><code>virtctl</code> CLI</strong></p>
+</li>
+<li>
+<p>設定済みの <strong>デフォルト StorageClass</strong> (例: <code>lvms-vg1</code>)</p>
+</li>
+<li>
+<p>OpenShift Virtualization での基本的な VM 作成に関する知識</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ディスクバスタイプ"><a class="anchor" href="#_ディスクバスタイプ"></a>ディスクバスタイプ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ディスクバスタイプは、仮想ディスクがゲストオペレーティングシステムにどのように提示されるかを決定します。タイプごとにパフォーマンス特性や互換性のトレードオフが異なります。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">バスタイプ</th>
+<th class="tableblock halign-left valign-top">説明</th>
+<th class="tableblock halign-left valign-top">パフォーマンス</th>
+<th class="tableblock halign-left valign-top">ユースケース</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtIO</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">準仮想化ディスクドライバー</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">最も高いスループットと最も低いレイテンシー</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linux VM、VirtIO driver がインストールされた Windows VM</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SCSI</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">エミュレートされた SCSI コントローラー (virtio-scsi 経由)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">より広範な機能サポートを備えた優れたパフォーマンス</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TRIM/discard や永続的予約などの SCSI 機能を必要とする VM</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SATA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">エミュレートされた SATA/AHCI コントローラー</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">完全なエミュレーションのオーバーヘッドにより最も低いパフォーマンス</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtIO または SCSI ドライバーのサポートがないレガシーゲストオペレーティングシステム</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>VirtIO は、すべての Linux VM でデフォルトかつ推奨されるバスタイプです。デバイスエミュレーションをバイパスし、共有メモリのリングバッファーを介してハイパーバイザーと直接通信するため、I/O 操作ごとの CPU オーバーヘッドとレイテンシーが削減されます。</p>
+</div>
+<div class="paragraph">
+<p>シンプロビジョニングされたストレージの TRIM/discard などの機能が必要な場合や、SCSI デバイスを前提とするゲストワークロードを実行する場合は SCSI を使用します。SATA は、VirtIO および SCSI ドライバーがないレガシーオペレーティングシステムにのみ使用してください。</p>
+</div>
+<div class="sect2">
+<h3 id="_vm_spec_におけるバスタイプ"><a class="anchor" href="#_vm_spec_におけるバスタイプ"></a>VM Spec におけるバスタイプ</h3>
+<div class="paragraph">
+<p>バスタイプは <code>spec.template.spec.domain.devices.disks</code> の下で設定します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">devices:
+  disks:
+  - name: rootdisk
+    disk:
+      bus: virtio</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ボリュームモード_block_vs_filesystem"><a class="anchor" href="#_ボリュームモード_block_vs_filesystem"></a>ボリュームモード: Block vs Filesystem</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>PersistentVolumeClaim のボリュームモードは、ストレージバックエンドが VM Pod にボリュームを提供する方法を制御します。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Filesystem</strong> (デフォルト): ストレージバックエンドは、基盤となるデバイス上にファイルシステム (通常は ext4) をプロビジョニングします。QEMU はそのファイルシステム上のファイルとして VM ディスクを保存します。これにより、QEMU と raw ストレージの間にファイルシステムのオーバーヘッドのレイヤーが追加されます。</p>
+</li>
+<li>
+<p><strong>Block</strong>: ストレージバックエンドは、raw ブロックデバイスを VM Pod に直接公開します。QEMU は中間ファイルシステムを介さずにブロックデバイスの読み取りおよび書き込みを行います。これによりファイルシステムのオーバーヘッドが排除され、レイテンシーが短縮されます。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>I/O 負荷の高いワークロードにおいて、Block モードは通常、Filesystem モードよりも 5〜15% 優れた IOPS と低いレイテンシーを提供します。具体的な向上幅はストレージバックエンドによって異なります。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+すべての StorageClass が Block ボリュームモードをサポートしているわけではありません。ストレージプロバイダーのドキュメントを確認してください。LVM Storage と ODF (Ceph RBD) は両方とも Block モードをサポートしています。
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_ボリュームモードの設定"><a class="anchor" href="#_ボリュームモードの設定"></a>ボリュームモードの設定</h3>
+<div class="paragraph">
+<p>ボリュームモードは DataVolume または PVC で設定します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">dataVolumeTemplates:
+- metadata:
+    name: my-disk
+  spec:
+    pvc:
+      accessModes:
+      - ReadWriteOnce
+      volumeMode: Block
+      resources:
+        requests:
+          storage: 30Gi
+    source:
+      registry:
+        pullMethod: node
+        url: docker://quay.io/containerdisks/fedora:latest</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ディスクキャッシュモード"><a class="anchor" href="#_ディスクキャッシュモード"></a>ディスクキャッシュモード</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>キャッシュモードは、ホストが VM ディスクの読み取りおよび書き込みキャッシュをどのように処理するかを制御します。KubeVirt は 3 つのキャッシュモードをサポートしています。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 50%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">キャッシュモード</th>
+<th class="tableblock halign-left valign-top">動作</th>
+<th class="tableblock halign-left valign-top">推奨用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>none</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ホスト側のキャッシュはありません。読み取りと書き込みはストレージバックエンドに直接行われます。ゲスト OS が独自のページキャッシュを管理します。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">データベース、共有ストレージ、独自のキャッシュを管理するワークロード</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>writeback</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ホストは読み取りと書き込みの両方をキャッシュします。書き込みはストレージに到達する前に確認応答されます。ホスト障害時のデータ損失リスクが高くなります。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">書き込みの耐久性よりもパフォーマンスが重視される汎用 VM</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>writethrough</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ホストは読み取りをキャッシュしますが、書き込みはストレージに直接行われます。ホスト側のデータ損失に対して安全ですが、書き込みパフォーマンスは低下します。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">書き込みの安全性を必要とし、読み取りキャッシュのメリットを享受できるワークロード</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>キャッシュモードが設定されていない場合、KubeVirt はデフォルトで Block ボリュームには <code>none</code> を、Filesystem ボリュームには <code>writethrough</code> を使用します。</p>
+</div>
+<div class="paragraph">
+<p>データベースワークロードの場合は、ホスト側のキャッシュからの干渉を受けずにデータベースエンジンが書き込み順序と fsync の動作を制御できるように、<code>cache: none</code> を使用してください。</p>
+</div>
+<div class="sect2">
+<h3 id="_キャッシュモードの設定"><a class="anchor" href="#_キャッシュモードの設定"></a>キャッシュモードの設定</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">devices:
+  disks:
+  - name: rootdisk
+    cache: none
+    disk:
+      bus: virtio</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_io_スレッディングおよびマルチキュー"><a class="anchor" href="#_io_スレッディングおよびマルチキュー"></a>I/O スレッディングおよびマルチキュー</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>デフォルトでは、すべての VM ディスク I/O はメインの QEMU スレッドで実行されます。I/O 負荷が高い場合、この単一スレッドがボトルネックになります。この問題には 2 つの設定で対処します。</p>
+</div>
+<div class="sect2">
+<h3 id="_io_スレッド"><a class="anchor" href="#_io_スレッド"></a>I/O スレッド</h3>
+<div class="paragraph">
+<p><code>ioThreadsPolicy</code> フィールドは、メインの QEMU エミュレーションスレッドとは別に、ディスク I/O 用の専用スレッドを作成します。個々のディスクで <code>dedicatedIOThread: true</code> を設定して、これらのスレッドにディスクを割り当てます。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>auto</code>: KubeVirt は <code>dedicatedIOThread: true</code> が設定されたディスクごとに 1 つの I/O スレッドを作成します。</p>
+</li>
+<li>
+<p><code>shared</code>: <code>dedicatedIOThread: true</code> が設定されたすべてのディスクが単一の I/O スレッドを共有します。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>それぞれが最大の I/O スループットを必要とする複数のディスクを持つ VM には <code>auto</code> を使用します。ホスト上のスレッド数を削減したい場合は <code>shared</code> を使用します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_block_multi_queue"><a class="anchor" href="#_block_multi_queue"></a>Block Multi-Queue</h3>
+<div class="paragraph">
+<p><code>blockMultiQueue</code> 設定は、VirtIO ブロックデバイス用に複数の virtqueue を作成します。各 vCPU は独自の I/O 送信キューを取得し、これにより CPU コア間での並列 I/O 処理が可能になります。これは、多くの並列クエリを実行するデータベースなど、高い I/O 並行性を持つワークロードに役立ちます。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+ブロックマルチキューは VirtIO ディスクバスにのみ適用されます。SCSI または SATA ディスクには影響しません。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_namespace_の作成"><a class="anchor" href="#_ステップ_1_namespace_の作成"></a>ステップ 1: Namespace の作成</h2>
+<div class="sectionbody">
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace disk-io-tuning</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_ベースライン_vm_のデプロイ"><a class="anchor" href="#_ステップ_2_ベースライン_vm_のデプロイ"></a>ステップ 2: ベースライン VM のデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>まず、パフォーマンスのベースラインを確立するために、デフォルトのディスク設定で VM をデプロイします。</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+この例の cloud-init パスワードはデモ目的のみに使用されます。本番環境では、常に強力で一意のパスワードまたは SSH 鍵認証を使用してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/disk-io-tuning/vm-baseline.yaml" class="xref attachment">vm-baseline.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-baseline
+  namespace: disk-io-tuning
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-baseline
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        memory:
+          guest: 2Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+            bootOrder: 1
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 2Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: baseline-rootdisk
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+            packages:
+            - fio
+  dataVolumeTemplates:
+  - metadata:
+      name: baseline-rootdisk
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 30Gi
+      source:
+        registry:
+          pullMethod: node
+          url: docker://quay.io/containerdisks/fedora:latest
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM が起動するのを待ちます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n disk-io-tuning -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>STATUS が <code>Running</code> と表示されたら、次のステップに進みます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_チューニング済み_vm_のデプロイ"><a class="anchor" href="#_ステップ_3_チューニング済み_vm_のデプロイ"></a>ステップ 3: チューニング済み VM のデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>すべての I/O チューニングオプション (VirtIO バス、<code>cache: none</code>、I/O スレッド、ブロックマルチキュー) を有効にして、2 つ目の VM をデプロイします。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/disk-io-tuning/vm-tuned.yaml" class="xref attachment">vm-tuned.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-tuned
+  namespace: disk-io-tuning
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-tuned
+    spec:
+      domain:
+        ioThreadsPolicy: auto
+        cpu:
+          cores: 2
+        memory:
+          guest: 2Gi
+        devices:
+          blockMultiQueue: true
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+            bootOrder: 1
+            cache: none
+            io: native
+            dedicatedIOThread: true
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 2Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: tuned-rootdisk
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+            packages:
+            - fio
+  dataVolumeTemplates:
+  - metadata:
+      name: tuned-rootdisk
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        volumeMode: Block
+        resources:
+          requests:
+            storage: 30Gi
+      source:
+        registry:
+          pullMethod: node
+          url: docker://quay.io/containerdisks/fedora:latest
+EOF</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_この_vm_における主要なチューニング設定"><a class="anchor" href="#_この_vm_における主要なチューニング設定"></a>この VM における主要なチューニング設定</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>ioThreadsPolicy: auto</code></strong>: 要求した各ディスクに対して専用の I/O スレッドを作成します。</p>
+</li>
+<li>
+<p><strong><code>blockMultiQueue: true</code></strong>: すべての VirtIO ブロックデバイスで vCPU ごとの I/O キューを有効にします。</p>
+</li>
+<li>
+<p><strong><code>cache: none</code></strong>: ゲスト OS が独自のキャッシュを制御できるように、ホスト側のキャッシュをバイパスします。</p>
+</li>
+<li>
+<p><strong><code>io: native</code></strong>: QEMU のスレッド I/O の代わりに Linux ネイティブの非同期 I/O (io_uring/libaio) を使用します。これにより、高 I/O 負荷下でのコンテキストスイッチが削減されます。</p>
+</li>
+<li>
+<p><strong><code>dedicatedIOThread: true</code></strong>: メインの QEMU スレッドを共有する代わりに、このディスクを専用の I/O スレッドに割り当てます。</p>
+</li>
+<li>
+<p><strong><code>volumeMode: Block</code></strong>: ファイルシステムのオーバーヘッドを回避して、raw ブロックデバイスを QEMU に公開します。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>両方の VM が実行状態になるまで待ちます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n disk-io-tuning</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">想定される出力</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME          AGE   STATUS    READY
+vm-baseline   5m    Running   True
+vm-tuned      2m    Running   True</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_fio_によるベンチマーク_ベースライン_vm"><a class="anchor" href="#_ステップ_4_fio_によるベンチマーク_ベースライン_vm"></a>ステップ 4: fio によるベンチマーク (ベースライン VM)</h2>
+<div class="sectionbody">
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+fio の書き込みテストは、ページキャッシュをバイパスしてストレージバックエンドに直接アクセスする持続的な I/O 負荷を生成します。共有ストレージ (Ceph、ODF、NFS) を備えた本番クラスターでは、これによりストレージの帯域幅が飽和し、他の VM やワークロードのパフォーマンスが低下する可能性があります。これらのベンチマークは、専用のテストクラスターまたはメンテナンスウィンドウ中に実行してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>ベースライン VM に接続し、<code>fio</code> ベンチマークを実行します。<code>fio</code> ツールは起動時に cloud-init によってインストールされています。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console vm-baseline -n disk-io-tuning</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザー名 <code>fedora</code>、パスワード <code>redhat</code> でログインします。</p>
+</div>
+<div class="paragraph">
+<p>cloud-init による <code>fio</code> のインストールが完了するまで待ちます。ステータスは以下で確認できます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cloud-init status --wait</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ランダム読み取り_iops_テスト"><a class="anchor" href="#_ランダム読み取り_iops_テスト"></a>ランダム読み取り IOPS テスト</h3>
+<div class="paragraph">
+<p>16 の同時 I/O 操作で 4K ランダム読み取りテストを実行します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo fio --name=randread --ioengine=libaio --direct=1 --bs=4k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=randread --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Random Read IOPS:", $8, "| Avg Latency (usec):", $40}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ランダム書き込み_iops_テスト"><a class="anchor" href="#_ランダム書き込み_iops_テスト"></a>ランダム書き込み IOPS テスト</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo fio --name=randwrite --ioengine=libaio --direct=1 --bs=4k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=randwrite --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Random Write IOPS:", $49, "| Avg Latency (usec):", $81}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_シーケンシャル読み取りスループットテスト"><a class="anchor" href="#_シーケンシャル読み取りスループットテスト"></a>シーケンシャル読み取りスループットテスト</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo fio --name=seqread --ioengine=libaio --direct=1 --bs=128k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=read --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Sequential Read BW (KiB/s):", $7}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_シーケンシャル書き込みスループットテスト"><a class="anchor" href="#_シーケンシャル書き込みスループットテスト"></a>シーケンシャル書き込みスループットテスト</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo fio --name=seqwrite --ioengine=libaio --direct=1 --bs=128k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=write --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Sequential Write BW (KiB/s):", $48}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>各テストの結果を記録します。<code>Ctrl+]</code> を押してコンソールを終了します。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_fio_によるベンチマーク_チューニング済み_vm"><a class="anchor" href="#_ステップ_5_fio_によるベンチマーク_チューニング済み_vm"></a>ステップ 5: fio によるベンチマーク (チューニング済み VM)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>チューニング済みの VM に接続し、同じベンチマークを実行します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console vm-tuned -n disk-io-tuning</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザー名 <code>fedora</code>、パスワード <code>redhat</code> でログインします。cloud-init が完了するまで待ちます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cloud-init status --wait</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>同じ 4 つの fio テストを実行します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo fio --name=randread --ioengine=libaio --direct=1 --bs=4k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=randread --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Random Read IOPS:", $8, "| Avg Latency (usec):", $40}'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo fio --name=randwrite --ioengine=libaio --direct=1 --bs=4k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=randwrite --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Random Write IOPS:", $49, "| Avg Latency (usec):", $81}'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo fio --name=seqread --ioengine=libaio --direct=1 --bs=128k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=read --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Sequential Read BW (KiB/s):", $7}'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo fio --name=seqwrite --ioengine=libaio --direct=1 --bs=128k \
+  --iodepth=16 --numjobs=1 --size=1G --runtime=30 --time_based \
+  --rw=write --filename=/tmp/fio-test --output-format=terse \
+  | awk -F';' '{print "Sequential Write BW (KiB/s):", $48}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ベースラインの VM とチューニング済みの VM の間で、IOPS、スループット、レイテンシーの数値を比較します。チューニング済みの VM では、特に I/O スレッディングと直接ブロックアクセスの効果が最も大きいランダム I/O ワークロードにおいて、IOPS の向上とレイテンシーの短縮が見られるはずです。</p>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> を押してコンソールを終了します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_6_ホスト側からのチューニング設定の確認"><a class="anchor" href="#_ステップ_6_ホスト側からのチューニング設定の確認"></a>ステップ 6: ホスト側からのチューニング設定の確認</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>virt-launcher pod および QEMU プロセスを検査することで、チューニングオプションが適用されていることを確認できます。</p>
+</div>
+<div class="paragraph">
+<p>チューニングされた VM で I/O スレッドの割り当てを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vmi vm-tuned -n disk-io-tuning -o jsonpath='{.status.launcherContainerImageVersion}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>チューニングされた VM の QEMU コマンドライン引数を検査して、I/O スレッドおよびキャッシュ設定を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">TUNED_POD=$(oc get pod -n disk-io-tuning -l kubevirt.io/domain=vm-tuned -o jsonpath='{.items[0].metadata.name}')
+oc exec -n disk-io-tuning "$TUNED_POD" -- ps aux | grep -o '\-drive [^ ]*' | head -5</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ドライブパラメーターで <code>cache=none</code>、<code>aio=native</code>、および <code>iothread</code> を探します。これらにより、QEMU レベルでチューニングが有効になっていることが確認できます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_7_io_ボトルネックの特定"><a class="anchor" href="#_ステップ_7_io_ボトルネックの特定"></a>ステップ 7: I/O ボトルネックの特定</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I/O パフォーマンスが期待を満たしていない場合は、以下のツールを使用してボトルネックを特定します。</p>
+</div>
+<div class="sect2">
+<h3 id="_ゲスト側のツール"><a class="anchor" href="#_ゲスト側のツール"></a>ゲスト側のツール</h3>
+<div class="paragraph">
+<p>VM コンソールに接続し、<code>iostat</code> を使用してデバイスごとの I/O 統計を監視します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo dnf install -y sysstat
+iostat -xz 2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>注目すべき主要な列:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>%util</code></strong>: デバイスがビジー状態である時間の割合。100% に近い値は、デバイスが飽和状態にあることを示します。</p>
+</li>
+<li>
+<p><strong><code>await</code></strong>: キュー時間を含む、I/O リクエストが完了するまでの平均時間 (ミリ秒)。高い値は輻輳を示します。</p>
+</li>
+<li>
+<p><strong><code>r_await</code> / <code>w_await</code></strong>: 読み取りと書き込みそれぞれの待機時間。大きな差がある場合は、非対称なワークロードパターンを示唆しています。</p>
+</li>
+<li>
+<p><strong><code>avgqu-sz</code></strong>: 平均 I/O キュー深度。シングルスピンドルデバイスで値が常に 1 を超えている場合は、キューイングが発生していることを示します。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ホスト側のツール"><a class="anchor" href="#_ホスト側のツール"></a>ホスト側のツール</h3>
+<div class="paragraph">
+<p>OpenShift ノードから、virt-launcher pod のリソース消費量を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm top pod -n disk-io-tuning -l kubevirt.io/domain=vm-tuned</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>OpenShift のモニタリングを使用してノードレベルのディスク I/O プレッシャーを確認します。ノードでの高い <code>iowait</code> CPU 値は、VM の設定ではなくホストレベルのストレージがボトルネックであることを示しています。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc adm top node</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM をホストしているノードで顕著な <code>iowait</code> を伴う高い CPU 使用率が示されている場合、VM ディスク設定ではなくストレージバックエンド自体が制限要因となっている可能性があります。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ストレージバックエンドの影響"><a class="anchor" href="#_ストレージバックエンドの影響"></a>ストレージバックエンドの影響</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ストレージバックエンドは、ほとんどの VM レベルのチューニングオプションよりも I/O パフォーマンスに大きな影響を与えます。一般的なバックエンドの比較は以下のとおりです。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">バックエンド</th>
+<th class="tableblock halign-left valign-top">ランダム IOPS (標準的)</th>
+<th class="tableblock halign-left valign-top">レイテンシー</th>
+<th class="tableblock halign-left valign-top">最適な用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LVM thin pool (local NVMe)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">50,000-200,000+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 ミリ秒未満</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">高パフォーマンスデータベース、レイテンシーの影響を受けやすいワークロード</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ODF / Ceph RBD</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10,000-50,000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1-5 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">汎用、レプリケーションおよびスナップショットを必要とするワークロード</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFS</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1,000-10,000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2-10 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">共有ストレージ、読み取り中心のワークロード、レイテンシーの影響を受けにくいアプリケーション</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クラウドプロバイダーディスク (gp3、マネージド SSD)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3,000-16,000 (プロビジョニング済み)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1-3 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クラウドでホストされる OpenShift クラスター</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+これらの数値はおおよその範囲であり、ハードウェア、ネットワーク、および設定によって異なります。常に独自の環境でベンチマークを実行してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ワークロードタイプ別のチューニング推奨事項"><a class="anchor" href="#_ワークロードタイプ別のチューニング推奨事項"></a>ワークロードタイプ別のチューニング推奨事項</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ワークロード</th>
+<th class="tableblock halign-left valign-top">推奨設定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">データベース (PostgreSQL、MySQL)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtIO バス、<code>cache: none</code>、<code>io: native</code>、<code>dedicatedIOThread: true</code>、Block ボリュームモード、<code>blockMultiQueue: true</code>。データベースは独自のライトキャッシュを管理し、予測可能な fsync 動作を必要とします。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Web サーバー / アプリケーションサーバー</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtIO バス、デフォルトのキャッシュモード、Filesystem ボリュームモード。Web サーバーは通常 I/O バウンドではありません。デフォルト設定で十分です。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ログ集約 / ストリーミング</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtIO バス、<code>cache: writeback</code>、<code>dedicatedIOThread: true</code>。シーケンシャル書き込みワークロードはライトキャッシュの恩恵を受けます。ログは再収集できるため、データ損失のリスクは許容されます。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">汎用 / デスクトップ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtIO バス、デフォルトのキャッシュおよび I/O 設定。混在した負荷の低い I/O ワークロードでは、チューニングによるメリットは最小限です。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">データ分析 / バッチ処理</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VirtIO バス、<code>io: native</code>、Block ボリュームモード、<code>blockMultiQueue: true</code>。大規模なシーケンシャル読み取りは、ネイティブ I/O とブロックアクセスの恩恵を受けます。</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルで作成したすべてのリソースを削除します:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace disk-io-tuning</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、次の方法について学習しました:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ゲスト OS の互換性とパフォーマンスのニーズに基づいて適切なディスクバスタイプ (VirtIO、SCSI、SATA) を選択する</p>
+</li>
+<li>
+<p>PVC のボリュームモード (Block または Filesystem) を選択する</p>
+</li>
+<li>
+<p>ワークロードの要件に合わせてディスクキャッシュモード (<code>none</code>、<code>writeback</code>、<code>writethrough</code>) を設定する</p>
+</li>
+<li>
+<p>より高い I/O 並行性を実現するために I/O スレッディングおよびブロックマルチキューを有効にする</p>
+</li>
+<li>
+<p>ゲスト内で <code>fio</code> を使用して VM ディスクパフォーマンスをベンチマーク測定する</p>
+</li>
+<li>
+<p>ゲスト側の <code>iostat</code> とホスト側のモニタリングを使用して I/O ボトルネックを特定する</p>
+</li>
+<li>
+<p>ワークロードタイプに基づいてチューニングの推奨事項を適用する</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="multi-disk-configuration.html" class="xref page">マルチディスク VM 構成</a></p>
+</li>
+<li>
+<p><a href="../performance/resource-limits-qos.html" class="xref page">VM のリソース制限と QoS</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/storage/disks_and_volumes/" target="_blank" rel="noopener">KubeVirt のディスクとボリューム</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/virtualization/storage" target="_blank" rel="noopener">OpenShift Virtualization ストレージ</a></p>
+</li>
+<li>
+<p><a href="https://fio.readthedocs.io/en/latest/" target="_blank" rel="noopener">fio ドキュメント</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="cdi-operations.html">CDI Operations</a></span>
+  <span class="next"><a href="../networking/index.html">ネットワーク構成</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
+  </body>
+</html>

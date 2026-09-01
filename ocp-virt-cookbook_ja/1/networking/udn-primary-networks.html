@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -377,7 +456,7 @@ EOF</code></pre>
 <h2 id="_ステップ_2_userdefinednetwork_リソースの構成"><a class="anchor" href="#_ステップ_2_userdefinednetwork_リソースの構成"></a>ステップ 2: UserDefinedNetwork リソースの構成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Layer2 トポロジーとカスタムサブネット構成を使用して、プライマリ UDN を定義します。このリソースは、IP 範囲、IPAM ライフサイクル、プライマリロールの指定といったネットワーク特性を定義し、該当する namespace 内の Pod に対するデフォルトのクラスターネットワーク設定を上書きします。</p>
+<p>Layer2 トポロジーとカスタムサブネット構成を使用して、Primary UDN を定義します。このリソースは、IP 範囲、IPAM ライフサイクル、プライマリロールの指定といったネットワーク特性を定義し、該当する namespace 内の Pod に対するデフォルトのクラスターネットワーク設定を上書きします。</p>
 </div>
 <div class="paragraph">
 <p><a href="_attachments/udn-primary-networks/udn-primary.yaml" class="xref attachment">udn-primary.yaml をダウンロード</a></p>
@@ -404,10 +483,10 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ステップ_3_プライマリ_udn_を使用したワークロードのデプロイ"><a class="anchor" href="#_ステップ_3_プライマリ_udn_を使用したワークロードのデプロイ"></a>ステップ 3: プライマリ UDN を使用したワークロードのデプロイ</h2>
+<h2 id="_ステップ_3_primary_udn_を使用したワークロードのデプロイ"><a class="anchor" href="#_ステップ_3_primary_udn_を使用したワークロードのデプロイ"></a>ステップ 3: Primary UDN を使用したワークロードのデプロイ</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>プライマリ UDN 構成を利用し、接続テスト用に単純な Python HTTP サーバーを実行する仮想マシンを作成します。ワークロードは、UDN の IPAM を介して 192.168.100.0/24 サブネットから自動的に IP アドレスを受け取り、UDN をそのプライマリネットワークインターフェースとして使用します。</p>
+<p>Primary UDN 構成を利用し、接続テスト用に単純な Python HTTP サーバーを実行する仮想マシンを作成します。ワークロードは、UDN の IPAM を介して 192.168.100.0/24 サブネットから自動的に IP アドレスを受け取り、UDN をそのプライマリネットワークインターフェースとして使用します。</p>
 </div>
 <div class="admonitionblock caution">
 <table>
@@ -577,13 +656,79 @@ fedora-vm-web-service   LoadBalancer   172.30.72.140   aa32981df19ad4959ae9a82fb
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">&lt;h1&gt;Welcome to OpenShift Virtualization !!!&lt;/h1&gt;</code></pre>
 </div>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ネットワークトポロジー"><a class="anchor" href="#_ネットワークトポロジー"></a>ネットワークトポロジー</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>次の図は、UDN プライマリネットワークがカスタム IP アドレス指定によって namespace スコープのネットワーク分離をどのように提供するかを示しています。デフォルト pod ネットワークと並行してインターフェースを追加するセカンダリーネットワークとは異なり、UDN プライマリネットワークは namespace 内のすべてのワークロードに対してデフォルト pod ネットワークを完全に置き換えます。</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="_images/udn-primary-topology.png" alt="UDN Primary Network Topology">
+</div>
+</div>
+<div class="paragraph">
+<p><code>Layer2</code> トポロジーと <code>role: Primary</code> を備えた <code>UserDefinedNetwork</code> リソースは、ラベル付けされた namespace 用のカスタムサブネット (192.168.100.0/24) を管理するように OVN-Kubernetes を設定します。OVN-Kubernetes IPAM は、<code>Persistent</code> ライフサイクルでこのサブネットからアドレスを割り当てます。これは、再起動や移行をまたいでも VM が IP を保持することを意味します。各 VM のプライマリインターフェースは l2bridge バインディングを通じて UDN に直接接続され、Multus プラグインや <code>NetworkAttachmentDefinition</code> は不要です。外部アクセスは、UDN サブネット上の VM にトラフィックをルーティングする LoadBalancer などの標準 Kubernetes Service を介して提供されます。</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+ワークロードがデプロイされる前に、namespace に <code>k8s.ovn.org/primary-user-defined-network</code> のラベルを付ける必要があります。このラベルは、namespace 内で pod または VM が実行された後に追加または削除することはできません。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ビジネスユースケース"><a class="anchor" href="#_ビジネスユースケース"></a>ビジネスユースケース</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>UDN プライマリネットワークは、namespace レベルでカスタム IP アドレス指定による完全なネットワーク分離を必要とするワークロードに最適です。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ユースケース</th>
+<th class="tableblock halign-left valign-top">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">マルチテナント SaaS プラットフォーム</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">各テナントは、分離されたサブネットを持つ専用の namespace を取得します。あるテナントの namespace 内の VM は別のテナントの namespace 内の VM に到達できないため、物理的なネットワークセグメンテーションを行わずにネットワークレベルのテナント分離が提供されます。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">開発およびテスト環境</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">チームはカスタム IP 範囲 (例: 開発用に 10.0.1.0/24、ステージング用に 10.0.2.0/24) を持つ namespace を取得できるため、開発者は他のチームやクラスターのデフォルトネットワークと競合することなく、本番環境を模倣したIPアドレス割り当てスキームを定義できます。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クラスター管理の IP 永続性</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">再起動やライブマイグレーションをまたいでも安定した IP アドレスを必要とする VM。<code>Persistent</code> IPAM ライフサイクルにより、データベースサーバー、監視エージェント、クラスター化されたアプリケーションは、外部 DHCP やゲスト内の静的設定なしでアドレスを保持します。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">セカンダリーネットワークとの比較</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ワークロードがデフォルト pod ネットワークをまったく使用すべきではなく、namespace レベルの分離が必要な場合は、UDN プライマリネットワークを選択します。VM が専用のレプリケーションやハートビートトラフィックなど、デフォルト pod ネットワークと並行して追加のプライベートネットワークを必要とする場合は、Layer 2 セカンダリーネットワークを選択します。</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="sect1">
@@ -614,7 +759,7 @@ fedora-vm-web-service   LoadBalancer   172.30.72.140   aa32981df19ad4959ae9a82fb
 </div>
 </div>
 <div class="sect1">
-<h2 id="_関連情報"><a class="anchor" href="#_関連情報"></a>関連情報</h2>
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -630,7 +775,7 @@ fedora-vm-web-service   LoadBalancer   172.30.72.140   aa32981df19ad4959ae9a82fb
 </div>
 <nav class="pagination">
   <span class="prev"><a href="cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a></span>
-  <span class="next"><a href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a></span>
+  <span class="next"><a href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a></span>
 </nav>
 </article>
   </div>
@@ -642,5 +787,8 @@ fedora-vm-web-service   LoadBalancer   172.30.72.140   aa32981df19ad4959ae9a82fb
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

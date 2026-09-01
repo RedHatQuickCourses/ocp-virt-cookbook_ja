@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -314,38 +393,38 @@
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#クイックヘルスチェック">[クイックヘルスチェック]</a></p>
+<p><a href="#quick-health-check">クイックヘルスチェック</a></p>
 </li>
 <li>
-<p><a href="#_メソッド_1_コンソールアクセス">メソッド 1: コンソールアクセス</a></p>
+<p><a href="#method-1-console">メソッド 1: コンソールアクセス</a></p>
 </li>
 <li>
-<p><a href="#_メソッド_2_vnc_アクセス">メソッド 2: VNC アクセス</a></p>
+<p><a href="#method-2-vnc">メソッド 2: VNC アクセス</a></p>
 </li>
 <li>
-<p><a href="#_メソッド_3_virtctl_経由の_ssh">メソッド 3: virtctl 経由の SSH</a></p>
+<p><a href="#method-3-virtctl-ssh">メソッド 3: virtctl 経由の SSH</a></p>
 </li>
 <li>
-<p><a href="#_メソッド_4_nodeport_service_経由の_ssh">メソッド 4: NodePort Service 経由の SSH</a></p>
+<p><a href="#method-4-nodeport">メソッド 4: NodePort Service 経由の SSH</a></p>
 </li>
 <li>
-<p><a href="#_メソッド_5_loadbalancer_経由の_ssh">メソッド 5: LoadBalancer 経由の SSH</a></p>
+<p><a href="#method-5-loadbalancer">メソッド 5: LoadBalancer 経由の SSH</a></p>
 </li>
 <li>
-<p><a href="#_メソッド_6_ポートフォワード経由の_ssh">メソッド 6: ポートフォワード経由の SSH</a></p>
+<p><a href="#method-6-port-forward">メソッド 6: ポートフォワード経由の SSH</a></p>
 </li>
 <li>
-<p><a href="#_メソッド_7_セカンダリネットワーク経由の直接アクセス">メソッド 7: セカンダリネットワーク経由の直接アクセス</a></p>
+<p><a href="#method-7-secondary-network">メソッド 7: セカンダリーネットワーク経由の直接アクセス</a></p>
 </li>
 <li>
-<p><a href="#調査コマンド">[調査コマンド]</a></p>
+<p><a href="#diagnostic-commands">調査コマンド</a></p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_クイックヘルスチェック"><a class="anchor" href="#_クイックヘルスチェック"></a>クイックヘルスチェック</h2>
+<h2 id="quick-health-check"><a class="anchor" href="#quick-health-check"></a>クイックヘルスチェック</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_vm_ステータスの確認"><a class="anchor" href="#_vm_ステータスの確認"></a>VM ステータスの確認</h3>
@@ -356,7 +435,7 @@ oc get vmi &lt;vm-name&gt; -n &lt;namespace&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>実行中の VM の期待される出力:</p>
+<p>実行中の VM の想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -384,7 +463,7 @@ my-vm       5m    Running   True</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -401,13 +480,13 @@ virt-launcher-&lt;vm&gt;-xxxxx   3/3     Running   0          5m</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>空の場合、guest agent は実行されていません。注: 基本的なアクセス方法 (コンソール、VNC、SSH、ポートフォワード、NodePort、LoadBalancer、セカンダリネットワーク) には guest agent は必須ではありません。guest agent はゲスト OS の詳細情報を提供したり、動的な SSH キー注入のような機能を有効にしたりするために使用されます。</p>
+<p>空の場合、guest agent は実行されていません。注: 基本的なアクセス方法 (コンソール、VNC、SSH、ポートフォワード、NodePort、LoadBalancer、セカンダリーネットワーク) には guest agent は必須ではありません。guest agent はゲスト OS の詳細情報を提供したり、動的な SSH 鍵注入のような機能を有効にしたりするために使用されます。</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_メソッド_1_コンソールアクセス"><a class="anchor" href="#_メソッド_1_コンソールアクセス"></a>メソッド 1: コンソールアクセス</h2>
+<h2 id="method-1-console"><a class="anchor" href="#method-1-console"></a>メソッド 1: コンソールアクセス</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_問題_コンソールに接続できない"><a class="anchor" href="#_問題_コンソールに接続できない"></a>問題: コンソールに接続できない</h3>
@@ -425,13 +504,13 @@ Error: unable to connect to console</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check VM is running
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM が実行中であることを確認
 oc get vm my-vm -n my-namespace
 
-# Check VMI exists
+# VMI が存在することを確認
 oc get vmi my-vm -n my-namespace
 
-# Check virt-launcher pod
+# virt-launcher Pod を確認
 oc get pods -n my-namespace -l kubevirt.io/domain=my-vm</code></pre>
 </div>
 </div>
@@ -494,8 +573,8 @@ oc get kubevirt -n openshift-cnv -o jsonpath='{.items[0].status.observedKubeVirt
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Try sending Enter key
-# Press Enter multiple times</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Enter キーの送信を試行
+# Enter を複数回押す</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -534,7 +613,7 @@ oc get kubevirt -n openshift-cnv -o jsonpath='{.items[0].status.observedKubeVirt
 <p>切断して再接続を試みます:</p>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Press Ctrl+] to disconnect
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Ctrl+] で切断
 virtctl console my-vm -n my-namespace</code></pre>
 </div>
 </div>
@@ -564,7 +643,7 @@ virtctl console my-vm -n my-namespace</code></pre>
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-この例の cloud-init パスワードはデモ目的のみです。本番環境では常に強力でユニークなパスワードを使用するか、SSH キー認証を使用してください。
+この例の cloud-init パスワードはデモ目的のみです。本番環境では常に強力でユニークなパスワードを使用するか、SSH 鍵認証を使用してください。
 </td>
 </tr>
 </table>
@@ -586,7 +665,7 @@ virtctl console my-vm -n my-namespace</code></pre>
 </div>
 </li>
 <li>
-<p>または、SSH キー認証を使用し、キーを使用してコンソール経由でアクセスします。</p>
+<p>または、SSH 鍵認証を使用し、キーを使用してコンソール経由でアクセスします。</p>
 </li>
 <li>
 <p>VM 内の cloud-init ログを確認し、ユーザー作成のエラーがないか調査します。</p>
@@ -597,7 +676,7 @@ virtctl console my-vm -n my-namespace</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_メソッド_2_vnc_アクセス"><a class="anchor" href="#_メソッド_2_vnc_アクセス"></a>メソッド 2: VNC アクセス</h2>
+<h2 id="method-2-vnc"><a class="anchor" href="#method-2-vnc"></a>メソッド 2: VNC アクセス</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_問題_virtctl_vnc_コマンドが動作しない"><a class="anchor" href="#_問題_virtctl_vnc_コマンドが動作しない"></a>問題: virtctl vnc コマンドが動作しない</h3>
@@ -615,21 +694,27 @@ Error: VNC is not configured for this VM</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check if graphics is enabled
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># グラフィックスデバイスが有効か確認
 oc get vm my-vm -n my-namespace -o jsonpath='{.spec.template.spec.domain.devices.autoattachGraphicsDevice}'
 
-# Check VM devices configuration
+# VM デバイス設定を確認
 oc get vm my-vm -n my-namespace -o yaml | grep -A 10 "devices:"</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p><strong>一般的な原因</strong>:
 - <code>autoattachGraphicsDevice: false</code> によりグラフィックスデバイスが無効化されている
-- VM 仕様でグラフィックスデバイスが明示的に除外されている</p>
+- VM spec でグラフィックスデバイスが明示的に除外されている</p>
 </div>
 <div class="paragraph">
-<p><strong>解決策</strong>:
-. グラフィックスデバイスが有効になっていることを確認します (OpenShift Virtualization ではデフォルトで有効です)。明示的に無効化されている場合は、<code>autoattachGraphicsDevice: false</code> の設定を削除するか、<code>true</code> に設定してください。</p>
+<p><strong>解決策</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>グラフィックスデバイスが有効になっていることを確認します (OpenShift Virtualization ではデフォルトで有効です)。明示的に無効化されている場合は、<code>autoattachGraphicsDevice: false</code> の設定を削除するか、<code>true</code> に設定してください。</p>
+</li>
+</ol>
 </div>
 </div>
 <div class="sect2">
@@ -643,11 +728,11 @@ virtctl vnc コマンドは開始されるが、VNC ビューアーが接続で�
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check virtctl output for port number
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># virtctl 出力でポート番号を確認
 virtctl vnc my-vm -n my-namespace
-# Shows: "VNC connection on port 5900"
+# 表示例: "VNC connection on port 5900"
 
-# Check if port is listening
+# ポートが待受状態か確認
 netstat -tuln | grep 5900</code></pre>
 </div>
 </div>
@@ -666,10 +751,10 @@ netstat -tuln | grep 5900</code></pre>
 <p>VNC ビューアーをインストールします:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Linux
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Linux の場合
 sudo dnf install tigervnc
 
-# macOS
+# macOS の場合
 brew install tiger-vnc</code></pre>
 </div>
 </div>
@@ -707,7 +792,7 @@ VNC は接続できたが、真っ白 (または真っ黒) な画面が表示さ
 <p>VM に GUI がインストールされているか確認します:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Inside VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内部
 systemctl status gdm  # For GNOME
 systemctl status lightdm  # For other DEs</code></pre>
 </div>
@@ -722,7 +807,7 @@ systemctl status lightdm  # For other DEs</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_メソッド_3_virtctl_経由の_ssh"><a class="anchor" href="#_メソッド_3_virtctl_経由の_ssh"></a>メソッド 3: virtctl 経由の SSH</h2>
+<h2 id="method-3-virtctl-ssh"><a class="anchor" href="#method-3-virtctl-ssh"></a>メソッド 3: virtctl 経由の SSH</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_問題_virtctl_ssh_コマンドが失敗する"><a class="anchor" href="#_問題_virtctl_ssh_コマンドが失敗する"></a>問題: virtctl ssh コマンドが失敗する</h3>
@@ -740,12 +825,12 @@ Error: SSH is not available for this VM</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check VM has IP address
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM に IP アドレスがあることを確認
 oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces}'
 
-# Check SSH service in VM (via console)
+# VM 内の SSH サービスを確認 (コンソール経由)
 virtctl console my-vm -n my-namespace
-# Inside VM: systemctl status sshd</code></pre>
+# VM 内部: systemctl status sshd</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -764,7 +849,7 @@ virtctl console my-vm -n my-namespace
 <p>VM に SSH をインストールして有効にします:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Inside VM via console
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># コンソール経由で VM 内部
 sudo dnf install openssh-server
 sudo systemctl enable --now sshd</code></pre>
 </div>
@@ -782,7 +867,7 @@ sudo systemctl enable --now sshd</code></pre>
 <p>SSH 接続をテストします:</p>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Try port-forward method first
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># まず port-forward 方式を試行
 oc port-forward vmi/my-vm -n my-namespace 2222:22 &amp;
 ssh -p 2222 fedora@localhost</code></pre>
 </div>
@@ -807,10 +892,10 @@ fedora@my-vm: Permission denied (publickey,gssapi-keyex,gssapi-with-mic) .</code
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check SSH keys
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># SSH 鍵を確認
 ls -la ~/.ssh/
 
-# Try with password authentication
+# パスワード認証で試行
 virtctl ssh --local-ssh-opts="-o PreferredAuthentications=password" fedora@my-vm -n my-namespace</code></pre>
 </div>
 </div>
@@ -818,7 +903,7 @@ virtctl ssh --local-ssh-opts="-o PreferredAuthentications=password" fedora@my-vm
 <p><strong>一般的な原因</strong>:
 - SSH 公開鍵が VM の authorized_keys に含まれていない
 - ユーザー名が間違っている
-- SSH キーのパスフレーズが必要</p>
+- SSH 鍵のパスフレーズが必要</p>
 </div>
 <div class="paragraph">
 <p><strong>解決策</strong>:</p>
@@ -826,7 +911,7 @@ virtctl ssh --local-ssh-opts="-o PreferredAuthentications=password" fedora@my-vm
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>cloud-init 経由で SSH キーを追加します:</p>
+<p>cloud-init 経由で SSH 鍵を追加します:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">cloudInitNoCloud:
@@ -877,7 +962,7 @@ chmod 600 ~/.ssh/authorized_keys</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_メソッド_4_nodeport_service_経由の_ssh"><a class="anchor" href="#_メソッド_4_nodeport_service_経由の_ssh"></a>メソッド 4: NodePort Service 経由の SSH</h2>
+<h2 id="method-4-nodeport"><a class="anchor" href="#method-4-nodeport"></a>メソッド 4: NodePort Service 経由の SSH</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_問題_nodeport_service_にアクセスできない"><a class="anchor" href="#_問題_nodeport_service_にアクセスできない"></a>問題: NodePort Service にアクセスできない</h3>
@@ -895,13 +980,13 @@ ssh: connect to host &lt;node-ip&gt; port 30022: Connection refused</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check service exists
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Service の存在を確認
 oc get svc -n my-namespace
 
-# Check service endpoints
+# Service エンドポイントを確認
 oc get endpoints my-vm-ssh -n my-namespace
 
-# Check NodePort assigned
+# NodePort の割り当てを確認
 oc get svc my-vm-ssh -n my-namespace -o jsonpath='{.spec.ports[0].nodePort}'</code></pre>
 </div>
 </div>
@@ -951,7 +1036,7 @@ spec:
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console my-vm -n my-namespace
-# Inside VM:
+# VM 内部:
 systemctl status sshd</code></pre>
 </div>
 </div>
@@ -970,10 +1055,10 @@ SSH は接続できるが、別の VM に接続されるか、接続が拒否さ
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check service endpoints
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Service エンドポイントを確認
 oc describe svc my-vm-ssh -n my-namespace
 
-# Look at Endpoints field - should show VM pod IP</code></pre>
+# Endpoints フィールドを確認 — VM Pod の IP が表示されるはず</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -991,8 +1076,8 @@ oc describe svc my-vm-ssh -n my-namespace
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">selector:
-  kubevirt.io/domain: my-vm  # Unique per VM
-  # OR
+  kubevirt.io/domain: my-vm  # VM ごとに一意
+  # または
   app: my-specific-vm-app</code></pre>
 </div>
 </div>
@@ -1019,12 +1104,12 @@ NodePort アクセスに使用すべき Node IP が特定できない。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Get node IPs
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Node の IP を取得
 oc get nodes -o wide
 
-# Use any node's INTERNAL-IP or EXTERNAL-IP (if available)
+# 任意の Node の INTERNAL-IP または EXTERNAL-IP (利用可能な場合) を使用
 
-# Or get specific node where VM is running
+# または VM が実行されている特定の Node を取得
 VM_NODE=$(oc get vmi my-vm -n my-namespace -o jsonpath='{.status.nodeName}')
 oc get node $VM_NODE -o jsonpath='{.status.addresses[?(@.type=="InternalIP") ].address}'</code></pre>
 </div>
@@ -1033,7 +1118,7 @@ oc get node $VM_NODE -o jsonpath='{.status.addresses[?(@.type=="InternalIP") ].a
 </div>
 </div>
 <div class="sect1">
-<h2 id="_メソッド_5_loadbalancer_経由の_ssh"><a class="anchor" href="#_メソッド_5_loadbalancer_経由の_ssh"></a>メソッド 5: LoadBalancer 経由の SSH</h2>
+<h2 id="method-5-loadbalancer"><a class="anchor" href="#method-5-loadbalancer"></a>メソッド 5: LoadBalancer 経由の SSH</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_問題_loadbalancer_service_に外部_ip_が割り当てられない"><a class="anchor" href="#_問題_loadbalancer_service_に外部_ip_が割り当てられない"></a>問題: LoadBalancer Service に外部 IP が割り当てられない</h3>
@@ -1052,10 +1137,10 @@ my-vm-ssh    LoadBalancer   172.30.x.x      &lt;pending&gt;     22:30022/TCP</co
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check if LoadBalancer provider is available
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># LoadBalancer プロバイダーが利用可能か確認
 oc get svc -A | grep LoadBalancer
 
-# Check cluster has LoadBalancer support
+# クラスターが LoadBalancer をサポートしているか確認
 oc describe svc my-vm-ssh -n my-namespace</code></pre>
 </div>
 </div>
@@ -1101,13 +1186,13 @@ oc describe svc my-vm-ssh -n my-namespace</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check LoadBalancer IP
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># LoadBalancer IP を確認
 LB_IP=$(oc get svc my-vm-ssh -n my-namespace -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-# Try ping
+# ping で確認
 ping -c 3 $LB_IP
 
-# Check from within cluster
+# クラスター内部から確認
 oc run test-curl --image=curlimages/curl --rm -it --restart=Never -- curl -v telnet://$LB_IP:22</code></pre>
 </div>
 </div>
@@ -1138,7 +1223,7 @@ oc run test-curl --image=curlimages/curl --rm -it --restart=Never -- curl -v tel
 </div>
 </div>
 <div class="sect1">
-<h2 id="_メソッド_6_ポートフォワード経由の_ssh"><a class="anchor" href="#_メソッド_6_ポートフォワード経由の_ssh"></a>メソッド 6: ポートフォワード経由の SSH</h2>
+<h2 id="method-6-port-forward"><a class="anchor" href="#method-6-port-forward"></a>メソッド 6: ポートフォワード経由の SSH</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_問題_oc_port_forward_が開始できない"><a class="anchor" href="#_問題_oc_port_forward_が開始できない"></a>問題: oc port-forward が開始できない</h3>
@@ -1156,10 +1241,10 @@ Error: unable to forward port</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check VMI exists
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VMI の存在を確認
 oc get vmi my-vm -n my-namespace
 
-# Check local port not in use
+# ローカルポートが使用されていないことを確認
 netstat -tuln | grep 2222
 lsof -i :2222</code></pre>
 </div>
@@ -1187,7 +1272,7 @@ lsof -i :2222</code></pre>
 <p>ポートを使用しているプロセスを強制終了します:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Find process
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># プロセスを検索
 lsof -ti :2222 | xargs kill -9</code></pre>
 </div>
 </div>
@@ -1222,9 +1307,9 @@ ssh: connect to host localhost port 2222: Connection refused</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check SSH is listening in VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内で SSH がリッスンしているか確認
 virtctl console my-vm -n my-namespace
-# Inside VM:
+# VM 内部:
 ss -tuln | grep :22</code></pre>
 </div>
 </div>
@@ -1243,7 +1328,7 @@ ss -tuln | grep :22</code></pre>
 <p>VM に SSH をインストールして開始します:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Inside VM via console
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># コンソール経由で VM 内部
 sudo dnf install openssh-server
 sudo systemctl enable --now sshd</code></pre>
 </div>
@@ -1253,7 +1338,7 @@ sudo systemctl enable --now sshd</code></pre>
 <p>SSH ポートを確認します:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Inside VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内部
 sudo ss -tuln | grep ssh</code></pre>
 </div>
 </div>
@@ -1262,7 +1347,7 @@ sudo ss -tuln | grep ssh</code></pre>
 <p>SSH 構成を確認します:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Inside VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内部
 sudo cat /etc/ssh/sshd_config | grep ^Port</code></pre>
 </div>
 </div>
@@ -1312,10 +1397,10 @@ done &amp;</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_メソッド_7_セカンダリネットワーク経由の直接アクセス"><a class="anchor" href="#_メソッド_7_セカンダリネットワーク経由の直接アクセス"></a>メソッド 7: セカンダリネットワーク経由の直接アクセス</h2>
+<h2 id="method-7-secondary-network"><a class="anchor" href="#method-7-secondary-network"></a>メソッド 7: セカンダリーネットワーク経由の直接アクセス</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_問題_セカンダリネットワーク上の_vm_に到達できない"><a class="anchor" href="#_問題_セカンダリネットワーク上の_vm_に到達できない"></a>問題: セカンダリネットワーク上の VM に到達できない</h3>
+<h3 id="_問題_セカンダリーネットワーク上の_vm_に到達できない"><a class="anchor" href="#_問題_セカンダリーネットワーク上の_vm_に到達できない"></a>問題: セカンダリーネットワーク上の VM に到達できない</h3>
 <div class="paragraph">
 <p><strong>事象</strong>:</p>
 </div>
@@ -1330,21 +1415,21 @@ Request timeout</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check VM has secondary interface configured
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM にセカンダリーインターフェースが設定されているか確認
 oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces}' | jq
 
-# Check NetworkAttachmentDefinition (NAD)  exists
+# NetworkAttachmentDefinition (NAD) の存在を確認
 oc get network-attachment-definition -n my-namespace
 
-# Check VM network configuration
+# VM ネットワーク設定を確認
 oc get vm my-vm -n my-namespace -o jsonpath='{.spec.template.spec.networks}' | jq</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p><strong>一般的な原因</strong>:
 - NetworkAttachmentDefinition が構成されていない
-- VM にセカンダリネットワークインターフェースがない
-- セカンダリネットワークの IP が構成されていない
+- VM にセカンダリーネットワークインターフェースがない
+- セカンダリーネットワークの IP が構成されていない
 - 物理ネットワークにアクセスできない
 - VLAN 構成のエラー</p>
 </div>
@@ -1362,7 +1447,7 @@ oc get vm my-vm -n my-namespace -o jsonpath='{.spec.template.spec.networks}' | j
 </div>
 </li>
 <li>
-<p>VM にセカンダリネットワークがあることを確認します:</p>
+<p>VM にセカンダリーネットワークがあることを確認します:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
@@ -1389,8 +1474,8 @@ oc get vm my-vm -n my-namespace -o jsonpath='{.spec.template.spec.networks}' | j
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console my-vm -n my-namespace
-# Inside VM:
-ip addr show enp2s0  # Secondary interface</code></pre>
+# VM 内部:
+ip addr show enp2s0  # セカンダリーインターフェース</code></pre>
 </div>
 </div>
 </li>
@@ -1404,7 +1489,7 @@ ip addr show enp2s0  # Secondary interface</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_問題_セカンダリネットワークインターフェースが_vm_で表示されない"><a class="anchor" href="#_問題_セカンダリネットワークインターフェースが_vm_で表示されない"></a>問題: セカンダリネットワークインターフェースが VM で表示されない</h3>
+<h3 id="_問題_セカンダリーネットワークインターフェースが_vm_で表示されない"><a class="anchor" href="#_問題_セカンダリーネットワークインターフェースが_vm_で表示されない"></a>問題: セカンダリーネットワークインターフェースが VM で表示されない</h3>
 <div class="paragraph">
 <p><strong>事象</strong>:
 プライマリインターフェース (enp1s0)  のみが表示され、enp2s0 がない。</p>
@@ -1414,17 +1499,17 @@ ip addr show enp2s0  # Secondary interface</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Inside VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VM 内部で確認
 ip link show
 
-# Check from OpenShift
+# OpenShift から確認
 oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces}' | jq</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p><strong>一般的な原因</strong>:
 - NAD が同じ namespace に存在しない
-- VM spec にセカンダリネットワークインターフェースが欠落している
+- VM spec にセカンダリーネットワークインターフェースが欠落している
 - Multus CNI が動作していない</p>
 </div>
 <div class="paragraph">
@@ -1441,7 +1526,7 @@ oc get vmi my-vm -n my-namespace -o jsonpath='{.status.interfaces}' | jq</code><
 </div>
 </li>
 <li>
-<p>VM 仕様にネットワークとインターフェースの両方が定義されていることを確認します。</p>
+<p>VM spec にネットワークとインターフェースの両方が定義されていることを確認します。</p>
 </li>
 <li>
 <p>multus ログを確認します:</p>
@@ -1466,7 +1551,7 @@ oc describe $POD -n my-namespace</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_調査コマンド"><a class="anchor" href="#_調査コマンド"></a>調査コマンド</h2>
+<h2 id="diagnostic-commands"><a class="anchor" href="#diagnostic-commands"></a>調査コマンド</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_vm_アクセスヘルスチェックスクリプト"><a class="anchor" href="#_vm_アクセスヘルスチェックスクリプト"></a>VM アクセスヘルスチェックスクリプト</h3>
@@ -1586,7 +1671,7 @@ ping -c 2 8.8.8.8 &amp;&amp; echo "External connectivity: OK" || echo "External 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_その他のリソース"><a class="anchor" href="#_その他のリソース"></a>その他のリソース</h2>
+<h2 id="_追加リソース"><a class="anchor" href="#_追加リソース"></a>追加リソース</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -1651,7 +1736,7 @@ ping -c 2 8.8.8.8 &amp;&amp; echo "External connectivity: OK" || echo "External 
   "kernelRelease": "6.11.4-301.fc41.x86_64",
   "kernelVersion": "#1 SMP PREEMPT_DYNAMIC Thu Oct 10 16:16:06 UTC 2024",
   "name": "Fedora Linux",
-  "prettyName": "Fedora Linux 41 (Cloud Edition) ",
+  "prettyName": "Fedora Linux 41 (Cloud Edition)",
   "version": "41",
   "versionId": "41"
 }</code></pre>
@@ -1676,5 +1761,8 @@ ping -c 2 8.8.8.8 &amp;&amp; echo "External connectivity: OK" || echo "External 
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

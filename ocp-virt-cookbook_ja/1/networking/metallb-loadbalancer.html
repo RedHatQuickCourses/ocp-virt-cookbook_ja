@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>VM ワークロード用の MetalLB およびロードバランサーサービス :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="network-policies-vms.html">
+    <link rel="next" href="dual-stack-vms.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../storage/index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ネットワーク構成</a></li>
+    <li><a href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">VM ワークロード用の MetalLB およびロードバランサーサービス</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、ベアメタル OpenShift クラスター上で MetalLB を設定し、LoadBalancer タイプの Service を介して仮想マシンサービスを公開する方法を説明します。OpenShift Route は Ingress コントローラーを通じて HTTP/HTTPS トラフィックを処理しますが、多くの VM ワークロードでは、SSH、データベース、RDP、カスタム TCP/UDP サービスなどの非 HTTP プロトコルに対する直接的な外部アクセスが必要です。</p>
+</div>
+<div class="paragraph">
+<p>MetalLB は、設定されたプールから外部 IP アドレスを割り当て、レイヤー 2 (ARP/NDP) または BGP プロトコルを介してそれらをアドバタイズすることで、ベアメタルクラスターでの LoadBalancer Service のサポートを提供します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift 4.18+ (OpenShift Virtualization Operator がインストール済み)</p>
+</li>
+<li>
+<p>クラウドロードバランサーのないベアメタルクラスターまたはインフラストラクチャー</p>
+</li>
+<li>
+<p>クラスターノードと同じレイヤー 2 ネットワーク上の IP アドレス範囲 (L2 モード用)</p>
+</li>
+<li>
+<p>クラスター管理者アクセス</p>
+</li>
+<li>
+<p><code>oc</code> CLI がインストールされていること</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_metallb_と_route_の使い分け"><a class="anchor" href="#_metallb_と_route_の使い分け"></a>MetalLB と Route の使い分け</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">アクセス方法</th>
+<th class="tableblock halign-left valign-top">プロトコル</th>
+<th class="tableblock halign-left valign-top">ユースケース</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenShift Route</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP/HTTPS のみ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Web アプリケーション、TLS 終端を使用する API</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NodePort Service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">任意の TCP/UDP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">高位ポート番号 (30000-32767) でのシンプルな外部アクセス</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LoadBalancer (MetalLB)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">任意の TCP/UDP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">標準ポート (22、80、443、3306、5432) での本番環境の外部アクセス</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gateway API (HTTPRoute)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP/HTTPS、gRPC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ロールベースのルーティング、TLS、トラフィック分割を備えた Kubernetes 標準の L7 Ingress (OCP 4.19 以降)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>専用の外部 IP アドレスを使用して標準ポートで VM サービスを公開する必要がある場合、特に Route や Gateway API では対応できない非 HTTP プロトコルの場合に MetalLB を使用します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_metallb_operator_のインストール"><a class="anchor" href="#_ステップ_1_metallb_operator_のインストール"></a>ステップ 1: MetalLB Operator のインストール</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>MetalLB Operator の namespace を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace metallb-system</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>AllNamespaces インストールモードで OperatorGroup を作成します (MetalLB Operator で必要)。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+ name: metallb-operator
+ namespace: metallb-system
+spec: {}
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Red Hat Operators カタログから MetalLB Operator をサブスクライブします。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/metallb-loadbalancer/metallb-subscription.yaml" class="xref attachment">metallb-subscription.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+ name: metallb-operator
+ namespace: metallb-system
+spec:
+ channel: stable
+ name: metallb-operator
+ source: redhat-operators
+ sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Operator がインストールされるまで待ちます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc wait --for=condition=CatalogSourcesUnhealthy=False subscription metallb-operator -n metallb-system --timeout=120s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ClusterServiceVersion が準備完了状態になっていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n metallb-system -o custom-columns=NAME:.metadata.name,PHASE:.status.phase</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>PHASE 列に <code>Succeeded</code> と表示されるまで待ちます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_metallb_インスタンスの作成"><a class="anchor" href="#_ステップ_2_metallb_インスタンスの作成"></a>ステップ 2: MetalLB インスタンスの作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>MetalLB インスタンスをデプロイします。これにより、IP アドレスの通知と割り当てを処理する speaker および controller Pod が作成されます。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/metallb-loadbalancer/metallb-instance.yaml" class="xref attachment">metallb-instance.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: metallb.io/v1beta1
+kind: MetalLB
+metadata:
+ name: metallb
+ namespace: metallb-system
+spec: {}
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>MetalLB Pod が実行中になるまで待機します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc wait deployment controller -n metallb-system --for=condition=Available --timeout=120s</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n metallb-system</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>controller</code> Deployment および <code>speaker</code> DaemonSet の Pod が実行中であることが確認できます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_ip_アドレスプールの設定"><a class="anchor" href="#_ステップ_3_ip_アドレスプールの設定"></a>ステップ 3: IP アドレスプールの設定</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>MetalLB が LoadBalancer サービスに割り当てることができる IP アドレスのプールを定義します。これらのアドレスは、クラスターノードと同じレイヤー 2 ネットワーク上でルーティング可能である必要があり、他のデバイスに割り当てられていてはなりません。</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+以下のアドレス範囲を、ネットワーク上で利用可能な IP に置き換えてください。この範囲は Worker Node と同じサブネット上にある必要があり、既存の DHCP 割り当てや静的 IP と競合してはなりません。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/metallb-loadbalancer/ipaddresspool.yaml" class="xref attachment">ipaddresspool.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+ name: vm-services-pool
+ namespace: metallb-system
+spec:
+ addresses:
+ - 192.168.2.200-192.168.2.210
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_l2_advertisement_の設定"><a class="anchor" href="#_ステップ_4_l2_advertisement_の設定"></a>ステップ 4: L2 Advertisement の設定</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>L2Advertisement を作成して、ローカルネットワーク上で ARP (IPv4) または NDP (IPv6) 経由で IP アドレスをアドバタイズします。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/metallb-loadbalancer/l2advertisement.yaml" class="xref attachment">l2advertisement.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+ name: vm-services-l2
+ namespace: metallb-system
+spec:
+ ipAddressPools:
+ - vm-services-pool
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_vm_のデプロイ"><a class="anchor" href="#_ステップ_5_vm_のデプロイ"></a>ステップ 5: VM のデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>外部アクセスをテストするために、 namespace を作成し、Nginx Web サーバーを搭載した VM をデプロイします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace metallb-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/metallb-loadbalancer/vm-webserver.yaml" class="xref attachment">vm-webserver.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+ name: web-vm
+ namespace: metallb-demo
+ labels:
+ app: web-vm
+spec:
+ runStrategy: Always
+ instancetype:
+ name: u1.small
+ preference:
+ name: fedora
+ template:
+ metadata:
+  labels:
+  app: web-vm
+ spec:
+  domain:
+  devices:
+   disks:
+   - name: containerdisk
+    disk: {}
+   - name: cloudinitdisk
+    disk: {}
+   interfaces:
+   - name: default
+    masquerade: {}
+  networks:
+  - name: default
+   pod: {}
+  volumes:
+  - name: containerdisk
+   containerDisk:
+   image: quay.io/containerdisks/fedora:40
+  - name: cloudinitdisk
+   cloudInitNoCloud:
+   userData: |
+    #cloud-config
+    user: fedora
+    password: changeme
+    chpasswd:
+    expire: false
+    ssh_pwauth: true
+    packages:
+    - nginx
+    runcmd:
+    - systemctl enable --now nginx
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM の準備が整うまで待機します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc wait vm web-vm -n metallb-demo --for=condition=Ready --timeout=300s</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_6_http_用の_loadbalancer_service_の作成"><a class="anchor" href="#_ステップ_6_http_用の_loadbalancer_service_の作成"></a>ステップ 6: HTTP 用の LoadBalancer Service の作成</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>LoadBalancer Service を介して VM の HTTP ポートを公開します。MetalLB は設定されたプールから外部 IP を割り当てます。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/metallb-loadbalancer/service-lb-http.yaml" class="xref attachment">service-lb-http.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Service
+metadata:
+ name: web-vm-lb
+ namespace: metallb-demo
+spec:
+ type: LoadBalancer
+ selector:
+ app: web-vm
+ ports:
+ - name: http
+  protocol: TCP
+  port: 80
+  targetPort: 80
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>外部 IP が割り当てられていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get svc web-vm-lb -n metallb-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>想定される出力には、MetalLB プールからの EXTERNAL-IP が表示されます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">NAME  TYPE   CLUSTER-IP  EXTERNAL-IP  PORT(S)  AGE
+web-vm-lb LoadBalancer 172.30.x.x  192.168.2.200 80:3xxxx/TCP ...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>前のコマンド出力に表示された外部 IP を使用して、同じネットワーク上のマシンから VM への外部アクセスをテストします。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -s http://&lt;EXTERNAL-IP&gt;:80 | head -5</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_7_loadbalancer_を介した_ssh_アクセスの公開"><a class="anchor" href="#_ステップ_7_loadbalancer_を介した_ssh_アクセスの公開"></a>ステップ 7: LoadBalancer を介した SSH アクセスの公開</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>SSH などの非 HTTP プロトコルの場合、個別の LoadBalancer Service を作成します。MetalLB はプールから別の IP を割り当てます。</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/metallb-loadbalancer/service-lb-ssh.yaml" class="xref attachment">service-lb-ssh.yaml のダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Service
+metadata:
+ name: web-vm-ssh
+ namespace: metallb-demo
+spec:
+ type: LoadBalancer
+ selector:
+ app: web-vm
+ ports:
+ - name: ssh
+  protocol: TCP
+  port: 22
+  targetPort: 22
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>SSH サービスに外部 IP が割り当てられていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get svc web-vm-ssh -n metallb-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>割り当てられた外部 IP を使用して SSH 経由で接続します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ssh fedora@&lt;EXTERNAL-IP&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_マルチポートサービス"><a class="anchor" href="#_マルチポートサービス"></a>マルチポートサービス</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>複数のサービスを公開する VM の場合、単一の LoadBalancer Service で複数のポートを定義できます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: v1
+kind: Service
+metadata:
+ name: multi-port-vm
+ namespace: metallb-demo
+spec:
+ type: LoadBalancer
+ selector:
+ app: web-vm
+ ports:
+ - name: http
+  protocol: TCP
+  port: 80
+  targetPort: 80
+ - name: https
+  protocol: TCP
+  port: 443
+  targetPort: 443
+ - name: ssh
+  protocol: TCP
+  port: 22
+  targetPort: 22</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これにより、単一の外部 IP が割り当てられ、3 つのポートすべてにアクセスできるようになります。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_動的ルーティング環境向けの_bgp_モード"><a class="anchor" href="#_動的ルーティング環境向けの_bgp_モード"></a>動的ルーティング環境向けの BGP モード</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>BGP 対応ルーターを備えたデータセンター環境の場合、MetalLB は BGP 経由で LoadBalancer IP をアドバタイズできます。これにより、複数ノード間にわたる等コストマルチパス (ECMP) ルーティングが可能になり、L2 モードで発生する単一ノードへのトラフィック集中を回避できます。</p>
+</div>
+<div class="paragraph">
+<p>BGP モードには以下が必要です。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>BGP 対応の上流ルーター</p>
+</li>
+<li>
+<p>ピアリング設定 (AS 番号、ピアアドレス)</p>
+</li>
+<li>
+<p><code>L2Advertisement</code> の代わりとなる <code>BGPPeer</code> および <code>BGPAdvertisement</code> リソース</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+ name: upstream-router
+ namespace: metallb-system
+spec:
+ myASN: 64500
+ peerASN: 64501
+ peerAddress: 192.168.2.1</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+ name: bgp-advertisement
+ namespace: metallb-system
+spec:
+ ipAddressPools:
+ - vm-services-pool</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+BGP モードの設定は、ネットワークインフラストラクチャーに完全に依存します。ネットワークチームと連携して、AS 番号、ピアアドレス、ルーティングポリシーを決定してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_gateway_api_kubernetes_ネイティブの_ingress_標準"><a class="anchor" href="#_gateway_api_kubernetes_ネイティブの_ingress_標準"></a>Gateway API: Kubernetes ネイティブの Ingress 標準</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenShift 4.19 以降、Kubernetes Gateway API は OpenShift Routes と並ぶ Ingress オプションとして一般提供されています。Gateway API は、GatewayClass、Gateway、および HTTPRoute カスタムリソースを通じてロール指向の L7 トラフィック管理を提供し、OpenShift Service Mesh 3 を介した Envoy によってサポートされ、Ingress Operator によって管理されます。</p>
+</div>
+<div class="paragraph">
+<p>Gateway API は、VM の virt-launcher Pod を選択する ClusterIP Service に HTTP/HTTPS/gRPC トラフィックをルーティングすることで、VM ワークロードと連携します。ベアメタルクラスターでは、MetalLB が基盤となる LoadBalancer として機能し、Gateway の Service に外部 IP を提供できます。</p>
+</div>
+<div class="paragraph">
+<p>次の例は、トラフィックを VM Web サービスにルーティングする HTTPRoute を示しています。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+ name: web-vm-route
+ namespace: metallb-demo
+spec:
+ parentRefs:
+ - name: my-gateway
+  namespace: openshift-ingress
+ hostnames:
+ - "web-vm.apps.example.com"
+ rules:
+ - backendRefs:
+  - name: web-vm-lb
+   port: 80</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>OpenShift は、これら 3 つの ingress モデルをすべて同時にサポートしています。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>OpenShift Routes</strong>&#8201;&#8212;&#8201;HAProxy をバックエンドとする、安定して実績のあるデフォルトの ingress。edge、passthrough、または re-encrypt TLS 終端を備えた HTTP/HTTPS をサポート。</p>
+</li>
+<li>
+<p><strong>Gateway API</strong>&#8201;&#8212;&#8201;L7 ルーティング、トラフィック分割、クロス namespace 参照を備えた Kubernetes 標準の代替機能。OCP 4.19 以降が必要。</p>
+</li>
+<li>
+<p><strong>MetalLB LoadBalancer</strong>&#8201;&#8212;&#8201;任意の TCP/UDP プロトコルに対する L4 外部 IP 割り当て。ベアメタル上の非 HTTP ワークロード (SSH、データベース、RDP) に対する唯一の選択肢。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Route と Gateway API はどちらも L7 HTTP トラフィックを処理します。MetalLB は、どちらも対応できないプロトコルの L4 におけるギャップを埋めます。ベアメタルでは、MetalLB と Gateway API は相互補完的です。MetalLB が外部 IP を提供し、Gateway が L7 ルーティングの決定を処理します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_トラブルシューティング"><a class="anchor" href="#_トラブルシューティング"></a>トラブルシューティング</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_service_が_pending_状態のままになる"><a class="anchor" href="#_service_が_pending_状態のままになる"></a>Service が Pending 状態のままになる</h3>
+<div class="paragraph">
+<p>LoadBalancer Service が外部 IP なしで <code>Pending</code> 状態のままになる場合:</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe svc &lt;service-name&gt; -n &lt;namespace&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>一般的な原因:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>IPAddressPool</code> が設定されていないか、すべてのアドレスが枯渇している</p>
+</li>
+<li>
+<p>プールを参照する <code>L2Advertisement</code> または <code>BGPAdvertisement</code> がない</p>
+</li>
+<li>
+<p>MetalLB speaker Pod が実行されていない (<code>oc get pods -n metallb-system</code> を確認)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_外部_ip_が割り当てられているが到達できない"><a class="anchor" href="#_外部_ip_が割り当てられているが到達できない"></a>外部 IP が割り当てられているが到達できない</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>IP がクライアントマシンと同じ L2 サブネット上にあることを確認する</p>
+</li>
+<li>
+<p>ファイアウォールが ARP またはターゲットポートをブロックしていないことを確認する</p>
+</li>
+<li>
+<p>IP を保持しているノード上で speaker Pod が実行されていることを確認する: <code>oc get pods -n metallb-system -o wide</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_externaltrafficpolicy_cluster_での接続タイムアウト"><a class="anchor" href="#_externaltrafficpolicy_cluster_での接続タイムアウト"></a>externalTrafficPolicy: Cluster での接続タイムアウト</h3>
+<div class="paragraph">
+<p>デフォルトでは、Service は <code>externalTrafficPolicy: Cluster</code> を使用するため、非対称ルーティングが発生する可能性があります。タイムアウトが発生する場合は、<code>externalTrafficPolicy: Local</code> の設定を試してください。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+ externalTrafficPolicy: Local</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これにより、トラフィックはその IP をアドバタイズしているノードによってのみ処理されるようになり、ルーティングの非対称性を回避できます。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>デモ用 namespace を削除します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace metallb-demo</code></pre>
+</div>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+MetalLB Operator は継続して使用できるようにインストールされたままになります。完全に削除するには、以下を実行します。
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete metallb metallb -n metallb-system</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete subscription metallb-operator -n metallb-system</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete csv -n metallb-system -l operators.coreos.com/metallb-operator.metallb-system=</code></pre>
+</div>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace metallb-system</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下について学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>MetalLB は、クラウドプロバイダーのないベアメタルクラスターに LoadBalancer Service サポートを提供します</p>
+</li>
+<li>
+<p>L2 モードは ARP アナウンスを使用し、クラスターノードと同じサブネット上の IP を必要とします</p>
+</li>
+<li>
+<p>BGP モードは、ルーティングされたデータセンター環境向けのルートアドバタイズを可能にします</p>
+</li>
+<li>
+<p>LoadBalancer Service は、専用の外部 IP で VM の非 HTTP ポート (SSH、データベース、RDP) を公開します</p>
+</li>
+<li>
+<p>単一の外部 IP に対して、複数のポートを 1 つの Service にまとめることができます</p>
+</li>
+<li>
+<p>Service の <code>selector</code> は、<code>spec.template.metadata.labels</code> のラベルを使用して VM Pod をターゲットにします</p>
+</li>
+<li>
+<p>MetalLB は、設定された <code>IPAddressPool</code> リソースから IP を自動的に割り当てます</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="vm-ingress-routes.html" class="xref page">VM Ingress および Routes</a>&#8201;&#8212;&#8201;OpenShift Route を介して VM HTTP サービスを公開します</p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/networking_operators/metallb-operator" target="_blank" rel="noopener">MetalLB Operator ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/red_hat_openshift_service_mesh/3.0/html-single/gateways/index#ossm-exposing-a-service-by-using-the-kubernetes-gateway-api_ossm-getting-traffic-into-a-mesh" target="_blank" rel="noopener">Kubernetes Gateway API を使用したサービスの公開 (Service Mesh 3.0)</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/2022/Virtual-Machines-with-MetalLB.html" target="_blank" rel="noopener">KubeVirt MetalLB ガイド</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="network-policies-vms.html">VM のネットワークポリシー</a></span>
+  <span class="next"><a href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
+  </body>
+</html>

@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -352,7 +431,7 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">セカンダリネットワーク</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">セカンダリーネットワーク</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">従来のインフラストラクチャ</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
 </tr>
@@ -477,7 +556,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>注: <code>your-public-key-here</code> は実際の SSH 公開鍵に置き換えるか、テスト用にパスワード認証を使用してください。</p>
+<p>Note: <code>your-public-key-here</code> は実際の SSH 公開鍵に置き換えるか、テスト用にパスワード認証を使用してください。</p>
 </div>
 <div class="paragraph">
 <p>VM をデプロイします。</p>
@@ -865,7 +944,7 @@ virt-launcher-fedora-access-vm-xxxxx   2/2     Running   0          10m</code></
 </div>
 </div>
 <div class="sect1">
-<h2 id="_手法_6_セカンダリネットワーク経由の直接ネットワークアクセス"><a class="anchor" href="#_手法_6_セカンダリネットワーク経由の直接ネットワークアクセス"></a>手法 6: セカンダリネットワーク経由の直接ネットワークアクセス</h2>
+<h2 id="_手法_6_セカンダリーネットワーク経由の直接ネットワークアクセス"><a class="anchor" href="#_手法_6_セカンダリーネットワーク経由の直接ネットワークアクセス"></a>手法 6: セカンダリーネットワーク経由の直接ネットワークアクセス</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>bridge ネットワークや localnet ネットワーク上の VM に対して、IP 経由で直接アクセスします。</p>
@@ -875,7 +954,7 @@ virt-launcher-fedora-access-vm-xxxxx   2/2     Running   0          10m</code></
 <div class="ulist">
 <ul>
 <li>
-<p>VM がセカンダリネットワーク (bridge、localnet、VLAN) に接続されていること</p>
+<p>VM がセカンダリーネットワーク (bridge、localnet、VLAN) に接続されていること</p>
 </li>
 <li>
 <p>現在の場所からネットワークに到達可能であること</p>
@@ -887,7 +966,7 @@ virt-launcher-fedora-access-vm-xxxxx   2/2     Running   0          10m</code></
 </div>
 </div>
 <div class="sect2">
-<h3 id="_セカンダリネットワークを持つ_vm"><a class="anchor" href="#_セカンダリネットワークを持つ_vm"></a>セカンダリネットワークを持つ VM</h3>
+<h3 id="_セカンダリーネットワークを持つ_vm"><a class="anchor" href="#_セカンダリーネットワークを持つ_vm"></a>セカンダリーネットワークを持つ VM</h3>
 <div class="paragraph">
 <p><a href="_attachments/remote-access-linux-vms/fedora-vlan-access-vm.yaml" class="xref attachment">fedora-vlan-access-vm.yaml をダウンロード</a></p>
 </div>
@@ -1095,10 +1174,10 @@ spec:
 <h3 id="_vm_ステータスの確認"><a class="anchor" href="#_vm_ステータスの確認"></a>VM ステータスの確認</h3>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VirtualMachine
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># VirtualMachine の確認
 oc get vm -n vm-access-demo
 
-# VirtualMachineInstance
+# VirtualMachineInstance の確認
 oc get vmi -n vm-access-demo
 
 # VMの詳細情報
@@ -1218,7 +1297,7 @@ ping -c 3 192.168.100.100</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_問題_セカンダリネットワークの_ip_に接続できない"><a class="anchor" href="#_問題_セカンダリネットワークの_ip_に接続できない"></a>問題: セカンダリネットワークの IP に接続できない</h3>
+<h3 id="_問題_セカンダリーネットワークの_ip_に接続できない"><a class="anchor" href="#_問題_セカンダリーネットワークの_ip_に接続できない"></a>問題: セカンダリーネットワークの IP に接続できない</h3>
 <div class="paragraph">
 <p><strong>原因</strong>: ネットワークに到達できないか、ルーティングの問題。</p>
 </div>
@@ -1291,6 +1370,80 @@ ping -c 3 192.168.100.100</code></pre>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_適切なアクセス方法の選択"><a class="anchor" href="#_適切なアクセス方法の選択"></a>適切なアクセス方法の選択</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>以下の図は、要件に基づいて適切なアクセス方法を選択するためのガイドです。</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="_images/remote-access-decision.png" alt="Remote Access Decision Diagram">
+</div>
+</div>
+<div class="paragraph">
+<p>各判断ポイントでは、ネットワークアクセスの必要性、アクセスが一時的なものかどうか、利用可能なインフラストラクチャーに基づいて選択肢を絞り込みます。以下の表は、一般的なロールとシナリオを推奨される方法に対応付けています。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">シナリオ</th>
+<th class="tableblock halign-left valign-top">推奨される方法</th>
+<th class="tableblock halign-left valign-top">理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">起動しない VM をデバッグする開発者</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンソール (<code>virtctl console</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ネットワーク接続なしで動作します。SSH が破損している場合や、VM にネットワークがない場合の唯一の選択肢です。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM 上でアプリケーションをテストする開発者</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ポートフォワード (<code>virtctl port-forward</code> または <code>oc port-forward</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Service を作成しない一時的なアクセスです。ターミナルセッションが終了すると停止します。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">運用担当者/SRE による通常の管理者アクセス</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">virtctl SSH (<code>virtctl ssh</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クラスター認証情報を持つユーザーにとって最もシンプルな認証アクセスです。API サーバー経由で監査ログが記録されます。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM にデプロイする CI/CD パイプライン</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">サービスアカウントを使用した virtctl SSH</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クラスター認証情報を使用した自動 SSH アクセス。外部エンドポイントは不要です。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">外部モニタリングツール (Nagios、Zabbix、Prometheus)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NodePort または LoadBalancer Service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VM の再起動後も維持される安定した外部エンドポイント。利用可能な場合は MetalLB を備えた LoadBalancer を使用します。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">既存の企業ネットワークと統合された VM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">セカンダリーネットワーク (直接 SSH)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NAT やポートフォワードを行わずに企業ネットワークから直接 L2/L3 アクセスが可能です。標準の SSH ツールが使用できます。</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+ニーズを満たす最もシンプルな方法から始めてください。ほとんどのユーザーは、トラブルシューティングには <code>virtctl console</code>、通常のアクセスには <code>virtctl ssh</code> のみが必要です。NodePort/LoadBalancer は、外部システムがクラスター認証情報なしで VM に到達する必要がある場合にのみ使用してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1334,7 +1487,7 @@ oc delete namespace vm-access-demo</code></pre>
 <p>一時的なアクセスのためにポート転送を使用する方法</p>
 </li>
 <li>
-<p>セカンダリネットワーク上の VM にアクセスする方法</p>
+<p>セカンダリーネットワーク上の VM にアクセスする方法</p>
 </li>
 <li>
 <p>VM アクセスのセキュリティベストプラクティス</p>
@@ -1372,5 +1525,8 @@ oc delete namespace vm-access-demo</code></pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

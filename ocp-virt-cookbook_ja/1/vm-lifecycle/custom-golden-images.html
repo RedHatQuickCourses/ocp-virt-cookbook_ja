@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>カスタム OS イメージとゴールデンイメージの作成 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="import-qcow2-boot-volume.html">
-    <link rel="next" href="golden-images-troubleshooting.html">
+    <link rel="next" href="windows-golden-images.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item is-current-page" data-depth="2">
     <a class="nav-link" href="custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -331,6 +410,33 @@
 </div>
 </div>
 <div class="sect1">
+<h2 id="_エンタープライズのユースケース"><a class="anchor" href="#_エンタープライズのユースケース"></a>エンタープライズのユースケース</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>これらの利点は、同じベースイメージがチームや環境全体で繰り返しデプロイされる組織規模で最も重要になります。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>コンプライアンス強化済みイメージ</strong>: セキュリティエージェントが事前インストールされた CIS ベンチマーク準拠の RHEL イメージを維持し、実稼働 VM の唯一の承認済みベースイメージとします。すべての VM を個別に監査するのではなく、イメージを 1 回監査するだけで済みます。</p>
+</li>
+<li>
+<p><strong>開発およびテスト向けの迅速なプロビジョニング</strong>: 毎回 ISO からインストールするのではなく、ゴールデンイメージから 5 分で 50 台の同一 VM をデプロイします。</p>
+</li>
+<li>
+<p><strong>バージョン管理</strong>: 1 月のパッチが適用された RHEL 9.3 をベースに構築された Q1 イメージや、4 月のパッチが適用された RHEL 9.4 をベースに構築された Q2 イメージなど、イメージのバージョンを経時的に追跡できるため、どの VM がどのイメージを実行しているかを常に把握できます。<a href="#version-management">バージョン管理</a> を参照してください。</p>
+</li>
+<li>
+<p><strong>複数チーム間での標準化</strong>: プラットフォームチームがゴールデンイメージを維持管理し、開発チームがそれを利用します。各チームがイメージを再構築することなく、すべてのチームが同じベースから開始できます。</p>
+</li>
+<li>
+<p><strong>ディザスターリカバリー</strong>: クラスター再構築後の迅速な再デプロイメントに備えて、事前に構築されたゴールデンイメージをレジストリまたはオブジェクトストレージに保存しておきます。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
 <div class="sectionbody">
 <div class="ulist">
@@ -342,7 +448,7 @@
 <p>CLI ツール: <code>oc</code>, <code>virtctl</code>, <code>kubectl</code></p>
 </li>
 <li>
-<p>ストレージクラスが構成済みであること (本チュートリアルでは <code>lvms-vg1</code> を使用)</p>
+<p>Storage Class が構成済みであること (本チュートリアルでは <code>lvms-vg1</code> を使用)</p>
 </li>
 <li>
 <p>Linux システム管理に関する基本的な理解</p>
@@ -358,13 +464,29 @@
 <h2 id="_ゴールデンイメージのワークフロー"><a class="anchor" href="#_ゴールデンイメージのワークフロー"></a>ゴールデンイメージのワークフロー</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>プロセスには以下のステップが含まれます。
-. 標準 OS イメージからベース VM を展開する
-. VM をカスタマイズする (ソフトウェアのインストール、設定の構成)
-. VM を汎用化する (マシン固有のデータを削除)
-. VM を停止し、そのディスクをキャプチャする
-. ゴールデンイメージ用の DataSource を作成する
-. ゴールデンイメージから新しい VM を展開する</p>
+<p>プロセスには以下のステップが含まれます。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>標準 OS イメージからベース VM を展開する</p>
+</li>
+<li>
+<p>VM をカスタマイズする (ソフトウェアのインストール、設定の構成)</p>
+</li>
+<li>
+<p>VM を汎用化する (マシン固有のデータを削除)</p>
+</li>
+<li>
+<p>VM を停止し、そのディスクをキャプチャする</p>
+</li>
+<li>
+<p>ゴールデンイメージ用の DataSource を作成する</p>
+</li>
+<li>
+<p>ゴールデンイメージから新しい VM を展開する</p>
+</li>
+</ol>
 </div>
 </div>
 </div>
@@ -389,7 +511,7 @@
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-この例で使用している cloud-init のパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードまたは SSH キー認証を使用してください。
+この例で使用している cloud-init のパスワードはデモ目的のみです。本番環境では、常に強力でユニークなパスワードまたは SSH 鍵認証を使用してください。
 </td>
 </tr>
 </table>
@@ -503,17 +625,8 @@ base-fedora-vm-disk   CloneInProgress   45.2%                 2m</code></pre>
 base-fedora-vm   4m    Running   10.128.1.151   ocplab01   True</code></pre>
 </div>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-ディスクの初期クローンには、ストレージのパフォーマンスに応じて通常 3〜5 分かかります。
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>Note: ディスクの初期クローンには、ストレージのパフォーマンスに応じて通常 3〜5 分かかります。</p>
 </div>
 </div>
 </div>
@@ -917,7 +1030,7 @@ webserver-vm-2   5m    Running   10.128.1.153   ocplab01   True</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_バージョン管理"><a class="anchor" href="#_バージョン管理"></a>バージョン管理</h2>
+<h2 id="version-management"><a class="anchor" href="#version-management"></a>バージョン管理</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>ゴールデンイメージの新しいバージョンを作成するには：</p>
@@ -1029,7 +1142,7 @@ webserver-vm-2   5m    Running   10.128.1.153   ocplab01   True</code></pre>
 <p>ファイアウォールルールを適切に構成する</p>
 </li>
 <li>
-<p>VM 固有のシークレット (SSH キー、パスワード) には cloud-init を使用する</p>
+<p>VM 固有のシークレット (SSH 鍵、パスワード) には cloud-init を使用する</p>
 </li>
 </ul>
 </div>
@@ -1100,7 +1213,7 @@ oc delete namespace golden-images</code></pre>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a></span>
-  <span class="next"><a href="golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a></span>
+  <span class="next"><a href="windows-golden-images.html">Windows ゴールデンイメージ</a></span>
 </nav>
 </article>
   </div>
@@ -1112,5 +1225,8 @@ oc delete namespace golden-images</code></pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

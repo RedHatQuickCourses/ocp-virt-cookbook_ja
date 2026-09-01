@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>VM ディスクサイズの拡張 (PVC ボリューム拡張) :: OpenShift Virtualization cookbook</title>
+    <link rel="prev" href="multi-disk-configuration.html">
+    <link rel="next" href="cdi-operations.html">
+    <meta name="generator" content="Antora 3.2.0-alpha.12">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/collapsible.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/reading-time.css">
+    <link rel="stylesheet" href="../../../_/css/vendor/audio-transcript.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Virtualization cookbook</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="ocp-virt-cookbook_ja" data-version="1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Virtualization cookbook</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">はじめに</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="index.html">ストレージ設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="lvm-operator.html">LVM Operator のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="lvm-troubleshooting.html">LVM のトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="hostpath-provisioner.html">HostPath Provisioner</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="creating-managing-storage-class.html">StorageClass の作成と管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="disk-io-tuning.html">ディスク I/O チューニング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../networking/index.html">ネットワーク構成</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/static-ip-configuration.html">静的 IP の設定</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cloud-init-troubleshooting.html">cloud-init トラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/ovs-bridge-troubleshooting.html">Localnet ネットワークのトラブルシューティング</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-configuration/index.html">仮想マシンの設定</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/internal-dns-for-vms.html">VM の内部 DNS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-vms.html">Linux 仮想マシンへのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-linux-troubleshooting.html">Linux VM リモートアクセスのトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/node-placement-affinity.html">ノードの配置と Affinity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/hotplug-volumes-interfaces.html">ボリュームとインターフェースのホットプラグ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../performance/index.html">VM パフォーマンスチューニング</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/resource-limits-qos.html">Resource limits と QoS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/cpu-pinning.html">専用 CPU 配置</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/numa-hugepages.html">NUMA と Hugepages</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../vm-lifecycle/index.html">VM ライフサイクル管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/import-qcow2-boot-volume.html">qcow2 ブートボリュームのインポート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/cloning-vms.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/vm-snapshots.html">VM スナップショット</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/boot-order-boot-sources.html">VM のブート順序とブートソース</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../manifests/index.html">マニフェスト</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../api/index.html">API ガイド</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/glossary.html">Glossary</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Virtualization cookbook</span>
+    <span class="version">1</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Virtualization cookbook</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
+    <li><a href="index.html">ストレージ設定</a></li>
+    <li><a href="expanding-vm-disk-size.html">VM ディスクサイズの拡張</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">VM ディスクサイズの拡張 (PVC ボリューム拡張)</h1>
+<div class="sect1">
+<h2 id="_概要"><a class="anchor" href="#_概要"></a>概要</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、基盤となる PersistentVolumeClaim (PVC) のサイズを変更して、OpenShift Virtualization の仮想マシンのディスクサイズを拡張する方法を説明します。ディスクの拡張は、VM 管理者にとって最も一般的な Day 2 オペレーションの 1 つです。このガイドがない場合、ユーザーは Kubernetes の PVC 拡張ドキュメントと KubeVirt 固有のゲスト OS 手順を組み合わせる必要があります。</p>
+</div>
+<div class="paragraph">
+<p>オフライン (VM 停止中) とオンライン (VM 実行中) の両方で VM ディスクを拡張する方法、クラスターとゲストの両方の観点から拡張を確認する方法、およびゲスト OS 内で手動のファイルシステムサイズ変更がいつ必要になるかを学びます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提条件"><a class="anchor" href="#_前提条件"></a>前提条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>OpenShift Virtualization Operator がインストールされている <strong>OpenShift 4.18+</strong></p>
+</li>
+<li>
+<p><strong>クラスター管理者アクセス</strong> (<code>system:admin</code> または同等)</p>
+</li>
+<li>
+<p>インストール済みの <strong><code>oc</code> CLI</strong> および <strong><code>virtctl</code> CLI</strong></p>
+</li>
+<li>
+<p><code>allowVolumeExpansion: true</code> が設定された <strong>StorageClass</strong></p>
+</li>
+<li>
+<p>PVC を基盤とするディスクを備えた<strong>実行中の VM</strong></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_1_storageclass_の拡張サポートの確認"><a class="anchor" href="#_ステップ_1_storageclass_の拡張サポートの確認"></a>ステップ 1: StorageClass の拡張サポートの確認</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VM ディスクの拡張を試行する前に、PVC の基盤となる StorageClass がボリューム拡張をサポートしていることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get storageclass -o custom-columns=NAME:.metadata.name,PROVISIONER:.provisioner,EXPANSION:.allowVolumeExpansion</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME         PROVISIONER    EXPANSION
+lvms-vg1     topolvm.io     true</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+クラスターに追加の StorageClass が表示される場合があります。重要な点は、VM の PVC で使用されている StorageClass の EXPANSION 列に <code>true</code> が表示されていることです。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>StorageClass の EXPANSION 列に <code>false</code> または <code>&lt;none&gt;</code> と表示されている場合は、次に進む前に有効にしてください。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc patch storageclass &lt;your-storage-class&gt; -p '{"allowVolumeExpansion": true}'</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+StorageClass で <code>allowVolumeExpansion</code> を <code>true</code> に設定することは必要ですが、十分ではありません。CSI ドライバー自体もサイズ変更に対応している必要があります。一部のプロビジョナー (HostPath など) は、この設定に関係なくドライバーレベルでボリュームのサイズを変更できません。不明な場合は、ストレージプロバイダーのドキュメントを確認してください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_2_namespace_の作成とデモ_vm_のデプロイ"><a class="anchor" href="#_ステップ_2_namespace_の作成とデモ_vm_のデプロイ"></a>ステップ 2: Namespace の作成とデモ VM のデプロイ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアル専用の namespace を作成します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>1 つの 10Gi ブートディスクを持つ Fedora VM をデプロイします。これは、以降のステップで拡張するディスクです。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>rootdisk</strong>: Fedora ブートソースからクローンされたブートディスク (10Gi、<code>lvms-vg1</code> StorageClass)</p>
+</li>
+<li>
+<p><strong>cloudinitdisk</strong>: コンソールログイン用の Cloud-init 設定</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+この例の cloud-init パスワードはデモ目的のみのものです。本番環境では、常に強力で一意のパスワードまたは SSH 鍵認証を使用してください。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/expanding-vm-disk-size/vm-expansion.yaml" class="xref attachment">vm-expansion.yaml をダウンロード</a></p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f - &lt;&lt;EOF
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: expansion-vm
+  namespace: pvc-expansion-demo
+spec:
+  instancetype:
+    name: u1.small
+  preference:
+    name: fedora
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: expansion-vm
+    spec:
+      domain:
+        devices:
+          disks:
+          - disk: {}
+            name: rootdisk
+          - disk: {}
+            name: cloudinitdisk
+          interfaces:
+          - masquerade: {}
+            name: default
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: expansion-vm-rootdisk
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: redhat
+            chpasswd:
+              expire: false
+  dataVolumeTemplates:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: expansion-vm-rootdisk
+    spec:
+      sourceRef:
+        kind: DataSource
+        name: fedora
+        namespace: openshift-virtualization-os-images
+      storage:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: lvms-vg1
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>DataVolume のインポートと VM の起動を待ちます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get dv -n pvc-expansion-demo -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>DataVolume に <code>Succeeded</code> と表示されたら、VM が実行中であることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME           AGE   STATUS    READY
+expansion-vm   3m    Running   True</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>初期の PVC サイズを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                      STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+expansion-vm-rootdisk     Bound    pvc-xxxx     10Gi       RWO            lvms-vg1       3m</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+PVC 名は、<code>dataVolumeTemplates</code> で定義された DataVolume 名と一致します。マニフェストを作成していない既存の VM の場合は、<code>oc get vm &lt;vm-name&gt; -n &lt;namespace&gt; -o jsonpath='{.spec.template.spec.volumes}'</code> を使用して、各ディスクをバッキングしている PVC を特定します。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_3_オフライン拡張_vm_停止状態"><a class="anchor" href="#_ステップ_3_オフライン拡張_vm_停止状態"></a>ステップ 3: オフライン拡張 (VM 停止状態)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>オフライン拡張は最も安全な方法です。PVC のサイズを変更する前に VM を停止します。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>VM を停止します。</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl stop expansion-vm -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>VM が停止していることを確認します:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm expansion-vm -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME           AGE   STATUS    READY
+expansion-vm   5m    Stopped   False</pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>PVC にパッチを適用して、ディスクサイズを 10Gi から 20Gi に増やします:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc patch pvc expansion-vm-rootdisk -n pvc-expansion-demo --type merge -p '{"spec":{"resources":{"requests":{"storage":"20Gi"}}}}'</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+パッチ適用直後には PVC の容量は更新されません。<code>FileSystemResizePending</code> condition は、ボリュームのサイズ変更が Pod による PVC のマウントを待機していることを示しています。次のステップで VM を起動するとマウントがトリガーされ、サイズ変更が完了します。
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>VM を起動します:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl start expansion-vm -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>VM が実行中であり、PVC が拡張されたことを確認します:</p>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm expansion-vm -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME           AGE   STATUS    READY
+expansion-vm   6m    Running   True</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>+</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc expansion-vm-rootdisk -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>+
+出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                      STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+expansion-vm-rootdisk     Bound    pvc-xxxx     20Gi       RWO            lvms-vg1       6m</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_4_オンライン拡張_vm_実行中"><a class="anchor" href="#_ステップ_4_オンライン拡張_vm_実行中"></a>ステップ 4: オンライン拡張 (VM 実行中)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>CSI ドライバーが使用中ボリュームの拡張をサポートしている場合は、VM を停止せずに PVC のサイズを変更できます。これは、ダウンタイムが許容されない状況におけるステップ 3 の代替手段です。</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+すべての CSI ドライバーがオンライン拡張をサポートしているわけではありません。ドライバーがサポートしていない場合、サイズ変更は受け入れられますが、次回ボリュームがマウントされるまで (つまり、VM の再起動後まで) 保留されます。
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+このステップはステップ 3 の代替であり、後続のステップではありません。ステップ 3 でオフライン拡張をすでに実行している場合は、ステップ 5 に進んでください。以下のコマンドは、PVC が元の 10Gi サイズのままであることを前提としています。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>VM の実行中に PVC を拡張するには、VM を停止せずに PVC に直接パッチを適用します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc patch pvc expansion-vm-rootdisk -n pvc-expansion-demo --type merge -p '{"spec":{"resources":{"requests":{"storage":"20Gi"}}}}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>PVC ステータスでサイズ変更の条件を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe pvc expansion-vm-rootdisk -n pvc-expansion-demo | grep -A 5 Conditions</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>CSI ドライバーがオンライン拡張をサポートしている場合、リサイズが完了すると PVC の容量が更新されます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Conditions:
+  Type                      Status
+  ----                      ------
+  FileSystemResizePending   False</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ドライバーがオンライン拡張をサポートしていない場合、またはリサイズがまだ進行中の場合は、ボリュームが再マウントされるまで <code>FileSystemResizePending: True</code> が表示されます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Conditions:
+  Type                      Status
+  ----                      ------
+  FileSystemResizePending   True</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Filesystem PVC の場合、KubeVirt はボリュームサイズの変更を検出すると、バッキングディスクイメージファイルを自動的に拡張します。ステップ 5 で説明するように、ゲスト OS のファイルシステムは手動でリサイズする必要がある場合があります。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_5_ゲスト_os_ファイルシステムのリサイズ"><a class="anchor" href="#_ステップ_5_ゲスト_os_ファイルシステムのリサイズ"></a>ステップ 5: ゲスト OS ファイルシステムのリサイズ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>PVC を拡張すると、VM に提供されるブロックデバイスのサイズが大きくなります。ゲスト OS イメージによっては、起動時にパーティションテーブルとファイルシステムが自動的に拡張される場合と、されない場合があります。</p>
+</div>
+<div class="paragraph">
+<p>VM コンソールにアクセスします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console expansion-vm -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ユーザー名 <code>fedora</code>、パスワード <code>redhat</code> でログインします。</p>
+</div>
+<div class="paragraph">
+<p>現在のディスクとパーティションのレイアウトを確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lsblk</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_自動リサイズ_fedora_および類似のイメージ"><a class="anchor" href="#_自動リサイズ_fedora_および類似のイメージ"></a>自動リサイズ (Fedora および類似のイメージ)</h3>
+<div class="paragraph">
+<p>最新の Fedora クラウドイメージは、<code>cloud-utils-growpart</code> および <code>systemd-growfs</code> サービスを使用して、起動時にルートパーティションとファイルシステムを自動的に拡張します。イメージがこれを自動的に処理する場合、<code>lsblk</code> ではルートパーティションがすでに拡張後のディスク全体を占有していることが示されます。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+zram0  251:0    0  883M  0 disk [SWAP]
+vda    253:0    0 18.6G  0 disk
+|-vda1 253:1    0    2M  0 part
+|-vda2 253:2    0  100M  0 part /boot/efi
+`-vda3 253:3    0 18.5G  0 part /var
+                                /home
+                                /boot
+                                /
+vdb    253:16   0    1M  0 disk</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+ストレージプロバイダーがメタデータ用に少量の領域を予約するため、ディスクの表示が 20G よりわずかに少なくなる場合があります (例: 18.6G)。これは、シンプロビジョニングされたストレージにおける想定通りの動作です。
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>ファイルシステムに拡張されたサイズが反映されていることを確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">df -h /</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda3        19G  759M   18G   5% /</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ファイルシステムに拡張されたサイズがすでに表示されている場合、ゲスト OS が自動的にサイズ変更を処理しています。以下の手動でのサイズ変更手順をスキップして、ステップ 6 に進むことができます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_手動でのサイズ変更_rhelcentosおよびその他のイメージ"><a class="anchor" href="#_手動でのサイズ変更_rhelcentosおよびその他のイメージ"></a>手動でのサイズ変更 (RHEL、CentOS、およびその他のイメージ)</h3>
+<div class="paragraph">
+<p>ゲスト OS がパーティションとファイルシステムを自動的に拡張しない場合、<code>lsblk</code> はディスクを新しいサイズで表示しますが、ルートパーティションは元のサイズのままで、末尾に未割り当て領域が存在します。この場合、パーティションの拡張とファイルシステムの拡張という 2 つの手動操作が必要になります。</p>
+</div>
+<div class="paragraph">
+<p><code>lsblk</code> を使用してルートパーティション番号を特定します。ルートパーティションは <code>/</code> にマウントされているパーティションです。一般的なレイアウトには、パーティション 3 (Fedora)、パーティション 4 (RHEL/CentOS)、またはパーティション 2 (minimal イメージ) があります。以下の例では <code>/dev/vda4</code> を使用していますが、お使いのイメージに合わせてパーティション番号を調整してください。</p>
+</div>
+<div class="sect3">
+<h4 id="_パーティションの拡張"><a class="anchor" href="#_パーティションの拡張"></a>パーティションの拡張</h4>
+<div class="paragraph">
+<p><code>growpart</code> を使用して、ルートパーティションを利用可能な領域に合わせて拡張します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo growpart /dev/vda 4</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>想定される出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>CHANGED: partition=4 start=6094848 old: size=14882816 end=20977664 new: size=35756032 end=41850880</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>growpart</code> が <code>NOCHANGE: partition cannot be grown</code> と報告した場合、パーティションはすでにディスク全体を占有しており、拡張は不要です。これは、起動時にパーティションを自動拡張するイメージでは正常な動作です。
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_ファイルシステムの拡張"><a class="anchor" href="#_ファイルシステムの拡張"></a>ファイルシステムの拡張</h4>
+<div class="paragraph">
+<p>パーティションは拡張されましたが、ファイルシステムはまだ元の領域を使用しています。拡張したパーティション全体を占有するようにファイルシステムをリサイズします。</p>
+</div>
+<div class="paragraph">
+<p>XFS (Fedora/RHEL のデフォルト) の場合は、<code>xfs_growfs</code> を使用します。XFS はアンマウント不要のオンラインリサイズをサポートしています。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo xfs_growfs /</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ext4 ファイルシステムの場合は、代わりに <code>resize2fs</code> を使用します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo resize2fs /dev/vda4</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>xfs_growfs</code> と <code>resize2fs</code> は両方とも、読み書き可能でマウントされたファイルシステムのオンラインサイズ変更をサポートしています。アンマウントや再起動は不要です。
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_ゲスト内での確認"><a class="anchor" href="#_ゲスト内での確認"></a>ゲスト内での確認</h4>
+<div class="paragraph">
+<p>ファイルシステムに拡張されたサイズが反映されていることを確認します。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">df -h /</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>イメージのパーティションレイアウトおよびストレージプロバイダーのオーバーヘッドに応じて、ルートファイルシステムには約 17-19G の使用可能な領域が表示されるはずです。</p>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> を押してコンソールを終了します。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_6_ルートディスクとデータディスクの拡張の比較"><a class="anchor" href="#_ステップ_6_ルートディスクとデータディスクの拡張の比較"></a>ステップ 6: ルートディスクとデータディスクの拡張の比較</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ステップ 3〜5 の手順では、ルート (ブート) ディスクを拡張しました。追加のデータディスクの拡張も同じ PVC パッチ適用プロセスに従いますが、ゲスト OS での手順はデータディスクの構成方法によって異なります。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">シナリオ</th>
+<th class="tableblock halign-left valign-top">ゲスト OS での手順</th>
+<th class="tableblock halign-left valign-top">備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ルートディスク (パーティションあり)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ルートパーティションに対して <code>growpart</code> を実行し、その後 <code>xfs_growfs</code> または <code>resize2fs</code> を実行 (自動拡張されない場合)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>lsblk</code> を使用して正しいパーティション番号を特定する必要があります。ブート、スワップ、EFI パーティションは影響を受けません。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">データディスク (パーティションあり)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">データパーティションに対して <code>growpart</code> を実行し、その後 <code>xfs_growfs</code> または <code>resize2fs</code> を実行</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ルートディスクと同じプロセスです。<code>lsblk</code> を使用して正しいデバイス (例: <code>/dev/vdb1</code>) を見つけます。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">データディスク (パーティションなし、ディスク全体のファイルシステム)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>xfs_growfs</code> または <code>resize2fs</code> のみ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ファイルシステムがパーティションテーブルなしでブロックデバイス上に直接配置されているため、<code>growpart</code> は不要です。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">データディスク (空、未フォーマット)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mkfs.xfs /dev/vdb</code> (または <code>mkfs.ext4</code>)、その後にマウント</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ホットプラグまたはマルチディスク構成によって追加された新しいディスクです。拡張は不要で、フォーマットしてマウントするだけです。<a href="multi-disk-configuration.html" class="xref page">Multi-Disk VM Configuration</a> を参照してください。</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+データディスクがパーティション分割されているかどうかわからない場合は、ゲスト内で <code>lsblk</code> を実行します。<code>vdb1</code> や <code>vdb2</code> のようなエントリーがあるディスクはパーティション分割されています。子要素がなく単に <code>vdb</code> としてリストされているディスクは、パーティション分割されていないか、空のディスクです。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_7_検証"><a class="anchor" href="#_ステップ_7_検証"></a>ステップ 7: 検証</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>クラスターとゲストの両方の観点から、拡張が成功したことを確認します。</p>
+</div>
+<div class="paragraph">
+<p>クラスター側から、PVC の容量を確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pvc expansion-vm-rootdisk -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力例:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                      STATUS   VOLUME       CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+expansion-vm-rootdisk     Bound    pvc-xxxx     20Gi       RWO            lvms-vg1       10m</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲスト内から、ファイルシステムを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console expansion-vm -n pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">lsblk
+df -h /</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ディスク (<code>vda</code>) に約 20G (ストレージプロバイダーのオーバーヘッドを除く) が表示され、<code>df -h /</code> でルートファイルシステムが拡張された領域を使用していることを確認できるはずです。正確なサイズとパーティションレイアウトは、ゲスト OS イメージによって異なります。</p>
+</div>
+<div class="paragraph">
+<p>PVC が 20Gi と表示されているにもかかわらず、ゲストファイルシステムで元のサイズが表示されたままになっている場合は、ステップ 5 のパーティションおよびファイルシステムのサイズ変更手順が完了しておらず、ゲスト OS によっても自動的に処理されていません。ステップ 5 に戻り、手動でのサイズ変更手順に従ってください。</p>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> を押してコンソールを終了します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_制限事項とよくある問題"><a class="anchor" href="#_制限事項とよくある問題"></a>制限事項とよくある問題</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>縮小はサポートされていません。</strong> PVC のボリューム拡張は一方向の操作です。一度拡張した PVC のサイズを縮小することはできません。</p>
+</li>
+<li>
+<p><strong>すべての CSI ドライバーがオンライン拡張をサポートしているわけではありません。</strong> ドライバーがサポートしていない場合、サイズ変更はボリュームが再マウントされるまで延期されます。</p>
+</li>
+<li>
+<p><strong>PVC 容量はすぐには更新されません。</strong> パッチ適用後、Pod がボリュームをマウントするまで、PVC に <code>FileSystemResizePending</code> が表示される場合があります。オフライン拡張の場合、VM を起動することでマウントがトリガーされ、サイズ変更が完了します。</p>
+</li>
+<li>
+<p><strong>ファイルシステムの自動サイズ変更はイメージによって異なります。</strong> 最新の Fedora およびクラウドイメージでは、起動時にパーティションとファイルシステムが自動的に拡張されます。RHEL、CentOS、およびその他のイメージでは、ステップ 5 で説明されているように、手動での <code>growpart</code> および <code>xfs_growfs</code>/<code>resize2fs</code> の手順が必要になる場合があります。</p>
+</li>
+<li>
+<p><strong>VM が新しいサイズを認識しません。</strong> ゲスト OS が新しいディスクサイズを検出しない場合は、VM を再起動するか、ゲスト内で SCSI バスの再スキャンを試行してください。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_クリーンアップ"><a class="anchor" href="#_クリーンアップ"></a>クリーンアップ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Namespace を削除します。これにより、VM、PVC、DataVolume が削除されます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete namespace pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Namespace が削除されたことを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get namespace pvc-expansion-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>想定される出力:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Error from server (NotFound): namespaces "pvc-expansion-demo" not found</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_まとめ"><a class="anchor" href="#_まとめ"></a>まとめ</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>このチュートリアルでは、以下の方法を学びました。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>StorageClass がボリューム拡張をサポートしているかどうかを確認する</p>
+</li>
+<li>
+<p>PVC 名が VM ディスクボリュームにどのようにマッピングされるかを理解する</p>
+</li>
+<li>
+<p>安全性を最大限に高めるために、オフライン (VM 停止状態) で VM ディスクを拡張する</p>
+</li>
+<li>
+<p>ダウンタイムなしで VM ディスクをオンライン (VM 実行中) で拡張する</p>
+</li>
+<li>
+<p>ゲスト OS がファイルシステムを自動拡張するか、手動でのサイズ変更が必要かを判断する</p>
+</li>
+<li>
+<p><code>growpart</code>、<code>xfs_growfs</code> (XFS)、<code>resize2fs</code> (ext4) を使用して、ゲスト OS のファイルシステムのサイズを手動で変更する</p>
+</li>
+<li>
+<p>ルートディスクの拡張とデータディスクの拡張の違いを理解する</p>
+</li>
+<li>
+<p>PVC ボリューム拡張の一般的な問題と制限事項を理解する</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/storage/expanding-persistent-volumes" target="_blank" rel="noopener">PersistentVolume の拡張 - OpenShift ドキュメント</a></p>
+</li>
+<li>
+<p><a href="https://kubevirt.io/user-guide/storage/disks_and_volumes/" target="_blank" rel="noopener">ディスクとボリューム - KubeVirt ユーザーガイド</a></p>
+</li>
+<li>
+<p><a href="creating-managing-storage-class.html" class="xref page">StorageClass の作成と管理</a></p>
+</li>
+<li>
+<p><a href="multi-disk-configuration.html" class="xref page">マルチディスク VM の設定</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="multi-disk-configuration.html">マルチディスク VM</a></span>
+  <span class="next"><a href="cdi-operations.html">CDI Operations</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+<script defer src="../../../_/js/vendor/tabs.js"></script>
+<script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
+  </body>
+</html>

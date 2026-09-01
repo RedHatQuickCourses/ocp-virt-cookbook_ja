@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>仮想マシン用 SR-IOV セカンダリネットワークの構成 :: OpenShift Virtualization cookbook</title>
+    <title>仮想マシン用 SR-IOV セカンダリーネットワークの構成 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="linux-bridges.html">
-    <link rel="next" href="vm-ingress-routes.html">
+    <link rel="next" href="network-policies-vms.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -291,7 +370,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">ネットワーク構成</a></li>
-    <li><a href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a></li>
+    <li><a href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a></li>
   </ul>
 </nav>
 </div>
@@ -300,7 +379,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">仮想マシン用 SR-IOV セカンダリネットワークの構成</h1>
+<h1 class="page">仮想マシン用 SR-IOV セカンダリーネットワークの構成</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
@@ -382,7 +461,7 @@ SR-IOV の設定を変更すると、物理 NIC 上の仮想機能の数が変�
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力 (バージョンにより異なる場合があります):</p>
+<p>想定される出力 (バージョンにより異なる場合があります):</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -590,7 +669,7 @@ Operator が Machine Config Operator を介してこれを自動的に処理し�
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -604,7 +683,7 @@ Operator が Machine Config Operator を介してこれを自動的に処理し�
 <div class="sectionbody">
 <div class="paragraph">
 <p>トランク構成では、物理スイッチポートは同じケーブルで複数の VLAN を伝送します。
-各 <code>SriovNetwork</code> リソースは個別の VLAN を定義します。Operator はそれぞれに対して個別の <code>NetworkAttachmentDefinition</code> (NAD) を生成します。
+各 <code>SriovNetwork</code> リソースは個別の VLAN を定義します。 Operator はそれぞれに対して個別の <code>NetworkAttachmentDefinition</code> (NAD) を生成します。
 これらの NAD を通じて VF が VM に割り当てられると、自動的に指定された VLAN ID で送信トラフィックにタグ付けされ、受信時にタグが削除されるため、ゲスト OS はタグなしのフレームを認識することになります。</p>
 </div>
 <div class="paragraph">
@@ -635,12 +714,12 @@ EOF</code></pre>
 apiVersion: sriovnetwork.openshift.io/v1
 kind: SriovNetwork
 metadata:
-  name: sriov-net-data
+  name: sriov-net-mgmt
   namespace: openshift-sriov-network-operator
 spec:
   networkNamespace: sriov-demo
   resourceName: mlxsriovnic
-  vlan: 100
+  vlan: 200
   spoofChk: "off"
   trust: "on"
 EOF</code></pre>
@@ -697,7 +776,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -723,7 +802,7 @@ sriov-net-mgmt   5s</pre>
 </td>
 <td class="content">
 この例の cloud-init パスワードはデモ目的専用です。
-本番環境では、常に SSH キー認証または強力なパスワードを使用してください。
+本番環境では、常に SSH 鍵認証または強力なパスワードを使用してください。
 </td>
 </tr>
 </table>
@@ -952,7 +1031,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>期待される出力:</p>
+<p>想定される出力:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -962,9 +1041,18 @@ enp7s0           UP             10.100.0.10/24
 enp8s0           UP             10.200.0.10/24</pre>
 </div>
 </div>
-<div class="paragraph">
-<p>ヒント: ここでは明快にするために手動で <code>ip addr add</code> を使用していますが、このように割り当てられたアドレスはリンクフラップや再起動で失われます。
-本番環境では、以下のいずれかの永続的な代替手段を使用してください:</p>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+ここでは明快にするために手動で <code>ip addr add</code> を使用していますが、このように割り当てられたアドレスはリンクフラップや再起動で失われます。
+本番環境では、以下のいずれかの永続的な代替手段を使用してください:
+</td>
+</tr>
+</table>
 </div>
 <div class="ulist">
 <ul>
@@ -1193,13 +1281,13 @@ enp8s0           UP             10.200.0.10/24</pre>
 <p><a href="https://kubevirt.io/user-guide/network/interfaces_and_networks/#sriov" target="_blank" rel="noopener">KubeVirt SR-IOV インターフェースバインディング</a></p>
 </li>
 <li>
-<p><a href="localnet-secondary.html" class="xref page">Localnet セカンダリネットワーク</a>&#8201;&#8212;&#8201;ソフトウェア定義ネットワーキングを使用した代替のセカンダリネットワークアプローチ</p>
+<p><a href="localnet-secondary.html" class="xref page">Localnet セカンダリーネットワーク</a>&#8201;&#8212;&#8201;ソフトウェア定義ネットワーキングを使用した代替のセカンダリーネットワークアプローチ</p>
 </li>
 <li>
 <p><a href="localnet-vlan.html" class="xref page">Localnet VLAN 設定</a>&#8201;&#8212;&#8201;localnet トポロジでの VLAN タギング (ソフトウェアベースの代替案)</p>
 </li>
 <li>
-<p><a href="linux-bridges.html" class="xref page">Linux bridge</a>&#8201;&#8212;&#8201;より単純なハードウェア要件向けの別のセカンダリネットワークオプション</p>
+<p><a href="linux-bridges.html" class="xref page">Linux bridge</a>&#8201;&#8212;&#8201;より単純なハードウェア要件向けの別のセカンダリーネットワークオプション</p>
 </li>
 </ul>
 </div>
@@ -1207,7 +1295,7 @@ enp8s0           UP             10.200.0.10/24</pre>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="linux-bridges.html">Linux bridge</a></span>
-  <span class="next"><a href="vm-ingress-routes.html">VM Ingress および Routes</a></span>
+  <span class="next"><a href="network-policies-vms.html">VM のネットワークポリシー</a></span>
 </nav>
 </article>
   </div>
@@ -1219,5 +1307,8 @@ enp8s0           UP             10.200.0.10/24</pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

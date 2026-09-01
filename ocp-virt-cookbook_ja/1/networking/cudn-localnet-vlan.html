@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>OpenShift Virtualization における ClusterUserDefinedNetwork を使用した VLAN 対応の Localnet セカンダリネットワークの構成 :: OpenShift Virtualization cookbook</title>
+    <title>OpenShift Virtualization における ClusterUserDefinedNetwork を使用した VLAN 対応の Localnet セカンダリーネットワークの構成 :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="localnet-vlan.html">
     <link rel="next" href="layer2-secondary.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item is-current-page" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -291,7 +370,7 @@
   <ul>
     <li><a href="../index.html">OpenShift Virtualization cookbook</a></li>
     <li><a href="index.html">ネットワーク構成</a></li>
-    <li><a href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a></li>
+    <li><a href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a></li>
   </ul>
 </nav>
 </div>
@@ -300,11 +379,11 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">OpenShift Virtualization における ClusterUserDefinedNetwork を使用した VLAN 対応の Localnet セカンダリネットワークの構成</h1>
+<h1 class="page">OpenShift Virtualization における ClusterUserDefinedNetwork を使用した VLAN 対応の Localnet セカンダリーネットワークの構成</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>本チュートリアルでは、OpenShift Virtualization において、ClusterUserDefinedNetwork (CUDN) を使用して VLAN タグ付けを行う Localnet セカンダリネットワークを構成する方法を解説します。このアプローチでは、物理ネットワークインフラへの直接アクセスと、複数の namespace にまたがる VLAN セグメンテーションを提供し、Pod ネットワークの接続性を維持したまま、仮想マシン (VM) が特定の VLAN タグ付きネットワークと通信できるようにします。CUDN は一元的な管理と namespace 間のネットワーク可用性を提供するため、一貫した VLAN ベースのネットワークインフラを必要とするエンタープライズ環境に最適です。</p>
+<p>本チュートリアルでは、OpenShift Virtualization において、ClusterUserDefinedNetwork (CUDN) を使用して VLAN タグ付けを行う Localnet セカンダリーネットワークを構成する方法を解説します。このアプローチでは、物理ネットワークインフラへの直接アクセスと、複数の namespace にまたがる VLAN セグメンテーションを提供し、Pod ネットワークの接続性を維持したまま、仮想マシン (VM) が特定の VLAN タグ付きネットワークと通信できるようにします。CUDN は一元的な管理と namespace 間のネットワーク可用性を提供するため、一貫した VLAN ベースのネットワークインフラを必要とするエンタープライズ環境に最適です。</p>
 </div>
 </div>
 </div>
@@ -357,7 +436,7 @@
 <p><strong>VLAN タグ付け</strong>: 各 VLAN は一意の VLAN ID (例: 100, 200, 300) によって識別される</p>
 </li>
 <li>
-<p><strong>マルチネットワーク</strong>: 複数の VLAN ベースのセカンダリネットワークをサポートするために不可欠</p>
+<p><strong>マルチネットワーク</strong>: 複数の VLAN ベースのセカンダリーネットワークをサポートするために不可欠</p>
 </li>
 </ul>
 </div>
@@ -368,11 +447,11 @@
 <h2 id="_ステップ_1_vm_namespace_の作成"><a class="anchor" href="#_ステップ_1_vm_namespace_の作成"></a>ステップ 1: VM namespace の作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VLAN 構成の Localnet セカンダリネットワークを使用する VM 用の namespace を作成します。ClusterUserDefinedNetwork (CUDN) を使用すると、同一のネットワークを複数の namespace で利用可能にできます。</p>
+<p>VLAN 構成の Localnet セカンダリーネットワークを使用する VM 用の namespace を作成します。ClusterUserDefinedNetwork (CUDN) を使用すると、同一のネットワークを複数の namespace で利用可能にできます。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Create first namespace
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 1 つ目の namespace を作成
 oc apply -f - &lt;&lt;EOF
 apiVersion: v1
 kind: Namespace
@@ -380,7 +459,7 @@ metadata:
   name: vm-guests-vlan-prod
 EOF
 
-# Create second namespace
+# 2 つ目の namespace を作成
 oc apply -f - &lt;&lt;EOF
 apiVersion: v1
 kind: Namespace
@@ -450,7 +529,7 @@ EOF</code></pre>
 <div class="listingblock execute">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get nncp br-vlan-creation
-# Expected output: STATUS: Available</code></pre>
+# 想定される出力: STATUS: Available</code></pre>
 </div>
 </div>
 </div>
@@ -486,7 +565,7 @@ EOF</code></pre>
 <h2 id="_ステップ_4_vlan_対応の_clusteruserdefinednetwork_作成"><a class="anchor" href="#_ステップ_4_vlan_対応の_clusteruserdefinednetwork_作成"></a>ステップ 4: VLAN 対応の ClusterUserDefinedNetwork 作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>複数の namespace にまたがるセカンダリネットワーク接続のために、VLAN タグ付けを伴う Localnet トポロジーを構成する ClusterUserDefinedNetwork を作成します。</p>
+<p>複数の namespace にまたがるセカンダリーネットワーク接続のために、VLAN タグ付けを伴う Localnet トポロジーを構成する ClusterUserDefinedNetwork を作成します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -524,7 +603,7 @@ EOF</code></pre>
 <p><code>physicalNetworkName</code>: bridge mapping の論理ネットワークインターフェース名 (<code>localnet-vlan</code>) を参照</p>
 </li>
 <li>
-<p><code>role: Secondary</code>: セカンダリネットワークとして定義 (VM は Pod ネットワークをプライマリとして保持)</p>
+<p><code>role: Secondary</code>: セカンダリーネットワークとして定義 (VM は Pod ネットワークをプライマリとして保持)</p>
 </li>
 <li>
 <p><code>namespaceSelector</code>: このネットワークを使用できる namespace を定義</p>
@@ -540,7 +619,7 @@ EOF</code></pre>
 <h2 id="_ステップ_5_vlan_ネットワーク接続と静的_ip_を持つ_vm_のデプロイ"><a class="anchor" href="#_ステップ_5_vlan_ネットワーク接続と静的_ip_を持つ_vm_のデプロイ"></a>ステップ 5: VLAN ネットワーク接続と静的 IP を持つ VM のデプロイ</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>構成済みの namespace の 1 つに、Pod ネットワークと VLAN タグ付き Localnet セカンダリネットワークの両方に接続する VM を作成します。</p>
+<p>構成済みの namespace の 1 つに、Pod ネットワークと VLAN タグ付き Localnet セカンダリーネットワークの両方に接続する VM を作成します。</p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -750,18 +829,18 @@ EOF</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check VMs in production namespace
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 本番 namespace の VM を確認
 oc get vm -n vm-guests-vlan-prod
 oc get vmi -n vm-guests-vlan-prod
 
-# Check VMs in development namespace
+# 開発 namespace の VM を確認
 oc get vm -n vm-guests-vlan-dev
 oc get vmi -n vm-guests-vlan-dev
 
-# Access production VM console (credentials: fedora/fedora via cloud-init)
+# 本番 VM のコンソールにアクセス (認証情報: fedora/fedora、cloud-init 経由)
 virtctl console -n vm-guests-vlan-prod fedora-cudn-vlan-vm
 
-# Access development VM console (credentials: fedora/fedora via cloud-init)
+# 開発 VM のコンソールにアクセス (認証情報: fedora/fedora、cloud-init 経由)
 virtctl console -n vm-guests-vlan-dev fedora-cudn-vlan-vm-dev</code></pre>
 </div>
 </div>
@@ -770,31 +849,31 @@ virtctl console -n vm-guests-vlan-dev fedora-cudn-vlan-vm-dev</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check network interfaces - primary (pod network) and secondary (VLAN network)
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ネットワークインターフェースの確認 - プライマリ (Pod ネットワーク) とセカンダリー (VLAN ネットワーク)
 ip addr show
 
-# Check routes
+# ルーティングテーブルの確認
 ip route show
 
-# Expected output example (primary network via DHCP):
+# 想定される出力例 (プライマリネットワーク、DHCP 経由):
 default via 10.128.0.1 dev enp1s0 proto dhcp src 10.128.0.174 metric 100
 
-# Test external connectivity
+# 外部接続のテスト
 ping 8.8.8.8
 
-# Verify the web service is running
+# Web サービスが実行中であることを確認
 curl localhost:8080
 
-# Verify static IP assignment on VLAN interface
+# VLAN インターフェースの静的 IP 割り当てを確認
 ip addr show enp2s0
-# Expected: inet 192.168.100.10/24 (prod) or 192.168.100.20/24 (dev)
+# 想定される値: inet 192.168.100.10/24 (本番) または 192.168.100.20/24 (開発)
 
-# Test VLAN interface connectivity between VMs
-# From production VM (192.168.100.10) ping development VM:
+# VM 間の VLAN インターフェース接続をテスト
+# 本番 VM (192.168.100.10) から開発 VM へ ping:
 ping 192.168.100.20
 
-# Verify VLAN tagging (if tcpdump is available)
-# This will show VLAN-tagged traffic on the secondary interface
+# VLAN タグ付けの確認 (tcpdump が利用可能な場合)
+# セカンダリーインターフェース上の VLAN タグ付きトラフィックを表示
 sudo tcpdump -i enp2s0 -nn vlan 100</code></pre>
 </div>
 </div>
@@ -808,13 +887,13 @@ sudo tcpdump -i enp2s0 -nn vlan 100</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># From production VM (192.168.100.10), test connectivity to development VM
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># 本番 VM (192.168.100.10) から開発 VM への接続をテスト
 ping 192.168.100.20
 
-# Test web service connectivity between namespaces
+# namespace 間の Web サービス接続をテスト
 curl 192.168.100.20:8080
 
-# From development VM (192.168.100.20), test connectivity to production VM
+# 開発 VM (192.168.100.20) から本番 VM への接続をテスト
 ping 192.168.100.10
 curl 192.168.100.10:8080</code></pre>
 </div>
@@ -920,20 +999,20 @@ curl 192.168.100.10:8080</code></pre>
 <h3 id="_確認コマンド"><a class="anchor" href="#_確認コマンド"></a>確認コマンド</h3>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Check ClusterUserDefinedNetwork status
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># ClusterUserDefinedNetwork のステータスを確認
 oc get clusteruserdefinednetwork
 
-# Verify bridge mapping on worker nodes
+# Worker Node 上の bridge mapping を確認
 oc get nncp cudn-localnet-vlan-bridge-mapping -o yaml
 
-# Check VM network status in both namespaces
+# 両方の namespace の VM ネットワークステータスを確認
 oc get vmi -n vm-guests-vlan-prod -o yaml | grep -A 10 networks
 oc get vmi -n vm-guests-vlan-dev -o yaml | grep -A 10 networks
 
-# View OVN-Kubernetes logs for troubleshooting
+# トラブルシューティング用に OVN-Kubernetes のログを確認
 oc logs -n openshift-ovn-kubernetes -l app=ovnkube-node
 
-# Check CUDN network attachment across namespaces
+# namespace 間の CUDN ネットワークアタッチメントを確認
 oc get network-attachment-definitions -A | grep cudn-localnet-vlan-100</code></pre>
 </div>
 </div>
@@ -1001,7 +1080,7 @@ oc get network-attachment-definitions -A | grep cudn-localnet-vlan-100</code></p
 <p>複数の namespace にまたがる VLAN タグ付きの <code>ClusterUserDefinedNetwork</code> を作成する方法</p>
 </li>
 <li>
-<p>CUDN VLAN セカンダリネットワーク上で、cloud-init を使用して静的 IP アドレスを持つ VM をデプロイする方法</p>
+<p>CUDN VLAN セカンダリーネットワーク上で、cloud-init を使用して静的 IP アドレスを持つ VM をデプロイする方法</p>
 </li>
 <li>
 <p>同じ CUDN VLAN ネットワークを共有する VM 間で、namespace 間の接続性を確認する方法</p>
@@ -1029,8 +1108,8 @@ oc get network-attachment-definitions -A | grep cudn-localnet-vlan-100</code></p
 </div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a></span>
-  <span class="next"><a href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a></span>
+  <span class="prev"><a href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a></span>
+  <span class="next"><a href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a></span>
 </nav>
 </article>
   </div>
@@ -1042,5 +1121,8 @@ oc get network-attachment-definitions -A | grep cudn-localnet-vlan-100</code></p
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

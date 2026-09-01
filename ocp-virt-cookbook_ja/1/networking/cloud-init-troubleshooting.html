@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -330,7 +409,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_クイックヘルスチェック"><a class="anchor" href="#_クイックヘルスチェック"></a>クイックヘルスチェック</h2>
+<h2 id="quick-health-checks"><a class="anchor" href="#quick-health-checks"></a>クイックヘルスチェック</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_vm_ステータスの確認"><a class="anchor" href="#_vm_ステータスの確認"></a>VM ステータスの確認</h3>
@@ -357,13 +436,13 @@ oc get vmi &lt;vm-name&gt; -n &lt;namespace&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>空の場合、Guest Agent は実行されていません (<a href="#issue-1-guest-agent-not-running">Guest Agent の問題</a> を参照)。</p>
+<p>空の場合、Guest Agent は実行されていません (<a href="../getting-started/installing-qemu-guest-agent.html" class="xref page">QEMU guest agent のインストール</a> を参照)。</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cloud_init_のデバッグ"><a class="anchor" href="#_cloud_init_のデバッグ"></a>cloud-init のデバッグ</h2>
+<h2 id="debugging-cloud-init"><a class="anchor" href="#debugging-cloud-init"></a>cloud-init のデバッグ</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_vm_コンソールへのアクセス"><a class="anchor" href="#_vm_コンソールへのアクセス"></a>VM コンソールへのアクセス</h3>
@@ -383,7 +462,7 @@ oc get vmi &lt;vm-name&gt; -n &lt;namespace&gt;</code></pre>
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># cloud-init の完了ステータスを確認
 cloud-init status
 
-# 成功時の期待される出力:
+# 成功時の想定される出力:
 # status: done
 
 # 詳細なステータスを確認
@@ -459,7 +538,7 @@ curl http://&lt;vm-ip&gt;</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_シナリオ別の一般的な問題"><a class="anchor" href="#_シナリオ別の一般的な問題"></a>シナリオ別の一般的な問題</h2>
+<h2 id="common-issues-by-scenario"><a class="anchor" href="#common-issues-by-scenario"></a>シナリオ別の一般的な問題</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_シナリオ_1_dhcp_設定"><a class="anchor" href="#_シナリオ_1_dhcp_設定"></a>シナリオ 1: DHCP 設定</h3>
@@ -708,7 +787,7 @@ ip addr show enp1s0
 # 正しい IP が表示される
 
 ping 192.168.1.1
-# Network unreachable</code></pre>
+# ネットワークに到達不能</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -766,10 +845,10 @@ ping -c 1 192.168.1.1</code></pre>
 <div class="sect2">
 <h3 id="_シナリオ_3_複数のネットワークインターフェース"><a class="anchor" href="#_シナリオ_3_複数のネットワークインターフェース"></a>シナリオ 3: 複数のネットワークインターフェース</h3>
 <div class="sect3">
-<h4 id="_問題_セカンダリインターフェースが設定されない"><a class="anchor" href="#_問題_セカンダリインターフェースが設定されない"></a>問題: セカンダリインターフェースが設定されない</h4>
+<h4 id="_問題_セカンダリーインターフェースが設定されない"><a class="anchor" href="#_問題_セカンダリーインターフェースが設定されない"></a>問題: セカンダリーインターフェースが設定されない</h4>
 <div class="paragraph">
 <p><strong>事象</strong>:
-プライマリインターフェースのみ IP を取得し、セカンダリインターフェースがダウンしているか未設定の状態。</p>
+プライマリインターフェースのみ IP を取得し、セカンダリーインターフェースがダウンしているか未設定の状態。</p>
 </div>
 <div class="paragraph">
 <p><strong>調査</strong>:</p>
@@ -789,13 +868,13 @@ nmcli connection show</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>networkData にセカンダリインターフェースが定義されていない</p>
+<p>networkData にセカンダリーインターフェースが定義されていない</p>
 </li>
 <li>
-<p>セカンダリインターフェースの名前が間違っている</p>
+<p>セカンダリーインターフェースの名前が間違っている</p>
 </li>
 <li>
-<p>セカンダリネットワーク接続が機能していない</p>
+<p>セカンダリーネットワーク接続が機能していない</p>
 </li>
 </ul>
 </div>
@@ -821,7 +900,7 @@ nmcli connection show</code></pre>
 </div>
 </li>
 <li>
-<p>networkData 内のインターフェース両方を確認:</p>
+<p>networkData 内の両方のインターフェースを確認:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">networkData: |
@@ -829,7 +908,7 @@ nmcli connection show</code></pre>
   ethernets:
     enp1s0:
       dhcp4: true
-    enp2s0:  # セカンダリインターフェース
+    enp2s0:  # セカンダリーインターフェース
       dhcp4: false
       addresses:
         - 192.168.100.10/24</code></pre>
@@ -879,7 +958,7 @@ ip route show
 <p>DHCP がプライマリインターフェースにデフォルトルートを追加している</p>
 </li>
 <li>
-<p>静的設定がセカンダリインターフェースにデフォルトルートを追加している</p>
+<p>静的設定がセカンダリーインターフェースにデフォルトルートを追加している</p>
 </li>
 </ul>
 </div>
@@ -889,7 +968,7 @@ ip route show
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>networkData でセカンダリインターフェースからデフォルトルートを削除:</p>
+<p>networkData でセカンダリーインターフェースからデフォルトルートを削除:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">enp2s0:
@@ -1144,7 +1223,7 @@ ping 8.8.8.8
 # 成功
 
 ping google.com
-# Unknown host</code></pre>
+# ホストが不明</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1214,7 +1293,7 @@ nslookup google.com</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_調査コマンド"><a class="anchor" href="#_調査コマンド"></a>調査コマンド</h2>
+<h2 id="diagnostic-commands"><a class="anchor" href="#diagnostic-commands"></a>調査コマンド</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_ネットワークステータスの全確認"><a class="anchor" href="#_ネットワークステータスの全確認"></a>ネットワークステータスの全確認</h3>
@@ -1230,10 +1309,10 @@ ip route show
 echo "=== DNS ==="
 cat /etc/resolv.conf
 
-echo "=== cloud-init Status ==="
+echo "=== Cloud-init Status ==="
 cloud-init status --long
 
-echo "=== cloud-init Network Config ==="
+echo "=== Cloud-init Network Config ==="
 sudo cat /var/lib/cloud/instance/network-config.txt
 
 echo "=== NetworkManager Connections ==="
@@ -1290,7 +1369,7 @@ cloud-init status --long</code></pre>
 <h2 id="_インターフェース命名リファレンス"><a class="anchor" href="#_インターフェース命名リファレンス"></a>インターフェース命名リファレンス</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VM 内の最新 Linux ディストリビューションは、PCI スロット位置に基づいた予測可能なインターフェース名を使用します。</p>
+<p>VM 内の最新の Linux ディストリビューションは、PCI スロット位置に基づいた予測可能なインターフェース名を使用します。</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -1314,7 +1393,7 @@ cloud-init status --long</code></pre>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">2 番目 (Multus/NAD)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>enp2s0</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">セカンダリネットワーク</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">セカンダリーネットワーク</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">3 番目 (Multus/NAD)</p></td>
@@ -1371,7 +1450,7 @@ cloud-init status --long</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_参考資料"><a class="anchor" href="#_参考資料"></a>参考資料</h2>
+<h2 id="_追加リソース"><a class="anchor" href="#_追加リソース"></a>追加リソース</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -1446,7 +1525,7 @@ status: done</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>これは、適切なインターフェース命名を行うことで DHCP シナリオが正しく機能することを確認しています。</p>
+<p>これにより、適切なインターフェース命名を行えば DHCP シナリオが正しく機能することが確認できます。</p>
 </div>
 </div>
 </div>
@@ -1464,5 +1543,8 @@ status: done</code></pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

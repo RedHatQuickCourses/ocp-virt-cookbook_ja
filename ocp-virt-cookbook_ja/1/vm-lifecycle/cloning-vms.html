@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -313,7 +392,7 @@
 <h2 id="_vm_クローンとは"><a class="anchor" href="#_vm_クローンとは"></a>VM クローンとは</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>VM クローンは、既存の VM を複製して新しい仮想マシンを作成するものです。OpenShift Virtualization では、クローン作成のために主に 2 つの手法が用意されています。</p>
+<p>VM クローンは、既存の VM を複製して新しい仮想マシンを作成するものです。OpenShift Virtualization では、クローン作成のために主に 2 つの方法が用意されています。</p>
 </div>
 <div class="ulist">
 <ul>
@@ -344,6 +423,33 @@
 </li>
 <li>
 <p>デプロイから本番稼働可能な状態までの時間を短縮</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ビジネスユースケース"><a class="anchor" href="#_ビジネスユースケース"></a>ビジネスユースケース</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>クローン作成は、ゼロから構築するのではなく、すでに設定済みの VM が必要な場合に最も効果的です。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>環境プロビジョニング</strong>: QA テスト用に、完全に設定された本番環境同等の VM をクローンします。その結果、ゼロから構築された VM よりも迅速に作成でき、本番環境に近い状態が得られます。</p>
+</li>
+<li>
+<p><strong>スケールアウトテスト</strong>: Web サーバー VM を 10 回クローンして、複数の同一インスタンス全体で負荷をシミュレートします。</p>
+</li>
+<li>
+<p><strong>クロス namespace デプロイ</strong>: 検証済みの VM をステージング namespace から本番 namespace に昇格させ、RBAC でソースへのアクセスを制御します。<a href="#_namespace_をまたぐクローンの作成">namespace をまたぐクローンの作成</a> を参照してください。</p>
+</li>
+<li>
+<p><strong>ディザスターリカバリーテスト</strong>: 本番 VM を DR namespace にクローンし、クローンに対してフェイルオーバー手順を実行してから削除することで、実行中の本番 VM に影響を与えません。</p>
+</li>
+<li>
+<p><strong>開発者サンドボックス</strong>: 必要なツールと設定がすでにインストールされているリファレンス VM のクローンを各開発者に提供します。</p>
 </li>
 </ul>
 </div>
@@ -423,7 +529,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_クローン手法の理解"><a class="anchor" href="#_クローン手法の理解"></a>クローン手法の理解</h2>
+<h2 id="_クローン方法の理解"><a class="anchor" href="#_クローン方法の理解"></a>クローン方法の理解</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>OpenShift Virtualization には、VM をクローンする 2 つのアプローチがあります。</p>
@@ -467,9 +573,95 @@
 <p>クローンプロセス中のカスタマイズが可能</p>
 </li>
 <li>
-<p>namespace をまたぐクローン作成に有用</p>
+<p>namespace をまたぐクローンの作成に有用</p>
 </li>
 </ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_クローン作成パスの比較"><a class="anchor" href="#_クローン作成パスの比較"></a>クローン作成パスの比較</h3>
+<div class="paragraph">
+<p>上記の 2 つの方法は、<a href="custom-golden-images.html" class="xref page">カスタムゴールデンイメージ</a> で説明されているゴールデンイメージパターンとともに、異なるリソースを通じて同じ結果を実現します。</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Webコンソールのクローン — 最もシンプル、同一 namespace
+│
+└─ ソース VM
+   │
+   └─ コンソールでのクローン操作
+      │
+      └─ ソースディスクの完全なコピーを持つ新しいVM
+
+CLI DataVolume クローン — スクリプト化可能、namespace をまたいで動作
+│
+└─ ソース PVC
+   │
+   └─ DataVolume  — spec.source.pvc
+      │
+      └─ 新たな PVC
+         │
+         └─ そのPVCを参照する新しいVM
+
+ゴールデンイメージからのクローン作成 — 用意された1つのイメージから多数のVMを作成
+│
+└─ DataSource
+   │
+   └─ DataVolume  — spec.sourceRef
+      │
+      └─ 新たな VM</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これらを選択する際の基準として以下を使用してください。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">方法</th>
+<th class="tableblock halign-left valign-top">最適な用途</th>
+<th class="tableblock halign-left valign-top">namespace</th>
+<th class="tableblock halign-left valign-top">RBAC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Web コンソール</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">対話形式で実行する VM の単発コピー</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">同一 namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">不要</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CLI DataVolume</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">自動化、スクリプトによるクローン、または繰り返しのクローン作成</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">同一または異なる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クロス namespace で必要</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ゴールデンイメージ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 つの標準化および一般化されたイメージからの多数の VM 作成</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">同一または異なる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クロス namespace で必要</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+3 つのパスはすべて、ディスクの完全で独立したコピーを生成します。クローンはスナップショットではなく、ソースへの参照でもないため、それぞれがソースボリュームと同じ容量のストレージを消費します。クローン数にソースボリュームサイズを掛けた値として容量を計画してください。<a href="#storage-capacity-requirements">ストレージ容量の要件</a> を参照してください。
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -723,10 +915,10 @@ oc get vmi -n vm-cloning-demo</code></pre>
 <h2 id="_cli_を使用した_vm_のクローン作成"><a class="anchor" href="#_cli_を使用した_vm_のクローン作成"></a>CLI を使用した VM のクローン作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>自動化やカスタマイズ、あるいは namespace をまたぐクローン作成には、CLI を使用します。</p>
+<p>自動化やカスタマイズ、あるいは namespace をまたぐクローンの作成には、CLI を使用します。</p>
 </div>
 <div class="sect2">
-<h3 id="_手法_1pvc_をクローンしその後に_vm_を作成_推奨"><a class="anchor" href="#_手法_1pvc_をクローンしその後に_vm_を作成_推奨"></a>手法 1：PVC をクローンし、その後に VM を作成 (推奨)</h3>
+<h3 id="_方法_1pvc_をクローンしその後に_vm_を作成_推奨"><a class="anchor" href="#_方法_1pvc_をクローンしその後に_vm_を作成_推奨"></a>方法 1：PVC をクローンし、その後に VM を作成 (推奨)</h3>
 <div class="paragraph">
 <p>これは CLI での推奨されるアプローチです。まず、ソース VM の PVC を特定します。</p>
 </div>
@@ -888,7 +1080,7 @@ spec:
 </div>
 </div>
 <div class="sect2">
-<h3 id="_手法_2vm_全体をクローンする_代替アプローチ"><a class="anchor" href="#_手法_2vm_全体をクローンする_代替アプローチ"></a>手法 2：VM 全体をクローンする (代替アプローチ)</h3>
+<h3 id="_方法_2vm_全体をクローンする_代替アプローチ"><a class="anchor" href="#_方法_2vm_全体をクローンする_代替アプローチ"></a>方法 2：VM 全体をクローンする (代替アプローチ)</h3>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -896,7 +1088,7 @@ spec:
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-この手法は手動での編集が必要であり、推奨されません。より信頼性が高くトラブルシューティングが容易な「手法 1」を使用してください。
+この方法は手動での編集が必要であり、推奨されません。より信頼性が高くトラブルシューティングが容易な「方法 1」を使用してください。
 </td>
 </tr>
 </table>
@@ -1035,7 +1227,7 @@ spec:
 <div class="sect2">
 <h3 id="_新しいホスト名とパスワードでのクローン作成"><a class="anchor" href="#_新しいホスト名とパスワードでのクローン作成"></a>新しいホスト名とパスワードでのクローン作成</h3>
 <div class="paragraph">
-<p>DataVolume クローンを作成します (手法 2 と同様)。</p>
+<p>DataVolume クローンを作成します (方法 2 と同様)。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1186,7 +1378,7 @@ curl localhost
 </div>
 </div>
 <div class="sect1">
-<h2 id="_namespace_をまたぐクローン作成"><a class="anchor" href="#_namespace_をまたぐクローン作成"></a>namespace をまたぐクローン作成</h2>
+<h2 id="_namespace_をまたぐクローンの作成"><a class="anchor" href="#_namespace_をまたぐクローンの作成"></a>namespace をまたぐクローンの作成</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>環境分離 (開発、テスト、本番) のために、別の namespace へ VM をクローンします。</p>
@@ -1247,7 +1439,7 @@ subjects:
 </div>
 </div>
 <div class="sect2">
-<h3 id="_namespace_をまたぐクローン作成_2"><a class="anchor" href="#_namespace_をまたぐクローン作成_2"></a>namespace をまたぐクローン作成</h3>
+<h3 id="_namespace_をまたぐクローン作成"><a class="anchor" href="#_namespace_をまたぐクローン作成"></a>namespace をまたぐクローン作成</h3>
 <div class="paragraph">
 <p>demo namespace からクローンする DataVolume を production namespace に作成します。</p>
 </div>
@@ -1429,7 +1621,7 @@ virtctl start webserver-production -n vm-cloning-production</code></pre>
 </ul>
 </div>
 <div class="paragraph">
-<p>どちらの手法が使用されているか確認します。</p>
+<p>どちらの方法が使用されているか確認します。</p>
 </div>
 <div class="listingblock execute">
 <div class="content">
@@ -1448,7 +1640,7 @@ cdi.kubevirt.io/cloneType: copy      # Host-assisted cloning</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ストレージ容量の要件"><a class="anchor" href="#_ストレージ容量の要件"></a>ストレージ容量の要件</h3>
+<h3 id="storage-capacity-requirements"><a class="anchor" href="#storage-capacity-requirements"></a>ストレージ容量の要件</h3>
 <div class="paragraph">
 <p>各クローンには完全なストレージ割り当てが必要です。</p>
 </div>
@@ -1749,21 +1941,21 @@ oc describe vmi &lt;vm-name&gt; -n &lt;namespace&gt;</code></pre>
 </div>
 <div class="listingblock execute">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># demo namespace内のすべてのVMを削除
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># demo namespace 内のすべての VM を削除
 oc delete vm --all -n vm-cloning-demo
 
-# demo namespace内のすべてのDataVolumeを削除
+# demo namespace 内のすべての DataVolume を削除
 oc delete dv --all -n vm-cloning-demo
 
-# 本番VMを削除
+# 本番 VM を削除
 oc delete vm webserver-production -n vm-cloning-production
 oc delete dv --all -n vm-cloning-production
 
-# RBACリソースを削除
+# RBAC リソースを削除
 oc delete role datavolume-cloner -n vm-cloning-demo
 oc delete rolebinding allow-clone-from-demo -n vm-cloning-demo
 
-# namespaceを削除
+# namespace を削除
 oc delete namespace vm-cloning-demo
 oc delete namespace vm-cloning-production</code></pre>
 </div>
@@ -1817,7 +2009,7 @@ oc delete namespace vm-cloning-production</code></pre>
 <p>認証情報とシステム ID に関するセキュリティプラクティス</p>
 </li>
 <li>
-<p>よくある問題とトラブルシューティング手法</p>
+<p>よくある問題とトラブルシューティング方法</p>
 </li>
 <li>
 <p>VM クローンの本番ユースケース</p>
@@ -1855,5 +2047,8 @@ oc delete namespace vm-cloning-production</code></pre>
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

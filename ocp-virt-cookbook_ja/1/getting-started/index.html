@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>スタートガイド :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="../index.html">
-    <link rel="next" href="prerequisites.html">
+    <link rel="next" href="vm-quick-start.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -55,10 +55,19 @@
     <a class="nav-link" href="index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../performance/realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../performance/vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -305,6 +384,89 @@
 <div class="sectionbody">
 <div class="paragraph">
 <p>このモジュールでは、OpenShift Virtualization を使い始めるために必要な基本ツールと基本的な設定について説明します。OpenShift Virtualization が初めての方でも、知識を再確認したい方でも、これらのガイドを活用して迅速に環境を構築できます。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_学習パス"><a class="anchor" href="#_学習パス"></a>学習パス</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>以下の図は、推奨されるチュートリアルの順序を示しています。数分で VM を稼働させたい場合はクイックスタートから開始し、全体を完全に理解したい場合は完全なパスに従ってください。</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>  FAST TRACK
+  ┌─────────────────────────┐
+  │  クイックスタート — 5 分で作成する最初の VM    │
+  └─────────────────────────┘
+
+  FULL LEARNING PATH
+
+  ┌─────────┐       ┌─────────────┐      ┌───────────┐
+  │ 前提条件        ├───►│ Operator のインストール ├───►│ デフォルトストレージ │
+  └─────────┘       └─────────────┘      └───────────┘
+                                                              │
+                         ┌─────────────────────┤
+                         ▼                                   ▼
+                  ┌───────┐                ┌─────────┐
+                  │  VM 作成    │                │ VM 作成       │
+                  │ (Console)  │                │ (CLI &amp; YAML)  │
+                  └───┬───┘                └────┬────┘
+                         │                              │
+                         └────────┬─────────┘
+                                        ▼
+                              ┌───────────┐
+                              │  VM ライフサイクル  │
+                              └─────┬─────┘
+                                        ▼
+                              ┌───────────┐
+                              │  virtctl の基礎   │
+                              └─────┬─────┘
+                                        ▼
+                              ┌───────────┐
+                              │  Cloud-init の基礎│
+                              └───────────┘</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+すでに Operator がインストールされている場合は、直接 <a href="default-storage-class.html" class="xref page">ストレージの設定</a> に進んでください。
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_対象読者"><a class="anchor" href="#_対象読者"></a>対象読者</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>担当する役割によって、このモジュールで進むべきパスが異なります。</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">VMware または Hyper-V から移行する VM 管理者</dt>
+<dd>
+<p>まず <a href="prerequisites.html" class="xref page">前提条件とセットアップ</a> で環境を把握します。次に <a href="install-openshift-virtualization.html" class="xref page">OpenShift Virtualization Operator のインストールと設定</a> と <a href="create-vm-web-console.html" class="xref page">Web コンソールを使用したテンプレートからの VM の作成</a> に従って、Web コンソールから最初の VM を作成します。続いて <a href="vm-lifecycle-states.html" class="xref page">VM ライフサイクルの状態と基本操作の理解</a> で OpenShift における VM の管理方法を学びます。</p>
+</dd>
+<dt class="hdlist1">テスト VM を必要とする開発者</dt>
+<dd>
+<p><a href="vm-quick-start.html" class="xref page">クイックスタート: 5 分で作成する最初の VM</a> から開始して、数分で VM を稼働させます。その後、<a href="virtctl-basics.html" class="xref page">virtctl を使用した VM 管理</a> を読んでコマンドラインから VM を管理する方法を学びます。</p>
+</dd>
+<dt class="hdlist1">プラットフォームエンジニア</dt>
+<dd>
+<p>完全な学習パスに従って、<a href="prerequisites.html" class="xref page">前提条件とセットアップ</a>、<a href="install-openshift-virtualization.html" class="xref page">OpenShift Virtualization Operator のインストールと設定</a>、<a href="default-storage-class.html" class="xref page">デフォルト Storage Class の設定</a>、および両方の VM 作成チュートリアルを順番に進めます。このモジュールを完了した後は、<a href="../networking/index.html" class="xref page">Networking</a> モジュールおよび <a href="../storage/index.html" class="xref page">Storage</a> モジュールに進んでください。</p>
+</dd>
+<dt class="hdlist1">評価担当者または意思決定者</dt>
+<dd>
+<p><a href="install-openshift-virtualization.html" class="xref page">OpenShift Virtualization Operator のインストールと設定</a> を読んで、Operator が提供する機能を理解します。次に <a href="create-vm-web-console.html" class="xref page">Web コンソールを使用したテンプレートからの VM の作成</a> に従って、コンソールで VM が稼働している様子を確認します。<a href="vm-lifecycle-states.html" class="xref page">VM ライフサイクルの状態と基本操作の理解</a> のページでは、日常的な管理操作について説明しています。</p>
+</dd>
+</dl>
 </div>
 </div>
 </div>
@@ -373,9 +535,9 @@
 <dd>
 <p>仮想マシンを管理するための重要な <code>virtctl</code> コマンドの学習</p>
 </dd>
-<dt class="hdlist1"><a href="default-storage-class.html" class="xref page">デフォルトストレージクラスの設定</a></dt>
+<dt class="hdlist1"><a href="default-storage-class.html" class="xref page">デフォルト Storage Class の設定</a></dt>
 <dd>
-<p>仮想マシンのデプロイを簡素化するためのデフォルトストレージクラスの設定</p>
+<p>仮想マシンのデプロイを簡素化するためのデフォルト Storage Class の設定</p>
 </dd>
 <dt class="hdlist1"><a href="create-vm-web-console.html" class="xref page">Web コンソールを使用したテンプレートからの VM の作成</a></dt>
 <dd>
@@ -416,7 +578,7 @@
 </div>
 <nav class="pagination">
   <span class="prev"><a href="../index.html">はじめに</a></span>
-  <span class="next"><a href="prerequisites.html">前提条件</a></span>
+  <span class="next"><a href="vm-quick-start.html">クイックスタート</a></span>
 </nav>
 </article>
   </div>
@@ -428,5 +590,8 @@
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>

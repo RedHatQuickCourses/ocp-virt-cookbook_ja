@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>リアルタイム仮想マシン :: OpenShift Virtualization cookbook</title>
     <link rel="prev" href="numa-hugepages.html">
-    <link rel="next" href="../vm-lifecycle/index.html">
+    <link rel="next" href="vm-monitoring-metrics.html">
     <meta name="generator" content="Antora 3.2.0-alpha.12">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <link rel="stylesheet" href="../../../_/css/vendor/tabs.css">
@@ -55,10 +55,19 @@
     <a class="nav-link" href="../getting-started/index.html">スタートガイド</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-quick-start.html">クイックスタート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/prerequisites.html">前提条件</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/architecture-overview.html">アーキテクチャの概要</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/install-openshift-virtualization.html">OpenShift Virtualization のインストール</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/installing-qemu-guest-agent.html">QEMU guest agent のインストール</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/default-storage-class.html">ストレージ設定</a>
@@ -67,13 +76,16 @@
     <a class="nav-link" href="../getting-started/create-vm-web-console.html">Web コンソールを使用した VM の作成</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクル状態</a>
+    <a class="nav-link" href="../getting-started/create-vm-cli-yaml.html">CLI からの VM の作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../getting-started/vm-lifecycle-states.html">VM ライフサイクルの状態</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../getting-started/virtctl-basics.html">Virtctl の基礎</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">OpenShift Virtualization VM のための cloud-init 基礎</a>
+    <a class="nav-link" href="../getting-started/cloud-init-fundamentals.html">cloud-init の基礎</a>
   </li>
 </ul>
   </li>
@@ -92,6 +104,9 @@
     <a class="nav-link" href="../storage/lvm-troubleshooting.html">LVM のトラブルシューティング</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/odf-ceph-storage.html">ODF/Ceph Storage</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/hostpath-provisioner.html">HostPath Provisioner</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -99,6 +114,15 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../storage/multi-disk-configuration.html">マルチディスク VM</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/expanding-vm-disk-size.html">VM ディスクサイズの拡張</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/cdi-operations.html">CDI Operations</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../storage/disk-io-tuning.html">ディスク I/O チューニング</a>
   </li>
 </ul>
   </li>
@@ -120,22 +144,31 @@
     <a class="nav-link" href="../networking/udn-primary-networks.html">UDN プライマリネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-secondary.html">CUDN を使用した Localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/localnet-vlan.html">NAD を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/cudn-localnet-vlan.html">CUDN を使用した VLAN 対応の localnet セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/layer2-secondary.html">Layer 2 セカンダリーネットワーク</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/linux-bridges.html">Linux bridge</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリネットワーク</a>
+    <a class="nav-link" href="../networking/sriov-secondary.html">SR-IOV セカンダリーネットワーク</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/network-policies-vms.html">VM のネットワークポリシー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/metallb-loadbalancer.html">VM 向け MetalLB ロードバランサー</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../networking/dual-stack-vms.html">デュアルスタック IPv4/IPv6 VM</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../networking/vm-ingress-routes.html">VM Ingress および Routes</a>
@@ -166,7 +199,13 @@
     <a class="nav-link" href="../vm-configuration/remote-access-windows-vms.html">RDP を使用した Windows VM へのリモートアクセス</a>
   </li>
   <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/ssh-access-windows-vms.html">SSH 経由での Windows VM へのリモートアクセス</a>
+  </li>
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/windows-vm-virtio-drivers.html">VirtIO ドライバーを使用した Windows VM のデプロイ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/legacy-windows-versions.html">レガシー Windows バージョン</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/infrastructure-node-placement.html">Infrastructure 配置戦略</a>
@@ -179,6 +218,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-configuration/vm-templates.html">仮想マシンテンプレート</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-configuration/instancetype-preference.html">Instancetype と Preference</a>
   </li>
 </ul>
   </li>
@@ -202,6 +244,9 @@
   <li class="nav-item is-current-page" data-depth="2">
     <a class="nav-link" href="realtime-vms.html">リアルタイム VM</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -217,6 +262,9 @@
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/custom-golden-images.html">カスタムゴールデンイメージ</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../vm-lifecycle/windows-golden-images.html">Windows ゴールデンイメージ</a>
   </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../vm-lifecycle/golden-images-troubleshooting.html">ゴールデンイメージトラブルシューティング</a>
@@ -249,6 +297,37 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../api/api-component-overview.html">API コンポーネントの概要</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../agentic-vm-management/index.html">AI エージェントによる VM 管理</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/getting-started.html">rh-virt の開始</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/natural-language-vm-create.html">自然言語による VM 作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-lifecycle.html">AI VM ライフサイクル操作</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/vm-clone.html">VM のクローン作成</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-snapshot-management.html">VM スナップショット管理</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-skill-chaining.html">Day-2 スキルチェイニング</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../agentic-vm-management/ai-vm-rebalance.html">VM のリバランスとライブマイグレーション</a>
   </li>
 </ul>
   </li>
@@ -828,7 +907,7 @@ PerformanceProfile を適用すると、RT カーネルのインストールと�
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-この例の cloud-init パスワードはデモンストレーション専用です。本番環境では、SSH キー認証または強力で固有のパスワードを使用してください。
+この例の cloud-init パスワードはデモンストレーション専用です。本番環境では、SSH 鍵認証または強力で固有のパスワードを使用してください。
 </td>
 </tr>
 </table>
@@ -1141,7 +1220,7 @@ Socket(s):               1</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># /dev/cpu_dma_latency set to 0us
+<pre># /dev/cpu_dma_latency が 0us に設定済み
 policy: fifo: loadavg: 0.92 0.42 0.18 1/148 1599
 
 T: 0 ( 1597) P:80 I:200 C: 156868 Min:      3 Act:    5 Avg:  191 Max:    9501
@@ -1177,6 +1256,170 @@ RT Worker Node と最適化されたゲストイメージを備えた完全に�
 </div>
 <div class="paragraph">
 <p><code>Ctrl+]</code> を押してコンソールから切断します。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ステップ_9_ゲスト_rt_カーネルによるフルスタックのリアルタイム化"><a class="anchor" href="#_ステップ_9_ゲスト_rt_カーネルによるフルスタックのリアルタイム化"></a>ステップ 9: ゲスト RT カーネルによるフルスタックのリアルタイム化</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ステップ 8 の cyclictest の結果では、最大レイテンシーが数百から数千マイクロ秒を示しています。これは、ゲスト内の標準 Fedora カーネルが <code>PREEMPT_DYNAMIC</code> スケジューリングを使用しており、カーネル内コードパスの制限付きプリエンプションを保証できないためです。ホスト側の <code>SCHED_FIFO</code> 優先度と CPU 分離により <strong>外部</strong> ジッター (他の Pod、IRQ、CPU 時間を奪うカーネルスレッド) は排除されますが、タイマー割り込みが vCPU に到達した後も、<strong>ゲストカーネル</strong> がスリープ状態の cyclictest スレッドを起動する必要があります。標準カーネルでは、プリエンプト不可能なコードセクションの処理を完了する間に、その起動が遅れる可能性があります。</p>
+</div>
+<div class="paragraph">
+<p>ゲスト内に <code>PREEMPT_RT</code> カーネルをインストールすることで、リアルタイムスタックが完成します。ゲスト RT カーネルを使用すると、実質的にすべてのカーネルコードパスがプリエンプト可能になり、cyclictest の最大レイテンシーはミリ秒単位から数十マイクロ秒前半へと低下します。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">構成</th>
+<th class="tableblock halign-left valign-top">ゲストカーネル</th>
+<th class="tableblock halign-left valign-top">予想される cyclictest 最大レイテンシー</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ホスト RT のみ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">標準 (<code>PREEMPT_DYNAMIC</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">数百から数千マイクロ秒</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">フルスタック RT</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">リアルタイム (<code>PREEMPT_RT</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">数十マイクロ秒前半</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="_ゲスト内への_rt_カーネルのインストール"><a class="anchor" href="#_ゲスト内への_rt_カーネルのインストール"></a>ゲスト内への RT カーネルのインストール</h3>
+<div class="paragraph">
+<p>実行中の VM に接続します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console vm-realtime -n realtime-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>fedora</code> としてパスワード <code>redhat</code> でログインします。</p>
+</div>
+<div class="paragraph">
+<p><code>PREEMPT_RT</code> カーネルパッケージを提供する Fedora Kernel Vanilla COPR リポジトリを有効にします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo dnf -y copr enable @kernel-vanilla/stable</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>リアルタイムカーネルをインストールします。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo dnf -y install kernel-rt-core kernel-rt-modules</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>RT カーネルをデフォルトのブートエントリとして設定します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo grubby --set-default /boot/vmlinuz-*rt*</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> を押してコンソールから切断します。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vm_の再起動"><a class="anchor" href="#_vm_の再起動"></a>VM の再起動</h3>
+<div class="paragraph">
+<p>VM を再起動して RT カーネルで起動します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl restart vm-realtime -n realtime-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VM が Running 状態に戻るのを待ちます。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get vm vm-realtime -n realtime-demo -w</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ゲスト_rt_カーネルの確認"><a class="anchor" href="#_ゲスト_rt_カーネルの確認"></a>ゲスト RT カーネルの確認</h3>
+<div class="paragraph">
+<p>VM コンソールに接続します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">virtctl console vm-realtime -n realtime-demo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ログインしてカーネルバージョンを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">uname -r</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力のバージョン文字列に <code>rt</code> が含まれている必要があります (例:)。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>6.15.2-0.rc0.20250604gite53b1bae1f73.502.vanilla.fc42.x86_64+rt</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>PREEMPT_RT</code> がアクティブであることを確認します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">uname -v</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>出力に <code>PREEMPT_RT</code> が含まれており、完全なプリエンプティブルカーネルモードであることが確認できます。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_rt_カーネルでの_cyclictest_の再実行"><a class="anchor" href="#_rt_カーネルでの_cyclictest_の再実行"></a>RT カーネルでの cyclictest の再実行</h3>
+<div class="paragraph">
+<p>VM は永続ストレージを使用しているため、ステップ 8 でインストールした <code>realtime-tests</code> が残っています。同じパラメーターで cyclictest を実行します。</p>
+</div>
+<div class="listingblock execute">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo cyclictest --mlockall --smp --priority=80 --interval=200 --distance=0 --duration=60</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ゲスト RT カーネルを使用すると、最大レイテンシーは数十マイクロ秒前半になることが期待されます。これは、ステップ 8 の標準カーネルで見られた数百から数千マイクロ秒と比べて大幅な改善です。</p>
+</div>
+<div class="paragraph">
+<p><code>Ctrl+]</code> を押してコンソールから切断します。</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+本番環境のリアルタイムワークロードでは、実行時にインストールするのではなく、RT カーネルが事前インストールされたカスタムディスクイメージをビルドしてください。これにより、起動後のカーネルインストールと再起動のサイクルが不要になり、すべての RT VM にわたって一貫性のあるバージョン固定されたデプロイが保証されます。
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -1357,7 +1600,7 @@ PerformanceProfile と MachineConfigPool を削除すると、ノードを標準
 </div>
 </div>
 <div class="sect1">
-<h2 id="_参照資料"><a class="anchor" href="#_参照資料"></a>参照資料</h2>
+<h2 id="_参照"><a class="anchor" href="#_参照"></a>参照</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -1388,7 +1631,7 @@ PerformanceProfile と MachineConfigPool を削除すると、ノードを標準
 </div>
 <nav class="pagination">
   <span class="prev"><a href="numa-hugepages.html">NUMA と Hugepages</a></span>
-  <span class="next"><a href="../vm-lifecycle/index.html">VM ライフサイクル管理</a></span>
+  <span class="next"><a href="vm-monitoring-metrics.html">VM のモニタリングとメトリクス</a></span>
 </nav>
 </article>
   </div>
@@ -1400,5 +1643,8 @@ PerformanceProfile と MachineConfigPool を削除すると、ノードを標準
 <script async src="../../../_/js/vendor/highlight.js"></script>
 <script defer src="../../../_/js/vendor/tabs.js"></script>
 <script defer src="../../../_/js/vendor/reading-time.js"></script>
+<script src="../../../_/js/vendor/lunr.js"></script>
+<script src="../../../_/js/search-ui.js" id="search-ui-script" data-site-root-path="../../.." data-snippet-length="100" data-stylesheet="../../../_/css/search.css"></script>
+<script async src="../../../search-index.js"></script>
   </body>
 </html>
