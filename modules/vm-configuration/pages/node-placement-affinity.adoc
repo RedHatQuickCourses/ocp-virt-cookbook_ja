@@ -752,7 +752,7 @@ Warning  FailedScheduling  0/3 nodes are available: 3 node(s) didn't match Pod's
 
 * NodeSelector または required Affinity rule に一致するノードが存在しない。
 * 一致するすべてのノードが満杯 (CPU/メモリ不足) 。
-* ノード上のテイントによりスケジュールが許可されていない。
+* ノード上の Taint によりスケジュールが許可されていない。
 
 **解決策**:
 

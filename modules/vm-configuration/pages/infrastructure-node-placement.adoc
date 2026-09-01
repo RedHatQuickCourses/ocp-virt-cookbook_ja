@@ -447,7 +447,7 @@ oc get pods -n openshift-cnv -o wide
 oc get pods -n openshift-cnv -l kubevirt.io=virt-api -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.nodeName}{"\n"}{end}'
 ----
 
-期待される動作:
+想定される動作:
 
 * Infrastructure Pod が終了され、一致するノード上で再作成されます。
 * virt-handler DaemonSet は、NodeSelector の変更に基づいて Pod を追加/削除します。

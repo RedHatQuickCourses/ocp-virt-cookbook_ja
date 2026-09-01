@@ -13,5 +13,8 @@
     "watch:adoc": "watch 'node scripts/generate-duration-manifest.js && npx antora --attribute build-date=\"$(date +%Y-%m-%d)\" antora-playbook.yml' ./modules",
     "serve": "npx http-server build/site -c-1",
     "generate-pdf": "sh scripts/generate-course-pdf.sh"
+  },
+  "dependencies": {
+    "@antora/lunr-extension": "^1.0.0-alpha.13"
   }
 }

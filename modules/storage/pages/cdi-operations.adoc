@@ -42,7 +42,7 @@ oc get pods -n openshift-cnv -l app.kubernetes.io/component=storage
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME                READY  STATUS  RESTARTS  AGE
 cdi-apiserver-7f9c7b5b4-xk2lm   1/1   Running  0     5d
@@ -146,7 +146,7 @@ oc get dv fedora-http -n cdi-operations-demo -w
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME     PHASE       PROGRESS  RESTARTS  AGE
 fedora-http ImportScheduled  N/A          5s
@@ -178,7 +178,7 @@ oc get pvc fedora-http -n cdi-operations-demo
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME     STATUS  VOLUME    CAPACITY  ACCESS MODES  STORAGECLASS  AGE
 fedora-http Bound  pvc-xxxx   10Gi    RWO      lvms-vg1    2m
@@ -302,7 +302,7 @@ virtctl image-upload dv fedora-upload \
 * **`--force-bind`** -- `WaitForFirstConsumer` StorageClass の PVC バインディングを即時に強制します
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 PVC cdi-operations-demo/fedora-upload created
 Uploading data to https://cdi-uploadproxy-openshift-cnv.apps...
@@ -361,7 +361,7 @@ oc get dv fedora-clone -n cdi-operations-demo -w
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME      PHASE       PROGRESS  RESTARTS  AGE
 fedora-clone  CloneScheduled   N/A          5s
@@ -462,7 +462,7 @@ oc get dataimportcron -n cdi-operations-demo
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME        LASTIMPORT  NEXTIMPORT      LASTIMPORTNAMESPACE
 fedora-image-cron        Mon, 21 Jul 03:00  cdi-operations-demo
@@ -521,7 +521,7 @@ NOTE: すべてのインポートでスクラッチスペースが必要なわ�
 
 === ファイルシステムのオーバーヘッド
 
-`Filesystem` モードの PVC (ほとんどの StorageClass のデフォルト) を使用する場合、基盤となるストレージファイルシステムはボリュームの一定の割合をメタデータ用に予約します。CDI は、イメージが必要とする容量よりもわずかに多い容量を要求することで、これを考慮します。
+`Filesystem` モードの PVC (ほとんどの StorageClass のデフォルト設定) を使用する場合、基盤となるストレージファイルシステムはボリュームの一定の割合をメタデータ用に予約します。CDI は、イメージが必要とする容量よりもわずかに多い容量を要求することで、これを考慮します。
 
 デフォルトのファイルシステムオーバーヘッドは 5.5% です。グローバル、または StorageClass ごとに調整できます。
 
@@ -694,7 +694,7 @@ oc get namespace cdi-operations-demo
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 Error from server (NotFound): namespaces "cdi-operations-demo" not found
 ----

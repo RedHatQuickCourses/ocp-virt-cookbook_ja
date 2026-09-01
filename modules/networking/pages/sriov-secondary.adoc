@@ -40,7 +40,7 @@ OperatorHub から SR-IOV Network Operator をインストールした後、そ�
 oc get csv -n openshift-sriov-network-operator
 ----
 
-期待される出力 (バージョンにより異なる場合があります):
+想定される出力 (バージョンにより異なる場合があります):
 
 ----
 NAME                                          DISPLAY                   VERSION               PHASE
@@ -184,7 +184,7 @@ VF リソースがノードの割当可能容量に含まれているかを確�
 oc get node <node-name> -o jsonpath='{.status.allocatable.openshift\.io/mlxsriovnic}'
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 4
@@ -266,7 +266,7 @@ EOF
 oc get net-attach-def -n sriov-demo
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 NAME             AGE
@@ -457,7 +457,7 @@ sudo ip link set enp8s0 up
 ip -br addr show
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 lo               UNKNOWN        127.0.0.1/8 ::1/128

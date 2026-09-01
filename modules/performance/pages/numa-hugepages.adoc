@@ -132,7 +132,7 @@ WARNING: これにより、対象の MachineConfigPool 内のすべてのノー�
 oc get node <node-name> -o jsonpath='{.status.allocatable.hugepages-2Mi}{"\n"}'
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 2Gi
@@ -152,7 +152,7 @@ oc debug node/<node-name>
 chroot /host grep -i hugepages /proc/meminfo
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 AnonHugePages:         0 kB
@@ -345,7 +345,7 @@ VM が Running 状態になるまで待ちます。
 oc get vm vm-hugepages -n numa-hugepages-demo -w
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 NAME           AGE   STATUS    READY
@@ -422,7 +422,7 @@ VM が停止したことを確認します。
 oc get vm vm-hugepages -n numa-hugepages-demo
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 NAME           AGE    STATUS    READY
@@ -510,7 +510,7 @@ VM が Running 状態になるまで待ちます。
 oc get vm vm-numa-hugepages -n numa-hugepages-demo -w
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 NAME                AGE   STATUS    READY
@@ -528,7 +528,7 @@ vm-numa-hugepages   60s   Running   True
 oc get vmi vm-numa-hugepages -n numa-hugepages-demo -o jsonpath='{.spec.domain.cpu.numa}{"\n"}'
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 {"guestMappingPassthrough":{}}

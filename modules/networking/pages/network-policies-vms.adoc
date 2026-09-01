@@ -241,7 +241,7 @@ oc exec -n default curl-test -- curl -s --connect-timeout 5 http://<web-vm-ip>:8
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 command terminated with exit code 28
 ----
@@ -383,7 +383,7 @@ oc exec -n default curl-test -- curl -s --connect-timeout 5 http://<db-vm-ip>:54
 `<db-vm-ip>` をステップ 2 のデータベース VM の IP に置き換えます。
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 command terminated with exit code 28
 ----
@@ -402,7 +402,7 @@ oc get networkpolicy -n netpol-demo
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME           POD-SELECTOR  AGE
 allow-db-from-web    app=database  ...

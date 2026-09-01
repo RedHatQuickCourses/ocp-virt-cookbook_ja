@@ -349,7 +349,7 @@ oc get vm -n disk-io-tuning
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME          AGE   STATUS    READY
 vm-baseline   5m    Running   True

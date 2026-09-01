@@ -10,7 +10,7 @@
 **VLAN**:: Virtual LAN (仮想 LAN)、VLAN タグ付けを使用したネットワークセグメンテーション
 **OVS**:: Open vSwitch、ソフトウェアベースのネットワークスイッチ
 **IPAM**:: IP Address Management (IP アドレス管理)、自動 IP 割り当て
-**PVC**:: PersistentVolumeClaim (永続ボリューム要求)、ストレージの要求
+**PVC**:: PersistentVolumeClaim、ストレージの要求
 **DataVolume**:: VM 用ストレージをプロビジョニングするための CDI カスタムリソース (CR)
 **VMI**:: VirtualMachineInstance (仮想マシンインスタンス)、実行中の VM インスタンス
 **SCC**:: SecurityContextConstraint (セキュリティコンテキスト制約)、OpenShift Pod セキュリティポリシー
@@ -22,4 +22,4 @@
 == 参照
 
 * xref:getting-started:index.adoc[] - OpenShift Virtualization を始める
-* xref:ROOT:index.adoc[] - クックブックのホームページに戻る
+* xref:ROOT:index.adoc[] - cookbook のホームに戻る

@@ -229,7 +229,7 @@ VM の起動を待ちます：
 oc get vm -n resource-qos-demo
 ----
 
-期待される出力：
+想定される出力：
 ----
 NAME             AGE   STATUS    READY
 vm-besteffort    30s   Running   True
@@ -246,7 +246,7 @@ Burstable VM の場合：
 oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-burstable -o jsonpath='{.items[0].status.qosClass}{"\n"}'
 ----
 
-期待される出力：
+想定される出力：
 ----
 Burstable
 ----
@@ -258,7 +258,7 @@ Guaranteed VM の場合：
 oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-guaranteed -o jsonpath='{.items[0].status.qosClass}{"\n"}'
 ----
 
-期待される出力：
+想定される出力：
 ----
 Guaranteed
 ----
@@ -270,7 +270,7 @@ BestEffort VM の場合：
 oc get pod -n resource-qos-demo -l kubevirt.io/domain=vm-besteffort -o jsonpath='{.items[0].status.qosClass}{"\n"}'
 ----
 
-期待される出力：
+想定される出力：
 ----
 Burstable
 ----
@@ -410,6 +410,14 @@ Quota に対する namespace レベルのリソース消費量を確認します
 oc describe resourcequota vm-resource-quota -n resource-qos-demo
 ----
 
+== QoS 階層の概要
+
+次の図は、Kubernetes がリソース設定と、メモリ不足 (memory pressure) 時の結果的な退避 (eviction) 動作に基づいて、VM を 3 つの QoS 階層にどのように分類するかを示しています。
+
+image::qos-tiers.png[QoS Tier Diagram, align=center]
+
+Kubernetes は、`virt-launcher` Pod のリソース requests および limits に基づいて QoS クラスを割り当てます。KubeVirt は、VM のリソース仕様 (`spec.domain` で定義された CPU およびメモリ) をコンテナレベルの requests および limits に変換し、Kubernetes はそれを QoS 分類の評価に使用します。limits を持つ ResourceQuota が namespace に存在する場合、KubeVirt は `autoMemoryLimitsRatio` 乗数 (デフォルトは 1.0023、`alpha.kubevirt.io/auto-memory-limits-ratio` ラベルにより namespace ごとに設定可能) を使用してメモリ limits を自動的に設定します。
+
 == QoS class のまとめ
 
 [cols="1,1,1,1",options="header"]
@@ -431,6 +439,37 @@ oc describe resourcequota vm-resource-quota -n resource-qos-demo
 | 最初に退避 (evict)
 | 一時的な、破棄可能なワークロード
 |===
+
+== ビジネスユースケース
+
+適切な QoS クラスの選択は、ワークロードの退避に対する許容度、パフォーマンス要件、クラスターの集約度目標によって異なります。次の表は、一般的なワークロードタイプと適切な QoS 設定のマッピングを示しています。
+
+[cols="1,1,2,2",options="header"]
+|===
+|ワークロードタイプ |QoS クラス |設定 |根拠
+
+|本番データベース (PostgreSQL、Oracle、MongoDB)
+|Guaranteed
+|CPU とメモリの両方で requests を limits と同じ値に設定する
+|データベース VM は、メモリ不足時に決して退避 (evict) されてはなりません。予測可能なパフォーマンスとデータの整合性が、VM の集約度よりも優先されます。
+
+|アプリケーションサーバー (Web、API)
+|Burstable
+|requests を予想される定常状態の使用量に設定し、limits は未設定にするか requests より高い値に設定する
+|アプリケーションサーバーは、トラフィックスパイク時のバーストから恩恵を受けます。退避 (evict) はすべての BestEffort Pod の後にのみ発生するため、一時的な再起動を許容できるワークロードには適しています。
+
+|開発およびテスト VM
+|BestEffort
+|リソースの requests と limits を省略する
+|退避 (evict) された場合でも迅速に再作成できるエフェメラルな VM です。使い捨てのワークロードに対してクラスター上の VM 集約度を最大化します。
+
+|バッチ処理 (ETL、スケジュールされたジョブ)
+|Burstable (高い limits)
+|requests をアイドル状態の使用量に、limits をピーク時の処理要件に設定する
+|バッチ VM は処理ウィンドウ中にバーストする必要がありますが、それ以外の時間帯にはスロットル可能です。スケジューラーはオフピーク時にノードを効率的に集約配置します。
+|===
+
+NOTE: これらは推奨される開始点です。QoS クラスを確定する前に、`oc adm top pods` を使用して実際のリソース消費量を観察してください。Burstable に適していると思われるワークロードでも、Guaranteed の配置を必要とするメモリパターンが明らかになる場合があります。
 
 == サイジングの推奨事項
 

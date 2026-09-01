@@ -5,7 +5,7 @@
 
 このチュートリアルでは、OpenShift Virtualization 上で仮想マシンを作成して実行するための最速の手順を説明します。5 分足らずで、コンソールからアクセス可能な実行中の Fedora VM を用意できます。この簡潔なアプローチでは、詳細な説明を省略してすぐに結果を得ることを重視しており、ワークショップやデモ、迅速なスタートに最適です。
 
-詳細な内容については、このクイックスタートを完了した後に完全な xref:index.adoc[Getting Started module] を参照してください。
+詳細な内容については、このクイックスタートを完了した後に xref:index.adoc[スタートガイド]モジュールを参照してください。
 
 === 達成できること
 
@@ -91,7 +91,7 @@ VM が作成され、実行中であることを確認します。
 oc get vm fedora-quickstart
 ----
 
-期待される出力には `Running` ステータスが表示されます。
+想定される出力には `Running` ステータスが表示されます。
 
 ----
 NAME                AGE   STATUS    READY
@@ -105,7 +105,7 @@ VirtualMachineInstance がアクティブであることを確認します。
 oc get vmi fedora-quickstart
 ----
 
-期待される出力には `Running` フェーズが表示されます。
+想定される出力には `Running` フェーズが表示されます。
 
 ----
 NAME                AGE   PHASE     IP           NODENAME                      READY
@@ -135,7 +135,7 @@ VM が起動しない場合:
 
 一般的な問題:
 
-* **デフォルトの StorageClass がない**: xref:default-storage-class.adoc[] を参照してください
+* **デフォルト StorageClass がない**: xref:default-storage-class.adoc[] を参照してください
 * **クラスターリソースの不足**: `oc describe nodes` でノード容量を確認します
 * **ネットワーク接続**: `oc get pods -o wide` で Pod ネットワークを確認します
 

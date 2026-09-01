@@ -5,11 +5,62 @@
 
 このチュートリアルでは、OpenShift Web コンソールと事前構築済みテンプレートを使用して仮想マシン (VM) を作成する方法を説明します。Web コンソールは、VM 管理のための直感的なグラフィカルインターフェースを提供するため、新規ユーザーの出発点です。
 
+== テンプレートベースの VM 作成の仕組み
+
+Web コンソールでテンプレートから VM を作成すると、OpenShift Virtualization はバックグラウンドで一連のリソース操作をトリガーします。このフローを理解することで、プロビジョニングの問題のトラブルシューティングやストレージ要件の計画に役立ちます。
+
+[source,text]
+----
+                                 openshift-virtualization-os-images namespace
+                                +------------------------------------------+
+                                |                                          |
+  VM Template                   |   DataSource                             |
+  (VM spec、ブートソース      ---------->  (特定のOSバージョンの                |
+   の参照、CPU/memory        |   |    ゴールデンイメージPVCを指す)              |
+   デフォルト値の定義)         |   |        |                                 |
+                            |   +------------------------------------------+
+                            |            |
+                            |            |  クローン操作
+                            |            v
+                            |   +------------------------------------------+
+                            |   |  your-project namespace                  |
+                            |   |                                          |
+                            |   |   DataVolume                             |
+                            |   |   (クローンを管理し、                       |
+                            |   |    OS ディスクを含む PVC を作成)            |
+                            |   |        |                                 |
+                            |   |        v                                 |
+                            |   |   PVC                                    |
+                            |   |   (クローン作成された OS イメージを含む       |
+                            |   |    永続ディスク)                           |
+                            |   |        |                                 |
+                            |   |        v                                 |
+                            |   |   virt-launcher pod                      |
+                            |   |   (QEMU/KVM を実行し、                    |
+                            |   |    PVC をマウントして VM を起動)            |
+                            |   |        |                                 |
+                            |   |        v                                 |
+                            |   |   実行中の VirtualMachineInstance         |
+                            |   |                                          |
+                            |   +------------------------------------------+
+----
+
+このフローにおける主要なステップは以下のとおりです。
+
+. **Template** は、ブートディスク用の DataSource への参照と、デフォルトの CPU、メモリ、デバイス設定を含む VirtualMachine spec を定義します。
+. `openshift-virtualization-os-images` namespace 内の **DataSource** は、選択されたオペレーティングシステム用に事前インポートされたゴールデンイメージ PVC を指します。
+. お使いのプロジェクトの namespace に **DataVolume** が作成されます。これにより、ゴールデンイメージ PVC のクローン作成がオーケストレーションされます。
+. クローン操作により、OS ディスクのコピーを含む **PVC** がプロジェクトの namespace に生成されます。
+. **virt-launcher pod** が起動し、PVC をマウントして QEMU/KVM 経由で VM を実行します。
+. **VirtualMachineInstance** (VMI) は実行中の VM を表し、そのステータス、IP アドレス、ノード配置をレポートします。
+
+NOTE: クローン操作の所要時間は、ディスクサイズとストレージバックエンドによって異なります。スマートクローン (CSI ボリュームクローンまたはスナップショットベースのクローン) をサポートするストレージクラスは、ホスト支援型コピーよりも高速に完了します。
+
 == 前提条件
 
 * OpenShift Virtualization Operator がインストールされた OpenShift 4.18 以降 (link:https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/virtualization/installing[OpenShift Virtualization のインストール,window=_blank]を参照)
 * VM を作成する権限を持つ OpenShift Web コンソールへのアクセス
-* VM ディスクプロビジョニング用に構成された default StorageClass
+* VM ディスクプロビジョニング用に構成されたデフォルト StorageClass
 * クラスター内で利用可能なブートソースイメージ (DataSource)
 
 ブートソースが利用可能であることを確認します。
@@ -42,7 +93,7 @@ OpenShift Virtualization には、一般的なオペレーティングシステ�
 
 image::vm-templates-catalog.png[OS オプションが表示されたテンプレートカタログ]
 
-TIP: **Source available** と表示されているテンプレートには、すぐに使用できる事前構成済みのブートソースがあります。これには、クラスター内で xref:default-storage-class.adoc[default StorageClass] が構成されている必要があります。
+TIP: **Source available** と表示されているテンプレートには、すぐに使用できる事前構成済みのブートソースがあります。これには、クラスター内で xref:default-storage-class.adoc[デフォルト StorageClass] が構成されている必要があります。
 
 各テンプレートには以下が含まれています。
 
@@ -50,6 +101,27 @@ TIP: **Source available** と表示されているテンプレートには、す
 * OS に適したディスクサイズ
 * ブートソース参照 (DataSource)
 * cloud-init または sysprep 構成 (該当する場合)
+
+== VM テンプレートに含まれるもの
+
+VM テンプレートは、VirtualMachine マニフェストをパラメーター化されたフィールドでラップした OpenShift Template リソースです。Web コンソールでテンプレートを選択すると、コンソールによってそれらのパラメーター (VM 名、namespace、ディスクサイズ) が入力され、完全な VirtualMachine オブジェクトが生成されます。
+
+テンプレートは、次の 3 つの点で生の VirtualMachine マニフェストと異なります。
+
+* **パラメーター** -- `${NAME}` や `${DATA_SOURCE_NAME}` などのフィールドは、作成時に置き換えられます。これにより、1 つのテンプレートから異なる名前や設定を持つ多数の VM を生成できます。
+* **DataSource 参照** -- テンプレートはディスクイメージの URL や PVC を直接指定する代わりに、`openshift-virtualization-os-images` namespace 内の DataSource を参照します。DataSource はブートイメージの場所を抽象化するため、基盤となるゴールデンイメージが更新された場合でもテンプレートの有効性が維持されます。
+* **Web コンソールのアノテーション** -- テンプレートには `template.kubevirt.io/type`、`name.os.template.kubevirt.io`、`description` などのアノテーションが含まれており、カタログでテンプレートをどのように表示するか、どのアイコンを表示するか、どのようなデフォルト値を提示するかを Web コンソールに伝えます。
+
+テンプレートの構造は、任意のテンプレートを検査して確認できます。
+
+[source,bash,role=execute]
+----
+oc get template fedora-server-small -n openshift -o yaml
+----
+
+出力の下部には `parameters` セクションが表示され、`objects` セクションには VirtualMachine オブジェクトの定義が表示されます。Web コンソールは両方のセクションを読み取り、VM 作成時に表示されるカスタマイズフォームを構築します。
+
+TIP: 組織に合わせてカスタマイズしたテンプレートを作成するには、xref:vm-configuration:vm-templates.adoc[カスタム VM テンプレートの作成] を参照してください。
 
 == ステップ 3: テンプレートからの VM 作成
 
@@ -262,6 +334,34 @@ image::vm-quick-create.png[Quick create VirtualMachine オプション]
 * テスト環境や開発環境
 * デフォルトのテンプレート設定で問題ない場合
 * ラピッドプロトタイピング
+
+== 適切な VM 作成方法の選択
+
+OpenShift Virtualization には、VM を作成するための複数の方法が用意されています。それぞれの方法は異なるニーズに適しています。適切なアプローチを選択するには、以下のガイダンスを参考にしてください。
+
+=== テンプレートからのクイック作成
+
+最適な用途: テスト、デモ、および使い捨ての開発用 VM。
+
+テンプレートのデフォルト設定を受け入れるだけで、数秒で VM を稼働させることができます。設定する項目はありません。VM を迅速に用意する必要があり、特定のリソース設定を重視しない場合に使用します。
+
+=== カスタマイズされたテンプレート
+
+最適な用途: 特定の CPU、メモリ、ディスクサイズを必要とするものの、標準テンプレートの OS デフォルト設定を使用できる VM。
+
+テンプレートを選択した後、作成前に Web コンソールで個々のフィールド (コア数、メモリ、ディスクサイズ、cloud-init ユーザーデータ) を調整します。これは日常的な作業で最も一般的な方法です。
+
+=== カスタム YAML マニフェスト
+
+最適な用途: 自動化、GitOps パイプライン、マルチ NIC 構成、およびすべてのフィールドを完全に制御する必要があるケース。
+
+VirtualMachine マニフェストを直接記述し、`oc apply -f` を使用して適用します。このアプローチは、バージョン管理や CI/CD システムと統合されます。詳細は xref:create-vm-cli-yaml.adoc[CLI と YAML マニフェストを使用した VM の作成] を参照してください。
+
+=== カスタムテンプレート
+
+最適な用途: 標準化された VM 構成を持ち、事前に承認された VM タイプをチームに提供したい組織。
+
+組織の標準 (承認済み OS イメージ、ネットワークポリシー、リソース制限、必須ラベル) をエンコードした OpenShift Template を作成します。チームは、基盤となる構成を意識することなく、Web コンソールを介してこれらのテンプレートから VM を作成できます。手順については xref:vm-configuration:vm-templates.adoc[カスタム VM テンプレートの作成] を参照してください。
 
 == まとめ
 

@@ -137,7 +137,7 @@ lvms-operator-864b6975bb-kxt4t   1/1     Running   0          10m
 vg-manager-xxxxx                 1/1     Running   0          5m
 ----
 
-期待される Pod:
+想定される Pod:
 
 * **lvms-operator**: 常に存在し、LVM ストレージのライフサイクルを管理します。
 * **vg-manager**: ノードごとに 1 つ存在し、そのノードの volume group を管理します。

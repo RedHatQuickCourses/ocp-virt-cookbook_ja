@@ -267,7 +267,7 @@ VM 内部で、設定を確認します。
 ip addr show
 ----
 
-.期待される出力
+.想定される出力
 ----
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -294,7 +294,7 @@ ip addr show
 ip route show
 ----
 
-.期待される出力
+.想定される出力
 ----
 default via 10.0.2.1 dev enp1s0 proto dhcp src 10.0.2.2 metric 100
 10.0.2.0/24 dev enp1s0 proto kernel scope link src 10.0.2.2 metric 100
@@ -313,7 +313,7 @@ oc get vmi fedora-multi-vm -n static-ip-demo -o jsonpath='{.status.interfaces}' 
 ----
 
 [source,json]
-.期待される出力
+.想定される出力
 ----
 [
     {
@@ -356,7 +356,7 @@ VM 内部:
 cloud-init status
 ----
 
-.期待される出力
+.想定される出力
 ----
 status: done
 ----
@@ -366,7 +366,7 @@ status: done
 nmcli connection show
 ----
 
-.期待される出力
+.想定される出力
 ----
 NAME               UUID                                  TYPE      DEVICE
 cloud-init enp1s0  a41601f3-3acc-5f60-ac5f-9d9011ab7c25  ethernet  enp1s0
@@ -546,7 +546,7 @@ ip addr show enp2s0
 
 DHCP 予約が適用されている場合、出力は固定 MAC 上の予約済み IP を表示します。
 
-.期待される出力
+.想定される出力
 ----
 3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1400 qdisc fq_codel state UP group default qlen 1000
     link/ether 02:00:00:01:00:01 brd ff:ff:ff:ff:ff:ff

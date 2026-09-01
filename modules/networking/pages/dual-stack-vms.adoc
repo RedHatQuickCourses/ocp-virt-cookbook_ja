@@ -30,7 +30,7 @@ oc get network.config cluster -o jsonpath='{.status.serviceNetwork[*]}'
 ----
 
 [source,bash]
-.Expected output
+.想定される出力
 ----
 10.128.0.0/14 fd01::/48
 172.30.0.0/16 fd02::/112
@@ -179,7 +179,7 @@ ip -4 addr show eth0
 ----
 
 [source,bash]
-.Expected output
+.想定される出力
 ----
 inet 10.0.2.2/24 brd 10.0.2.255 scope global dynamic eth0
 ----
@@ -190,7 +190,7 @@ ip -6 addr show eth0
 ----
 
 [source,bash]
-.Expected output
+.想定される出力
 ----
 inet6 fd10:0:2::2/120 scope global
 ----
@@ -258,7 +258,7 @@ oc get svc dualstack-web -n dualstack-demo -o jsonpath='{.spec.clusterIPs}'
 ----
 
 [source,bash]
-.Expected output
+.想定される出力
 ----
 ["172.30.x.x","fd02::x"]
 ----

@@ -587,6 +587,121 @@ IMPORTANT: 遅延の結果は、ハードウェア、BIOS 設定、ワークロ�
 
 `Ctrl+]` を押してコンソールから切断します。
 
+== ステップ 9: ゲスト RT カーネルによるフルスタックのリアルタイム化
+
+ステップ 8 の cyclictest の結果では、最大レイテンシーが数百から数千マイクロ秒を示しています。これは、ゲスト内の標準 Fedora カーネルが `PREEMPT_DYNAMIC` スケジューリングを使用しており、カーネル内コードパスの制限付きプリエンプションを保証できないためです。ホスト側の `SCHED_FIFO` 優先度と CPU 分離により *外部* ジッター (他の Pod、IRQ、CPU 時間を奪うカーネルスレッド) は排除されますが、タイマー割り込みが vCPU に到達した後も、*ゲストカーネル* がスリープ状態の cyclictest スレッドを起動する必要があります。標準カーネルでは、プリエンプト不可能なコードセクションの処理を完了する間に、その起動が遅れる可能性があります。
+
+ゲスト内に `PREEMPT_RT` カーネルをインストールすることで、リアルタイムスタックが完成します。ゲスト RT カーネルを使用すると、実質的にすべてのカーネルコードパスがプリエンプト可能になり、cyclictest の最大レイテンシーはミリ秒単位から数十マイクロ秒前半へと低下します。
+
+[cols="2,3,3",options="header"]
+|===
+|構成 |ゲストカーネル |予想される cyclictest 最大レイテンシー
+
+|ホスト RT のみ
+|標準 (`PREEMPT_DYNAMIC`)
+|数百から数千マイクロ秒
+
+|フルスタック RT
+|リアルタイム (`PREEMPT_RT`)
+|数十マイクロ秒前半
+|===
+
+=== ゲスト内への RT カーネルのインストール
+
+実行中の VM に接続します。
+
+[source,bash,role=execute]
+----
+virtctl console vm-realtime -n realtime-demo
+----
+
+`fedora` としてパスワード `redhat` でログインします。
+
+`PREEMPT_RT` カーネルパッケージを提供する Fedora Kernel Vanilla COPR リポジトリを有効にします。
+
+[source,bash,role=execute]
+----
+sudo dnf -y copr enable @kernel-vanilla/stable
+----
+
+リアルタイムカーネルをインストールします。
+
+[source,bash,role=execute]
+----
+sudo dnf -y install kernel-rt-core kernel-rt-modules
+----
+
+RT カーネルをデフォルトのブートエントリとして設定します。
+
+[source,bash,role=execute]
+----
+sudo grubby --set-default /boot/vmlinuz-*rt*
+----
+
+`Ctrl+]` を押してコンソールから切断します。
+
+=== VM の再起動
+
+VM を再起動して RT カーネルで起動します。
+
+[source,bash,role=execute]
+----
+virtctl restart vm-realtime -n realtime-demo
+----
+
+VM が Running 状態に戻るのを待ちます。
+
+[source,bash,role=execute]
+----
+oc get vm vm-realtime -n realtime-demo -w
+----
+
+=== ゲスト RT カーネルの確認
+
+VM コンソールに接続します。
+
+[source,bash,role=execute]
+----
+virtctl console vm-realtime -n realtime-demo
+----
+
+ログインしてカーネルバージョンを確認します。
+
+[source,bash,role=execute]
+----
+uname -r
+----
+
+出力のバージョン文字列に `rt` が含まれている必要があります (例:)。
+
+----
+6.15.2-0.rc0.20250604gite53b1bae1f73.502.vanilla.fc42.x86_64+rt
+----
+
+`PREEMPT_RT` がアクティブであることを確認します。
+
+[source,bash,role=execute]
+----
+uname -v
+----
+
+出力に `PREEMPT_RT` が含まれており、完全なプリエンプティブルカーネルモードであることが確認できます。
+
+=== RT カーネルでの cyclictest の再実行
+
+VM は永続ストレージを使用しているため、ステップ 8 でインストールした `realtime-tests` が残っています。同じパラメーターで cyclictest を実行します。
+
+[source,bash,role=execute]
+----
+sudo cyclictest --mlockall --smp --priority=80 --interval=200 --distance=0 --duration=60
+----
+
+ゲスト RT カーネルを使用すると、最大レイテンシーは数十マイクロ秒前半になることが期待されます。これは、ステップ 8 の標準カーネルで見られた数百から数千マイクロ秒と比べて大幅な改善です。
+
+`Ctrl+]` を押してコンソールから切断します。
+
+IMPORTANT: 本番環境のリアルタイムワークロードでは、実行時にインストールするのではなく、RT カーネルが事前インストールされたカスタムディスクイメージをビルドしてください。これにより、起動後のカーネルインストールと再起動のサイクルが不要になり、すべての RT VM にわたって一貫性のあるバージョン固定されたデプロイが保証されます。
+
 == トラブルシューティング
 
 === VM のスケジュール失敗：リアルタイム対応ノードがない

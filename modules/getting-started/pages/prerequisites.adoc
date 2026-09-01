@@ -3,7 +3,7 @@
 
 == 概要
 
-このページでは、本クックブックで扱う OpenShift Virtualization の前提条件と要件の概要を説明します。
+このページでは、本 cookbook で扱う OpenShift Virtualization の前提条件と要件の概要を説明します。
 
 == クラスター要件
 
@@ -100,13 +100,13 @@ oc get storageclass
 
 [source,bash,role=execute]
 ----
-# Check cluster status
+# クラスターの状態を確認
 oc get nodes
 
-# Verify OpenShift Virtualization operator
+# OpenShift Virtualization Operator を確認
 oc get csv -n openshift-cnv
 
-# Check available VM templates
+# 利用可能なVMテンプレートを確認
 oc get datasources -n openshift-virtualization-os-images
 ----
 

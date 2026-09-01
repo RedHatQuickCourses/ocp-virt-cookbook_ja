@@ -463,7 +463,7 @@ Namespace が削除されたことを確認します。
 oc get namespace pvc-expansion-demo
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 Error from server (NotFound): namespaces "pvc-expansion-demo" not found
@@ -478,7 +478,7 @@ Error from server (NotFound): namespaces "pvc-expansion-demo" not found
 * 安全性を最大限に高めるために、オフライン (VM 停止状態) で VM ディスクを拡張する
 * ダウンタイムなしで VM ディスクをオンライン (VM 実行中) で拡張する
 * ゲスト OS がファイルシステムを自動拡張するか、手動でのサイズ変更が必要かを判断する
-* `growpart`、`xfs_growfs` (XFS)、または `resize2fs` (ext4) を使用して、ゲスト OS のファイルシステムのサイズを手動で変更する
+* `growpart`、`xfs_growfs` (XFS)、`resize2fs` (ext4) を使用して、ゲスト OS のファイルシステムのサイズを手動で変更する
 * ルートディスクの拡張とデータディスクの拡張の違いを理解する
 * PVC ボリューム拡張の一般的な問題と制限事項を理解する
 

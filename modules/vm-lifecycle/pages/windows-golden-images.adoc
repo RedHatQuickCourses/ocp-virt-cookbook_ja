@@ -363,7 +363,7 @@ oc get dv win2k25 -n default
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME      PHASE       PROGRESS   RESTARTS   AGE
 win2k25   Succeeded   100.0%                45m
@@ -375,7 +375,7 @@ oc get datasource win2k25 -n default
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME      AGE
 win2k25   45m
@@ -389,7 +389,7 @@ oc get pipelinerun -n default
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME                              SUCCEEDED   REASON      STARTTIME   COMPLETIONTIME
 windows2k25-installer-run-abcde   True        Succeeded   50m         5m
@@ -572,7 +572,7 @@ oc get vmi win2k25-vm-1 -n default
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME            AGE   PHASE     IP             NODENAME     READY
 win2k25-vm-1    8m    Running   10.128.1.155   worker-01    True
@@ -586,7 +586,7 @@ oc get vmi win2k25-vm-1 -n default -o jsonpath='{.status.guestOSInfo}' | python3
 ----
 
 [source,json]
-.Expected output
+.想定される出力
 ----
 {
     "id": "mswindows",

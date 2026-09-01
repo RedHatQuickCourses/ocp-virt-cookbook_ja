@@ -142,7 +142,7 @@ oc get svc myapp-service -n myapp
 oc get endpointslice -n myapp -l kubernetes.io/service-name=myapp-service
 ----
 
-期待される出力:
+想定される出力:
 
 Service は `TYPE: ClusterIP` で `CLUSTER-IP: None` (headless service) と表示されるはずです。
 
@@ -187,7 +187,7 @@ oc exec -n myapp debug-dns -- getent hosts myapp-service.myapp.svc.cluster.local
 oc delete pod debug-dns -n myapp
 ----
 
-期待される結果:
+想定される結果:
 
 * DNS 解決によって VM の Pod IP アドレスが返されます (例: `10.128.0.169 myapp-service.myapp.svc.cluster.local`) 
 

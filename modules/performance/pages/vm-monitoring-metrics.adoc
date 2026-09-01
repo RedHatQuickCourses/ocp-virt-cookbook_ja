@@ -135,6 +135,7 @@ Metrics タブには、主要な 4 つのグラフが表示されます。
 * **Memory usage**: メモリ消費量 (GB) を表示します
 * **Network In/Out**: すべてのインターフェースのネットワークトラフィック (MB/s)
 * **Storage In/Out**: すべてのディスクのストレージ I/O (MB/s)
+
 image::vm-monitoring-metrics-dashboard.png[monitoring-test-vm の CPU、メモリ、ストレージ、ネットワークメトリクスを表示する VM Metrics ダッシュボード]
 
 TIP: メトリクスの収集は、VM の起動後すぐに開始されます。グラフが空で表示される場合は、データが収集されてグラフに反映されるまで 2-3 分お待ちください。
@@ -446,7 +447,7 @@ VM の内部で、サービスステータスを確認します。
 systemctl status qemu-guest-agent
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 ● qemu-guest-agent.service - QEMU Guest Agent

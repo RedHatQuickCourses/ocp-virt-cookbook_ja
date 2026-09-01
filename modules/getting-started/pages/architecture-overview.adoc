@@ -4,17 +4,17 @@
 == 概要
 
 OpenShift Virtualization は、同一ノード上でコンテナワークロードと並行して仮想マシンを実行する機能によって OpenShift クラスターを拡張します。
-アップストリームの KubeVirt プロジェクトをベースにしており、カスタムリソース定義 (Custom Resource Definition)、PersistentVolumeClaim、Pod などの標準的な Kubernetes リソースを使用して、VM の完全なライフサイクルを管理します。
+アップストリームの KubeVirt プロジェクトをベースにしており、カスタムリソース定義 (Custom Resource Definition)、PersistentVolumeClaim、Pod などの標準的な Kubernetes リソースを使用して、VM の全てのライフサイクルを管理します。
 本ガイドでは、 Operator のインストールや最初の仮想マシンの作成を行う前に、Kubernetes 上で VM がどのように実行されるかを理解できるように、OpenShift Virtualization の基盤となるアーキテクチャについて説明します。
 
 === 学習内容
 
 * VM とコンテナが同一のクラスターインフラストラクチャーを共有する方法
-* HyperConverged CR からそのサブ Operator までの Operator 階層
+* HyperConverged CR からサブ Operator の Operator 階層
 * VirtualMachine CR から実行中の QEMU/KVM プロセスに至る実行フロー
 * ストレージパイプラインを通じてディスクイメージが実行中の VM ディスクになる仕組み
 * VM が Pod ネットワークおよびセカンダリーインターフェースを使用してネットワークに接続する仕組み
-* OpenShift Virtualization と VMware vSphere、Microsoft Hyper-V、その他の従来のハイパーバイザーとの比較
+* OpenShift Virtualization と VMware vSphere、Microsoft Hyper-V、その他のハイパーバイザーとの比較
 
 適用対象:
 
@@ -24,15 +24,15 @@ OpenShift Virtualization 4.18+
 
 == 前提条件
 
-* **基本的な Kubernetes の知識** -- Pod、Namespace、およびカスタムリソースに関する一般的な知識
-* **クラスターへのアクセスは不要** -- 本書は概念ガイドです
+* **基本的な Kubernetes の知識** -- Pod、Namespace、カスタムリソースに関する一般的な知識
+* **クラスターへのアクセスは不要** -- 本書は概要ガイドです
 * インストール手順については、xref:install-openshift-virtualization.adoc[] を参照してください
 * 環境セットアップの詳細については、xref:prerequisites.adoc[] を参照してください
 
 == VM とコンテナ: 共有インフラストラクチャー
 
 OpenShift Virtualization は Kubernetes プラットフォームを置き換えるのではなく、拡張します。
-仮想マシンはカスタムリソース定義 (CRD) を使用して定義され、Pod、Deployment、Service を処理するのと同じ Kubernetes API を通じて管理されます。
+仮想マシンはカスタムリソース定義 (CRD) を使用して定義され、Pod、Deployment、Service を扱うのと同じ Kubernetes API を通じて管理されます。
 この機能の背後にあるアップストリームプロジェクトは KubeVirt です。
 
 VM とコンテナは同じ Worker Node 上で実行され、同じストレージバックエンドを使用し、同じネットワークインフラストラクチャーを共有します。
@@ -55,12 +55,12 @@ OpenShift Virtualization スタック全体は、`openshift-cnv` namespace 内�
 この CR を作成すると、それぞれ異なる機能領域を担当する 4 つのサブ Operator がアクティブになります。
 
 *KubeVirt Operator* は、コア仮想化ライフサイクルを担当します。
-VM リクエストを検証する API レイヤー (`virt-api`)、VM のスケジューリングと状態遷移をオーケストレーションするコントローラー (`virt-controller`)、および各 VM のホストリソースを設定するノードレベルのエージェント (`virt-handler`) を管理します。
+VM リクエストを検証する API レイヤー (`virt-api`)、VM のスケジューリングと状態遷移をオーケストレーションするコントローラー (`virt-controller`)、各 VM のホストリソースを設定するノードレベルのエージェント (`virt-handler`) を管理します。
 
 *CDI Operator* (Containerized Data Importer) は、ディスクイメージの管理を処理します。
 コンテナレジストリ、HTTP ソース、または S3 バケットからのイメージのインポート、ローカルイメージのアップロード、既存ボリュームのクローン作成を行います。取得したイメージは PersistentVolumeClaim (PVC) に格納され、VM がディスクとして使用します。
 
-*SSP Operator* (Scheduling, Scale, and Performance) は、VM テンプレートとブートソースを管理します。
+*SSP Operator* (Scheduling、Scale、Performance) は、VM テンプレートとブートソースを管理します。
 一般的なオペレーティングシステム向けのデフォルトテンプレートのセットを維持し、そのブートソースイメージを自動的に最新の状態に保ちます。
 
 *Network Addons Operator* は、セカンダリーネットワークインターフェースに必要なネットワークコンポーネントをデプロイします。
@@ -80,7 +80,7 @@ VM がデフォルトの Pod ネットワーク以外の追加ネットワーク
 |VM およびそのリソースが実行される場所
 |===
 
-NOTE: Pod レベルの詳細やデプロイツリーを含むコンポーネントの完全な内訳については、インストールガイドの xref:install-openshift-virtualization.adoc#_what_gets_deployed[デプロイされるコンポーネント] セクションを参照してください。
+NOTE: Pod レベルの詳細やデプロイツリーを含むコンポーネントの内訳については、インストールガイドの xref:install-openshift-virtualization.adoc#_what_gets_deployed[デプロイされるコンポーネント] セクションを参照してください。
 
 == VM の動作の仕組み
 
@@ -94,6 +94,7 @@ NOTE: Pod レベルの詳細やデプロイツリーを含むコンポーネン�
 . ターゲットノード上の `virt-handler` は、ネットワークブリッジやデバイスパススルーを含むホストレベルのリソースを設定します。
 . `virt-launcher` Pod 内で、`libvirtd` がセッションモードで実行され、QEMU/KVM プロセスを開始します。
 . ゲストオペレーティングシステムは、PVC を基盤とする仮想ディスクから起動します。
+
 image::architecture-overview/vm-execution-flow.png[VirtualMachine CR から virt-controller および virt-launcher を経由して QEMU/KVM ゲスト OS に至る VM 実行フロー]
 
 === リソースの関係性
@@ -138,7 +139,7 @@ PVC のアクセスモードによって、VM で利用可能な操作が決ま�
 
 TIP: VMware vSphere に馴染みがある場合、`DataSource` はコンテンツライブラリテンプレートに似ており、`DataVolume` はクローン操作に相当し、CDI はクローンを実行するエンジンであり、結果として得られる `PVC` は vmdk ファイルと同等です。
 
-ストレージ設定の詳細については、xref:default-storage-class.adoc[] および xref:storage:index.adoc[Storage module] を参照してください。
+ストレージ設定の詳細については、xref:default-storage-class.adoc[] および xref:storage:index.adoc[Storage モジュール] を参照してください。
 
 == ネットワーク: VM の接続方法
 
@@ -154,7 +155,7 @@ NMState Operator は、bridge、VLAN、bond などのノードレベルのネッ
 
 TIP: VMware vSphere を使い慣れている場合、デフォルトの Pod ネットワークは VMware Workstation の NAT ネットワークに類似しています。Multus セカンダリーネットワークは、異なるポートグループまたは仮想スイッチに接続された vNIC を追加することに相当します。
 
-ネットワークのチュートリアルおよびトポロジーのオプションについては、xref:networking:index.adoc[Networking module] を参照してください。
+ネットワークのチュートリアルおよびトポロジーのオプションについては、xref:networking:index.adoc[Networking モジュール] を参照してください。
 
 == 従来のハイパーバイザーとの比較
 

@@ -8,7 +8,7 @@
 
 === 学習内容
 
-* Fedora、Debian、および openSUSE Leap で `virtctl console` を使用して `qemu-guest-agent` を手動でインストールおよび有効化する方法
+* Fedora、Debian、openSUSE Leap で `virtctl console` を使用して `qemu-guest-agent` を手動でインストールおよび有効化する方法
 * cloud-init の `packages` および `runcmd` モジュールを使用して `qemu-guest-agent` を自動的にインストールする方法
 * エージェントが接続され、ゲスト OS 情報を OpenShift Virtualization にレポートしていることを確認する方法
 
@@ -949,7 +949,7 @@ oc delete namespace qemu-ga-demo
 
 このチュートリアルでは、次の方法を学びました:
 
-* Fedora、Debian、および openSUSE Leap 上で `virtctl console` を使用して手動で `qemu-guest-agent` をインストールおよび有効化する
+* Fedora、Debian、openSUSE Leap 上で `virtctl console` を使用して手動で `qemu-guest-agent` をインストールおよび有効化する
 * cloud-init の `packages` および `runcmd` モジュールを使用して `qemu-guest-agent` を自動的にインストールする
 * エージェントが接続され、ゲスト OS 情報を OpenShift Virtualization に報告していることを確認する
 

@@ -248,7 +248,7 @@ fedora-app-vm   7d3h   Running   True
 oc get vmi fedora-app-vm -n myapp
 ----
 
-期待される結果: 実行中の場合は VMI が一覧に表示され、停止後は VMI は表示されません。
+想定される結果: 実行中の場合は VMI が一覧に表示され、停止後は VMI は表示されません。
 
 == クイックリファレンス
 

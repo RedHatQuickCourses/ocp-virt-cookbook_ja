@@ -5,6 +5,62 @@
 
 このモジュールでは、OpenShift Virtualization を使い始めるために必要な基本ツールと基本的な設定について説明します。OpenShift Virtualization が初めての方でも、知識を再確認したい方でも、これらのガイドを活用して迅速に環境を構築できます。
 
+== 学習パス
+
+以下の図は、推奨されるチュートリアルの順序を示しています。数分で VM を稼働させたい場合はクイックスタートから開始し、全体を完全に理解したい場合は完全なパスに従ってください。
+
+....
+  FAST TRACK
+  ┌─────────────────────────┐
+  │  クイックスタート — 5 分で作成する最初の VM    │
+  └─────────────────────────┘
+
+  FULL LEARNING PATH
+
+  ┌─────────┐       ┌─────────────┐      ┌───────────┐
+  │ 前提条件        ├───►│ Operator のインストール ├───►│ デフォルトストレージ │
+  └─────────┘       └─────────────┘      └───────────┘
+                                                              │
+                         ┌─────────────────────┤
+                         ▼                                   ▼
+                  ┌───────┐                ┌─────────┐
+                  │  VM 作成    │                │ VM 作成       │
+                  │ (Console)  │                │ (CLI & YAML)  │
+                  └───┬───┘                └────┬────┘
+                         │                              │
+                         └────────┬─────────┘
+                                        ▼
+                              ┌───────────┐
+                              │  VM ライフサイクル  │
+                              └─────┬─────┘
+                                        ▼
+                              ┌───────────┐
+                              │  virtctl の基礎   │
+                              └─────┬─────┘
+                                        ▼
+                              ┌───────────┐
+                              │  Cloud-init の基礎│
+                              └───────────┘
+....
+
+TIP: すでに Operator がインストールされている場合は、直接 xref:default-storage-class.adoc[ストレージの設定] に進んでください。
+
+== 対象読者
+
+担当する役割によって、このモジュールで進むべきパスが異なります。
+
+VMware または Hyper-V から移行する VM 管理者::
+まず xref:prerequisites.adoc[] で環境を把握します。次に xref:install-openshift-virtualization.adoc[] と xref:create-vm-web-console.adoc[] に従って、Web コンソールから最初の VM を作成します。続いて xref:vm-lifecycle-states.adoc[] で OpenShift における VM の管理方法を学びます。
+
+テスト VM を必要とする開発者::
+xref:vm-quick-start.adoc[] から開始して、数分で VM を稼働させます。その後、xref:virtctl-basics.adoc[] を読んでコマンドラインから VM を管理する方法を学びます。
+
+プラットフォームエンジニア::
+完全な学習パスに従って、xref:prerequisites.adoc[]、xref:install-openshift-virtualization.adoc[]、xref:default-storage-class.adoc[]、および両方の VM 作成チュートリアルを順番に進めます。このモジュールを完了した後は、xref:networking:index.adoc[Networking] モジュールおよび xref:storage:index.adoc[Storage] モジュールに進んでください。
+
+評価担当者または意思決定者::
+xref:install-openshift-virtualization.adoc[] を読んで、Operator が提供する機能を理解します。次に xref:create-vm-web-console.adoc[] に従って、コンソールで VM が稼働している様子を確認します。xref:vm-lifecycle-states.adoc[] のページでは、日常的な管理操作について説明しています。
+
 == 学習内容
 
 このセクションでは、以下の内容を学習します。

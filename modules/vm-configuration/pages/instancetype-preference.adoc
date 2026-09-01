@@ -1,5 +1,5 @@
 = 仮想マシン定義の Instancetype と Preference
-:navtitle: Instancetype and Preference
+:navtitle: Instancetype と Preference
 
 == 概要
 

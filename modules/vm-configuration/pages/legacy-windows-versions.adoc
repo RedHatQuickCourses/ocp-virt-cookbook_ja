@@ -62,7 +62,7 @@ qemu-img info windows-legacy.qcow2
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 image: windows-legacy.qcow2
 file format: qcow2
@@ -117,7 +117,7 @@ oc get pvc windowsxp-dv
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
 windowsxp-dv   Bound    pvc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx   130Gi      RWO            lvms-vg1       5m
@@ -161,7 +161,7 @@ oc get vm windowsxp -w
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME        AGE   STATUS    READY
 windowsxp   10s   Running   True

@@ -1,16 +1,16 @@
 {
-  "totalSeconds": 11723,
+  "totalSeconds": 12312,
   "pageCount": 77,
   "pages": [
     {
       "module": "ROOT",
       "page": "index.adoc",
-      "seconds": 44
+      "seconds": 47
     },
     {
       "module": "getting-started",
       "page": "index.adoc",
-      "seconds": 25
+      "seconds": 62
     },
     {
       "module": "getting-started",
@@ -20,17 +20,17 @@
     {
       "module": "getting-started",
       "page": "prerequisites.adoc",
-      "seconds": 31
+      "seconds": 30
     },
     {
       "module": "getting-started",
       "page": "architecture-overview.adoc",
-      "seconds": 198
+      "seconds": 197
     },
     {
       "module": "getting-started",
       "page": "install-openshift-virtualization.adoc",
-      "seconds": 75
+      "seconds": 155
     },
     {
       "module": "getting-started",
@@ -45,7 +45,7 @@
     {
       "module": "getting-started",
       "page": "create-vm-web-console.adoc",
-      "seconds": 60
+      "seconds": 116
     },
     {
       "module": "getting-started",
@@ -55,7 +55,7 @@
     {
       "module": "getting-started",
       "page": "vm-lifecycle-states.adoc",
-      "seconds": 132
+      "seconds": 218
     },
     {
       "module": "getting-started",
@@ -70,7 +70,7 @@
     {
       "module": "storage",
       "page": "index.adoc",
-      "seconds": 43
+      "seconds": 79
     },
     {
       "module": "storage",
@@ -105,12 +105,12 @@
     {
       "module": "storage",
       "page": "expanding-vm-disk-size.adoc",
-      "seconds": 146
+      "seconds": 145
     },
     {
       "module": "storage",
       "page": "cdi-operations.adoc",
-      "seconds": 185
+      "seconds": 186
     },
     {
       "module": "storage",
@@ -135,7 +135,7 @@
     {
       "module": "networking",
       "page": "udn-primary-networks.adoc",
-      "seconds": 89
+      "seconds": 124
     },
     {
       "module": "networking",
@@ -155,12 +155,12 @@
     {
       "module": "networking",
       "page": "layer2-secondary.adoc",
-      "seconds": 149
+      "seconds": 179
     },
     {
       "module": "networking",
       "page": "linux-bridges.adoc",
-      "seconds": 212
+      "seconds": 213
     },
     {
       "module": "networking",
@@ -180,7 +180,7 @@
     {
       "module": "networking",
       "page": "dual-stack-vms.adoc",
-      "seconds": 190
+      "seconds": 191
     },
     {
       "module": "networking",
@@ -190,7 +190,7 @@
     {
       "module": "networking",
       "page": "ovs-bridge-troubleshooting.adoc",
-      "seconds": 211
+      "seconds": 212
     },
     {
       "module": "vm-configuration",
@@ -205,22 +205,22 @@
     {
       "module": "vm-configuration",
       "page": "remote-access-linux-vms.adoc",
-      "seconds": 120
+      "seconds": 145
     },
     {
       "module": "vm-configuration",
       "page": "remote-access-linux-troubleshooting.adoc",
-      "seconds": 239
+      "seconds": 241
     },
     {
       "module": "vm-configuration",
       "page": "remote-access-windows-vms.adoc",
-      "seconds": 67
+      "seconds": 71
     },
     {
       "module": "vm-configuration",
       "page": "ssh-access-windows-vms.adoc",
-      "seconds": 148
+      "seconds": 149
     },
     {
       "module": "vm-configuration",
@@ -245,7 +245,7 @@
     {
       "module": "vm-configuration",
       "page": "hotplug-volumes-interfaces.adoc",
-      "seconds": 74
+      "seconds": 124
     },
     {
       "module": "vm-configuration",
@@ -255,17 +255,17 @@
     {
       "module": "vm-configuration",
       "page": "instancetype-preference.adoc",
-      "seconds": 190
+      "seconds": 192
     },
     {
       "module": "performance",
       "page": "index.adoc",
-      "seconds": 33
+      "seconds": 52
     },
     {
       "module": "performance",
       "page": "resource-limits-qos.adoc",
-      "seconds": 181
+      "seconds": 221
     },
     {
       "module": "performance",
@@ -275,17 +275,17 @@
     {
       "module": "performance",
       "page": "numa-hugepages.adoc",
-      "seconds": 290
+      "seconds": 291
     },
     {
       "module": "performance",
       "page": "realtime-vms.adoc",
-      "seconds": 298
+      "seconds": 316
     },
     {
       "module": "performance",
       "page": "vm-monitoring-metrics.adoc",
-      "seconds": 168
+      "seconds": 169
     },
     {
       "module": "vm-lifecycle",
@@ -300,7 +300,7 @@
     {
       "module": "vm-lifecycle",
       "page": "custom-golden-images.adoc",
-      "seconds": 110
+      "seconds": 125
     },
     {
       "module": "vm-lifecycle",
@@ -310,12 +310,12 @@
     {
       "module": "vm-lifecycle",
       "page": "golden-images-troubleshooting.adoc",
-      "seconds": 107
+      "seconds": 108
     },
     {
       "module": "vm-lifecycle",
       "page": "cloning-vms.adoc",
-      "seconds": 245
+      "seconds": 289
     },
     {
       "module": "vm-lifecycle",
@@ -330,7 +330,7 @@
     {
       "module": "manifests",
       "page": "index.adoc",
-      "seconds": 86
+      "seconds": 87
     },
     {
       "module": "api",
@@ -370,7 +370,7 @@
     {
       "module": "agentic-vm-management",
       "page": "ai-vm-snapshot-management.adoc",
-      "seconds": 254
+      "seconds": 255
     },
     {
       "module": "agentic-vm-management",

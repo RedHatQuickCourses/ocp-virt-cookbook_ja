@@ -1,5 +1,5 @@
 = VM ライフサイクルの状態と基本操作の理解
-:navtitle: VM ライフサイクル状態
+:navtitle: VM ライフサイクルの状態
 
 == 概要
 
@@ -34,7 +34,7 @@ VirtualMachine リソースは、VM が実行中であるかどうかにかか�
 
 [source,bash,role=execute]
 ----
-# List VirtualMachine resources
+# 仮想マシンリソースを一覧表示
 oc get vm -n my-vms
 ----
 
@@ -119,6 +119,46 @@ VM は、そのライフサイクルを通じていくつかの状態に遷移�
 |はい (短時間)
 |===
 
+=== 状態遷移図
+
+次の図は、VM が状態間をどのように遷移するかを示しています。各矢印は操作または自動遷移を表します。
+
+[source,text]
+----
+  ┌──────┐      start   ┌──────┐           ┌────────┐            ┌───────┐
+  │ Stopped │─────────►│ Pending │───────►│ Scheduling │───────►│ Starting │
+  └──────┘              └──────┘           └────────┘            └───┬───┘
+       ▲                                                                                │
+       │                                                                                ▼
+  ┌──┴─────┐         ┌───────┐   stop   ┌──────┐    pause     ┌─────┐
+  │ Terminating │◄──────│ Stopping │◄──────│ Running │────────►│ Paused  │
+  └────────┘         └───────┘          └───┬──┘◄────────└─────┘
+                                                           │         unpause
+                                                        migrate
+                                                           │
+                                                           ▼
+                                                  ┌───────┐
+                                                  │ Migrating │──► Running (new node)
+                                                  └───────┘
+----
+
+* **Start** は、停止した VM を Pending、Scheduling、Starting を経由して Running に遷移させます。
+* **Stop** は、実行中の VM を Stopping および Terminating を経由して Stopped に戻します。
+* **Restart** は、すべての中間状態を経由して、完全な停止と起動のサイクルを実行します。
+* **Pause/Unpause** は、VMI のライフサイクルを変更することなく、実行を一時停止および再開します。
+* **Migrate** は、VM を Running 状態のまま別のノードにライブマイグレーションします。
+* **Delete** は、任意の状態から VM リソースを完全に削除します。
+
+=== ライブマイグレーションとライフサイクル
+
+ライブマイグレーションは、ダウンタイムなしで実行中の VM をあるノードから別のノードに移動します。マイグレーションは以下のような場面で発生します。
+
+* **Node drain** -- メンテナンスのためにノードが cordon された場合、実行中の VM は自動的に他のノードにマイグレーションされます。
+* **クラスターのアップグレード** -- OpenShift は Worker Node を 1 台ずつローリング更新し、各ノード上の VM のマイグレーションをトリガーします。
+* **リバランス** -- 管理者または descheduler が VM をマイグレーションして、ノード間でワークロードをより均等に分散する場合があります。
+
+マイグレーション中、VM は一時的に VMI ステータスに表示される `Migrating` フェーズに入ります。このプロセスの間、VM にはアクセス可能なままです。マイグレーションには共有ストレージ (ReadWriteMany PVC) が必要であるか、または非共有ストレージ設定のための post-copy マイグレーションが使用されます。
+
 == VM ライフサイクルの管理
 
 === VM の起動
@@ -145,10 +185,10 @@ virtctl start fedora-app-vm -n my-vms
 
 [source,bash,role=execute]
 ----
-# Check VM status
+# VM の状態を確認
 oc get vm fedora-app-vm -n my-vms
 
-# Check VMI was created
+# VMI が作成されたことを確認
 oc get vmi fedora-app-vm -n my-vms
 ----
 
@@ -195,10 +235,10 @@ WARNING: 強制停止は電源コードを抜くのと同じです。正常終�
 
 [source,bash,role=execute]
 ----
-# VM should show Stopped status
+# VM は停止状態になっているはずです。
 oc get vm fedora-app-vm -n my-vms
 
-# VMI should no longer exist
+# VMI は存在しないはずです。
 oc get vmi fedora-app-vm -n my-vms
 ----
 
@@ -235,10 +275,10 @@ image::vm-lifecycle-states/vm-paused-unpause-action.png[VM 詳細ページ。Act
 
 [source,bash,role=execute]
 ----
-# Pause a VM
+# VM を一時停止
 virtctl pause vm fedora-app-vm -n my-vms
 
-# Unpause a VM
+# VM の一時停止を解除
 virtctl unpause vm fedora-app-vm -n my-vms
 ----
 
@@ -468,7 +508,7 @@ oc get vm fedora-app-vm -n my-vms -o jsonpath='{.status.conditions}' | jq
 
 [source,bash,role=execute]
 ----
-# Get events for a specific VM
+# 特定の VM のイベントを取得
 oc get events -n my-vms --field-selector involvedObject.name=fedora-app-vm
 ----
 
@@ -542,6 +582,38 @@ oc get events -n my-vms -w
 |一時的に廃止された VM、またはメンテナンスモード。
 |===
 
+=== 実行戦略の選択
+
+この決定木を使用して、ワークロードに適した戦略を選択してください。
+
+[source,text]
+----
+  VMは常に稼働している必要がありますか?
+      │
+      ├── はい ──► Always
+      │           自動起動し、停止時には自動的に再起動します。
+      │
+      └── いいえ
+           │
+           クラッシュから自動的に復旧すべきですか?
+               │
+               ├── はい ──► RerunOnFailure
+               │           障害発生時には再起動し、
+               │           ゲスト側で開始されたシャットダウン時には停止状態を維持します。
+               │
+               └── いいえ
+                    │
+                    手動での開始・停止制御を行いますか?
+                        │
+                        ├── はい   ──► Manual
+                        │             明示的にリクエストしたときにのみ、
+                        │             開始および停止します。
+                        │
+                        └── いいえ ──► Halted
+                                      VMは停止したままになります。
+                                      メンテナンス中にVMを待機状態にしておく場合に使用します。
+----
+
 === 実行戦略の設定
 
 **VM の YAML:**
@@ -582,7 +654,14 @@ NOTE: `runStrategy` と非推奨の `running` フィールドを同時に使用�
 本モジュールでは以下を学びました。
 
 * VirtualMachine リソースと VirtualMachineInstance リソースの違い
-* VM ライフサイクルの状態と遷移
+* VM ライフサイクルの状態と遷移 (状態遷移図を含む)
 * VM の起動、停止、一時停止、再開、再起動、削除の方法
+* Node drain やアップグレード時におけるライブマイグレーションと VM ライフサイクルの関係
 * 条件 (Conditions) とイベント (Events) を使用した VM 状態の監視方法
-* VM の自動動作を制御する実行戦略 (Run Strategies)
+* 実行戦略による VM の自動動作の制御と適切な戦略の選択方法
+
+== 関連情報
+
+* xref:create-vm-web-console.adoc[] - Web コンソールからの VM の作成
+* xref:virtctl-basics.adoc[] - VM 管理用 CLI コマンド
+* link:https://docs.redhat.com/en/documentation/openshift_container_platform/{ocp-docs-version}/html/virtualization/managing-vms[仮想マシンの管理 - 公式ドキュメント,window=_blank]

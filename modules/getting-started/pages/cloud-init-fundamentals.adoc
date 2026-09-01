@@ -443,7 +443,7 @@ cloud-init の状態を確認します。
 cloud-init status --long
 ----
 
-成功した場合に期待される出力：
+成功した場合に想定される出力：
 
 [source,text]
 ----

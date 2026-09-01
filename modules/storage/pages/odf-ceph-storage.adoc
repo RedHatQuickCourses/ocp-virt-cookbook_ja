@@ -243,7 +243,7 @@ Ceph RBD Storage Class のみがデフォルトになっていることを確認
 oc get storageclass | grep "(default)"
 ----
 
-期待される出力:
+想定される出力:
 
 ----
 ocs-storagecluster-ceph-rbd (default)  openshift-storage.rbd.csi.ceph.com  Delete  Immediate  true

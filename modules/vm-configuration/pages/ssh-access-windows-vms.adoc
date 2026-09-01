@@ -85,7 +85,7 @@ Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH.Server*'
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 Name  : OpenSSH.Server~~~~0.0.1.0
 State : NotPresent
@@ -103,7 +103,7 @@ Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 Path          :
 Online        : True
@@ -130,7 +130,7 @@ Get-Service sshd
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 Status   Name    DisplayName
 Running  sshd    OpenSSH SSH Server
@@ -146,7 +146,7 @@ Get-NetFirewallRule -Name *OpenSSH-Server* | Select-Object Name, Enabled, Direct
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 Name                  Enabled Direction  Action
 OpenSSH-Server-In-TCP    True   Inbound  Allow
@@ -243,7 +243,7 @@ oc get svc windows-ssh-nodeport
 ----
 
 [source,text]
-.Expected output
+.想定される出力
 ----
 NAME                   TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
 windows-ssh-nodeport   NodePort   172.30.x.x      <none>        22:30022/TCP   5s
